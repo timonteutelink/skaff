@@ -36,10 +36,10 @@ import {
 import { toastNullError } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  projectNameRegex,
   type ProjectDTO,
   type TemplateDTO,
 } from "@timonteutelink/code-templator-lib/browser";
+import { projectNameRegex } from "@timonteutelink/template-types-lib";
 import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";

@@ -1,6 +1,5 @@
 import type {
-  InstantiatedTemplate,
-  TemplateDTO,
+	TemplateDTO,
 } from "@timonteutelink/code-templator-lib";
 
 /* =============================================================================
@@ -13,38 +12,38 @@ import type {
 		• createInstance – an action node to instantiate a new instance of that child template.
 ------------------------------------------------------------------------------- */
 export type ProjectTreeNode =
-  | InstantiatedNode
-  | SubCategoryNode
-  | ChildTemplateNode
-  | CreateInstanceNode;
+	| InstantiatedNode
+	| SubCategoryNode
+	| ChildTemplateNode
+	| CreateInstanceNode;
 
 export interface InstantiatedNode {
-  type: "instantiated";
-  id: string;
-  name: string;
-  instanceData: {
-    templateSettings: any; // Replace with proper type
-  };
-  children?: ProjectTreeNode[];
+	type: "instantiated";
+	id: string;
+	name: string;
+	instanceData: {
+		templateSettings: any; // Replace with proper type
+	};
+	children?: ProjectTreeNode[];
 }
 
 export interface SubCategoryNode {
-  type: "subCategory";
-  id: string;
-  name: string; // category name (e.g. "Components", "Pages", etc.)
-  children: ProjectTreeNode[];
+	type: "subCategory";
+	id: string;
+	name: string; // category name (e.g. "Components", "Pages", etc.)
+	children: ProjectTreeNode[];
 }
 
 export interface ChildTemplateNode {
-  type: "childTemplate";
-  id: string;
-  templateDefinition: TemplateDTO;
-  children: ProjectTreeNode[];
+	type: "childTemplate";
+	id: string;
+	templateDefinition: TemplateDTO;
+	children: ProjectTreeNode[];
 }
 
 export interface CreateInstanceNode {
-  type: "createInstance";
-  id: string;
-  parentId: string;
-  candidateTemplate: TemplateDTO;
+	type: "createInstance";
+	id: string;
+	parentId: string;
+	candidateTemplate: TemplateDTO;
 }

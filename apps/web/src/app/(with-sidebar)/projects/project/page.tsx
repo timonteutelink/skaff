@@ -12,10 +12,10 @@ import { ProjectTree } from "@/components/general/projects/project-tree";
 import type { ProjectTreeNode } from "@/components/general/projects/types";
 import { toastNullError } from "@/lib/utils";
 import type {
-  InstantiatedTemplate,
   ProjectDTO,
   TemplateDTO,
 } from "@timonteutelink/code-templator-lib/browser";
+import { InstantiatedTemplate } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
