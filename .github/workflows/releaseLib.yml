@@ -1,0 +1,45 @@
+name: Release Lib
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: >
+          Version to release. New version must be bigger than existing version and must be nonexistant.
+          Will not patch main with new version for now
+        required: true
+        default: "v0.0.1"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      content: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build distribution
+        run: bun run build:dist
+      - name: Pack tarballs
+        run: bun run pack:tarballs
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: 'apps/cli/tarballs/*.tgz'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
+          bun publish --access public

@@ -1,0 +1,10 @@
+services:
+  code-templator-web:
+    build:
+      context: ../../..
+      dockerfile: apps/web/docker/Dockerfile
+    image: code-templator-web:latest
+    environment:
+      BANANA: "banana"
+    ports:
+      - "3000:80"
