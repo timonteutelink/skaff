@@ -73,9 +73,21 @@ export type RedirectFile = {
 };
 
 /**
+ * Allow the templating engine to overwrite these files
+ * regex matching the path of the src file in the template relative to the templates/ folder
+ * By default if a file in a template is found in the destination the engine will error.
+ * ignore will not place the file and not error.
+ * If multiple rules match the first will be used
+ */
+export type AllowOverwrite = {
+  srcRegex: RegExp,
+  mode: 'overwrite' | 'overwrite-warn' | 'ignore' | 'ignore-warn' | 'error'
+}
+
+/**
  * Auto instantiate subtemplates.
  */
-export type AutoInstatiatedSubtemplate<
+export type AutoInstantiatedSubtemplate<
   TFullSettingsType extends
   TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
 > = {
@@ -90,7 +102,13 @@ export type AutoInstatiatedSubtemplate<
    * Function to map the user settings to the subtemplate settings.
    * This function is called with the user settings and should return the subtemplate settings.
    */
-  mapSettings: AnyOrCallback<TFullSettingsType, UserTemplateSettings>;
+  mapSettings: AnyOrCallback<TFullSettingsType, UserTemplateSettings>;// TODO if this can be done nicely between a template and its children then we can allow the parent template to define the settings from the child in here. Then the type can also be used to extend the fullparentsettings type for the children down below. And the template dir can become fully typed. But we should first think how other git repos are handled(templates referencing other templates.) Before we allow parents to access types of children and all those references.
+
+
+  /**
+   * Array of children templates to also autoinstiate with this one.
+   */
+  children: AutoInstantiatedSubtemplate<TFullSettingsType>[];
 };
 
 export type AiContext = {
@@ -178,9 +196,14 @@ export interface TemplateConfigModule<
   redirects?: AnyOrCallback<TFullSettingsType, RedirectFile[]>;
 
   /**
+   * Overwrite Rules
+   */
+  allowedOverwrites: AnyOrCallback<TFullSettingsType, AllowOverwrite[]>;
+
+  /**
    * Auto instantiate subtemplates.
    */
-  autoInstatiatedSubtemplates?: AnyOrCallback<TFullSettingsType, AutoInstatiatedSubtemplate<TFullSettingsType>[]>;
+  autoInstatiatedSubtemplates?: AnyOrCallback<TFullSettingsType, AutoInstantiatedSubtemplate<TFullSettingsType>[]>;
 
   /**
    * Assertions. Function must return true otherwise the template generation will fail.

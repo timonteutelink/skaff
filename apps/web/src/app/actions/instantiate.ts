@@ -18,7 +18,7 @@ import path from "node:path";
 
 // TODO make sure the templategenerationengine enforces to use the right templatecommithash unless specified otherwise
 // TODO fix that changing one character in env vars in turbo_repo generates empty diff.
-// TODO fix that env vars are stored inside the autoinstatiated subtemplate instead of the parent template in projectsettings.
+// TODO fix that env vars are stored inside the autoinstantiated subtemplate instead of the parent template in projectsettings.
 export async function createNewProject(
   projectName: string,
   templateName: string,

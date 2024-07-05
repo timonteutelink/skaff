@@ -163,6 +163,47 @@ export class TemplateGeneratorService {
     return { data: redirects.data };
   }
 
+
+  private getOverwrites(): Result<AllowOverwrite[]> {
+    if (
+      !this.currentlyGeneratingTemplate ||
+      !this.currentlyGeneratingTemplateFullSettings
+    ) {
+      return { error: "No template is currently being generated." };
+    }
+    const fullSettings = this.currentlyGeneratingTemplateFullSettings;
+    const overwrites = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.allowedOverwrites, fullSettings);
+    if ("error" in overwrites) {
+      console.error(`Failed to parse overwrites: ${overwrites.error}`);
+      return { error: `Failed to parse overwrites: ${overwrites.error}` };
+    }
+    if (!overwrites.data) {
+      return { data: [] };
+    }
+
+    return { data: overwrites.data };
+  }
+
+  private getTemplatesToAutoInstantiate(): Result<AllowOverwrite[]> {
+    if (
+      !this.currentlyGeneratingTemplate ||
+      !this.currentlyGeneratingTemplateFullSettings
+    ) {
+      return { error: "No template is currently being generated." };
+    }
+    const fullSettings = this.currentlyGeneratingTemplateFullSettings;
+    const overwrites = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.allowedOverwrites, fullSettings);
+    if ("error" in overwrites) {
+      console.error(`Failed to parse overwrites: ${overwrites.error}`);
+      return { error: `Failed to parse overwrites: ${overwrites.error}` };
+    }
+    if (!overwrites.data) {
+      return { data: [] };
+    }
+
+    return { data: overwrites.data };
+  }
+
   /**
    * Copies all files from the template’s adjacent "templates" directory to the destination.
    * Files are processed with Handlebars. If a file ends in ".hbs", the extension is removed.
@@ -190,6 +231,13 @@ export class TemplateGeneratorService {
       return { error: `Failed to parse redirects: ${redirects.error}` };
     }
 
+    const overwrites = this.getOverwrites();
+
+    if ("error" in overwrites) {
+      console.error(`Failed to parse overwrites: ${overwrites.error}`);
+      return { error: `Failed to parse overwrites: ${overwrites.error}` };
+    }
+
     await makeDir(dest.data);
 
     const entries = await glob(`**/*`, { cwd: src, dot: true, nodir: true });
@@ -210,8 +258,27 @@ export class TemplateGeneratorService {
       }
 
       try {
-        const stats = await fs.stat(srcPath);
-        if (stats.isDirectory()) continue;
+        const srcStats = await fs.stat(srcPath);
+        if (srcStats.isDirectory()) continue;
+
+        try {
+          const destStats = await fs.stat(destPath);
+          if (destStats.isFile()) {
+            const allowedOverwrite = overwrites.data.find((overwrite) => overwrite.srcRegex.match(entry));
+            if (!allowedOverwrite || allowedOverwrite.mode === 'error') {
+              console.error(`File: ${entry} at ${destPath} already exists.`);
+              return { error: `File: ${entry} at ${destPath} already exists.` }
+            }
+
+            if (allowedOverwrite.mode.endsWith('warn')) {
+              console.warn(`File: ${entry} at ${destPath} already exists. ${allowedOverwrite.mode.startsWith('ignore') ? 'Ignoring' : 'Overwriting'} it.`)
+            }
+
+            if (allowedOverwrite.mode.startsWith('ignore')) {
+              continue;
+            }
+          }
+        } catch { }
 
         const content = await fs.readFile(srcPath, "utf-8");
         const compiled = Handlebars.compile(content);
@@ -337,7 +404,9 @@ export class TemplateGeneratorService {
       return { error: "No template is currently being generated." };
     }
 
-    const templatesToAutoInstantiate = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.autoInstatiatedSubtemplates, fullParentSettings);
+    // TODO: Revise this to be able to be called recursively so add this as a param to function and use getTemplatesToAutoInstantiate. Then call this function on the children list.
+    // maybe later we make sure adding every template to the projectSettings happens in the first step and then the instantiateTemplateInProject and instantiateNewProject functions can call this function which will retrieve everything from projectsettings which were already set before calling instantiateTemplateInProject and instantiateNewProject. So 2 seperate steps. Modify the templateSettings and then generate
+    const templatesToAutoInstantiate = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.autoInstantiatedSubtemplates, fullParentSettings);
 
     if ("error" in templatesToAutoInstantiate) {
       console.error(
