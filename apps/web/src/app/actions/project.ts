@@ -1,6 +1,5 @@
 "use server";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
-import { diffProjectFromTemplate } from "@repo/ts/services/project-service";
 import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
 import { ProjectDTO, Result } from "@repo/ts/utils/types";
 
