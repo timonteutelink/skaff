@@ -386,9 +386,8 @@ export async function generateModifyTemplateDiff(
     ]!;
 
   const template = await rootTemplateRepository.loadRevision(
-    instantiatedTemplate.templateName,
-    project.instantiatedProjectSettings.instantiatedTemplates[0]!
-      .templateCommitHash!,
+    project.rootTemplate.config.templateConfig.name,
+    project.instantiatedProjectSettings.instantiatedTemplates[0]!.templateCommitHash!,
   );
 
   if ("error" in template) {
@@ -748,18 +747,10 @@ export async function generateUpdateTemplateDiff(
   project: Project,
   newTemplateRevisionHash: string,
 ): Promise<Result<NewTemplateDiffResult>> {
-  const rootInstantiatedTemplate =
-    project.instantiatedProjectSettings.instantiatedTemplates[0];
-
-  if (!rootInstantiatedTemplate) {
-    logger.error(`No instantiated root template found`);
-    return { error: "No instantiated root template found" };
-  }
-
-  const template = await (
-    await getRootTemplateRepository()
-  ).loadRevision(
-    rootInstantiatedTemplate.templateName,
+  const rootProjectRepository = await getRootTemplateRepository();
+  const rootTemplateName = project.rootTemplate.config.templateConfig.name
+  const template = await rootProjectRepository.loadRevision(
+    rootTemplateName,
     newTemplateRevisionHash,
   );
 
@@ -768,7 +759,7 @@ export async function generateUpdateTemplateDiff(
   }
 
   if (!template.data) {
-    logger.error(`Template ${rootInstantiatedTemplate.templateName} not found`);
+    logger.error(`Template ${rootTemplateName} not found`);
     return { error: "Template not found" };
   }
 
@@ -781,7 +772,7 @@ export async function generateUpdateTemplateDiff(
 
   if (!newProjectSettings.instantiatedTemplates[0]) {
     logger.error(
-      `Instantiated template ${rootInstantiatedTemplate.templateName} not found in project settings`,
+      `Instantiated template ${rootTemplateName} not found in project settings`,
     );
     return { error: "Instantiated template not found in project settings" };
   }

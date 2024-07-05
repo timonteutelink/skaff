@@ -12,16 +12,32 @@ import { getConfig } from "../lib";
 const asyncExecFile = promisify(execFile);
 const asyncExec = promisify(exec);
 
-export async function isGitRepo(path: string): Promise<Result<boolean>> {
+export async function isGitRepo(dir: string): Promise<Result<boolean>> {
   try {
-    const { stdout } = await asyncExec(`cd ${path} && git rev-parse --is-inside-work-tree`);
+    const { stdout } = await asyncExecFile(
+      "git",
+      ["-C", dir, "rev-parse", "--is-inside-work-tree"],
+      { encoding: "utf8" }
+    );
+
     return { data: stdout.trim() === "true" };
-  } catch (error) {
+  } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code?: number }).code === 128
+    ) {
+      return { data: false };
+    }
+
     logError({
       shortMessage: "Error checking if path is a git repository",
-      error,
+      error: err,
     });
-    return { error: `Error checking if path is a git repository: ${error}` };
+    return {
+      error: `Error checking if path is a git repository: ${String(err)}`,
+    };
   }
 }
 
