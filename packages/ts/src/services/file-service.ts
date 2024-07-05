@@ -15,6 +15,7 @@ export async function makeDir(path: string): Promise<Result<void>> {
 //
 // TODO so also possible to just force clean git and store commithash of template. Then can easily update all templates at once(not seperately) by just instantiating the project from this commit hash template and the new one and applying the diff. So we do not version any template but we store commit hash of entire template dir so if updated user can run update.
 // Then when creating the diff if empty we just cancel and autoupdate. the template. But updating requires again the instantiation workflow for if options were added in new template.
+// So updating will just be the edit workflow only when generating the baseproject for diff will not only use old settings but also old template.
 export async function hashFullDir(absoluteDirPath: string): Promise<Result<string>> {
 
 
