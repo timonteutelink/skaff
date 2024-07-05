@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "@inquirer/prompts": "^7.5.3",
-    "@timonteutelink/code-templator-lib": "0.0.54",
+    "@timonteutelink/code-templator-lib": "workspace:*",
     "@timonteutelink/template-types-lib": "^0.0.35",
     "@types/node": "^22.15.19",
     "commander": "^13.1.0",

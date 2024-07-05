@@ -671,7 +671,7 @@ export async function applyDiffToProject(
 }
 export async function diffProjectFromItsTemplate(
   project: Project,
-): Promise<Result<ParsedFile[]>> {
+): Promise<Result<{ files: ParsedFile[], hash: string }>> {
   if (!project.gitStatus.isClean) {
     logger.error("Cannot diff project with uncommitted changes");
     return { error: "Cannot diff project with uncommitted changes" };
@@ -690,7 +690,7 @@ export async function diffProjectFromItsTemplate(
   }
 
   if (existingSavedDiff.data) {
-    return { data: parseGitDiff(existingSavedDiff.data.data) };
+    return { data: { files: parseGitDiff(existingSavedDiff.data.data), hash: projectCommitHash } };
   }
 
   const tempNewProjectName = `${project.instantiatedProjectSettings.projectName}-${crypto.randomUUID()}`;
@@ -730,7 +730,7 @@ export async function diffProjectFromItsTemplate(
       return saveCacheResult;
     }
 
-    return { data: parseGitDiff(diff.data) };
+    return { data: { files: parseGitDiff(diff.data), hash: projectCommitHash } };
   } finally {
     await fs.rm(tempNewProjectPath.data, { recursive: true });
   }

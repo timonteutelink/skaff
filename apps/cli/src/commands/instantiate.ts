@@ -2,6 +2,7 @@ import {
   addAllAndDiff,
   applyDiff,
   deleteProject,
+  diffProjectFromTemplate,
   findTemplate,
   generateNewProject,
   generateNewProjectFromExisting,
@@ -21,6 +22,7 @@ import {
 } from "../cli-utils";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { promptForSchema } from "../zod-schema-prompt";
+import { viewPatchWithGit } from "../utils/diff-utils";
 
 async function promptUserTemplateSettings(
   rootTemplateName: string,
@@ -35,7 +37,14 @@ async function promptUserTemplateSettings(
     console.error(`No template found with name "${rootTemplateName}"`);
     process.exit(1);
   }
-  const templateSettingsSchema = rootTemplate.data.template.config.templateSettingsSchema;
+
+  const subTemplate = await rootTemplate.data.template.findSubTemplate(templateName);
+  if (!subTemplate) {
+    console.error(`No sub-template found with name "${templateName}" in root template "${rootTemplateName}"`);
+    process.exit(1);
+  }
+
+  const templateSettingsSchema = subTemplate.config.templateSettingsSchema;
   const promptResult = await promptForSchema(templateSettingsSchema);
 
   if (Object.keys(promptResult).length === 0) {
@@ -393,6 +402,40 @@ export function registerInstantiationCommand(program: Command) {
           return { diffHash: res.data.diffHash };
         }
       )
+    );
+
+  // diff from clean template
+  diffCmd
+    .command("diff-from-template")
+    .description("Generate a diff from the current project to a clean template")
+    .option("--json", "Output raw JSON instead of visual diff")
+    .option("--tool <tool>", "Specify diff viewer (less, bat, delta, diff-so-fancy, git-split-diffs)")
+    .action(
+      withFormatting(async (options: {
+        json?: boolean;
+        tool?: string;
+      }) => {
+        const proj = await getCurrentProject();
+        if ("error" in proj) {
+          console.error(proj.error);
+          process.exit(1);
+        }
+        if (!proj.data) {
+          console.error("No project found in the current directory.");
+          process.exit(1);
+        }
+        const result = await diffProjectFromTemplate(proj.data);
+        if ("error" in result) {
+          console.error(result.error);
+          process.exit(1);
+        }
+
+        if (options.json) {
+          console.log(JSON.stringify(result.data.files));
+        } else {
+          await viewPatchWithGit(result.data.hash, { tool: options.tool });
+        }
+      })
     );
 
   // manual apply
