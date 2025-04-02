@@ -59,6 +59,10 @@ function typeCheckFile(filePath: string): void {
  */
 function findTemplateConfigFiles(dir: string): string[] {
 	let results: string[] = [];
+	const candidate = path.join(dir, 'templateConfig.ts');
+	if (fs.existsSync(candidate)) {
+		results.push(candidate);
+	}
 	const entries = fs.readdirSync(dir, { withFileTypes: true });
 	for (const entry of entries) {
 		const fullPath = path.join(dir, entry.name);
@@ -91,7 +95,7 @@ function findTemplateConfigFiles(dir: string): string[] {
 }
 
 async function importTemplateConfigModule<T extends UserTemplateSettings>(cachePath: string): Promise<Record<string, TemplateConfigModule<T>>> {
-	const moduleObj = await import(pathToFileURL(cachePath).href);
+	const moduleObj = await import(/* webpackIgnore: true */ pathToFileURL(cachePath).href);
 
 	const configs = moduleObj.configs;
 
@@ -146,7 +150,7 @@ export async function loadAllTemplateConfigs<T extends UserTemplateSettings>(
 	sortedFiles.forEach((file, index) => {
 		const relPath = path.relative(rootDir, file).replace(/\\/g, '/');
 		const importAlias = `config${index}`;
-		importsCode += `import ${importAlias} from './${relPath}';\n`;
+		importsCode += `import ${importAlias} from './${(relPath + "").replace(/\.ts$/, '')}';\n`;
 		exportEntries.push(`'${relPath}': ${importAlias}`);
 	});
 	const indexCode = `${importsCode}\nexport const configs = {\n${exportEntries.join(

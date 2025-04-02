@@ -14,7 +14,8 @@ const sideEffectFunction: SideEffectFunction<z.infer<typeof templateSettingsSche
 const templateConfig: TemplateConfig = {
 	name: 'rust',
 	description: 'Rust template',
-	author: "Timon Teutelink",
+	author: "Timon Teutelink"
+
 };
 
 const templateConfigModule: TemplateConfigModule<z.infer<typeof templateSettingsSchema>> = {
