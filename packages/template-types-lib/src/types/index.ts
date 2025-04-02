@@ -3,9 +3,7 @@ export type {
 	TemplateConfig,
 	SideEffectFunction,
 	SideEffect,
-	RefTemplateConfigModule,
 	TemplateConfigModule,
-	TemplateConfigModuleType,
 	StringOrCallback
 } from './template-config-types';
 

@@ -57,12 +57,3 @@ export interface TemplateConfigModule<TSchemaType extends UserTemplateSettings> 
 	 */
 	sideEffects: SideEffect<TSchemaType>[];
 }
-
-export interface RefTemplateConfigModule {
-	/**
-	 * The path to the templateConfig.ts file to load.
-	 */
-	ref: string;
-}
-
-export type TemplateConfigModuleType<TSchemaType extends UserTemplateSettings> = TemplateConfigModule<TSchemaType> | RefTemplateConfigModule;
