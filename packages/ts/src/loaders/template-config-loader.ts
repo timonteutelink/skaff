@@ -1,7 +1,6 @@
 import myTsConfig from '@repo/typescript-config/base.json';
 import {
 	TemplateConfigModule,
-	TemplateConfigModuleType,
 	templateConfigSchema,
 	UserTemplateSettings,
 } from '@timonteutelink/template-types-lib';
@@ -100,7 +99,7 @@ async function importTemplateConfigModule<T extends UserTemplateSettings>(cacheP
 		const evaluatedModule = configs[key] as TemplateConfigModule<T>;
 		const parsedTemplateConfig = templateConfigSchema.safeParse(evaluatedModule.templateConfig);
 		if (!parsedTemplateConfig.success) {
-			throw new Error(`Invalid template configuration in ${configPath}`);
+			throw new Error(`Invalid template configuration in ${key}: ${parsedTemplateConfig.error.message}`);
 		}
 		evaluatedModule.templateConfig = parsedTemplateConfig.data;
 	}
@@ -120,7 +119,6 @@ async function importTemplateConfigModule<T extends UserTemplateSettings>(cacheP
 export async function loadAllTemplateConfigs<T extends UserTemplateSettings>(
 	rootDir: string
 ): Promise<Record<string, TemplateConfigModule<T>>> {
-	// Find all template configuration file paths.
 	const configFiles = findTemplateConfigFiles(rootDir);
 
 	if (configFiles.length === 0) {
@@ -133,7 +131,10 @@ export async function loadAllTemplateConfigs<T extends UserTemplateSettings>(
 		combinedContent += fs.readFileSync(file, 'utf-8');
 	}
 	const hash = createHash('sha256').update(combinedContent).digest('hex');
-	const cachePath = path.join(tmpdir(), `${hash}.mjs`);
+
+	const tmpDir = path.join(tmpdir(), "code-templator-cache");
+	fs.mkdirSync(tmpDir, { recursive: true });
+	const cachePath = path.join(tmpDir, "", `${hash}.mjs`);
 
 	if (fs.existsSync(cachePath)) {
 		console.log(`Using cached bundle at ${cachePath}`);
@@ -183,133 +184,5 @@ export async function loadAllTemplateConfigs<T extends UserTemplateSettings>(
 	fs.writeFileSync(cachePath, bundledCode, 'utf-8');
 	console.log(`Created bundled template configs at ${cachePath}`);
 
-
-	return moduleObj.configs;
-
 	return importTemplateConfigModule<T>(cachePath);
 }
-
-import myTsConfig from '@repo/typescript-config/base.json';
-import { TemplateConfigModule, TemplateConfigModuleType, templateConfigSchema, UserTemplateSettings } from '@timonteutelink/template-types-lib';
-import { randomUUID } from 'crypto';
-import * as esbuild from 'esbuild';
-import * as fs from 'fs';
-import { tmpdir } from 'os';
-import * as path from 'path';
-import * as ts from 'typescript';
-import { pathToFileURL } from 'url';
-
-/**
- * Performs type checking on the given file using the TypeScript Compiler API.
- * It uses the compiler options loaded from your custom tsconfig.
- */
-function typeCheckFile(filePath: string): void {
-	const basePath = process.cwd();
-	const { options, errors } = ts.convertCompilerOptionsFromJson(
-		{ ...myTsConfig.compilerOptions, baseUrl: basePath },
-		basePath
-	);
-
-	if (errors.length > 0) {
-		const formatHost: ts.FormatDiagnosticsHost = {
-			getCanonicalFileName: (fileName) => fileName,
-			getCurrentDirectory: ts.sys.getCurrentDirectory,
-			getNewLine: () => ts.sys.newLine,
-		};
-		throw new Error(
-			`Error in tsconfig:\n${ts.formatDiagnosticsWithColorAndContext(errors, formatHost)}`
-		);
-	}
-
-	const program = ts.createProgram([filePath], options);
-	const diagnostics = ts.getPreEmitDiagnostics(program);
-	if (diagnostics.length > 0) {
-		const formatHost: ts.FormatDiagnosticsHost = {
-			getCanonicalFileName: (fileName) => fileName,
-			getCurrentDirectory: ts.sys.getCurrentDirectory,
-			getNewLine: () => ts.sys.newLine,
-		};
-		throw new Error(
-			`TypeScript type checking failed:\n${ts.formatDiagnosticsWithColorAndContext(
-				diagnostics,
-				formatHost
-			)}`
-		);
-	}
-}
-
-/**
- * Loads and validates a template configuration from a template directory.
- * It type-checks the file, transpiles it with esbuild to CommonJS,
- * then directly evaluates the compiled code using eval.
- * Finally, it ensures that the default export conforms to the TemplateConfigModule interface.
- */
-
-// TODO refactor to load ALL templateConfigs(also nested ones.) in one go just using glob and name of templateConfig.ts. Then in other code instead of loading templateConfig.ts, just use the already loaded templateConfig by checking the object if file at that path exists. So this will return Record<string, TemplateConfigModule<UserTemplateSettings>> instead of TemplateConfigModule<UserTemplateSettings> where the key is the path of the templateConfig.ts file. This way one bundle is enough for all runs of templateConfig.ts. Then also hash contents of all templateConfigs found and use that as a cache key for the whole bundle.
-// If we want to do this way the refs need to become templateConfig.json files so no typescript needs to be ran to trace a ref
-export async function loadTemplateConfig<T extends UserTemplateSettings>(
-	templateDir: string
-): Promise<TemplateConfigModule<T>> {
-	const configPath = path.join(templateDir, 'templateConfig.ts');
-
-	typeCheckFile(configPath);
-
-	const tsCode = fs.readFileSync(configPath, 'utf-8');
-
-	const result = await esbuild.build({
-		stdin: {
-			contents: tsCode,
-			resolveDir: path.dirname(configPath),
-			sourcefile: configPath,
-			loader: 'ts',
-		},
-		bundle: true,
-		write: false,
-		format: 'esm',
-		target: 'es2022',
-	});
-
-	const bundledCode = result.outputFiles[0]?.text;
- Once you delete a repository, there is no going back.Please be certain.
-		if(!bundledCode) {
-		throw new Error(`Failed to bundle ${configPath}`);
-	}
-
-	const tempPath = path.join(tmpdir(), `${randomUUID()}.mjs`);
-	fs.writeFileSync(tempPath, bundledCode, 'utf-8');
-	const moduleObj = await import(/* webpackIgnore: true */ pathToFileURL(tempPath).href);
-	let evaluatedModule: TemplateConfigModuleType<T> = moduleObj.default;
-
-	if (
-		!evaluatedModule ||
-		typeof evaluatedModule !== 'object'
-	) {
-		throw new Error(`Invalid template configuration in ${configPath}`);
-	}
-
-	if (
-		'ref' in evaluatedModule &&
-		typeof evaluatedModule.ref === 'string'
-	) {
-		console.log(`Loading referenced template config at ${evaluatedModule.ref}`);
-		const refPath = path.join(templateDir, evaluatedModule.ref);
-		evaluatedModule = await loadTemplateConfig<T>(refPath);
-	}
-
-	if (
-		!('templateConfig' in evaluatedModule) ||
-		!('templateSettingsSchema' in evaluatedModule) ||
-		!('targetPath' in evaluatedModule) ||
-		!('sideEffects' in evaluatedModule) ||
-		!evaluatedModule.templateConfig ||
-		!evaluatedModule.templateSettingsSchema ||
-		!evaluatedModule.targetPath ||
-		!evaluatedModule.sideEffects
-	) {
-		throw new Error(`Invalid template configuration in ${configPath}`);
-	}
-
-
-	return evaluatedModule as TemplateConfigModule<T>;
-}
-

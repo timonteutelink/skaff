@@ -7,10 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      ts-node:
-        specifier: ^10.9.2
-        version: 10.9.2(@types/node@22.13.14)(typescript@5.8.2)
     devDependencies:
       prettier:
         specifier: ^3.5.3
@@ -181,8 +177,8 @@ importers:
   packages/ts:
     dependencies:
       '@timonteutelink/template-types-lib':
-        specifier: 0.0.14
-        version: 0.0.14
+        specifier: 0.0.15
+        version: 0.0.15
       '@types/fs-extra':
         specifier: ^11.0.4
         version: 11.0.4
@@ -723,8 +719,8 @@ packages:
   '@tailwindcss/postcss@4.0.17':
     resolution: {integrity: sha512-qeJbRTB5FMZXmuJF+eePd235EGY6IyJZF0Bh0YM6uMcCI4L9Z7dy+lPuLAhxOJzxnajsbjPoDAKOuAqZRtf1PQ==}
 
-  '@timonteutelink/template-types-lib@0.0.14':
-    resolution: {integrity: sha512-GBuqq0Fii73OeWcjCAnzlqPm7FBTKVHLK3SuQVI7jgSHlKHkqmWd33/xB++t2NVuPpRmI+Wzvmsy1fVxvgWjvw==}
+  '@timonteutelink/template-types-lib@0.0.15':
+    resolution: {integrity: sha512-XMaqQKDy0LPuhJ9Cq8ag3O2D1tZSNiJoxdswRTdJiRYqRy5Ja80hH//yAEUNW/4qCuuXleP7qW38YPFR2zrSgA==}
 
   '@tsconfig/node10@1.0.11':
     resolution: {integrity: sha512-DcRjDCujK/kCk/cUe8Xz8ZSpm8mS3mNNpta+jGCA6USEDfktlNvm1+IuZ9eTcDbNk41BHwpHHeW+N1lKCz4zOw==}
@@ -2301,6 +2297,7 @@ snapshots:
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
+    optional: true
 
   '@emnapi/runtime@1.4.0':
     dependencies:
@@ -2544,6 +2541,7 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
+    optional: true
 
   '@next/env@15.2.4': {}
 
@@ -2658,17 +2656,21 @@ snapshots:
       postcss: 8.5.3
       tailwindcss: 4.0.17
 
-  '@timonteutelink/template-types-lib@0.0.14':
+  '@timonteutelink/template-types-lib@0.0.15':
     dependencies:
       zod: 3.24.2
 
-  '@tsconfig/node10@1.0.11': {}
+  '@tsconfig/node10@1.0.11':
+    optional: true
 
-  '@tsconfig/node12@1.0.11': {}
+  '@tsconfig/node12@1.0.11':
+    optional: true
 
-  '@tsconfig/node14@1.0.3': {}
+  '@tsconfig/node14@1.0.3':
+    optional: true
 
-  '@tsconfig/node16@1.0.4': {}
+  '@tsconfig/node16@1.0.4':
+    optional: true
 
   '@types/estree@1.0.7': {}
 
@@ -2779,6 +2781,7 @@ snapshots:
   acorn-walk@8.3.4:
     dependencies:
       acorn: 8.14.1
+    optional: true
 
   acorn@8.14.1: {}
 
@@ -2806,7 +2809,8 @@ snapshots:
       normalize-path: 3.0.0
       picomatch: 2.3.1
 
-  arg@4.1.3: {}
+  arg@4.1.3:
+    optional: true
 
   arg@5.0.2: {}
 
@@ -2975,7 +2979,8 @@ snapshots:
 
   concat-map@0.0.1: {}
 
-  create-require@1.1.1: {}
+  create-require@1.1.1:
+    optional: true
 
   cross-spawn@7.0.6:
     dependencies:
@@ -3027,7 +3032,8 @@ snapshots:
 
   didyoumean@1.2.2: {}
 
-  diff@4.0.2: {}
+  diff@4.0.2:
+    optional: true
 
   dlv@1.1.3: {}
 
@@ -3723,7 +3729,8 @@ snapshots:
 
   lru-cache@11.1.0: {}
 
-  make-error@1.3.6: {}
+  make-error@1.3.6:
+    optional: true
 
   math-intrinsics@1.1.0: {}
 
@@ -4281,6 +4288,7 @@ snapshots:
       typescript: 5.8.2
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
+    optional: true
 
   tslib@2.8.1: {}
 
@@ -4386,7 +4394,8 @@ snapshots:
 
   util-deprecate@1.0.2: {}
 
-  v8-compile-cache-lib@3.0.1: {}
+  v8-compile-cache-lib@3.0.1:
+    optional: true
 
   which-boxed-primitive@1.1.1:
     dependencies:
@@ -4451,7 +4460,8 @@ snapshots:
 
   yaml@2.7.1: {}
 
-  yn@3.1.1: {}
+  yn@3.1.1:
+    optional: true
 
   yocto-queue@0.1.0: {}
 
