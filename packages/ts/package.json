@@ -1,0 +1,28 @@
+{
+  "name": "@repo/ts",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.13.10",
+    "eslint": "^9.23.0",
+    "typescript": "5.8.2"
+  },
+  "dependencies": {
+    "@timonteutelink/template-types-lib": "0.0.14",
+    "@types/fs-extra": "^11.0.4",
+    "esbuild": "^0.25.2",
+    "fs-extra": "^11.3.0",
+    "glob": "^11.0.1",
+    "handlebars": "^4.7.8",
+    "zod": "^3.24.2"
+  }
+}

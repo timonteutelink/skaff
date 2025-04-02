@@ -1,0 +1,28 @@
+{
+  "name": "@timonteutelink/template-types-lib",
+  "version": "0.0.14",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "check-types": "tsc --noEmit",
+    "build": "tsc -p tsconfig.json",
+    "publish": "pnpm publish --access public"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.23.0",
+    "eslint": "^9.23.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-only-warn": "^1.1.0",
+    "typescript": "5.8.2",
+    "typescript-eslint": "^8.27.0"
+  },
+  "dependencies": {
+    "zod": "^3.24.2"
+  }
+}

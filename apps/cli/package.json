@@ -1,0 +1,27 @@
+{
+  "name": "cli",
+  "version": "0.1.0",
+  "private": true,
+  "bin": {
+    "____": "replace with deno compile executable",
+    "code-templator-cli": "./dist/apps/cli/src/main.js"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "dev": "ts-node --transpile-only src/main.ts",
+    "lint": "eslint --ext .ts src",
+    "build": "tsc",
+    "start": "node dist/apps/cli/src/main.js",
+    "test-cli": "pnpm build && pnpm start"
+  },
+  "dependencies": {
+    "@repo/ts": "workspace:*"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.13.10",
+    "eslint": "^9.23.0",
+    "typescript": "5.8.2"
+  }
+}
