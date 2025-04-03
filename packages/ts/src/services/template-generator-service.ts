@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import * as path from 'node:path';
 import { Template } from '../models/template-models';
 import Handlebars from 'handlebars';
+import { stringOrCallbackToString } from '../utils/utils';
 
 export class TemplateGeneratorService {
   public destinationProjectRoot: string;
@@ -21,29 +22,28 @@ export class TemplateGeneratorService {
       return startingTemplate;
     }
 
-    for (const subTemplate of Object.values(startingTemplate.subTemplates)) {
-      if (subTemplate.config.templateConfig.name === templateName) {
-        return subTemplate;
-      }
-      const deeper = this.findTemplate(templateName, subTemplate);
-      if (deeper) {
-        return deeper;
+    for (const subTemplateList of Object.values(startingTemplate.subTemplates)) {
+      for (const subTemplate of subTemplateList) {
+        if (subTemplate.config.templateConfig.name === templateName) {
+          return subTemplate;
+        }
+        const deeper = this.findTemplate(templateName, subTemplate);
+        if (deeper) {
+          return deeper;
+        }
       }
     }
 
     return null;
   }
 
-  private stringOrCallbackToString(stringOrCallback: string | ((settings: UserTemplateSettings) => string)): string {
-    return typeof stringOrCallback === 'string' ? stringOrCallback : stringOrCallback(this.parsedUserSettings);
-  }
 
   private getTargetPath(template: Template): string {
     const targetPath = template.config.targetPath;
     if (!targetPath) {
       return '.';
     }
-    return this.stringOrCallbackToString(targetPath);
+    return stringOrCallbackToString(targetPath, this.parsedUserSettings);
   }
 
   private getAbsoluteTargetPath(template: Template): string {
@@ -92,7 +92,7 @@ export class TemplateGeneratorService {
     const sideEffects = template.config.sideEffects;
     await Promise.all(
       sideEffects.map(({ filePath, apply }) =>
-        this.applySideEffect(this.stringOrCallbackToString(filePath), apply)
+        this.applySideEffect(stringOrCallbackToString(filePath, this.parsedUserSettings), apply)
       )
     );
   }

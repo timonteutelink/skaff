@@ -6,6 +6,8 @@ import {
 	TemplateConfigModule,
 	UserTemplateSettings
 } from '@timonteutelink/template-types-lib';
+import zodToJsonSchema from 'zod-to-json-schema';
+import { TemplateDTO } from '../utils/types';
 
 export class Template {
 	// The directory that contains the templateConfig.ts file.
@@ -46,7 +48,6 @@ export class Template {
 	 */
 	public static async createAllTemplates(rootDir: string): Promise<Template> {
 		const configs = await loadAllTemplateConfigs(rootDir);
-		console.log(configs);
 		const templatesMap: Record<string, Template> = {};
 
 		// Create Template instances only for directories with an adjacent "templates" folder.
@@ -146,6 +147,21 @@ export class Template {
 		const generatorService = new TemplateGeneratorService(this, userSettings, rootDestinationDir);
 		const resultPath = await generatorService.instantiateTemplate(this.config.templateConfig.name);
 		console.log(`Templated files at: ${resultPath}`);
+	}
+
+	public mapTemplateToDTO(): TemplateDTO {
+		const flattenedChildren = Object.values(this.subTemplates || {}).flat();
+
+		return {
+			dir: this.dir,
+			config: {
+				templateConfig: this.config.templateConfig,
+				templateSettingsSchema: zodToJsonSchema(this.config.templateSettingsSchema),
+			},
+			templatesDir: this.templatesDir,
+			subTemplates: flattenedChildren.map(child => child.mapTemplateToDTO()),
+			refDir: this.refDir,
+		};
 	}
 }
 
