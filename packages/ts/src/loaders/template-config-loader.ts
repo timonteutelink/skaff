@@ -13,6 +13,18 @@ import * as ts from 'typescript';
 import { pathToFileURL } from 'url';
 
 /**
+ * Holds information about a template configuration file and its optional reference.
+ */
+interface TemplateConfigFileInfo {
+	configPath: string;
+	refDir?: string;
+}
+
+export type TemplateConfigWithFileInfo = {
+	templateConfig: TemplateConfigModule<UserTemplateSettings>;
+} & TemplateConfigFileInfo;
+
+/**
  * Performs type checking on the given file using the TypeScript Compiler API.
  * It uses the compiler options loaded from your custom tsconfig.
  */
@@ -54,32 +66,32 @@ function typeCheckFile(filePath: string): void {
 /**
  * Recursively scans the given directory for template configuration files.
  * It looks for directories that either contain a templateConfig.ts file or a templateRef.json file.
- * In case of templateRef.json, it reads the JSON (expecting a single key with a relative path)
+ * For templateRef.json, it reads the JSON (expecting a single key with a relative path)
  * and includes the templateConfig.ts file from that referenced folder.
  */
-function findTemplateConfigFiles(dir: string): string[] {
-	let results: string[] = [];
+function findTemplateConfigFiles(dir: string): TemplateConfigFileInfo[] {
+	let results: TemplateConfigFileInfo[] = [];
+
 	const candidate = path.join(dir, 'templateConfig.ts');
 	if (fs.existsSync(candidate)) {
-		results.push(candidate);
+		results.push({ configPath: candidate });
 	}
+
 	const entries = fs.readdirSync(dir, { withFileTypes: true });
 	for (const entry of entries) {
 		const fullPath = path.join(dir, entry.name);
 		if (entry.isDirectory()) {
-			const candidate = path.join(fullPath, 'templateConfig.ts');
-			if (fs.existsSync(candidate)) {
-				results.push(candidate);
-			}
 			const refCandidate = path.join(fullPath, 'templateRef.json');
 			if (fs.existsSync(refCandidate)) {
 				try {
 					const refData = JSON.parse(fs.readFileSync(refCandidate, 'utf-8'));
 					const refRelativePath = Object.values(refData)[0];
 					if (typeof refRelativePath === 'string') {
-						const resolvedRefPath = path.join(fullPath, refRelativePath, 'templateConfig.ts');
+						const resolvedRefDir = path.join(fullPath, refRelativePath);
+						const resolvedRefPath = path.join(resolvedRefDir, 'templateConfig.ts');
 						if (fs.existsSync(resolvedRefPath)) {
-							results.push(resolvedRefPath);
+							results.push({ configPath: resolvedRefPath, refDir: fullPath });
+							results = results.concat(findTemplateConfigFilesInSubdirs(resolvedRefDir));
 						} else {
 							console.warn(`Referenced templateConfig.ts not found at ${resolvedRefPath}`);
 						}
@@ -87,28 +99,44 @@ function findTemplateConfigFiles(dir: string): string[] {
 				} catch (err) {
 					console.warn(`Error parsing ${refCandidate}: ${(err as Error).message}`);
 				}
+			} else {
+				results = results.concat(findTemplateConfigFiles(fullPath));
 			}
+		}
+	}
+	return results;
+}
+
+function findTemplateConfigFilesInSubdirs(dir: string): TemplateConfigFileInfo[] {
+	let results: TemplateConfigFileInfo[] = [];
+	const entries = fs.readdirSync(dir, { withFileTypes: true });
+	for (const entry of entries) {
+		const fullPath = path.join(dir, entry.name);
+		if (entry.isDirectory()) {
 			results = results.concat(findTemplateConfigFiles(fullPath));
 		}
 	}
 	return results;
 }
 
-async function importTemplateConfigModule<T extends UserTemplateSettings>(cachePath: string): Promise<Record<string, TemplateConfigModule<T>>> {
+/**
+ * Imports and validates the bundled template configuration module.
+ */
+async function importTemplateConfigModule(cachePath: string): Promise<Record<string, TemplateConfigWithFileInfo>> {
 	const moduleObj = await import(/* webpackIgnore: true */ pathToFileURL(cachePath).href);
-
-	const configs = moduleObj.configs;
+	const configs = moduleObj.configs as Record<string, TemplateConfigWithFileInfo>;
 
 	for (const key in configs) {
-		const evaluatedModule = configs[key] as TemplateConfigModule<T>;
-		const parsedTemplateConfig = templateConfigSchema.safeParse(evaluatedModule.templateConfig);
+		const evaluatedModule = configs[key];
+		if (!evaluatedModule) continue;
+		const parsedTemplateConfig = templateConfigSchema.safeParse(evaluatedModule.templateConfig.templateConfig);
 		if (!parsedTemplateConfig.success) {
 			throw new Error(`Invalid template configuration in ${key}: ${parsedTemplateConfig.error.message}`);
 		}
-		evaluatedModule.templateConfig = parsedTemplateConfig.data;
+		evaluatedModule.templateConfig.templateConfig = parsedTemplateConfig.data;
 	}
 
-	return moduleObj.configs;
+	return configs;
 }
 
 /**
@@ -119,39 +147,51 @@ async function importTemplateConfigModule<T extends UserTemplateSettings>(cacheP
  *
  * Additionally, before bundling, it writes an index.ts to the file system, type-checks it,
  * and removes it. This ensures that all modules type-check correctly.
+ *
+ * The exported value for each template now includes metadata for:
+ *  - the path of the actual templateConfig.ts file, and
+ *  - the path of the templateRef.json file (if applicable).
  */
-export async function loadAllTemplateConfigs<T extends UserTemplateSettings>(
+export async function loadAllTemplateConfigs(
 	rootDir: string
-): Promise<Record<string, TemplateConfigModule<T>>> {
+): Promise<Record<string, TemplateConfigWithFileInfo>> {
 	const configFiles = findTemplateConfigFiles(rootDir);
 
 	if (configFiles.length === 0) {
 		throw new Error(`No templateConfig.ts files found under ${rootDir}`);
 	}
 
-	const sortedFiles = configFiles.sort();
+	const sortedFiles = configFiles.sort((a, b) => a.configPath.localeCompare(b.configPath));
 	let combinedContent = '';
-	for (const file of sortedFiles) {
-		combinedContent += fs.readFileSync(file, 'utf-8');
+	for (const fileInfo of sortedFiles) {
+		combinedContent += fs.readFileSync(fileInfo.configPath, 'utf-8');
 	}
 	const hash = createHash('sha256').update(combinedContent).digest('hex');
 
 	const tmpDir = path.join(tmpdir(), "code-templator-cache");
 	fs.mkdirSync(tmpDir, { recursive: true });
-	const cachePath = path.join(tmpDir, "", `${hash}.mjs`);
+	const cachePath = path.join(tmpDir, `${hash}.mjs`);
 
 	if (fs.existsSync(cachePath)) {
 		console.log(`Using cached bundle at ${cachePath}`);
-		return importTemplateConfigModule<T>(cachePath);
+		return importTemplateConfigModule(cachePath);
 	}
 
 	let importsCode = '';
 	const exportEntries: string[] = [];
-	sortedFiles.forEach((file, index) => {
-		const relPath = path.relative(rootDir, file).replace(/\\/g, '/');
+	sortedFiles.forEach((fileInfo, index) => {
+		const relConfigPath = path.relative(rootDir, fileInfo.configPath).replace(/\\/g, '/');
+		const importPath = `./${relConfigPath.replace(/\.ts$/, '')}`;
 		const importAlias = `config${index}`;
-		importsCode += `import ${importAlias} from './${(relPath + "").replace(/\.ts$/, '')}';\n`;
-		exportEntries.push(`'${relPath}': ${importAlias}`);
+		importsCode += `import ${importAlias} from '${importPath}';\n`;
+
+		let entry = `'${relConfigPath}': { templateConfig: ${importAlias}, configPath: '${relConfigPath}'`;
+		if (fileInfo.refDir) {
+			const relRefPath = path.relative(rootDir, fileInfo.refDir).replace(/\\/g, '/');
+			entry += `, refDir: '${relRefPath}'`;
+		}
+		entry += ' }';
+		exportEntries.push(entry);
 	});
 	const indexCode = `${importsCode}\nexport const configs = {\n${exportEntries.join(
 		',\n'
@@ -188,5 +228,6 @@ export async function loadAllTemplateConfigs<T extends UserTemplateSettings>(
 	fs.writeFileSync(cachePath, bundledCode, 'utf-8');
 	console.log(`Created bundled template configs at ${cachePath}`);
 
-	return importTemplateConfigModule<T>(cachePath);
+	return importTemplateConfigModule(cachePath);
 }
+

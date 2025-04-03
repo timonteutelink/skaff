@@ -8,29 +8,26 @@ import Handlebars from 'handlebars';
 export class TemplateGeneratorService {
   public destinationProjectRoot: string;
   public rootTemplate: Template;
-  public parsedUserSettings: UserTemplateSettings;//this is only for root but needed for every single template. Create datastructure to store the template with the settings together.
-  // There should be a Project class which holds the rootTemplate and the destinationProjectRoot. Then it can parse the templateConfig.json in the destinationProjectRoot and store the settings of all subtemplates. So will need a nested structure of UserTemplateSettings. Make sure children have available options of parents
+  public parsedUserSettings: UserTemplateSettings;
 
   constructor(rootTemplate: Template, userSettings: UserTemplateSettings, destinationProjectRoot: string) {
     this.destinationProjectRoot = destinationProjectRoot;
     this.rootTemplate = rootTemplate;
-    this.parsedUserSettings = rootTemplate.templateConfigModule.templateSettingsSchema.parse(userSettings);
+    this.parsedUserSettings = rootTemplate.config.templateSettingsSchema.parse(userSettings);
   }
 
   private findTemplate(templateName: string, startingTemplate: Template = this.rootTemplate): Template | null {
-    if (startingTemplate.templateConfigModule.templateConfig.name == templateName) {
-      return startingTemplate
+    if (startingTemplate.config.templateConfig.name === templateName) {
+      return startingTemplate;
     }
 
-    for (const [subTemplatesDir, subTemplates] of Object.entries(startingTemplate.subTemplates)) {
-      for (const [subTemplateDir, subTemplate] of Object.entries(subTemplates)) {
-        if (subTemplate.templateConfigModule.templateConfig.name == templateName) {
-          return subTemplate;
-        }
-        const deeper = this.findTemplate(templateName, subTemplate);
-        if (deeper) {
-          return deeper;
-        }
+    for (const subTemplate of Object.values(startingTemplate.subTemplates)) {
+      if (subTemplate.config.templateConfig.name === templateName) {
+        return subTemplate;
+      }
+      const deeper = this.findTemplate(templateName, subTemplate);
+      if (deeper) {
+        return deeper;
       }
     }
 
@@ -42,7 +39,7 @@ export class TemplateGeneratorService {
   }
 
   private getTargetPath(template: Template): string {
-    const targetPath = template.templateConfigModule.targetPath;
+    const targetPath = template.config.targetPath;
     if (!targetPath) {
       return '.';
     }
@@ -53,40 +50,33 @@ export class TemplateGeneratorService {
     return path.join(this.destinationProjectRoot, this.getTargetPath(template));
   }
 
-  // step 1: copy all files to be templated from 'templates' to destination
-  // step 2: apply side effects
-  // step 3 (Optional): show results to user and iterative with user to improve(only on small templates)
-  public async instantiateTemplate(templateName: string): Promise<string> {
-    const template = this.findTemplate(templateName);
-    if (!template) {
-      throw Error(`Template ${templateName} could not be found in rootTemplate ${this.rootTemplate.templateConfigModule.templateConfig.name}`)
-    }
-    await this.copyDirectory(template);
-    await this.applySideEffects(template);
-    return this.getAbsoluteTargetPath(template);
-  }
-
-  private async copyDirectory(
-    template: Template,
-  ): Promise<void> {
-    const src = template.templatesDirPath;
+  /**
+   * Copies all files from the template’s adjacent "templates" directory to the destination.
+   * Files are processed with Handlebars. If a file ends in ".hbs", the extension is removed.
+   */
+  private async copyDirectory(template: Template): Promise<void> {
+    const src = template.templatesDir;
     const dest = this.getAbsoluteTargetPath(template);
 
-    // Create the destination directory if it does not exist.
+    // Ensure the destination directory exists.
     await fs.mkdir(dest, { recursive: true });
 
     const entries = await glob("**/*", { cwd: src, dot: true });
 
     for (const entry of entries) {
       const srcPath = path.join(src, entry);
-      const destPath = path.join(dest, entry);
+      let destPath = path.join(dest, entry);
+      // Remove the ".hbs" extension if present.
+      if (destPath.endsWith('.hbs')) {
+        destPath = destPath.slice(0, -4);
+      }
 
       const stats = await fs.stat(srcPath);
       if (stats.isDirectory()) continue;
 
       const content = await fs.readFile(srcPath, "utf-8");
-      const template = Handlebars.compile(content);
-      const result = template(this.parsedUserSettings);
+      const compiled = Handlebars.compile(content);
+      const result = compiled(this.parsedUserSettings);
 
       await fs.ensureDir(path.dirname(destPath));
       await fs.writeFile(destPath, result, "utf-8");
@@ -95,13 +85,25 @@ export class TemplateGeneratorService {
     }
   }
 
+  /**
+   * Applies side effects defined in the template configuration.
+   */
   private async applySideEffects(template: Template) {
-    const sideEffects = template.templateConfigModule.sideEffects;
-
-    await Promise.all(sideEffects.map(({ filePath, apply }) => this.applySideEffect(this.stringOrCallbackToString(filePath), apply)))
+    const sideEffects = template.config.sideEffects;
+    await Promise.all(
+      sideEffects.map(({ filePath, apply }) =>
+        this.applySideEffect(this.stringOrCallbackToString(filePath), apply)
+      )
+    );
   }
 
-  private async applySideEffect(filePath: string, sideEffectFunction: SideEffectFunction<UserTemplateSettings>) {
+  /**
+   * Reads the target file, applies the side effect function using Handlebars templating data, and writes the new content.
+   */
+  private async applySideEffect(
+    filePath: string,
+    sideEffectFunction: SideEffectFunction<UserTemplateSettings>
+  ) {
     const absoluteFilePath = path.join(this.destinationProjectRoot, filePath);
     const oldFileContents = await fs.readFile(absoluteFilePath, 'utf8');
     const sideEffectResult = sideEffectFunction(this.parsedUserSettings, oldFileContents);
@@ -110,4 +112,24 @@ export class TemplateGeneratorService {
     }
     await fs.writeFile(absoluteFilePath, sideEffectResult, 'utf8');
   }
+
+  /**
+   * Instantiates the template by copying files from the template’s directory, processing them with Handlebars,
+   * and then applying any defined side effects.
+   *
+   * @param templateName The name of the template to instantiate.
+   * @returns The absolute path where templated files are written.
+   */
+  public async instantiateTemplate(templateName: string): Promise<string> {
+    const template = this.findTemplate(templateName);
+    if (!template) {
+      throw Error(
+        `Template ${templateName} could not be found in rootTemplate ${this.rootTemplate.config.templateConfig.name}`
+      );
+    }
+    await this.copyDirectory(template);
+    await this.applySideEffects(template);
+    return this.getAbsoluteTargetPath(template);
+  }
 }
+

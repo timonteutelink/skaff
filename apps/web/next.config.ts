@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
 		if (isServer) {
 			config.externals = config.externals || [];
 			config.externals.push({ esbuild: 'commonjs esbuild' });
+			config.resolve.alias = {
+				...config.resolve.alias,
+				'handlebars': 'handlebars/dist/handlebars.js'
+			};
 		}
 
 		return config;

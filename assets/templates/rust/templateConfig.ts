@@ -15,7 +15,6 @@ const templateConfig: TemplateConfig = {
 	name: 'rust',
 	description: 'Rust template',
 	author: "Timon Teutelink"
-
 };
 
 const templateConfigModule: TemplateConfigModule<z.infer<typeof templateSettingsSchema>> = {
