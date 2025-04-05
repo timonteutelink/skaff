@@ -1,18 +1,19 @@
-import { SideEffectFunction, UserTemplateSettings } from '@timonteutelink/template-types-lib';
-import { glob } from 'glob';
+import { UserTemplateSettings, SideEffectFunction } from '@timonteutelink/template-types-lib';
 import fs from 'fs-extra';
-import * as path from 'node:path';
-import { Template } from '../models/template-models';
+import { glob } from 'glob';
 import Handlebars from 'handlebars';
+import * as path from 'path';
+import { Template } from '../models/template-models';
 import { stringOrCallbackToString } from '../utils/utils';
 
+
 export class TemplateGeneratorService {
-  public destinationProjectRoot: string;
+  public destinationProject: Project;
   public rootTemplate: Template;
   public parsedUserSettings: UserTemplateSettings;
 
-  constructor(rootTemplate: Template, userSettings: UserTemplateSettings, destinationProjectRoot: string) {
-    this.destinationProjectRoot = destinationProjectRoot;
+  constructor(rootTemplate: Template, userSettings: UserTemplateSettings, destinationProject: Project) {
+    this.destinationProject = destinationProject;
     this.rootTemplate = rootTemplate;
     this.parsedUserSettings = rootTemplate.config.templateSettingsSchema.parse(userSettings);
   }
@@ -47,7 +48,7 @@ export class TemplateGeneratorService {
   }
 
   private getAbsoluteTargetPath(template: Template): string {
-    return path.join(this.destinationProjectRoot, this.getTargetPath(template));
+    return path.join(this.destinationProject.absoluteRootDir, this.getTargetPath(template));
   }
 
   /**
@@ -55,7 +56,7 @@ export class TemplateGeneratorService {
    * Files are processed with Handlebars. If a file ends in ".hbs", the extension is removed.
    */
   private async copyDirectory(template: Template): Promise<void> {
-    const src = template.templatesDir;
+    const src = template.relativeTemplatesDir;
     const dest = this.getAbsoluteTargetPath(template);
 
     // Ensure the destination directory exists.
@@ -91,8 +92,7 @@ export class TemplateGeneratorService {
   private async applySideEffects(template: Template) {
     const sideEffects = template.config.sideEffects;
     await Promise.all(
-      sideEffects.map(({ filePath, apply }) =>
-        this.applySideEffect(stringOrCallbackToString(filePath, this.parsedUserSettings), apply)
+      sideEffects.map(({ filePath, apply }) => this.applySideEffect(stringOrCallbackToString(filePath, this.parsedUserSettings), apply)
       )
     );
   }

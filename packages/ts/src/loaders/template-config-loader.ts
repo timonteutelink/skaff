@@ -193,10 +193,10 @@ export async function loadAllTemplateConfigs(
 		entry += ' }';
 		exportEntries.push(entry);
 	});
+	// add type info for full type checks. Probably something like Record<string, TemplateConfigModule<any>>
 	const indexCode = `${importsCode}\nexport const configs = {\n${exportEntries.join(
 		',\n'
 	)}\n};`;
-	console.log(`Generated temporary index file for bundling:\n${indexCode}`);
 
 	const tempIndexPath = path.join(rootDir, `.__temp_index_${randomUUID()}.ts`);
 	fs.writeFileSync(tempIndexPath, indexCode, 'utf-8');

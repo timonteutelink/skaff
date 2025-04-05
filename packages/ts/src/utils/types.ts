@@ -7,7 +7,7 @@ export interface TemplateDTO {
     templateSettingsSchema: object;
   };
   templatesDir: string;
-  subTemplates: TemplateDTO[];
+  subTemplates: Record<string, TemplateDTO[]>;
   refDir?: string;
 }
 

@@ -10,27 +10,42 @@ import zodToJsonSchema from 'zod-to-json-schema';
 import { TemplateDTO } from '../utils/types';
 
 export class Template {
-	// The directory that contains the templateConfig.ts file.
-	public dir: string;
 	// The loaded configuration module.
 	public config: TemplateConfigModule<UserTemplateSettings>;
-	// The adjacent "templates" directory containing the files to be templated.
-	public templatesDir: string;
 	// Subtemplates, keyed by the immediate subdirectory name (each key holds an array of children).
 	public subTemplates: Record<string, Template[]> = {};
 	// A reference to the parent template, if this is a subtemplate.
 	public parentTemplate?: Template;
+
+	// The directory containing the root template
+	public absoluteBaseDir: string;           // The absolute path of the parent directory of the root template. All uri will be based from here.
+
+	// The directory containing the "templateConfig.ts" and "templates" directory
+	public absoluteDir: string;       // The absolute path of this template’s directory.
+	public relativeDir: string;       // Relative path from the rootDir.
+
+	// paths to "templates" directory containing the files to be templated.
+	public absoluteTemplatesDir: string;
+	public relativeTemplatesDir: string;
+
 	// If this template was reffed, store the dir containing the templateRef.json.
-	public refDir?: string;
+	public relativeRefDir?: string;
 
 	private constructor(
-		dir: string,
 		config: TemplateConfigModule<UserTemplateSettings>,
-		templatesDir: string
+		baseDir: string,
+		absDir: string,
+		templatesDir: string,
+		refDir?: string
 	) {
-		this.dir = dir;
+		this.absoluteBaseDir = baseDir;
+		this.absoluteDir = absDir;
+		this.relativeDir = path.relative(baseDir, absDir);
+		this.absoluteTemplatesDir = templatesDir;
+		this.relativeTemplatesDir = path.relative(baseDir, templatesDir);
+		this.relativeRefDir = refDir;
+
 		this.config = config;
-		this.templatesDir = templatesDir;
 	}
 
 	/**
@@ -43,16 +58,18 @@ export class Template {
 	 *   <parent-dir>/project-types/<sub-template-dir>
 	 * then the key will be 'project-types'.
 	 *
-	 * @param rootDir The root directory containing all template configurations.
+	 * @param rootTemplateDir The directory containing the templateConfig.ts and templates folder of the root of this template
 	 * @returns A single top-level Template instance.
 	 */
-	public static async createAllTemplates(rootDir: string): Promise<Template> {
-		const configs = await loadAllTemplateConfigs(rootDir);
+	public static async createAllTemplates(rootTemplateDir: string): Promise<Template> {
+		const absoluteRootDir = path.resolve(rootTemplateDir);
+		const absoluteBaseDir = path.dirname(absoluteRootDir);
+		const configs = await loadAllTemplateConfigs(absoluteRootDir);
 		const templatesMap: Record<string, Template> = {};
 
 		// Create Template instances only for directories with an adjacent "templates" folder.
 		for (const info of Object.values(configs)) {
-			const templateDir = path.dirname(path.resolve(rootDir, info.configPath));
+			const templateDir = path.dirname(path.resolve(absoluteRootDir, info.configPath));
 			const templatesDir = path.join(templateDir, 'templates');
 			try {
 				const stat = await fs.stat(templatesDir);
@@ -60,23 +77,19 @@ export class Template {
 			} catch {
 				continue;
 			}
-			const template = new Template(templateDir, info.templateConfig, templatesDir);
-			if (info.refDir) {
-				// Store the refDir as provided (it will be a relative path, e.g. "github-actions")
-				template.refDir = info.refDir;
-			}
+			const template = new Template(info.templateConfig, absoluteBaseDir, templateDir, templatesDir, info.refDir);
 			templatesMap[templateDir] = template;
 		}
 
 		const allTemplates = Object.values(templatesMap);
 
 		// First pass: Handle explicit parent–child links via templateRef.json.
-		// For each candidate with a refDir, we resolve it relative to the rootDir.
+		// For each candidate with a refDir, we resolve it relative to the absoluteRootDir.
 		// Then, we use path.dirname(refAbsolute) as the intended parent's directory,
 		// and use the basename (e.g. "github-actions") as the key.
 		for (const candidate of allTemplates) {
-			if (candidate.refDir) {
-				const refAbsolute = path.resolve(rootDir, candidate.refDir);
+			if (candidate.relativeRefDir) {
+				const refAbsolute = path.resolve(absoluteRootDir, candidate.relativeRefDir);
 				const intendedParentDir = path.dirname(refAbsolute);
 				const parent = templatesMap[intendedParentDir];
 				if (parent) {
@@ -99,18 +112,18 @@ export class Template {
 
 			for (const potentialParent of allTemplates) {
 				if (potentialParent === candidate) continue;
-				const relative = path.relative(potentialParent.dir, candidate.dir);
+				const relative = path.relative(potentialParent.absoluteDir, candidate.absoluteDir);
 				if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) continue;
 				const segments = relative.split(path.sep).filter(Boolean);
 				if (segments[0] === 'templates') continue;
-				if (potentialParent.dir.length > longestMatchLength) {
+				if (potentialParent.absoluteDir.length > longestMatchLength) {
 					immediateParent = potentialParent;
-					longestMatchLength = potentialParent.dir.length;
+					longestMatchLength = potentialParent.absoluteDir.length;
 				}
 			}
 
 			if (immediateParent) {
-				const relPath = path.relative(immediateParent.dir, candidate.dir);
+				const relPath = path.relative(immediateParent.absoluteDir, candidate.absoluteDir);
 				const key = relPath.split(path.sep)[0];
 				if (!key) continue;
 				if (!immediateParent.subTemplates[key]) {
@@ -150,17 +163,19 @@ export class Template {
 	}
 
 	public mapTemplateToDTO(): TemplateDTO {
-		const flattenedChildren = Object.values(this.subTemplates || {}).flat();
-
+		const subTemplates: Record<string, TemplateDTO[]> = {};
+		for (const [key, value] of Object.entries(this.subTemplates)) {
+			subTemplates[key] = value.map(template => template.mapTemplateToDTO());
+		}
 		return {
-			dir: this.dir,
+			dir: this.relativeDir,
 			config: {
 				templateConfig: this.config.templateConfig,
 				templateSettingsSchema: zodToJsonSchema(this.config.templateSettingsSchema),
 			},
-			templatesDir: this.templatesDir,
-			subTemplates: flattenedChildren.map(child => child.mapTemplateToDTO()),
-			refDir: this.refDir,
+			templatesDir: this.relativeTemplatesDir,
+			subTemplates,
+			refDir: this.relativeRefDir,
 		};
 	}
 }
