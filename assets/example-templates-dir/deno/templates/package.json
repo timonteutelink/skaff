@@ -1,0 +1,13 @@
+{
+  "name": "{{project_name}}",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {},
+  "dependencies": {},
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@types/node": "^22",
+    "eslint": "^9",
+    "typescript": "^5"
+  }
+}

@@ -1,7 +1,5 @@
 import { z } from 'zod';
-import { UserTemplateSettings } from './utils';
-
-export type StringOrCallback<T extends UserTemplateSettings> = string | ((settings: T) => string);
+import { StringOrCallback, UserTemplateSettings } from './utils';
 
 /**
  * Interface representing all mandatory options for a template.
@@ -27,6 +25,11 @@ export type SideEffectFunction<T extends UserTemplateSettings> = (templateSettin
 
 export type SideEffect<T extends UserTemplateSettings> = {
 	apply: SideEffectFunction<T>;
+	/**
+	 * The path to the file to be created or edited.
+	 * relative to project root
+	 * @example "./README.md"
+	 */
 	filePath: StringOrCallback<T>;
 };
 
@@ -37,6 +40,7 @@ export type SideEffect<T extends UserTemplateSettings> = {
 export interface TemplateConfigModule<TSchemaType extends UserTemplateSettings> {
 	/**
 	 * The target path for the template. Must be set on subtemplates.
+	 * relative to the project root
 	 * @default "."
 	 * @example "src"
 	 */

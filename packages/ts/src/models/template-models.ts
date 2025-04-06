@@ -8,6 +8,7 @@ import {
 } from '@timonteutelink/template-types-lib';
 import zodToJsonSchema from 'zod-to-json-schema';
 import { TemplateDTO } from '../utils/types';
+import { Project } from './project-models';
 
 export class Template {
 	// The loaded configuration module.
@@ -156,8 +157,8 @@ export class Template {
 	 * @param userSettings The settings provided by the user.
 	 * @param rootDestinationDir The directory where the generated files should be written.
 	 */
-	public async instantiate(userSettings: UserTemplateSettings, rootDestinationDir: string): Promise<void> {
-		const generatorService = new TemplateGeneratorService(this, userSettings, rootDestinationDir);
+	public async instantiate(userSettings: UserTemplateSettings, destinationProject: Project): Promise<void> {
+		const generatorService = new TemplateGeneratorService(this, userSettings, destinationProject);
 		const resultPath = await generatorService.instantiateTemplate(this.config.templateConfig.name);
 		console.log(`Templated files at: ${resultPath}`);
 	}
