@@ -1,6 +1,7 @@
 'use client';
 import { createNewProject, retrieveProjects, retrieveProjectSearchPaths, retrieveTemplates } from "@/app/actions";
 import TablePage, { FieldInfo } from "@/components/general/TablePage";
+import { TemplateSettingsDialog } from "@/components/general/TemplateSettingsDialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -58,7 +59,32 @@ export default function TemplatesListPage() {
     });
   }, []);
 
-  const buttons = useMemo(() => (
+  const templateSettingsDialog = useMemo(() => {
+    const selectedTemplateSettingsSchema = templates.find((template) => template.config.templateConfig.name === selectedTemplate)?.config.templateSettingsSchema;
+    if (!selectedTemplateSettingsSchema) {
+      return null;
+    }
+    return (<TemplateSettingsDialog
+      projectName={projectName}
+      selectedTemplate={selectedTemplate}
+      selectedTemplateSettingsSchema={selectedTemplateSettingsSchema}
+
+      action={handleCreateProject}
+      cancel={() => {
+        setOpen(false);
+        setProjectName("");
+        setSelectedTemplate("");
+        setSelectedDirectory("");
+      }}
+    >
+      <Button disabled={!projectName || !selectedTemplate}>
+        Create Project
+      </Button>
+    </TemplateSettingsDialog>)
+  }, [projectName, selectedTemplate, handleCreateProject, templates]);
+
+
+  const createProjectDialog = useMemo(() => (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="gap-2">
@@ -73,22 +99,13 @@ export default function TemplatesListPage() {
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="directory">Project Directory</Label>
-            <Select value={selectedDirectory} onValueChange={setSelectedDirectory}>
-              <SelectTrigger id="directory">
-                <SelectValue placeholder="Select a directory" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Directories</SelectLabel>
-                  {projectSearchPaths.map((path) => (
-                    <SelectItem key={path} value={path}>
-                      {path}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="project-name">Project Name</Label>
+            <Input
+              id="project-name"
+              placeholder="My Awesome Project"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="template">Template</Label>
@@ -109,19 +126,26 @@ export default function TemplatesListPage() {
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="project-name">Project Name</Label>
-            <Input
-              id="project-name"
-              placeholder="My Awesome Project"
-              value={projectName}
-              onChange={(e) => setProjectName(e.target.value)}
-            />
+            <Label htmlFor="directory">Project Directory</Label>
+            <Select value={selectedDirectory} onValueChange={setSelectedDirectory}>
+              <SelectTrigger id="directory">
+                <SelectValue placeholder="Select a directory" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Directories</SelectLabel>
+                  {projectSearchPaths.map((path) => (
+                    <SelectItem key={path} value={path}>
+                      {path}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleCreateProject} disabled={!projectName || !selectedTemplate}>
-            Create Project
-          </Button>
+          {templateSettingsDialog}
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -133,7 +157,7 @@ export default function TemplatesListPage() {
       data={projects}
       columnMapping={columnMapping}
       caption="A list of your projects."
-      buttons={buttons}
+      buttons={createProjectDialog}
     />
   )
 }

@@ -122,6 +122,7 @@ export class TemplateGeneratorService {
    * @returns The absolute path where templated files are written.
    */
   public async instantiateTemplate(templateName: string): Promise<string> {
+    //TODO: make sure this passes all parents templates already initialized settings to the callbacks on the subtemplates and sideeffects
     const template = this.findTemplate(templateName);
     if (!template) {
       throw Error(

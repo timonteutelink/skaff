@@ -29,8 +29,6 @@ export default function TemplatesListPage() {
   return (
     <TablePage<TemplateDTO>
       title="Detected Templates"
-      addButtonText="Create New Template"
-      addButtonUrl="/templates/create"
       data={templates}
       columnMapping={columnMapping}
       caption="A list of your templates."

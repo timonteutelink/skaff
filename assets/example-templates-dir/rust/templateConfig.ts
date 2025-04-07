@@ -2,13 +2,14 @@ import { z } from 'zod';
 import { TemplateConfig, TemplateConfigModule, SideEffectFunction } from '@timonteutelink/template-types-lib';
 
 const templateSettingsSchema = z.object({
-	projectName: z.string(), //this should not need to be here. Make sure it is added to the object in every function
 	author: z.string().optional(),
 });
 
+export type TemplateSettings = z.infer<typeof templateSettingsSchema>;
+
 // can be done with a file in templates folder in this case just testing the sideeffects
-const sideEffectFunction: SideEffectFunction<z.infer<typeof templateSettingsSchema>> = (templateSettings, oldFileContents) => {
-	return `Project Name: ${templateSettings.projectName}\nAuthor: ${templateSettings.author || 'Unknown'}`;
+const sideEffectFunction: SideEffectFunction<TemplateSettings> = (templateSettings, oldFileContents) => {
+	return `Project Name: ${""}\nAuthor: ${templateSettings.author || 'Unknown'}`;
 };
 
 const templateConfig: TemplateConfig = {
@@ -17,7 +18,7 @@ const templateConfig: TemplateConfig = {
 	author: "Timon Teutelink"
 };
 
-const templateConfigModule: TemplateConfigModule<z.infer<typeof templateSettingsSchema>> = {
+const templateConfigModule: TemplateConfigModule<TemplateSettings> = {
 	templateConfig,
 	targetPath: '.',
 	templateSettingsSchema,

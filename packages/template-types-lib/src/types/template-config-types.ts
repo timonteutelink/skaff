@@ -21,7 +21,7 @@ export type TemplateConfig = z.infer<typeof templateConfigSchema>;
  * @param oldFileContents - The old contents of the file to be edited, if any.
  * @returns The new contents of the file.
  */
-export type SideEffectFunction<T extends UserTemplateSettings> = (templateSettings: T, oldFileContents?: string) => string;
+export type SideEffectFunction<T extends UserTemplateSettings> = (projectName: string, templateSettings: T, oldFileContents?: string) => string;
 
 export type SideEffect<T extends UserTemplateSettings> = {
 	apply: SideEffectFunction<T>;

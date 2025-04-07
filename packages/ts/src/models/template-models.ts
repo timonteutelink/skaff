@@ -162,6 +162,7 @@ export class Template {
 		const resultPath = await generatorService.instantiateTemplate(this.config.templateConfig.name);
 		console.log(`Templated files at: ${resultPath}`);
 	}
+	//TODO add support for loose templates which can be instantiated anywhere and will not be tracked using a templateSettings.json
 
 	/**
 	 * Instantiates the root template using the TemplateGeneratorService.
