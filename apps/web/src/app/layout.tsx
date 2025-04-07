@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { MainSidebar } from "@/components/general/MainSidebar";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -13,10 +15,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`antialiased`}
-      >
-        {children}
+      <body className="antialiased">
+        <SidebarProvider>
+          <MainSidebar />
+          <SidebarInset>
+            <main className="p-4">{children}</main>
+          </SidebarInset>
+        </SidebarProvider>
       </body>
     </html>
   );

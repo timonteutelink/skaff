@@ -6,22 +6,38 @@ import { ProjectDTO, TemplateDTO } from "@repo/ts/utils/types";
 
 export type Result<T> = { data: T } | { error: string };
 
-export async function runStuff() {
-	await ROOT_TEMPLATE_REGISTRY.loadTemplates();
-}
-
 export async function retrieveTemplates(): Promise<TemplateDTO[]> {
-	await ROOT_TEMPLATE_REGISTRY.loadTemplates();
+	await ROOT_TEMPLATE_REGISTRY.getTemplates();
 
 	const templates = ROOT_TEMPLATE_REGISTRY.templates.map(template => template.mapToDTO());
 
 	return templates;
 }
 
+export async function retrieveTemplate(templateName: string): Promise<TemplateDTO | null> {
+	const template = await ROOT_TEMPLATE_REGISTRY.findTemplate(templateName);
+
+	if (template) {
+		return template.mapToDTO();
+	}
+
+	return null;
+}
+
 export async function retrieveProjects(): Promise<ProjectDTO[]> {
-	await PROJECT_REGISTRY.loadProjects();
+	await PROJECT_REGISTRY.getProjects();
 
 	const projects = PROJECT_REGISTRY.projects.map(project => project.mapToDTO());
 
 	return projects;
+}
+
+export async function retrieveProject(projectName: string): Promise<ProjectDTO | null> {
+	const project = await PROJECT_REGISTRY.findProject(projectName);
+
+	if (project) {
+		return project.mapToDTO();
+	}
+
+	return null;
 }

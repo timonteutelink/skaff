@@ -1,12 +1,10 @@
 'use client';
 
 import { useCallback } from "react";
-import { runStuff } from "./actions";
 
 export default function Home() {
   const handleRunStuff = useCallback(async () => {
     console.log('Running stuff');
-    await runStuff();
   }, []);
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">

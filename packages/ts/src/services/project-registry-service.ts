@@ -8,7 +8,7 @@ export class ProjectRegistry {
 
 	constructor(private searchPaths: string[]) { }
 
-	async loadProjects(): Promise<void> {
+	private async loadProjects(): Promise<void> {
 		for (const searchPath of this.searchPaths) {
 			const dirs = await fs.readdir(searchPath);
 			for (const dir of dirs) {
@@ -27,8 +27,35 @@ export class ProjectRegistry {
 					}
 				}
 			}
-
 		}
+	}
+
+	async getProjects(): Promise<Project[]> {
+		if (!this.projects.length) {
+			await this.loadProjects();
+			if (!this.projects.length) {
+				console.error("No projects found.");
+				return [];
+			}
+		}
+		return this.projects;
+	}
+
+	async findProject(projectName: string): Promise<Project | null> {
+		if (!this.projects.length) {
+			await this.loadProjects();
+			if (!this.projects.length) {
+				console.error("No projects found.");
+				return null;
+			}
+		}
+
+		for (const project of this.projects) {
+			if (project.instantiatedProjectSettings.projectName === projectName) {
+				return project;
+			}
+		}
+		return null;
 	}
 }
 

@@ -39,6 +39,7 @@ export class Project {
 		return {
 			name: this.instantiatedProjectSettings.projectName,
 			absPath: this.absoluteRootDir,
+			rootTemplateName: this.instantiatedProjectSettings.rootTemplateName,
 			settings: this.instantiatedProjectSettings
 		}
 	}
