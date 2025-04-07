@@ -37,6 +37,7 @@ export type SideEffect<T extends UserTemplateSettings> = {
  * Interface representing the module to be exported from every templateConfig.ts file.
  * @template TSchemaType - The type of the schema used for template settings.
  */
+//TODO: add TParentSchemaType parent settings as seperate generic. This will be aggregated with the TSchemaType for the sideeffects and targetPath
 export interface TemplateConfigModule<TSchemaType extends UserTemplateSettings> {
 	/**
 	 * The target path for the template. Must be set on subtemplates.
