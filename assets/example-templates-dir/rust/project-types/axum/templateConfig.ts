@@ -7,6 +7,7 @@ const templateSettingsSchema = z.object({
 });
 
 export type TemplateSettings = z.infer<typeof templateSettingsSchema> & ParentTemplateSettings;
+// can be used in sideeffects and path functions to also retrieve options from parents
 
 const templateConfig: TemplateConfig = {
 	name: 'axum',
@@ -14,7 +15,7 @@ const templateConfig: TemplateConfig = {
 	author: "Timon Teutelink"
 };
 
-const templateConfigModule: TemplateConfigModule<TemplateSettings> = {
+const templateConfigModule: TemplateConfigModule<z.infer<typeof templateSettingsSchema>> = {
 	templateConfig,
 	targetPath: 'src',
 	templateSettingsSchema,

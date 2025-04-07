@@ -54,6 +54,7 @@ export async function createNewProject(
 	parentDirPath: string,
 	userTemplateSettings: UserTemplateSettings
 ): Promise<Result<ProjectDTO>> {
+	console.log("Creating project:", { name: projectName, template: templateName, parentDirPath, settings: JSON.stringify(userTemplateSettings) });
 	// const template = await ROOT_TEMPLATE_REGISTRY.findTemplate(templateName);
 	//
 	// if (!template) {

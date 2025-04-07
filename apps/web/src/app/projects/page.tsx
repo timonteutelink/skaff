@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProjectDTO, TemplateDTO } from "@repo/ts/utils/types";
+import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { PlusCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -31,10 +32,10 @@ export default function TemplatesListPage() {
   const [projectName, setProjectName] = useState("")
   const [selectedDirectory, setSelectedDirectory] = useState("")
 
-  const handleCreateProject = useCallback(async () => {
+  const handleCreateProject = useCallback(async (userSettings: UserTemplateSettings) => {
     console.log("Creating project:", { name: projectName, template: selectedTemplate, parentDirPath: selectedDirectory });
 
-    const newProject = await createNewProject(projectName, selectedTemplate, selectedDirectory);
+    const newProject = await createNewProject(projectName, selectedTemplate, selectedDirectory, userSettings);
     if (!newProject) {
       console.error("Failed to create project");
       return;

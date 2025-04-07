@@ -2,7 +2,9 @@ import { z } from 'zod';
 import { TemplateConfig, TemplateConfigModule, SideEffectFunction } from '@timonteutelink/template-types-lib';
 
 const templateSettingsSchema = z.object({
-	author: z.string().optional(),
+	author: z.string(),
+	license: z.enum(['MIT', 'Apache-2.0']).optional(),
+	coolStuff: z.boolean().optional(),
 });
 
 export type TemplateSettings = z.infer<typeof templateSettingsSchema>;
