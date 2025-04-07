@@ -23,7 +23,7 @@ const templateConfigModule: TemplateConfigModule<z.infer<typeof templateSettings
 	templateSettingsSchema,
 	sideEffects: [
 		{
-			filePath: () => './README.md',
+			filePath: (banana) => './README.md',
 			apply: sideEffectFunction,
 		},
 	]

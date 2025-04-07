@@ -163,10 +163,10 @@ export class Template {
 		console.log(`Templated files at: ${resultPath}`);
 	}
 
-	public mapTemplateToDTO(): TemplateDTO {
+	public mapToDTO(): TemplateDTO {
 		const subTemplates: Record<string, TemplateDTO[]> = {};
 		for (const [key, value] of Object.entries(this.subTemplates)) {
-			subTemplates[key] = value.map(template => template.mapTemplateToDTO());
+			subTemplates[key] = value.map(template => template.mapToDTO());
 		}
 		return {
 			dir: this.relativeDir,

@@ -9,7 +9,7 @@ import * as esbuild from 'esbuild';
 import * as fs from 'fs';
 import { tmpdir } from 'os';
 import * as path from 'path';
-import * as ts from 'typescript';
+import ts from 'typescript';
 import { pathToFileURL } from 'url';
 
 /**
@@ -130,6 +130,7 @@ async function importTemplateConfigModule(cachePath: string): Promise<Record<str
 		const evaluatedModule = configs[key];
 		if (!evaluatedModule) continue;
 		const parsedTemplateConfig = templateConfigSchema.safeParse(evaluatedModule.templateConfig.templateConfig);
+		// TODO check name provided same as name of template folder
 		if (!parsedTemplateConfig.success) {
 			throw new Error(`Invalid template configuration in ${key}: ${parsedTemplateConfig.error.message}`);
 		}

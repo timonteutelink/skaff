@@ -1,40 +1,28 @@
 import * as fs from "node:fs/promises";
 import path from "node:path";
-import z from 'zod';
+import { ProjectDTO, ProjectSettings, ProjectSettingsSchema } from "../utils/types";
 
-const ProjectSettingsSchema = z.object({
-	rootTemplateName: z.string().min(1),
-	rootTemplateAuthor: z.string().min(1),
-
-	instantiatedTemplates: z.array(z.object({
-		templateName: z.string().min(1),
-		templateSettings: z.any() //UserTemplateSettings
-	}))
-});
-
-type ProjectSettings = z.infer<typeof ProjectSettingsSchema>;
-
-// every template name inside a root template should be unique.
+// every project name inside a root project should be unique.
 //
-// The root template can be uniquely identified by its name and author.(and version)
+// The root project can be uniquely identified by its name and author.(and version)
 
 export class Project {
 	public absoluteRootDir: string;
 
 	public absoluteSettingsPath: string; // path to the templateSettings.json file
 
-	public instantiatedTemplateSettings: ProjectSettings;
+	public instantiatedProjectSettings: ProjectSettings;
 
-	constructor(absDir: string, absSettingsPath: string, templateSettings: ProjectSettings) {
+	constructor(absDir: string, absSettingsPath: string, projectSettings: ProjectSettings) {
 		this.absoluteRootDir = absDir;
 		this.absoluteSettingsPath = absSettingsPath;
-		this.instantiatedTemplateSettings = templateSettings;
+		this.instantiatedProjectSettings = projectSettings;
 	}
 
-	private static async loadTemplateSettings(templateSettingsPath: string): Promise<ProjectSettings> {
-		const templateSettings = await fs.readFile(templateSettingsPath, "utf-8");
-		const parsedTemplateSettings = JSON.parse(templateSettings);
-		const result = ProjectSettingsSchema.safeParse(parsedTemplateSettings);
+	private static async loadProjectSettings(projectSettingsPath: string): Promise<ProjectSettings> {
+		const projectSettings = await fs.readFile(projectSettingsPath, "utf-8");
+		const parsedProjectSettings = JSON.parse(projectSettings);
+		const result = ProjectSettingsSchema.safeParse(parsedProjectSettings);
 		if (!result.success) {
 			throw new Error(`Invalid templateSettings.json: ${result.error}`);
 		}
@@ -42,9 +30,17 @@ export class Project {
 	}
 
 	static async create(absDir: string) {
-		const templateSettingsPath = path.join(absDir, "templateSettings.json");
-		const templateSettings = await Project.loadTemplateSettings(templateSettingsPath);
-		return new Project(absDir, templateSettingsPath, templateSettings);
+		const projectSettingsPath = path.join(absDir, "templateSettings.json");
+		const projectSettings = await Project.loadProjectSettings(projectSettingsPath);
+		return new Project(absDir, projectSettingsPath, projectSettings);
+	}
+
+	public mapToDTO(): ProjectDTO {
+		return {
+			name: this.instantiatedProjectSettings.projectName,
+			absPath: this.absoluteRootDir,
+			settings: this.instantiatedProjectSettings
+		}
 	}
 }
 

@@ -1,4 +1,5 @@
 import { TemplateConfig } from "@timonteutelink/template-types-lib";
+import z from "zod";
 
 export interface TemplateDTO {
   dir: string;
@@ -10,4 +11,24 @@ export interface TemplateDTO {
   subTemplates: Record<string, TemplateDTO[]>;
   refDir?: string;
 }
+
+export const ProjectSettingsSchema = z.object({
+  projectName: z.string().min(1), //should match folder name
+  projectAuthor: z.string().min(1),
+
+  instantiatedTemplates: z.array(z.object({
+    templateName: z.string().min(1),
+    templateSettings: z.any() //UserTemplateSettings
+  }))
+});
+
+export type ProjectSettings = z.infer<typeof ProjectSettingsSchema>;
+
+export interface ProjectDTO {
+  name: string;
+  absPath: string;
+
+  settings: ProjectSettings;
+}
+
 

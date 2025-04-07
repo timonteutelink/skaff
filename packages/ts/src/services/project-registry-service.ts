@@ -8,16 +8,16 @@ export class ProjectRegistry {
 
 	constructor(private searchPaths: string[]) { }
 
-	async loadTemplates(): Promise<void> {
+	async loadProjects(): Promise<void> {
 		for (const searchPath of this.searchPaths) {
 			const dirs = await fs.readdir(searchPath);
 			for (const dir of dirs) {
 				const absDir = path.join(searchPath, dir);
 				const stat = await fs.stat(absDir);
-				const templateSettingsPath = path.join(absDir, "templateSettings.json");
-				const templateSettingsStat = await fs.stat(templateSettingsPath).catch(() => null);
+				const projectSettingsPath = path.join(absDir, "templateSettings.json");
+				const projectSettingsStat = await fs.stat(projectSettingsPath).catch(() => null);
 
-				if (stat.isDirectory() && templateSettingsStat && templateSettingsStat.isFile()) {
+				if (stat.isDirectory() && projectSettingsStat && projectSettingsStat.isFile()) {
 					try {
 						const project = await Project.create(absDir);
 						this.projects.push(project);
