@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { TemplateConfig, TemplateConfigModule, SideEffectFunction } from '@timonteutelink/template-types-lib';
 
 const templateSettingsSchema = z.object({
-	projectName: z.string(),
+	projectName: z.string(), //this should not need to be here. Make sure it is added to the object in every function
 	author: z.string().optional(),
 });
 

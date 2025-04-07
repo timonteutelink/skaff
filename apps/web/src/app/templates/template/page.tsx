@@ -1,10 +1,10 @@
 'use client';
 
 import type { TemplateDTO } from '@repo/ts/utils/types';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Tree } from 'react-arborist';
-import { retrieveTemplate, retrieveTemplates } from '../../actions';
 import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { NodeApi, Tree } from 'react-arborist';
+import { retrieveTemplate } from '@/app/actions';
 
 export interface TemplateTreeNode {
   id: string;
@@ -113,12 +113,15 @@ const TemplateArboristTreePage: React.FC = () => {
       }
       setTemplate(data);
     });
-  }, []);
+  }, [templateName, router]);
 
   const treeNodes: TemplateTreeNode[] = useMemo(() => template ? [buildTemplateNode(template)] : [], [template]);
 
-  const handleSelect = useCallback((node: TemplateTreeNode) => {
-    setSelectedNode(node);
+  const handleSelect = useCallback((node: NodeApi<TemplateTreeNode>) => {
+    setSelectedNode(node.data);
+    if (node.isClosed) {
+      node.toggle();
+    }
   }, []);
 
   if (!template) {
@@ -145,7 +148,7 @@ const TemplateArboristTreePage: React.FC = () => {
                   style={props.style}
                   className={`flex items-center p-2 cursor-pointer hover:bg-blue-100 select-none ${selectedNode?.id === props.node.data.id ? 'bg-blue-200' : ''
                     } break-words`}
-                  onClick={() => handleSelect(props.node.data)}
+                  onClick={() => handleSelect(props.node)}
                 >
                   {hasChildren && (
                     <button

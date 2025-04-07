@@ -3,8 +3,14 @@
 import { ROOT_TEMPLATE_REGISTRY } from "@repo/ts/services/root-template-registry-service";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import { ProjectDTO, TemplateDTO } from "@repo/ts/utils/types";
+import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
+import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 
 export type Result<T> = { data: T } | { error: string };
+
+export async function retrieveProjectSearchPaths(): Promise<string[]> {
+	return PROJECT_SEARCH_PATHS;
+}
 
 export async function retrieveTemplates(): Promise<TemplateDTO[]> {
 	await ROOT_TEMPLATE_REGISTRY.getTemplates();
@@ -40,4 +46,21 @@ export async function retrieveProject(projectName: string): Promise<ProjectDTO |
 	}
 
 	return null;
+}
+
+export async function createNewProject(
+	projectName: string,
+	templateName: string,
+	parentDirPath: string,
+	userTemplateSettings: UserTemplateSettings
+): Promise<Result<ProjectDTO>> {
+	// const template = await ROOT_TEMPLATE_REGISTRY.findTemplate(templateName);
+	//
+	// if (!template) {
+	// 	return { error: "Template not found" };
+	// }
+	//
+	// const project = await template.instantiate(
+	//
+	return { error: "Failed to create project" };
 }

@@ -2,6 +2,7 @@
 import { retrieveTemplates } from "@/app/actions";
 import TablePage, { FieldInfo } from "@/components/general/TablePage";
 import { TemplateDTO } from "@repo/ts/utils/types";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const columnMapping: FieldInfo<TemplateDTO>[] = [
@@ -16,6 +17,7 @@ const columnMapping: FieldInfo<TemplateDTO>[] = [
 ]
 
 export default function TemplatesListPage() {
+  const router = useRouter();
   const [templates, setTemplates] = useState<TemplateDTO[]>([]);
 
   useEffect(() => {
@@ -32,6 +34,9 @@ export default function TemplatesListPage() {
       data={templates}
       columnMapping={columnMapping}
       caption="A list of your templates."
+      onClick={(item) => {
+        router.push(`/templates/template?templateName=${item.config.templateConfig.name}`);
+      }}
     />
   )
 }

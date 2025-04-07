@@ -132,6 +132,9 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4.0.17
         version: 4.0.17
+      '@timonteutelink/template-types-lib':
+        specifier: 0.0.16
+        version: 0.0.16
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1

@@ -13,20 +13,25 @@ export interface FieldInfo<T extends Record<string, any>> {
 
 interface TablePageProps<T extends Record<string, any>> {
 	title: string
-	addButtonText: string
-	addButtonUrl: string
+	addButton?: {
+		text: string
+		url: string
+	}
 	data: T[]
 	columnMapping: FieldInfo<T>[]
 	caption?: string
+	onClick?: (item: T) => void
+	buttons?: React.ReactNode
 }
 
 export default function TablePage<T extends Record<string, any>>({
 	title,
-	addButtonText,
-	addButtonUrl,
+	addButton,
 	data,
 	columnMapping,
 	caption,
+	onClick,
+	buttons,
 }: TablePageProps<T>) {
 	const columnKeys = useMemo(() => columnMapping.map(field => field.name), [columnMapping])
 
@@ -34,12 +39,16 @@ export default function TablePage<T extends Record<string, any>>({
 		<div className="container mx-auto py-10">
 			<div className="flex justify-between items-center mb-6">
 				<h1 className="text-2xl font-bold">{title}</h1>
-				<Link href={addButtonUrl}>
-					<Button className="flex items-center gap-2">
-						<PlusCircle className="h-4 w-4" />
-						{addButtonText}
-					</Button>
-				</Link>
+				<div className="flex items-center">
+					{buttons ? buttons : addButton ? (
+						<Link href={addButton.url}>
+							<Button className="flex items-center gap-2">
+								<PlusCircle className="h-4 w-4" />
+								{addButton.text}
+							</Button>
+						</Link>
+					) : (<></>)}
+				</div>
 			</div>
 
 			<Table>
@@ -53,7 +62,7 @@ export default function TablePage<T extends Record<string, any>>({
 				</TableHeader>
 				<TableBody>
 					{data.map((item, index) => (
-						<TableRow key={index}>
+						<TableRow key={index} onClick={() => onClick && onClick(item)} className="cursor-pointer hover:bg-gray-100">
 							{columnMapping.map((field) => (
 								<TableCell key={`${index}-${field.name}`} className={field.name === columnKeys[0] ? "font-medium" : ""}>
 									{field.data(item)}

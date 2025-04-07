@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { MainSidebar } from "@/components/general/MainSidebar";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -19,7 +20,9 @@ export default function RootLayout({
         <SidebarProvider>
           <MainSidebar />
           <SidebarInset>
-            <main className="p-4">{children}</main>
+            <Suspense fallback={<div>Loading...</div>}>
+              {children}
+            </Suspense>
           </SidebarInset>
         </SidebarProvider>
       </body>

@@ -152,15 +152,27 @@ export class Template {
 	}
 
 	/**
-	 * Instantiates the template using the TemplateGeneratorService.
-	 *
+	 * Instantiates a subtemplate using the TemplateGeneratorService.
+	 *banana
 	 * @param userSettings The settings provided by the user.
-	 * @param rootDestinationDir The directory where the generated files should be written.
+	 * @param destinationProject The project where the template will be instantiated.
 	 */
-	public async instantiate(userSettings: UserTemplateSettings, destinationProject: Project): Promise<void> {
+	public async template(userSettings: UserTemplateSettings, destinationProject: Project): Promise<void> {
 		const generatorService = new TemplateGeneratorService(this, userSettings, destinationProject);
 		const resultPath = await generatorService.instantiateTemplate(this.config.templateConfig.name);
 		console.log(`Templated files at: ${resultPath}`);
+	}
+
+	/**
+	 * Instantiates the root template using the TemplateGeneratorService.
+	 * @param rootTemplateSettings The settings provided by the user.
+	 * @param destinationDir The directory where the template will be instantiated.
+	 * @param projectName The name of the project.
+	 * @returns The absolute path of the folder where the templated files are written.
+	 * @throws Error if the template cannot be found.
+	 * */
+	public async instantiate(rootTemplateSettings: UserTemplateSettings, destinationDir: string, projectName: string): Promise<void> {
+
 	}
 
 	public mapToDTO(): TemplateDTO {
