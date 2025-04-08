@@ -1,6 +1,8 @@
 import { TemplateConfig } from "@timonteutelink/template-types-lib";
 import z from "zod";
 
+export type Result<T> = { data: T } | { error: string };
+
 export interface TemplateDTO {
   dir: string;
   config: {

@@ -20,6 +20,8 @@ const templateConfig: TemplateConfig = {
 	author: "Timon Teutelink"
 };
 
+// describe chat for user to have when generating template
+// And also be able to describe a workflow using ai to generate a part of template automatically.
 const templateConfigModule: TemplateConfigModule<TemplateSettings> = {
 	templateConfig,
 	targetPath: '.',

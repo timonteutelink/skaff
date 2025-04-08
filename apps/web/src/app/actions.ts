@@ -2,11 +2,10 @@
 
 import { ROOT_TEMPLATE_REGISTRY } from "@repo/ts/services/root-template-registry-service";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
-import { ProjectDTO, TemplateDTO } from "@repo/ts/utils/types";
+import { ProjectDTO, Result, TemplateDTO } from "@repo/ts/utils/types";
 import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 
-export type Result<T> = { data: T } | { error: string };
 
 export async function retrieveProjectSearchPaths(): Promise<string[]> {
 	return PROJECT_SEARCH_PATHS;
@@ -23,11 +22,12 @@ export async function retrieveTemplates(): Promise<TemplateDTO[]> {
 export async function retrieveTemplate(templateName: string): Promise<TemplateDTO | null> {
 	const template = await ROOT_TEMPLATE_REGISTRY.findTemplate(templateName);
 
-	if (template) {
-		return template.mapToDTO();
+	if ('error' in template) {
+		console.error(template.error);
+		return null;
 	}
 
-	return null;
+	return template.data.mapToDTO();
 }
 
 export async function retrieveProjects(): Promise<ProjectDTO[]> {
@@ -54,14 +54,25 @@ export async function createNewProject(
 	parentDirPath: string,
 	userTemplateSettings: UserTemplateSettings
 ): Promise<Result<ProjectDTO>> {
-	console.log("Creating project:", { name: projectName, template: templateName, parentDirPath, settings: JSON.stringify(userTemplateSettings) });
-	// const template = await ROOT_TEMPLATE_REGISTRY.findTemplate(templateName);
-	//
-	// if (!template) {
-	// 	return { error: "Template not found" };
-	// }
-	//
-	// const project = await template.instantiate(
-	//
-	return { error: "Failed to create project" };
+	const template = await ROOT_TEMPLATE_REGISTRY.findTemplate(templateName);
+
+	if ('error' in template) {
+		return { error: template.error };
+	}
+
+	const instatiationResult = await template.data.instantiateNewProject(userTemplateSettings, parentDirPath, projectName);
+
+	if ('error' in instatiationResult) {
+		return { error: "Failed to create project" };
+	}
+
+	await PROJECT_REGISTRY.reloadProjects();
+
+	const project = await PROJECT_REGISTRY.findProject(projectName);
+
+	if (!project) {
+		return { error: "Failed to create project" };
+	}
+
+	return { data: project.mapToDTO() };
 }

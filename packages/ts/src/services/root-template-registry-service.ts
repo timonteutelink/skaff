@@ -1,6 +1,7 @@
 import * as fs from 'node:fs/promises';
 import { Template } from '../models/template-models';
 import { TEMPLATE_PATHS } from '../utils/env';
+import { Result } from '../utils/types';
 
 export class RootTemplateRegistry {
 	public templates: Template[] = [];
@@ -22,6 +23,11 @@ export class RootTemplateRegistry {
 		}
 	}
 
+	async reloadTemplates(): Promise<void> {
+		this.templates = [];
+		await this.loadTemplates();
+	}
+
 	async getTemplates(): Promise<Template[]> {
 		if (!this.templates.length) {
 			await this.loadTemplates();
@@ -33,21 +39,21 @@ export class RootTemplateRegistry {
 		return this.templates;
 	}
 
-	async findTemplate(templateName: string): Promise<Template | null> {
+	async findTemplate(templateName: string): Promise<Result<Template>> {
 		if (!this.templates.length) {
 			await this.loadTemplates();
 			if (!this.templates.length) {
 				console.error("No templates found.");
-				return null;
+				return { error: "No templates found." };
 			}
 		}
 
 		for (const template of this.templates) {
 			if (template.config.templateConfig.name === templateName) {
-				return template;
+				return { data: template };
 			}
 		}
-		return null;
+		return { error: `Template ${templateName} not found` };
 	}
 
 }

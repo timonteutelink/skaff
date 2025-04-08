@@ -36,8 +36,9 @@ export default function TemplatesListPage() {
     console.log("Creating project:", { name: projectName, template: selectedTemplate, parentDirPath: selectedDirectory });
 
     const newProject = await createNewProject(projectName, selectedTemplate, selectedDirectory, userSettings);
-    if (!newProject) {
+    if ('error' in newProject) {
       console.error("Failed to create project");
+      console.error(newProject.error);
       return;
     }
 
@@ -45,8 +46,9 @@ export default function TemplatesListPage() {
     setProjectName("")
     setSelectedTemplate("")
     setSelectedDirectory("")
-  }, [projectName, selectedTemplate, selectedDirectory]);
 
+    setProjects((prev) => [...prev, newProject.data]);
+  }, [projectName, selectedTemplate, selectedDirectory]);
 
   useEffect(() => {
     retrieveProjects().then((projects) => {

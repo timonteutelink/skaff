@@ -18,16 +18,20 @@ export class ProjectRegistry {
 				const projectSettingsStat = await fs.stat(projectSettingsPath).catch(() => null);
 
 				if (stat.isDirectory() && projectSettingsStat && projectSettingsStat.isFile()) {
-					try {
-						const project = await Project.create(absDir);
-						this.projects.push(project);
-					} catch (e) {
-						console.error(`Failed to load project at ${absDir}: ${e}`);
+					const project = await Project.create(absDir);
+					if ('error' in project) {
+						console.error(`Failed to load project at ${absDir}: ${project.error}`);
 						continue;
 					}
+					this.projects.push(project.data);
 				}
 			}
 		}
+	}
+
+	async reloadProjects(): Promise<void> {
+		this.projects = [];
+		await this.loadProjects();
 	}
 
 	async getProjects(): Promise<Project[]> {

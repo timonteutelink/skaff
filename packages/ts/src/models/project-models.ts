@@ -1,6 +1,18 @@
 import * as fs from "node:fs/promises";
 import path from "node:path";
-import { ProjectDTO, ProjectSettings, ProjectSettingsSchema } from "../utils/types";
+import { ProjectDTO, ProjectSettings, ProjectSettingsSchema, Result } from "../utils/types";
+import { Template } from "./template-models";
+import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
+import { ROOT_TEMPLATE_REGISTRY } from "../services/root-template-registry-service";
+// type ProjectSettings = {
+// 	projectName: string;
+// 	projectAuthor: string;
+// 	rootTemplateName: string;
+// 	instantiatedTemplates: {
+// 		templateName: string;
+// 		templateSettings?: any;
+// 	}[];
+// }
 
 // every project name inside a root project should be unique.
 //
@@ -13,26 +25,75 @@ export class Project {
 
 	public instantiatedProjectSettings: ProjectSettings;
 
-	constructor(absDir: string, absSettingsPath: string, projectSettings: ProjectSettings) {
+	public rootTemplate: Template;
+
+	constructor(absDir: string, absSettingsPath: string, projectSettings: ProjectSettings, rootTemplate: Template) {
 		this.absoluteRootDir = absDir;
 		this.absoluteSettingsPath = absSettingsPath;
 		this.instantiatedProjectSettings = projectSettings;
+		this.rootTemplate = rootTemplate;
 	}
 
-	private static async loadProjectSettings(projectSettingsPath: string): Promise<ProjectSettings> {
+	private static async loadProjectSettings(projectSettingsPath: string): Promise<Result<{ settings: ProjectSettings, rootTemplate: Template }>> {
 		const projectSettings = await fs.readFile(projectSettingsPath, "utf-8");
 		const parsedProjectSettings = JSON.parse(projectSettings);
-		const result = ProjectSettingsSchema.safeParse(parsedProjectSettings);
-		if (!result.success) {
-			throw new Error(`Invalid templateSettings.json: ${result.error}`);
+		const finalProjectSettings = ProjectSettingsSchema.safeParse(parsedProjectSettings);
+		if (!finalProjectSettings.success) {
+			return { error: `Invalid templateSettings.json: ${finalProjectSettings.error}` }
 		}
-		return result.data;
+		const rootTemplate = await ROOT_TEMPLATE_REGISTRY.findTemplate(finalProjectSettings.data.rootTemplateName);
+		if ('error' in rootTemplate) {
+			return { error: rootTemplate.error };
+		}
+
+		for (const subTemplateSettings of finalProjectSettings.data.instantiatedTemplates) {
+			const subTemplate = rootTemplate.data.findSubTemplate(subTemplateSettings.templateName);
+			if (!subTemplate) {
+				return {
+					error: `Template ${subTemplateSettings.templateName} not found in root template ${finalProjectSettings.data.rootTemplateName}`,
+				}
+			}
+
+			const subTemplateSettingsSchema = subTemplate.config.templateSettingsSchema.safeParse(subTemplateSettings.templateSettings);
+			if (!subTemplateSettingsSchema.success) {
+				return { error: `Invalid templateSettings.json for template ${subTemplateSettings.templateName}: ${subTemplateSettingsSchema.error}` }
+			}
+		}
+
+		const instantiatedProjectSettings = {
+			settings: finalProjectSettings.data,
+			rootTemplate: rootTemplate.data,
+		};
+		return { data: instantiatedProjectSettings };
 	}
 
-	static async create(absDir: string) {
+	/**
+	 * Aggregates all settings of the provided template and all parent templates inside of this project. If the template or any of the parents are not initialized in this project return an empty object
+	 * can be called recursively with parent templates to assemble a final object of all templates up to the root template.
+	 */
+	getInstantiatedSettings(template: Template): UserTemplateSettings {
+		const instantiatedSettings: UserTemplateSettings = {};
+		const projectTemplateSettings = this.instantiatedProjectSettings.instantiatedTemplates.find(t => t.templateName === template.config.templateConfig.name);
+		if (!projectTemplateSettings) {
+			return instantiatedSettings;
+		}
+		instantiatedSettings[template.config.templateConfig.name] = template.config.templateSettingsSchema.parse(projectTemplateSettings.templateSettings);
+
+		const parentTemplate = template.parentTemplate;
+		if (parentTemplate) {
+			const parentSettings = this.getInstantiatedSettings(parentTemplate);
+			Object.assign(instantiatedSettings, parentSettings);
+		}
+		return instantiatedSettings;
+	}
+
+	static async create(absDir: string): Promise<Result<Project>> {
 		const projectSettingsPath = path.join(absDir, "templateSettings.json");
 		const projectSettings = await Project.loadProjectSettings(projectSettingsPath);
-		return new Project(absDir, projectSettingsPath, projectSettings);
+		if ('error' in projectSettings) {
+			return { error: projectSettings.error };
+		}
+		return { data: new Project(absDir, projectSettingsPath, projectSettings.data.settings, projectSettings.data.rootTemplate) };
 	}
 
 	public mapToDTO(): ProjectDTO {

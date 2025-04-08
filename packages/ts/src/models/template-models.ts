@@ -7,7 +7,7 @@ import {
 	UserTemplateSettings
 } from '@timonteutelink/template-types-lib';
 import zodToJsonSchema from 'zod-to-json-schema';
-import { TemplateDTO } from '../utils/types';
+import { Result, TemplateDTO } from '../utils/types';
 import { Project } from './project-models';
 
 export class Template {
@@ -157,8 +157,8 @@ export class Template {
 	 * @param userSettings The settings provided by the user.
 	 * @param destinationProject The project where the template will be instantiated.
 	 */
-	public async template(userSettings: UserTemplateSettings, destinationProject: Project): Promise<void> {
-		const generatorService = new TemplateGeneratorService(this, userSettings, destinationProject);
+	public async templateInExistingProject(userSettings: UserTemplateSettings, destinationProject: Project): Promise<void> {
+		const generatorService = new TemplateGeneratorService(this, userSettings, destinationProject.absoluteRootDir, destinationProject);
 		const resultPath = await generatorService.instantiateTemplate(this.config.templateConfig.name);
 		console.log(`Templated files at: ${resultPath}`);
 	}
@@ -172,8 +172,15 @@ export class Template {
 	 * @returns The absolute path of the folder where the templated files are written.
 	 * @throws Error if the template cannot be found.
 	 * */
-	public async instantiate(rootTemplateSettings: UserTemplateSettings, destinationDir: string, projectName: string): Promise<void> {
-
+	public async instantiateNewProject(rootTemplateSettings: UserTemplateSettings, destinationDir: string, projectName: string): Promise<Result<string>> {
+		const generatorService = new TemplateGeneratorService(this, rootTemplateSettings, path.join(destinationDir, projectName));
+		const result = await generatorService.instantiateNewProject();
+		if ('error' in result) {
+			console.error(`Failed to instantiate new project: ${result.error}`);
+		} else {
+			console.log(`New project created at: ${result.data}`);
+		}
+		return result;
 	}
 
 	public mapToDTO(): TemplateDTO {
@@ -191,6 +198,24 @@ export class Template {
 			subTemplates,
 			refDir: this.relativeRefDir,
 		};
+	}
+
+	public findSubTemplate(templateName: string): Template | null {
+		if (this.config.templateConfig.name === templateName) {
+			return this;
+		}
+		for (const subTemplate of Object.values(this.subTemplates)) {
+			for (const template of subTemplate) {
+				if (template.config.templateConfig.name === templateName) {
+					return template;
+				}
+				const deeper = template.findSubTemplate(templateName);
+				if (deeper) {
+					return deeper;
+				}
+			}
+		}
+		return null;
 	}
 }
 
