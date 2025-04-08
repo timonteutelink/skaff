@@ -105,7 +105,6 @@ const TemplateArboristTreePage: React.FC = () => {
     }
 
     retrieveTemplate(templateName).then((data: TemplateDTO | null) => {
-      console.log('Templates data:', data);
       if (!data) {
         console.error('Template not found:', templateName);
         router.push("/templates");

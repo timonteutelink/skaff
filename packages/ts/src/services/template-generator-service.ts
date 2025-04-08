@@ -6,7 +6,7 @@ import * as path from 'path';
 import { Template } from '../models/template-models';
 import { stringOrCallbackToString } from '../utils/utils';
 import { Project } from '../models/project-models';
-import { Result } from '../utils/types';
+import { ProjectSettings, Result } from '../utils/types';
 
 export class TemplateGeneratorService {
   public absDestinationProjectPath: string;
@@ -49,18 +49,17 @@ export class TemplateGeneratorService {
    * Files are processed with Handlebars. If a file ends in ".hbs", the extension is removed.
    */
   private async copyDirectory(template: Template): Promise<void> {
-    const src = template.relativeTemplatesDir;
+    const src = template.absoluteTemplatesDir;
     const dest = this.getAbsoluteTargetPath(template);
 
-    // Ensure the destination directory exists.
     await fs.mkdir(dest, { recursive: true });
 
-    const entries = await glob("**/*", { cwd: src, dot: true }); //TODO from templates dir
+    const entries = await glob(`**/*`, { cwd: src, dot: true, nodir: true });
 
     for (const entry of entries) {
       const srcPath = path.join(src, entry);
       let destPath = path.join(dest, entry);
-      // Remove the ".hbs" extension if present.
+
       if (destPath.endsWith('.hbs')) {
         destPath = destPath.slice(0, -4);
       }
@@ -118,10 +117,14 @@ export class TemplateGeneratorService {
    * Instantiates the template by copying files from the template’s directory, processing them with Handlebars,
    * and then applying any defined side effects.
    *
-   * @param templateName The name of the template to instantiate.
+   * @param templateName The name of the template to instantiate.s
    * @returns The absolute path where templated files are written.
    */
   public async instantiateTemplate(templateName: string): Promise<Result<string>> {
+    if (!this.destinationProject) {
+      console.error('No destination project provided.');
+      return { error: 'No destination project provided.' };
+    }
     const template = this.rootTemplate.findSubTemplate(templateName);
     if (!template) {
       console.error(`Template ${templateName} could not be found in rootTemplate ${this.rootTemplate.config.templateConfig.name}`);
@@ -130,6 +133,7 @@ export class TemplateGeneratorService {
     try {
       await this.copyDirectory(template);
       await this.applySideEffects(template);
+      await Project.addTemplateToSettings(this.absDestinationProjectPath, template.config.templateConfig.name, this.parsedUserSettings);
     } catch (e) {
       console.error(`Failed to instantiate template: ${e}`);
       return { error: `Failed to instantiate template: ${e}` };
@@ -145,10 +149,31 @@ export class TemplateGeneratorService {
    * @throws Error if the project cannot be created.
    */
   public async instantiateNewProject(): Promise<Result<string>> {
+    const dirStat = await fs.stat(this.absDestinationProjectPath).catch(() => null);
+    if (dirStat && dirStat.isDirectory()) {
+      console.error(`Directory ${this.absDestinationProjectPath} already exists.`);
+      return { error: `Directory ${this.absDestinationProjectPath} already exists.` };
+    }
+
+    const projectName = path.basename(this.absDestinationProjectPath);
+
+    const newProjectSettings: ProjectSettings = {
+      projectName,
+      projectAuthor: this.parsedUserSettings.author,
+      rootTemplateName: this.rootTemplate.config.templateConfig.name,
+      instantiatedTemplates: [
+        {
+          templateName: this.rootTemplate.config.templateConfig.name,
+          templateSettings: this.parsedUserSettings,
+        },
+      ],
+    };
+
     try {
       await fs.mkdir(this.absDestinationProjectPath, { recursive: true });
       await this.copyDirectory(this.rootTemplate);
       await this.applySideEffects(this.rootTemplate);
+      await Project.writeNewProjectSettings(this.absDestinationProjectPath, newProjectSettings);
     } catch (e) {
       console.error(`Failed to instantiate new project: ${e}`);
       return { error: `Failed to instantiate new project: ${e}` };

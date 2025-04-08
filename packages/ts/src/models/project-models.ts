@@ -4,15 +4,6 @@ import { ProjectDTO, ProjectSettings, ProjectSettingsSchema, Result } from "../u
 import { Template } from "./template-models";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { ROOT_TEMPLATE_REGISTRY } from "../services/root-template-registry-service";
-// type ProjectSettings = {
-// 	projectName: string;
-// 	projectAuthor: string;
-// 	rootTemplateName: string;
-// 	instantiatedTemplates: {
-// 		templateName: string;
-// 		templateSettings?: any;
-// 	}[];
-// }
 
 // every project name inside a root project should be unique.
 //
@@ -32,6 +23,45 @@ export class Project {
 		this.absoluteSettingsPath = absSettingsPath;
 		this.instantiatedProjectSettings = projectSettings;
 		this.rootTemplate = rootTemplate;
+	}
+
+	public static async writeNewProjectSettings(absoluteProjectPath: string, projectSettings: ProjectSettings, overwrite?: boolean): Promise<Result<void>> {
+		const projectSettingsPath = path.join(absoluteProjectPath, "templateSettings.json");
+		if (!overwrite) {
+			try {
+				await fs.access(projectSettingsPath);
+				return { error: `Project settings file already exists at ${projectSettingsPath}` };
+			} catch {
+				// File does not exist, continue
+			}
+		}
+		try {
+			await fs.mkdir(absoluteProjectPath, { recursive: true });
+			const serializedProjectSettings = JSON.stringify(projectSettings, null, 2);
+			await fs.writeFile(projectSettingsPath, serializedProjectSettings, "utf-8");
+		} catch (error) {
+			return { error: `Failed to write templateSettings.json: ${error}` };
+		}
+		return { data: undefined };
+	}
+
+	public static async addTemplateToSettings(absoluteProjectPath: string, templateName: string, templateSettings: UserTemplateSettings): Promise<Result<void>> {
+		const projectSettingsPath = path.join(absoluteProjectPath, "templateSettings.json");
+		const projectSettingsResult = await Project.loadProjectSettings(projectSettingsPath);
+		if ('error' in projectSettingsResult) {
+			return { error: projectSettingsResult.error };
+		}
+		const projectSettings = projectSettingsResult.data.settings;
+		projectSettings.instantiatedTemplates.push({
+			templateName,
+			templateSettings,
+		});
+		const result = await Project.writeNewProjectSettings(absoluteProjectPath, projectSettings, true);
+		if ('error' in result) {
+			return { error: result.error };
+		}
+
+		return { data: undefined };
 	}
 
 	private static async loadProjectSettings(projectSettingsPath: string): Promise<Result<{ settings: ProjectSettings, rootTemplate: Template }>> {
