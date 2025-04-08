@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { ProjectDTO, TemplateDTO } from "@repo/ts/utils/types";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { PlusCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const columnMapping: FieldInfo<ProjectDTO>[] = [
@@ -24,6 +25,7 @@ const columnMapping: FieldInfo<ProjectDTO>[] = [
 ]
 
 export default function TemplatesListPage() {
+  const router = useRouter();
   const [projects, setProjects] = useState<ProjectDTO[]>([]);
   const [templates, setTemplates] = useState<TemplateDTO[]>([]);
   const [projectSearchPaths, setProjectSearchPaths] = useState<string[]>([]);
@@ -152,7 +154,7 @@ export default function TemplatesListPage() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  ), [open, projectName, selectedTemplate, handleCreateProject, templates, selectedDirectory]);
+  ), [open, projectName, selectedTemplate, templates, selectedDirectory, projectSearchPaths, templateSettingsDialog]);
 
   return (
     <TablePage<ProjectDTO>
@@ -161,6 +163,9 @@ export default function TemplatesListPage() {
       columnMapping={columnMapping}
       caption="A list of your projects."
       buttons={createProjectDialog}
+      onClick={(item) => {
+        router.push(`/projects/project?projectName=${item.name}`);
+      }}
     />
   )
 }
