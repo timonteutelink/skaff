@@ -1,6 +1,8 @@
-#!/usr/bin/env node
-import { loadTemplateConfig } from "@repo/ts/loaders/template-config-loader";
+import { ROOT_TEMPLATE_REGISTRY } from "@repo/ts/services/root-template-registry-service";
+import path from "node:path";
 
-loadTemplateConfig("../../assets/templates/rust").then((result) => {
-	console.log(result);
+process.chdir(path.join(process.cwd(), "..", ".."));
+
+ROOT_TEMPLATE_REGISTRY.getTemplates().then((templates) => {
+	console.log("Templates loaded:", templates);
 });

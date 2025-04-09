@@ -2,7 +2,7 @@ import { UserTemplateSettings, SideEffectFunction } from '@timonteutelink/templa
 import fs from 'fs-extra';
 import { glob } from 'glob';
 import Handlebars from 'handlebars';
-import * as path from 'path';
+import * as path from 'node:path';
 import { Template } from '../models/template-models';
 import { stringOrCallbackToString } from '../utils/utils';
 import { Project } from '../models/project-models';

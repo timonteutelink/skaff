@@ -3,17 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "bin": {
-    "____": "replace with deno compile executable",
-    "code-templator-cli": "./dist/apps/cli/src/main.js"
+    "code-templator-cli": "./code-templator"
   },
-  "scripts": {
-    "check-types": "tsc --noEmit",
-    "dev": "ts-node --transpile-only src/main.ts",
-    "lint": "eslint --ext .ts src",
-    "build": "tsc",
-    "start": "node dist/apps/cli/src/main.js",
-    "test-cli": "pnpm build && pnpm start"
-  },
+  "scripts": {},
   "dependencies": {
     "@repo/ts": "workspace:*"
   },

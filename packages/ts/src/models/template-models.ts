@@ -6,7 +6,7 @@ import {
 	TemplateConfigModule,
 	UserTemplateSettings
 } from '@timonteutelink/template-types-lib';
-import zodToJsonSchema from 'zod-to-json-schema';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 import { Result, TemplateDTO } from '../utils/types';
 import { Project } from './project-models';
 

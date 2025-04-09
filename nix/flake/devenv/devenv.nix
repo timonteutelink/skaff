@@ -15,6 +15,8 @@ localFlake:
           NIX_LD = builtins.readFile "${pkgs.stdenv.cc}/nix-support/dynamic-linker";
 
           LD_LIBRARY_PATH = "${pkgs.stdenv.cc.cc.lib}/lib";
+          TEMPLATE_PATHS = "/home/tteutelink/projects/timon/code-templator/assets/example-templates-dir/rust/";
+          PROJECT_SEARCH_PATHS = "/home/tteutelink/projects/btc/";
         };
 
         packages = with pkgs; [
@@ -27,6 +29,7 @@ localFlake:
             npm.enable = true;
           };
           typescript.enable = true;
+          deno.enable = true;
         };
 
         pre-commit = {

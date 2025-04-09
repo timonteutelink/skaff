@@ -1,16 +1,15 @@
-import myTsConfig from '@repo/typescript-config/base.json';
 import {
 	TemplateConfigModule,
 	templateConfigSchema,
 	UserTemplateSettings,
 } from '@timonteutelink/template-types-lib';
-import { randomUUID, createHash } from 'crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import * as esbuild from 'esbuild';
-import * as fs from 'fs';
-import { tmpdir } from 'os';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import { tmpdir } from 'node:os';
+import * as path from 'node:path';
 import ts from 'typescript';
-import { pathToFileURL } from 'url';
+import { pathToFileURL } from 'node:url';
 
 /**
  * Holds information about a template configuration file and its optional reference.
@@ -24,14 +23,26 @@ export type TemplateConfigWithFileInfo = {
 	templateConfig: TemplateConfigModule<UserTemplateSettings>;
 } & TemplateConfigFileInfo;
 
+async function readTsConfig() {
+	const module = await import("@repo/typescript-config/base.json", {
+		with: { type: "json" },
+	});
+	const tsConfig = module.default;
+	if (!tsConfig) {
+		throw new Error("Failed to load tsconfig.json");
+	}
+	return tsConfig;
+}
+
 /**
  * Performs type checking on the given file using the TypeScript Compiler API.
  * It uses the compiler options loaded from your custom tsconfig.
  */
-function typeCheckFile(filePath: string): void {
+async function typeCheckFile(filePath: string): Promise<void> {
 	const basePath = process.cwd();
+	const tsConfig = await readTsConfig();
 	const { options, errors } = ts.convertCompilerOptionsFromJson(
-		{ ...myTsConfig.compilerOptions, baseUrl: basePath },
+		{ ...tsConfig.compilerOptions, baseUrl: basePath },
 		basePath
 	);
 
@@ -202,7 +213,7 @@ export async function loadAllTemplateConfigs(
 	const tempIndexPath = path.join(rootDir, `.__temp_index_${randomUUID()}.ts`);
 	fs.writeFileSync(tempIndexPath, indexCode, 'utf-8');
 	try {
-		typeCheckFile(tempIndexPath);
+		await typeCheckFile(tempIndexPath);
 		console.log(`Temporary index file at ${tempIndexPath} passed type checking.`);
 	} finally {
 		fs.unlinkSync(tempIndexPath);
