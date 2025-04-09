@@ -1,26 +1,26 @@
 import { z } from 'zod';
 import { TemplateConfig, TemplateConfigModule, TemplateSettingsType } from '@timonteutelink/template-types-lib';
+import { FullTemplateSettings as ParentTemplateSettings } from './../../templateConfig';
 
 const templateSettingsSchema = z.object({
-	repo: z.string().optional(),
+	help: z.boolean().optional(),
 });
 
-type FullTemplateSettings = TemplateSettingsType<typeof templateSettingsSchema>;// doesnt reference parent since will be referenced from multiple different templates
+export type FullTemplateSettings = TemplateSettingsType<typeof templateSettingsSchema, ParentTemplateSettings>;
 
 const templateConfig: TemplateConfig = {
-	name: 'nix-github-actions',
-	description: 'Github actions nix',
+	name: 'rust-cli',
+	description: 'Rust CLI template',
 	author: "Timon Teutelink"
 };
 
 const templateConfigModule: TemplateConfigModule<FullTemplateSettings, typeof templateSettingsSchema> = {
 	templateConfig,
-	targetPath: '.github/workflows/',
+	targetPath: 'src',
 	templateSettingsSchema,
 	sideEffects: [
 	]
 };
 
 export default templateConfigModule;
-
 

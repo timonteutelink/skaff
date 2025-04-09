@@ -7,10 +7,10 @@ const templateSettingsSchema = z.object({
 	coolStuff: z.boolean().optional(),
 });
 
-export type TemplateSettings = TemplateSettingsType<typeof templateSettingsSchema>;
+export type FullTemplateSettings = TemplateSettingsType<typeof templateSettingsSchema>;
 
 // can be done with a file in templates folder in this case just testing the sideeffects
-const sideEffectFunction: SideEffectFunction<TemplateSettings> = (templateSettings, oldFileContents) => {
+const sideEffectFunction: SideEffectFunction<FullTemplateSettings> = (templateSettings, oldFileContents) => {
 	return `Project Name: ${""}\nAuthor: ${templateSettings.author || 'Unknown'}`;
 };
 
@@ -22,7 +22,7 @@ const templateConfig: TemplateConfig = {
 
 // describe chat for user to have when generating template
 // And also be able to describe a workflow using ai to generate a part of template automatically.
-const templateConfigModule: TemplateConfigModule<TemplateSettings, typeof templateSettingsSchema> = {
+const templateConfigModule: TemplateConfigModule<FullTemplateSettings, typeof templateSettingsSchema> = {
 	templateConfig,
 	targetPath: '.',
 	templateSettingsSchema,

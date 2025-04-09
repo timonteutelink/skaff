@@ -1,21 +1,20 @@
 import { z } from 'zod';
-import { TemplateConfig, TemplateConfigModule } from '@timonteutelink/template-types-lib';
-import { TemplateSettings as ParentTemplateSettings } from './../../templateConfig';
+import { TemplateConfig, TemplateConfigModule, TemplateSettingsType } from '@timonteutelink/template-types-lib';
+import { FullTemplateSettings as ParentTemplateSettings } from './../../templateConfig';
 
 const templateSettingsSchema = z.object({
 	auth: z.boolean().optional(),
 });
 
-export type TemplateSettings = z.infer<typeof templateSettingsSchema> & ParentTemplateSettings;
-// can be used in sideeffects and path functions to also retrieve options from parents
+export type FullTemplateSettings = TemplateSettingsType<typeof templateSettingsSchema, ParentTemplateSettings>;
 
 const templateConfig: TemplateConfig = {
-	name: 'axum',
+	name: 'rust-axum',
 	description: 'Axum template',
 	author: "Timon Teutelink"
 };
 
-const templateConfigModule: TemplateConfigModule<z.infer<typeof templateSettingsSchema>> = {
+const templateConfigModule: TemplateConfigModule<FullTemplateSettings, typeof templateSettingsSchema> = {
 	templateConfig,
 	targetPath: 'src',
 	templateSettingsSchema,
