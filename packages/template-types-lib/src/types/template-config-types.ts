@@ -22,9 +22,9 @@ export type TemplateConfig = z.infer<typeof templateConfigSchema>;
  * @param oldFileContents - The old contents of the file to be edited, if any.
  * @returns The new contents of the file.
  */
-export type SideEffectFunction<TFullSettingsType extends TemplateSettingsType<z.AnyZodObject>> = (templateSettings: TFullSettingsType, oldFileContents?: string) => string;
+export type SideEffectFunction<TFullSettingsType extends TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>> = (templateSettings: TFullSettingsType, oldFileContents?: string) => Promise<string>;
 
-export type SideEffect<TFullSettingsType extends TemplateSettingsType<z.AnyZodObject>> = {
+export type SideEffect<TFullSettingsType extends TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>> = {
 	apply: SideEffectFunction<TFullSettingsType>;
 	/**
 	 * The path to the file to be created or edited.

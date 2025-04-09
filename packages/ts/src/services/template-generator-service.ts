@@ -97,7 +97,7 @@ export class TemplateGeneratorService {
   private async applySideEffect(
     userSettings: UserTemplateSettings,
     filePath: string,
-    sideEffectFunction: SideEffectFunction<UserTemplateSettings>
+    sideEffectFunction: SideEffectFunction
   ) {
     const absoluteFilePath = path.join(this.absDestinationProjectPath, filePath);
     let oldFileContents = '';
@@ -106,7 +106,7 @@ export class TemplateGeneratorService {
     } catch {
       // ignore so just creates file
     }
-    const sideEffectResult = sideEffectFunction(userSettings, oldFileContents);
+    const sideEffectResult = await sideEffectFunction(userSettings, oldFileContents);
     if (!sideEffectResult) {
       return;
     }
