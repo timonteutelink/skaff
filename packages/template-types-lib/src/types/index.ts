@@ -1,4 +1,4 @@
-export type { UserTemplateSettings, StringOrCallback } from './utils';
+export type { UserTemplateSettings, StringOrCallback, TemplateSettingsType } from './utils';
 export type {
 	TemplateConfig,
 	SideEffectFunction,

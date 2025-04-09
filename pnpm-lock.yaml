@@ -133,8 +133,8 @@ importers:
         specifier: ^4.0.17
         version: 4.0.17
       '@timonteutelink/template-types-lib':
-        specifier: 0.0.16
-        version: 0.0.16
+        specifier: 0.0.17
+        version: 0.0.17
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -321,8 +321,8 @@ importers:
   packages/ts:
     dependencies:
       '@timonteutelink/template-types-lib':
-        specifier: 0.0.16
-        version: 0.0.16
+        specifier: 0.0.17
+        version: 0.0.17
       '@types/fs-extra':
         specifier: ^11.0.4
         version: 11.0.4
@@ -1496,8 +1496,8 @@ packages:
   '@tailwindcss/postcss@4.0.17':
     resolution: {integrity: sha512-qeJbRTB5FMZXmuJF+eePd235EGY6IyJZF0Bh0YM6uMcCI4L9Z7dy+lPuLAhxOJzxnajsbjPoDAKOuAqZRtf1PQ==}
 
-  '@timonteutelink/template-types-lib@0.0.16':
-    resolution: {integrity: sha512-/p4ng+hR0fdR6ifnX4XH6LWJDFK7lyA4xH4s1qBnynKj/qCpwS6f/yN6dnQp6uhIOO/sw69rtq2BMZngh2RNDQ==}
+  '@timonteutelink/template-types-lib@0.0.17':
+    resolution: {integrity: sha512-1mhSEzhzyhMJXvJ0dwQm8tIt+PZB1Ly2g6fip6d/2e8v5Os5ONXqWnHPmIQU7GKw21Os6TwAXjE/4kRp3GAD6w==}
 
   '@tsconfig/node10@1.0.11':
     resolution: {integrity: sha512-DcRjDCujK/kCk/cUe8Xz8ZSpm8mS3mNNpta+jGCA6USEDfktlNvm1+IuZ9eTcDbNk41BHwpHHeW+N1lKCz4zOw==}
@@ -4428,7 +4428,7 @@ snapshots:
       postcss: 8.5.3
       tailwindcss: 4.0.17
 
-  '@timonteutelink/template-types-lib@0.0.16':
+  '@timonteutelink/template-types-lib@0.0.17':
     dependencies:
       zod: 3.24.2
 

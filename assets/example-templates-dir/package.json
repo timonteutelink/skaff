@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "packageManager": "pnpm@10.6.2",
   "devDependencies": {
-    "@timonteutelink/template-types-lib": "0.0.17",
+    "@timonteutelink/template-types-lib": "0.0.18",
     "zod": "^3.24.2"
   }
 }
