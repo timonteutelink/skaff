@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { StringOrCallback, UserTemplateSettings } from './utils';
+import { StringOrCallback, UserTemplateSettings, TemplateSettingsType } from './utils';
 
 /**
  * Interface representing all mandatory options for a template.
@@ -21,16 +21,16 @@ export type TemplateConfig = z.infer<typeof templateConfigSchema>;
  * @param oldFileContents - The old contents of the file to be edited, if any.
  * @returns The new contents of the file.
  */
-export type SideEffectFunction<T extends UserTemplateSettings> = (projectName: string, templateSettings: T, oldFileContents?: string) => string;
+export type SideEffectFunction<TFullSettingsType extends TemplateSettingsType<z.AnyZodObject>> = (templateSettings: TFullSettingsType, oldFileContents?: string) => string;
 
-export type SideEffect<T extends UserTemplateSettings> = {
-	apply: SideEffectFunction<T>;
+export type SideEffect<TFullSettingsType extends TemplateSettingsType<z.AnyZodObject>> = {
+	apply: SideEffectFunction<TFullSettingsType>;
 	/**
 	 * The path to the file to be created or edited.
 	 * relative to project root
 	 * @example "./README.md"
 	 */
-	filePath: StringOrCallback<T>;
+	filePath: StringOrCallback<TFullSettingsType>;
 };
 
 /**
@@ -38,14 +38,14 @@ export type SideEffect<T extends UserTemplateSettings> = {
  * @template TSchemaType - The type of the schema used for template settings.
  */
 //TODO: add TParentSchemaType parent settings as seperate generic. This will be aggregated with the TSchemaType for the sideeffects and targetPath
-export interface TemplateConfigModule<TSchemaType extends UserTemplateSettings> {
+export interface TemplateConfigModule<TFullSettingsType extends TemplateSettingsType<TSettingsType, UserTemplateSettings>, TSettingsType extends z.AnyZodObject> {
 	/**
 	 * The target path for the template. Must be set on subtemplates.
 	 * relative to the project root
 	 * @default "."
 	 * @example "src"
 	 */
-	targetPath?: StringOrCallback<TSchemaType>;
+	targetPath?: StringOrCallback<TFullSettingsType>;
 
 	/**
 	 * Template base configuration options.
@@ -55,10 +55,10 @@ export interface TemplateConfigModule<TSchemaType extends UserTemplateSettings> 
 	/**
 	 * Schema inputted by user before generating the template.
 	 */
-	templateSettingsSchema: z.ZodSchema<TSchemaType, any, any>;
+	templateSettingsSchema: TSettingsType;
 
 	/**
 	 * An object with as keys the paths to the files to be created or edited, and as values a function that returns the new content of the file of this file at the given path.
 	 */
-	sideEffects: SideEffect<TSchemaType>[];
+	sideEffects: SideEffect<TFullSettingsType>[];
 }

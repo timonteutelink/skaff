@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TemplateConfig, TemplateConfigModule, SideEffectFunction } from '@timonteutelink/template-types-lib';
+import { TemplateConfig, TemplateConfigModule, SideEffectFunction, TemplateSettingsType } from '@timonteutelink/template-types-lib';
 
 const templateSettingsSchema = z.object({
 	author: z.string(),
@@ -7,7 +7,7 @@ const templateSettingsSchema = z.object({
 	coolStuff: z.boolean().optional(),
 });
 
-export type TemplateSettings = z.infer<typeof templateSettingsSchema>;
+export type TemplateSettings = TemplateSettingsType<typeof templateSettingsSchema>;
 
 // can be done with a file in templates folder in this case just testing the sideeffects
 const sideEffectFunction: SideEffectFunction<TemplateSettings> = (templateSettings, oldFileContents) => {
