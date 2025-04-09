@@ -157,10 +157,15 @@ export class Template {
 	 * @param userSettings The settings provided by the user.
 	 * @param destinationProject The project where the template will be instantiated.
 	 */
-	public async templateInExistingProject(userSettings: UserTemplateSettings, destinationProject: Project): Promise<void> {
+	public async templateInExistingProject(userSettings: UserTemplateSettings, destinationProject: Project, parentInstanceId: string): Promise<Result<string>> {
 		const generatorService = new TemplateGeneratorService(this, userSettings, destinationProject.absoluteRootDir, destinationProject);
-		const resultPath = await generatorService.instantiateTemplate(this.config.templateConfig.name);
-		console.log(`Templated files at: ${resultPath}`);
+		const resultPath = await generatorService.instantiateTemplate(this.config.templateConfig.name, parentInstanceId);
+		if ('error' in resultPath) {
+			console.error(`Failed to instantiate template: ${resultPath.error}`);
+		} else {
+			console.log(`Template instantiated at: ${resultPath.data}`);
+		}
+		return resultPath;
 	}
 	//TODO add support for loose templates which can be instantiated anywhere and will not be tracked using a templateSettings.json
 

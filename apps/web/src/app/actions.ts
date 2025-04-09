@@ -76,3 +76,30 @@ export async function createNewProject(
 
 	return { data: project.mapToDTO() };
 }
+
+export async function instantiateTemplate(
+	templateName: string,
+	parentInstanceId: string,
+	destinationProjectName: string,
+	userTemplateSettings: UserTemplateSettings
+): Promise<Result<string>> {
+	const template = await ROOT_TEMPLATE_REGISTRY.findTemplate(templateName);
+
+	if ('error' in template) {
+		return { error: template.error };
+	}
+
+	const destinationProject = await PROJECT_REGISTRY.findProject(destinationProjectName);
+
+	if (!destinationProject) {
+		return { error: "Destination project not found" };
+	}
+
+	const instatiationResult = await template.data.templateInExistingProject(userTemplateSettings, destinationProject, parentInstanceId);
+
+	if ('error' in instatiationResult) {
+		return { error: "Failed to instantiate template" };
+	}
+
+	return { data: instatiationResult.data };
+}

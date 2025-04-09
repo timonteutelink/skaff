@@ -45,7 +45,7 @@ export class Project {
 		return { data: undefined };
 	}
 
-	public static async addTemplateToSettings(absoluteProjectPath: string, templateName: string, templateSettings: UserTemplateSettings): Promise<Result<void>> {
+	public static async addTemplateToSettings(absoluteProjectPath: string, parentInstanceId: string, template: Template, templateSettings: UserTemplateSettings): Promise<Result<void>> {
 		const projectSettingsPath = path.join(absoluteProjectPath, "templateSettings.json");
 		const projectSettingsResult = await Project.loadProjectSettings(projectSettingsPath);
 		if ('error' in projectSettingsResult) {
@@ -53,7 +53,9 @@ export class Project {
 		}
 		const projectSettings = projectSettingsResult.data.settings;
 		projectSettings.instantiatedTemplates.push({
-			templateName,
+			id: crypto.randomUUID(),
+			parentId: parentInstanceId,
+			templateName: template.config.templateConfig.name,
 			templateSettings,
 		});
 		const result = await Project.writeNewProjectSettings(absoluteProjectPath, projectSettings, true);
@@ -101,17 +103,17 @@ export class Project {
 	 * Aggregates all settings of the provided template and all parent templates inside of this project. If the template or any of the parents are not initialized in this project return an empty object
 	 * can be called recursively with parent templates to assemble a final object of all templates up to the root template.
 	 */
-	getInstantiatedSettings(template: Template): UserTemplateSettings {
+	getInstantiatedSettings(template: Template, instanceId: string): UserTemplateSettings {
 		const instantiatedSettings: UserTemplateSettings = {};
-		const projectTemplateSettings = this.instantiatedProjectSettings.instantiatedTemplates.find(t => t.templateName === template.config.templateConfig.name);
+		const projectTemplateSettings = this.instantiatedProjectSettings.instantiatedTemplates.find(t => t.id === instanceId && t.templateName === template.config.templateConfig.name);
 		if (!projectTemplateSettings) {
 			return instantiatedSettings;
 		}
 		instantiatedSettings[template.config.templateConfig.name] = template.config.templateSettingsSchema.parse(projectTemplateSettings.templateSettings);
 
 		const parentTemplate = template.parentTemplate;
-		if (parentTemplate) {
-			const parentSettings = this.getInstantiatedSettings(parentTemplate);
+		if (parentTemplate && projectTemplateSettings.parentId) {
+			const parentSettings = this.getInstantiatedSettings(parentTemplate, projectTemplateSettings.parentId);
 			Object.assign(instantiatedSettings, parentSettings);
 		}
 		return instantiatedSettings;

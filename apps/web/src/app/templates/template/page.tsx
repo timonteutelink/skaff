@@ -3,9 +3,15 @@
 import type { TemplateDTO } from '@repo/ts/utils/types';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { NodeApi, Tree } from 'react-arborist';
 import { retrieveTemplate } from '@/app/actions';
+import { Tree } from '@/components/general/Tree';
 
+
+/* =============================================================================
+   Template Tree and Helper Functions
+   =============================================================================
+   Here we define the TemplateTreeNode type as well as a recursive builder function.
+------------------------------------------------------------------------------- */
 export interface TemplateTreeNode {
   id: string;
   name: string;
@@ -14,8 +20,6 @@ export interface TemplateTreeNode {
   children?: TemplateTreeNode[];
 }
 
-// Recursively build a tree node from a TemplateDTO,
-// adding category container nodes for each key in subTemplates.
 const buildTemplateNode = (template: TemplateDTO): TemplateTreeNode => {
   const categoryNodes: TemplateTreeNode[] = Object.entries(template.subTemplates).map(
     ([category, templates]) => {
@@ -38,6 +42,11 @@ const buildTemplateNode = (template: TemplateDTO): TemplateTreeNode => {
   };
 };
 
+/* =============================================================================
+   Details Panel Component
+   =============================================================================
+   Displays detailed information for a selected template tree node.
+------------------------------------------------------------------------------- */
 interface DetailsPanelProps {
   node: TemplateTreeNode;
 }
@@ -90,6 +99,13 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ node }) => {
   );
 };
 
+/* =============================================================================
+   TemplateArboristTreePage
+   =============================================================================
+   This page loads a template using a search parameter, builds a tree structure
+   via buildTemplateNode(), and displays a collapsible tree on the left alongside
+   a details panel on the right. The functionality is identical to before.
+------------------------------------------------------------------------------- */
 const TemplateArboristTreePage: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -100,27 +116,24 @@ const TemplateArboristTreePage: React.FC = () => {
   useEffect(() => {
     if (!templateName) {
       console.error('No template name provided in search params.');
-      router.push("/templates");
+      router.push('/templates');
       return;
     }
 
     retrieveTemplate(templateName).then((data: TemplateDTO | null) => {
       if (!data) {
         console.error('Template not found:', templateName);
-        router.push("/templates");
+        router.push('/templates');
         return;
       }
       setTemplate(data);
     });
   }, [templateName, router]);
 
-  const treeNodes: TemplateTreeNode[] = useMemo(() => template ? [buildTemplateNode(template)] : [], [template]);
+  const treeNodes: TemplateTreeNode[] = useMemo(() => (template ? [buildTemplateNode(template)] : []), [template]);
 
-  const handleSelect = useCallback((node: NodeApi<TemplateTreeNode>) => {
-    setSelectedNode(node.data);
-    if (node.isClosed) {
-      node.toggle();
-    }
+  const handleSelect = useCallback((node: TemplateTreeNode) => {
+    setSelectedNode(node);
   }, []);
 
   if (!template) {
@@ -139,32 +152,14 @@ const TemplateArboristTreePage: React.FC = () => {
           <h1 className="text-3xl font-bold">Templates Tree</h1>
         </header>
         <div className="p-4">
-          <Tree<TemplateTreeNode> openByDefault={false} data={treeNodes} rowHeight={40} width="100%">
-            {(props) => {
-              const hasChildren = props.node.children && props.node.children.length > 0;
-              return (
-                <div
-                  style={props.style}
-                  className={`flex items-center p-2 cursor-pointer hover:bg-blue-100 select-none ${selectedNode?.id === props.node.data.id ? 'bg-blue-200' : ''
-                    } break-words`}
-                  onClick={() => handleSelect(props.node)}
-                >
-                  {hasChildren && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        props.node.toggle();
-                      }}
-                      className="mr-2 focus:outline-none"
-                    >
-                      {props.node.isOpen ? '▼' : '▶'}
-                    </button>
-                  )}
-                  <span className="flex-1">{props.node.data.name}</span>
-                </div>
-              );
-            }}
-          </Tree>
+          <Tree<TemplateTreeNode>
+            data={treeNodes}
+            onSelect={handleSelect}
+            selectedId={selectedNode?.id}
+            openByDefault={false}
+            rowHeight={40}
+            width="100%"
+          />
         </div>
       </div>
       {/* Right side: Details panel */}

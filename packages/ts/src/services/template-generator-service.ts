@@ -21,36 +21,36 @@ export class TemplateGeneratorService {
     this.parsedUserSettings = rootTemplate.config.templateSettingsSchema.parse(userSettings);
   }
 
-  private getParsedUserSettingsWithParentSettings(template: Template): UserTemplateSettings {
+  private getParsedUserSettingsWithParentSettings(template: Template, parentInstanceId?: string): UserTemplateSettings {
     let newUserSettings = this.parsedUserSettings;
-    if (this.destinationProject && template.parentTemplate) {
+    if (this.destinationProject && template.parentTemplate && parentInstanceId) {
       newUserSettings = {
         ...newUserSettings,
-        ...this.destinationProject.getInstantiatedSettings(template.parentTemplate),
+        ...this.destinationProject.getInstantiatedSettings(template.parentTemplate, parentInstanceId),
       };
     }
     return newUserSettings;
   }
 
-  private getTargetPath(template: Template): string {
+  private getTargetPath(template: Template, parentInstanceId?: string): string {
     const targetPath = template.config.targetPath;
     if (!targetPath) {
       return '.';
     }
-    return stringOrCallbackToString(targetPath, this.getParsedUserSettingsWithParentSettings(template));
+    return stringOrCallbackToString(targetPath, this.getParsedUserSettingsWithParentSettings(template, parentInstanceId));
   }
 
-  private getAbsoluteTargetPath(template: Template): string {
-    return path.join(this.absDestinationProjectPath, this.getTargetPath(template));
+  private getAbsoluteTargetPath(template: Template, parentInstanceId?: string): string {
+    return path.join(this.absDestinationProjectPath, this.getTargetPath(template, parentInstanceId));
   }
 
   /**
    * Copies all files from the template’s adjacent "templates" directory to the destination.
    * Files are processed with Handlebars. If a file ends in ".hbs", the extension is removed.
    */
-  private async copyDirectory(template: Template): Promise<void> {
+  private async copyDirectory(template: Template, parentInstanceId?: string): Promise<void> {
     const src = template.absoluteTemplatesDir;
-    const dest = this.getAbsoluteTargetPath(template);
+    const dest = this.getAbsoluteTargetPath(template, parentInstanceId);
 
     await fs.mkdir(dest, { recursive: true });
 
@@ -69,7 +69,7 @@ export class TemplateGeneratorService {
 
       const content = await fs.readFile(srcPath, "utf-8");
       const compiled = Handlebars.compile(content);
-      const result = compiled(this.getParsedUserSettingsWithParentSettings(template));
+      const result = compiled(this.getParsedUserSettingsWithParentSettings(template, parentInstanceId));
 
       await fs.ensureDir(path.dirname(destPath));
       await fs.writeFile(destPath, result, "utf-8");
@@ -81,11 +81,11 @@ export class TemplateGeneratorService {
   /**
    * Applies side effects defined in the template configuration.
    */
-  private async applySideEffects(template: Template) {
+  private async applySideEffects(template: Template, parentInstanceId?: string): Promise<void> {
     const sideEffects = template.config.sideEffects;
     await Promise.all(
       sideEffects.map(({ filePath, apply }) => {
-        const parsedUserSettings = this.getParsedUserSettingsWithParentSettings(template);
+        const parsedUserSettings = this.getParsedUserSettingsWithParentSettings(template, parentInstanceId);
         return this.applySideEffect(parsedUserSettings, stringOrCallbackToString(filePath, parsedUserSettings), apply);
       })
     );
@@ -103,7 +103,7 @@ export class TemplateGeneratorService {
     let oldFileContents = '';
     try {
       oldFileContents = await fs.readFile(absoluteFilePath, 'utf8');
-    } catch (e) {
+    } catch {
       // ignore so just creates file
     }
     const sideEffectResult = sideEffectFunction(userSettings, oldFileContents);
@@ -120,7 +120,7 @@ export class TemplateGeneratorService {
    * @param templateName The name of the template to instantiate.s
    * @returns The absolute path where templated files are written.
    */
-  public async instantiateTemplate(templateName: string): Promise<Result<string>> {
+  public async instantiateTemplate(templateName: string, parentInstanceId: string): Promise<Result<string>> {
     if (!this.destinationProject) {
       console.error('No destination project provided.');
       return { error: 'No destination project provided.' };
@@ -131,14 +131,14 @@ export class TemplateGeneratorService {
       return { error: `Template ${templateName} could not be found in rootTemplate ${this.rootTemplate.config.templateConfig.name}` };
     }
     try {
-      await this.copyDirectory(template);
-      await this.applySideEffects(template);
-      await Project.addTemplateToSettings(this.absDestinationProjectPath, template.config.templateConfig.name, this.parsedUserSettings);
+      await this.copyDirectory(template, parentInstanceId);
+      await this.applySideEffects(template, parentInstanceId);
+      await Project.addTemplateToSettings(this.absDestinationProjectPath, parentInstanceId, template, this.parsedUserSettings);
     } catch (e) {
       console.error(`Failed to instantiate template: ${e}`);
       return { error: `Failed to instantiate template: ${e}` };
     }
-    return { data: this.getAbsoluteTargetPath(template) };
+    return { data: this.getAbsoluteTargetPath(template, parentInstanceId) };
   }
 
   /**
@@ -163,6 +163,8 @@ export class TemplateGeneratorService {
       rootTemplateName: this.rootTemplate.config.templateConfig.name,
       instantiatedTemplates: [
         {
+          id: crypto.randomUUID(),
+          parentId: undefined,
           templateName: this.rootTemplate.config.templateConfig.name,
           templateSettings: this.parsedUserSettings,
         },
