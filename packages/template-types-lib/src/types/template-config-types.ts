@@ -8,7 +8,8 @@ export const templateConfigSchema = z.object({
 	name: z.string().nonempty().min(2).describe("The name of the template. Must match the parent directory name."),
 	author: z.string().nonempty().min(2).describe("A description of the template."),
 
-	description: z.string().optional().describe("Author")
+	description: z.string().optional().describe("Author"),
+	multiInstance: z.boolean().optional().describe("Whether the template can be used multiple times in the same project. Defaults to false."),
 })
 
 
