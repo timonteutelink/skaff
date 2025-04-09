@@ -15,7 +15,7 @@ localFlake:
           NIX_LD = builtins.readFile "${pkgs.stdenv.cc}/nix-support/dynamic-linker";
 
           LD_LIBRARY_PATH = "${pkgs.stdenv.cc.cc.lib}/lib";
-          TEMPLATE_PATHS = "~/projects/timon/code-templator/assets/example-templates-dir/rust/,~/projects/btc/mcp-templates/deno/";
+          TEMPLATE_PATHS = "~/projects/timon/code-templator/assets/example-templates-dir/rust/:~/projects/btc/mcp-templates/deno/";
           PROJECT_SEARCH_PATHS = "~/projects/btc/";
         };
 
