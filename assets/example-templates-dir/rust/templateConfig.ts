@@ -14,7 +14,7 @@ const templateSettingsSchema = z.object({
 export type FullTemplateSettings = TemplateSettingsType<typeof templateSettingsSchema>;
 
 // can be done with a file in templates folder in this case just testing the sideeffects
-const sideEffectFunction: SideEffectFunction<FullTemplateSettings> = (templateSettings, oldFileContents) => {
+const sideEffectFunction: SideEffectFunction<FullTemplateSettings> = async (templateSettings, oldFileContents) => {
 	return `Project Name: ${""}\nAuthor: ${templateSettings.author || 'Unknown'}`;
 };
 

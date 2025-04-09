@@ -1,15 +1,16 @@
 import {
 	TemplateConfigModule,
 	templateConfigSchema,
-	UserTemplateSettings,
+	TemplateSettingsType
 } from '@timonteutelink/template-types-lib';
-import { randomUUID, createHash } from 'node:crypto';
 import * as esbuild from 'esbuild';
+import { createHash, randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
-import ts from 'typescript';
 import { pathToFileURL } from 'node:url';
+import ts from 'typescript';
+import z from 'zod';
 
 /**
  * Holds information about a template configuration file and its optional reference.
@@ -20,7 +21,7 @@ interface TemplateConfigFileInfo {
 }
 
 export type TemplateConfigWithFileInfo = {
-	templateConfig: TemplateConfigModule<UserTemplateSettings>;
+	templateConfig: TemplateConfigModule<TemplateSettingsType<z.AnyZodObject>, z.AnyZodObject>;
 } & TemplateConfigFileInfo;
 
 async function readTsConfig() {

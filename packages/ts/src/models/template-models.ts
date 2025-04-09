@@ -4,15 +4,17 @@ import { loadAllTemplateConfigs } from '../loaders/template-config-loader';
 import { TemplateGeneratorService } from '../services/template-generator-service';
 import {
 	TemplateConfigModule,
+	TemplateSettingsType,
 	UserTemplateSettings
 } from '@timonteutelink/template-types-lib';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { Result, TemplateDTO } from '../utils/types';
 import { Project } from './project-models';
+import z from 'zod';
 
 export class Template {
 	// The loaded configuration module.
-	public config: TemplateConfigModule<UserTemplateSettings>;
+	public config: TemplateConfigModule<TemplateSettingsType<z.AnyZodObject>, z.AnyZodObject>;
 	// Subtemplates, keyed by the immediate subdirectory name (each key holds an array of children).
 	public subTemplates: Record<string, Template[]> = {};
 	// A reference to the parent template, if this is a subtemplate.
@@ -33,7 +35,7 @@ export class Template {
 	public relativeRefDir?: string;
 
 	private constructor(
-		config: TemplateConfigModule<UserTemplateSettings>,
+		config: TemplateConfigModule<TemplateSettingsType<z.AnyZodObject>, z.AnyZodObject>,
 		baseDir: string,
 		absDir: string,
 		templatesDir: string,

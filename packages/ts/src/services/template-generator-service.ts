@@ -1,4 +1,4 @@
-import { UserTemplateSettings, SideEffectFunction } from '@timonteutelink/template-types-lib';
+import { UserTemplateSettings, SideEffectFunction, TemplateSettingsType } from '@timonteutelink/template-types-lib';
 import fs from 'fs-extra';
 import { glob } from 'glob';
 import Handlebars from 'handlebars';
@@ -7,6 +7,7 @@ import { Template } from '../models/template-models';
 import { stringOrCallbackToString } from '../utils/utils';
 import { Project } from '../models/project-models';
 import { ProjectSettings, Result } from '../utils/types';
+import z from 'zod';
 
 export class TemplateGeneratorService {
   public absDestinationProjectPath: string;
@@ -21,12 +22,23 @@ export class TemplateGeneratorService {
     this.parsedUserSettings = rootTemplate.config.templateSettingsSchema.parse(userSettings);
   }
 
-  private getParsedUserSettingsWithParentSettings(template: Template, parentInstanceId?: string): UserTemplateSettings {
-    let newUserSettings = this.parsedUserSettings;
-    if (this.destinationProject && template.parentTemplate && parentInstanceId) {
+  private getParsedUserSettingsWithParentSettings(template: Template, parentInstanceId?: string): TemplateSettingsType<z.AnyZodObject> {
+    let newUserSettings: TemplateSettingsType<z.AnyZodObject> = this.parsedUserSettings as TemplateSettingsType<z.AnyZodObject>;
+    if (this.destinationProject) {
       newUserSettings = {
         ...newUserSettings,
-        ...this.destinationProject.getInstantiatedSettings(template.parentTemplate, parentInstanceId),
+        project_name: this.destinationProject.instantiatedProjectSettings.projectName,
+      };
+      if (template.parentTemplate && parentInstanceId) {
+        newUserSettings = {
+          ...newUserSettings,
+          ...this.destinationProject.getInstantiatedSettings(template.parentTemplate, parentInstanceId),
+        };
+      }
+    } else {
+      newUserSettings = {
+        ...newUserSettings,
+        project_name: path.basename(this.absDestinationProjectPath),
       };
     }
     return newUserSettings;
@@ -95,7 +107,7 @@ export class TemplateGeneratorService {
    * Reads the target file, applies the side effect function using Handlebars templating data, and writes the new content.
    */
   private async applySideEffect(
-    userSettings: UserTemplateSettings,
+    userSettings: TemplateSettingsType<z.AnyZodObject>,
     filePath: string,
     sideEffectFunction: SideEffectFunction
   ) {
