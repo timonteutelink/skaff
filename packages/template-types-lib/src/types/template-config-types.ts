@@ -5,7 +5,7 @@ import { StringOrCallback, UserTemplateSettings, TemplateSettingsType } from './
  * Interface representing all mandatory options for a template.
  */
 export const templateConfigSchema = z.object({
-	name: z.string().nonempty().min(2).describe("The name of the template. Must match the parent directory name."),
+	name: z.string().nonempty().min(2).describe("The name of the template. Must match the parent directory name.").regex(/^[a-zA-Z0-9_]+$/, "The name must only contain letters, numbers, or underscores."),
 	author: z.string().nonempty().min(2).describe("A description of the template."),
 
 	description: z.string().optional().describe("Author"),

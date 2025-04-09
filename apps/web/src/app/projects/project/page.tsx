@@ -4,6 +4,7 @@ import {
   retrieveProject,
   retrieveTemplate,
   instantiateTemplate,
+  reloadProjects,
 } from '@/app/actions';
 import { TemplateSettingsDialog } from '@/components/general/TemplateSettingsDialog';
 import { Tree } from '@/components/general/Tree';
@@ -71,7 +72,8 @@ const collectTemplates = (tpl: TemplateDTO): Record<string, TemplateDTO> => {
   if (tpl.subTemplates) {
     Object.keys(tpl.subTemplates).forEach((cat) => {
       tpl.subTemplates[cat]?.forEach((sub) => {
-        map = { ...map, ...collectTemplates(sub) };
+        const subMap = collectTemplates(sub);
+        map = { ...map, ...subMap };
       });
     });
   }
@@ -134,18 +136,23 @@ const buildProjectTree = (
             (child) => child.templateName === candidateId
           );
           const childInstantiatedNodes = childInstances.map((child) => buildNode(child));
-          // Create a createInstance action node for this candidate.
-          const createNode: CreateInstanceNode = {
-            type: 'createInstance',
-            id: `${inst.id}-${category}-${candidateId}-create`,
-            parentId: inst.id,
-            candidateTemplate: candidate,
-          };
+
+          const finalChildren: ProjectTreeNode[] = [...childInstantiatedNodes];
+          if (childInstances.length == 0 || candidate.config.templateConfig.multiInstance) {
+            // Create a createInstance action node for this candidate.
+            const createNode: CreateInstanceNode = {
+              type: 'createInstance',
+              id: `${inst.id}-${category}-${candidateId}-create`,
+              parentId: inst.id,
+              candidateTemplate: candidate,
+            };
+            finalChildren.push(createNode);
+          }
           return {
             type: 'childTemplate',
             id: `${inst.id}-${category}-${candidateId}`,
             templateDefinition: candidate,
-            children: [...childInstantiatedNodes, createNode],
+            children: finalChildren,
           } as ChildTemplateNode;
         });
 
@@ -219,6 +226,7 @@ const ProjectTemplateTreePage: React.FC = () => {
   useEffect(() => {
     if (project && rootTemplate) {
       const templateMap = collectTemplates(rootTemplate);
+      console.log('Template map:', templateMap);
       const tree = buildProjectTree(project.settings.instantiatedTemplates, templateMap);
       setProjectTree(tree);
     }
@@ -234,6 +242,7 @@ const ProjectTemplateTreePage: React.FC = () => {
     async (userSettings: UserTemplateSettings, node: CreateInstanceNode) => {
       const candidate = node.candidateTemplate;
       const result = await instantiateTemplate(
+        rootTemplate!.config.templateConfig.name,
         candidate.config.templateConfig.name,
         node.parentId,
         projectNameParam!,
@@ -242,7 +251,7 @@ const ProjectTemplateTreePage: React.FC = () => {
       if ('error' in result) {
         console.error('Error instantiating template:', result.error);
       } else {
-        // Refresh project data and rebuild the tree.
+        await reloadProjects();
         const refreshedProject = await retrieveProject(projectNameParam!);
         if (refreshedProject && rootTemplate) {
           setProject(refreshedProject);

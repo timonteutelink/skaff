@@ -30,6 +30,10 @@ export async function retrieveTemplate(templateName: string): Promise<TemplateDT
 	return template.data.mapToDTO();
 }
 
+export async function reloadProjects(): Promise<void> {
+	await PROJECT_REGISTRY.reloadProjects();
+}
+
 export async function retrieveProjects(): Promise<ProjectDTO[]> {
 	await PROJECT_REGISTRY.getProjects();
 
@@ -78,15 +82,22 @@ export async function createNewProject(
 }
 
 export async function instantiateTemplate(
+	rootTemplateName: string,
 	templateName: string,
 	parentInstanceId: string,
 	destinationProjectName: string,
 	userTemplateSettings: UserTemplateSettings
 ): Promise<Result<string>> {
-	const template = await ROOT_TEMPLATE_REGISTRY.findTemplate(templateName);
+	const rootTemplate = await ROOT_TEMPLATE_REGISTRY.findTemplate(rootTemplateName);
 
-	if ('error' in template) {
-		return { error: template.error };
+	if ('error' in rootTemplate) {
+		return { error: rootTemplate.error };
+	}
+
+	const template = rootTemplate.data.findSubTemplate(templateName);
+
+	if (!template) {
+		return { error: "Template not found" };
 	}
 
 	const destinationProject = await PROJECT_REGISTRY.findProject(destinationProjectName);
@@ -95,7 +106,7 @@ export async function instantiateTemplate(
 		return { error: "Destination project not found" };
 	}
 
-	const instatiationResult = await template.data.templateInExistingProject(userTemplateSettings, destinationProject, parentInstanceId);
+	const instatiationResult = await template.templateInExistingProject(userTemplateSettings, destinationProject, parentInstanceId);
 
 	if ('error' in instatiationResult) {
 		return { error: "Failed to instantiate template" };

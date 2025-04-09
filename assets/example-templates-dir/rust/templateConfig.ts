@@ -5,6 +5,8 @@ import { TemplateConfig, TemplateConfigModule, SideEffectFunction, TemplateSetti
 // If after templating with handlebars a file contains { "TEMPLATE_FILE_REF": "../" } we can somehow include also that referenced file and template it. Then next to importing individual files from other locations we also allow importing templates with the provided settings. Even though this should use a subtemplate we should have also this way to automate instatiation of templates.
 
 // fix all error handling, proper communication to frontend but also rollbacks when template generation fails. Use git in existing projects to enforce this and in new projects we can delete the project on error.
+
+// Allow generating from existing templateSettings.json
 const templateSettingsSchema = z.object({
 	author: z.string(),
 	license: z.enum(['MIT', 'Apache-2.0']).optional(),

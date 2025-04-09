@@ -142,6 +142,14 @@ export class TemplateGeneratorService {
       console.error(`Template ${templateName} could not be found in rootTemplate ${this.rootTemplate.config.templateConfig.name}`);
       return { error: `Template ${templateName} could not be found in rootTemplate ${this.rootTemplate.config.templateConfig.name}` };
     }
+
+    for (const instantiatedTemplate of this.destinationProject.instantiatedProjectSettings.instantiatedTemplates) {
+      if (instantiatedTemplate.id === parentInstanceId && instantiatedTemplate.templateName === templateName && !template.config.templateConfig.multiInstance) {
+        console.error(`Template ${templateName} is already instantiated.`);
+        return { error: `Template ${templateName} is already instantiated.` };
+      }
+    }
+
     try {
       await this.copyDirectory(template, parentInstanceId);
       await this.applySideEffects(template, parentInstanceId);

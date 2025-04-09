@@ -19,7 +19,7 @@ export interface TreeProps<T> {
 	selectedId?: string;
 }
 
-export function Tree<T extends { id: string; name: string; children?: T[] }>({
+export function Tree<T extends { id: string; children?: T[] }>({
 	data,
 	renderLabel,
 	onSelect,
@@ -65,7 +65,7 @@ export function Tree<T extends { id: string; name: string; children?: T[] }>({
 								{node.isOpen ? '▼' : '▶'}
 							</button>
 						)}
-						<span className="flex-1">{node.data.name}</span>
+						<span className="flex-1">{('name' in node.data) ? node.data.name as string : 'Unnamed'}</span>
 					</div>
 				);
 
