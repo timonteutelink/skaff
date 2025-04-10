@@ -1,8 +1,8 @@
 {
   "tasks": {
-    "build": "deno compile --output=./code-templator --import-map=./import_map.json --allow-net --allow-env --allow-read --unstable-sloppy-imports src/main.ts",
-    "start": "deno run --import-map=./import_map.json --allow-net --allow-env --allow-read --unstable-sloppy-imports src/main.ts",
-    "dev": "deno run --import-map=./import_map.json --allow-net --allow-env --allow-read --unstable-sloppy-imports --watch=src src/main.ts",
+    "build": "deno compile --output=./code-templator --include=./node_modules/.bin/esbuild --allow-write --allow-run --import-map=./import_map.json --allow-net --allow-env --allow-read --unstable-sloppy-imports src/main.ts",
+    "start": "deno run --import-map=./import_map.json --allow-write --allow-run --allow-net --allow-env --allow-read --unstable-sloppy-imports src/main.ts",
+    "dev": "deno run --import-map=./import_map.json --allow-write --allow-run --allow-net --allow-env --allow-read --unstable-sloppy-imports --watch=src src/main.ts",
     "format": "deno fmt"
   }
 }

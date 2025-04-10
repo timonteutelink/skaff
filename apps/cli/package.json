@@ -7,7 +7,9 @@
   },
   "scripts": {},
   "dependencies": {
-    "@repo/ts": "workspace:*"
+    "@repo/ts": "workspace:*",
+    "@timonteutelink/template-types-lib": "^0.0.20",
+    "esbuild": "^0.25.2"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

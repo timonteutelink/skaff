@@ -26,6 +26,12 @@ importers:
       '@repo/ts':
         specifier: workspace:*
         version: link:../../packages/ts
+      '@timonteutelink/template-types-lib':
+        specifier: ^0.0.20
+        version: 0.0.20
+      esbuild:
+        specifier: ^0.25.2
+        version: 0.25.2
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*
