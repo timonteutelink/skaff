@@ -230,6 +230,13 @@ export class TemplateGeneratorService {
       }
     }
 
+    const assertions = anyOrCallbackToAny(template.config.assertions, this.currentlyGeneratingTemplateFullSettings);
+
+    if (assertions !== undefined && !assertions) {
+      console.error(`Template ${templateName} failed assertions.`);
+      return { error: `Template ${templateName} failed assertions.` };
+    }
+
     try {
       await this.copyDirectory();
       await this.applySideEffects();
