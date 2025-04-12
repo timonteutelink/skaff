@@ -19,13 +19,14 @@ export class RootTemplateRegistry {
 			const rootTemplateDirsPath = path.join(templatePath, "root-templates");
 			const rootTemplateDirs = await fs.readdir(rootTemplateDirsPath);
 			for (const rootTemplateDir of rootTemplateDirs) {
-				const stat = await fs.stat(rootTemplateDir);
+				const rootTemplateDirPath = path.join(rootTemplateDirsPath, rootTemplateDir);
+				const stat = await fs.stat(rootTemplateDirPath);
 				if (stat.isDirectory()) {
 					try {
-						const template = await Template.createAllTemplates(rootTemplateDir);
+						const template = await Template.createAllTemplates(rootTemplateDirPath);
 						this.templates.push(template);
 					} catch (e) {
-						console.error(`Failed to load template at ${rootTemplateDir}: ${e}`);
+						console.error(`Failed to load template at ${rootTemplateDirPath}: ${e}`);
 						continue;
 					}
 				}

@@ -224,7 +224,7 @@ export class TemplateGeneratorService {
         console.error(`Template ${templateName} is already instantiated.`);
         return { error: `Template ${templateName} is already instantiated.` };
       }
-      if (templatesThatDisableThisTemplate.includes(instantiatedTemplate.templateName)) {
+      if (templatesThatDisableThisTemplate?.includes(instantiatedTemplate.templateName)) {
         console.error(`Template ${templateName} cannot be instantiated because ${instantiatedTemplate.templateName} is already instantiated.`);
         return { error: `Template ${templateName} cannot be instantiated because ${instantiatedTemplate.templateName} is already instantiated.` };
       }

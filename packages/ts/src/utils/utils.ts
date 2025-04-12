@@ -1,7 +1,7 @@
 import { TemplateSettingsType, AnyOrCallback } from "@timonteutelink/template-types-lib";
 import z from "zod";
 
-export function anyOrCallbackToAny<TSettings extends TemplateSettingsType<z.AnyZodObject>, T>(anyOrCallback: AnyOrCallback<TSettings, T>, parsedUserSettings: TSettings): string {
+export function anyOrCallbackToAny<TSettings extends TemplateSettingsType<z.AnyZodObject>, T>(anyOrCallback: AnyOrCallback<TSettings, T>, parsedUserSettings: TSettings): T {
   return anyOrCallback instanceof Function ? anyOrCallback(parsedUserSettings) : anyOrCallback;
 }
 

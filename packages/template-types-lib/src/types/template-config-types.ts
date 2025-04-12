@@ -132,6 +132,11 @@ export interface TemplateConfigModule<TFullSettingsType extends TemplateSettings
 	autoInstatiatedSubtemplates?: AutoInstatiatedSubtemplate<TFullSettingsType>[];
 
 	/**
+	 * Assertions. Function must return true otherwise the template generation will fail.
+	 */
+	assertions?: AnyOrCallback<TFullSettingsType, boolean>;
+
+	/**
 	 * A description of this template. Usefull for the AI.
 	 * When instantiating a child template this description will be used to describe the the things this template adds.
 	 */
