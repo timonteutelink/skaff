@@ -17,7 +17,7 @@ localFlake:
           LD_LIBRARY_PATH = "${pkgs.stdenv.cc.cc.lib}/lib";
 
           TEMPLATE_DIR_PATHS = "~/projects/timon/code-templator/assets/example-templates-dir/:~/projects/btc/mcp-templates/:~/projects/timon/timon-templates/";
-          PROJECT_SEARCH_PATHS = "~/projects/btc/:~/projects/timon/";
+          PROJECT_SEARCH_PATHS = "~/projects/btc/:~/projects/timon/gen-projects/";
           ESBUILD_BINARY_PATH="~/projects/timon/code-templator/node_modules/.bin/esbuild";
         };
 
