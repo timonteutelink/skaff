@@ -4,17 +4,17 @@ import { glob } from 'glob';
 import Handlebars from 'handlebars';
 import * as path from 'node:path';
 import { Template } from '../models/template-models';
-import { stringOrCallbackToString } from '../utils/utils';
+import { anyOrCallbackToAny, stringOrCallbackToString } from '../utils/utils';
 import { Project } from '../models/project-models';
 import { ProjectSettings, Result } from '../utils/types';
 import z from 'zod';
+import { PROJECT_REGISTRY } from './project-registry-service';
 
 export class TemplateGeneratorService {
   public absDestinationProjectPath: string;
   public destinationProject?: Project;
   public rootTemplate: Template;
   public parsedUserSettings: UserTemplateSettings;
-
 
   // Values set when generating a template. Should always be set again before generating a new template.
   private currentlyGeneratingTemplate?: Template;
@@ -24,7 +24,7 @@ export class TemplateGeneratorService {
   constructor(rootTemplate: Template, userSettings: UserTemplateSettings, absDestinationProjectPath: string, destinationProject?: Project) {
     this.absDestinationProjectPath = absDestinationProjectPath;
     this.destinationProject = destinationProject;
-    this.rootTemplate = rootTemplate;
+    this.rootTemplate = rootTemplate.findRootTemplate();
     this.parsedUserSettings = rootTemplate.config.templateSettingsSchema.parse(userSettings);
   }
 
@@ -65,6 +65,21 @@ export class TemplateGeneratorService {
     return path.join(this.absDestinationProjectPath, this.getTargetPath());
   }
 
+  private getRedirects(): { from: string, to: string }[] {
+    if (!this.currentlyGeneratingTemplate || !this.currentlyGeneratingTemplateFullSettings) {
+      throw new Error('No template is currently being generated.');
+    }
+    const redirects = this.currentlyGeneratingTemplate.config.redirects;
+    const fullSettings = this.currentlyGeneratingTemplateFullSettings;
+    if (!redirects) {
+      return [];
+    }
+    return redirects.map(redirect => ({
+      from: stringOrCallbackToString(redirect.from, fullSettings),
+      to: stringOrCallbackToString(redirect.to, fullSettings),
+    }));
+  }
+
   /**
    * Copies all files from the template’s adjacent "templates" directory to the destination.
    * Files are processed with Handlebars. If a file ends in ".hbs", the extension is removed.
@@ -75,6 +90,7 @@ export class TemplateGeneratorService {
     }
     const src = this.currentlyGeneratingTemplate.absoluteTemplatesDir;
     const dest = this.getAbsoluteTargetPath();
+    const redirects = this.getRedirects();
 
     await fs.mkdir(dest, { recursive: true });
 
@@ -86,6 +102,13 @@ export class TemplateGeneratorService {
 
       if (destPath.endsWith('.hbs')) {
         destPath = destPath.slice(0, -4);
+      }
+
+      for (const redirect of redirects) {
+        if (destPath.endsWith(redirect.from)) {
+          destPath = path.join(dest, redirect.to);
+          break;
+        }
       }
 
       const stats = await fs.stat(srcPath);
@@ -110,10 +133,11 @@ export class TemplateGeneratorService {
       throw new Error('No template is currently being generated.');
     }
     const sideEffects = this.currentlyGeneratingTemplate.config.sideEffects;
+    const fullSettings = this.currentlyGeneratingTemplateFullSettings;
     await Promise.all(
-      sideEffects.map(({ filePath, apply }) => {
-        return this.applySideEffect(stringOrCallbackToString(filePath, this.currentlyGeneratingTemplateFullSettings), apply);
-      })
+      sideEffects?.map(({ filePath, apply }) => {
+        return this.applySideEffect(stringOrCallbackToString(filePath, fullSettings), apply);
+      }) || []
     );
   }
 
@@ -124,6 +148,9 @@ export class TemplateGeneratorService {
     filePath: string,
     sideEffectFunction: SideEffectFunction
   ) {
+    if (!this.currentlyGeneratingTemplate || !this.currentlyGeneratingTemplateFullSettings) {
+      throw new Error('No template is currently being generated.');
+    }
     const absoluteFilePath = path.join(this.absDestinationProjectPath, filePath);
     let oldFileContents = '';
     try {
@@ -144,6 +171,27 @@ export class TemplateGeneratorService {
     this.updateParsedUserSettingsWithParentSettings();
   }
 
+  private static async autoInstantiateSubTemplates(
+    rootTemplate: Template,
+    fullParentSettings: TemplateSettingsType<z.AnyZodObject>,
+    absDestinationProjectPath: string,
+    destinationProject: Project,
+    newProjectId: string
+  ) {
+    if (!rootTemplate.config.autoInstatiatedSubtemplates) {
+      return;
+    }
+    for (const templateToAutoInstantiate of rootTemplate.config.autoInstatiatedSubtemplates) {
+      const nameOfTemplateToAutoInstantiate = stringOrCallbackToString(templateToAutoInstantiate.subTemplateName, fullParentSettings);
+      const newTemplateSettings = templateToAutoInstantiate.mapSettings(fullParentSettings);
+      const template = rootTemplate.findSubTemplate(nameOfTemplateToAutoInstantiate);
+      if (template) {
+        const newTemplateGeneratorService = new TemplateGeneratorService(rootTemplate, newTemplateSettings, absDestinationProjectPath, destinationProject);
+        await newTemplateGeneratorService.instantiateTemplate(nameOfTemplateToAutoInstantiate, newProjectId, true);
+      }
+    }
+  }
+
   /**
    * Instantiates the template by copying files from the template’s directory, processing them with Handlebars,
    * and then applying any defined side effects.
@@ -151,7 +199,7 @@ export class TemplateGeneratorService {
    * @param templateName The name of the template to instantiate.s
    * @returns The absolute path where templated files are written.
    */
-  public async instantiateTemplate(templateName: string, parentInstanceId: string): Promise<Result<string>> {
+  public async instantiateTemplate(templateName: string, parentInstanceId: string, autoInstantiated?: boolean): Promise<Result<string>> {
     if (!this.destinationProject) {
       console.error('No destination project provided.');
       return { error: 'No destination project provided.' };
@@ -162,19 +210,37 @@ export class TemplateGeneratorService {
       return { error: `Template ${templateName} could not be found in rootTemplate ${this.rootTemplate.config.templateConfig.name}` };
     }
 
+    this.setTemplateGenerationValues(template, parentInstanceId);
+
+    if (!this.currentlyGeneratingTemplateFullSettings) {
+      console.error('Failed to parse user settings.');
+      return { error: 'Failed to parse user settings.' };
+    }
+
+    const templatesThatDisableThisTemplate = anyOrCallbackToAny(template.config.templatesThatDisableThis, this.currentlyGeneratingTemplateFullSettings);
+
     for (const instantiatedTemplate of this.destinationProject.instantiatedProjectSettings.instantiatedTemplates) {
       if (instantiatedTemplate.id === parentInstanceId && instantiatedTemplate.templateName === templateName && !template.config.templateConfig.multiInstance) {
         console.error(`Template ${templateName} is already instantiated.`);
         return { error: `Template ${templateName} is already instantiated.` };
       }
+      if (templatesThatDisableThisTemplate.includes(instantiatedTemplate.templateName)) {
+        console.error(`Template ${templateName} cannot be instantiated because ${instantiatedTemplate.templateName} is already instantiated.`);
+        return { error: `Template ${templateName} cannot be instantiated because ${instantiatedTemplate.templateName} is already instantiated.` };
+      }
     }
-
-    this.setTemplateGenerationValues(template, parentInstanceId);
 
     try {
       await this.copyDirectory();
       await this.applySideEffects();
-      await Project.addTemplateToSettings(this.absDestinationProjectPath, parentInstanceId, template, this.parsedUserSettings);
+      const newTemplateInstanceId = await Project.addTemplateToSettings(this.absDestinationProjectPath, parentInstanceId, template, this.parsedUserSettings, autoInstantiated);
+
+      if ('error' in newTemplateInstanceId) {
+        console.error(`Failed to add template to settings: ${newTemplateInstanceId.error}`);
+        return { error: `Failed to add template to settings: ${newTemplateInstanceId.error}` };
+      }
+
+      await TemplateGeneratorService.autoInstantiateSubTemplates(this.rootTemplate, this.currentlyGeneratingTemplateFullSettings, this.absDestinationProjectPath, this.destinationProject, newTemplateInstanceId.data);
     } catch (e) {
       console.error(`Failed to instantiate template: ${e}`);
       return { error: `Failed to instantiate template: ${e}` };
@@ -199,13 +265,15 @@ export class TemplateGeneratorService {
 
     const projectName = path.basename(this.absDestinationProjectPath);
 
+    const newProjectId = crypto.randomUUID();
+
     const newProjectSettings: ProjectSettings = {
       projectName,
       projectAuthor: this.parsedUserSettings.author,
       rootTemplateName: this.rootTemplate.config.templateConfig.name,
       instantiatedTemplates: [
         {
-          id: crypto.randomUUID(),
+          id: newProjectId,
           parentId: undefined,
           templateName: this.rootTemplate.config.templateConfig.name,
           templateSettings: this.parsedUserSettings,
@@ -215,11 +283,26 @@ export class TemplateGeneratorService {
 
     this.setTemplateGenerationValues(this.rootTemplate);
 
+    if (!this.currentlyGeneratingTemplateFullSettings) {
+      console.error('Failed to parse user settings.');
+      return { error: 'Failed to parse user settings.' };
+    }
+
     try {
       await fs.mkdir(this.absDestinationProjectPath, { recursive: true });
       await this.copyDirectory();
       await this.applySideEffects();
       await Project.writeNewProjectSettings(this.absDestinationProjectPath, newProjectSettings);
+
+      await PROJECT_REGISTRY.reloadProjects();
+      const destinationProject = await PROJECT_REGISTRY.findProject(projectName);
+
+      if (!destinationProject) {
+        console.error(`Failed to find project ${projectName} after creating it.`);
+        return { error: `Failed to find project ${projectName} after creating it.` };
+      }
+
+      await TemplateGeneratorService.autoInstantiateSubTemplates(this.rootTemplate, this.currentlyGeneratingTemplateFullSettings, this.absDestinationProjectPath, destinationProject, newProjectId);
     } catch (e) {
       console.error(`Failed to instantiate new project: ${e}`);
       return { error: `Failed to instantiate new project: ${e}` };

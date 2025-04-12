@@ -54,6 +54,14 @@ program
 	});
 
 program
+	.command('precompile-templates')
+	.description('Precompile all templates')
+	.action(async () => {
+		await ROOT_TEMPLATE_REGISTRY.reloadTemplates();
+		console.log('Templates precompiled successfully');
+	});
+
+program
 	.command('create-project')
 	.description('Create a new project from a template')
 	.action(async () => {

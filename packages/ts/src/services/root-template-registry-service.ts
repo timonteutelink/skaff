@@ -1,23 +1,33 @@
 import * as fs from 'node:fs/promises';
 import { Template } from '../models/template-models';
-import { TEMPLATE_PATHS } from '../utils/env';
+import { TEMPLATE_DIR_PATHS } from '../utils/env';
 import { Result } from '../utils/types';
+import path from 'node:path';
 
+// now only stores the root templates at: <templateDirPath>/root-templates/*
+// later also store reference to files and generic templates to allow direct instantiation without saving state of subtemplates
 export class RootTemplateRegistry {
+	public templatePaths: string[] = [];
 	public templates: Template[] = [];
 
-	constructor(private templatePaths: string[]) { }
+	constructor(templatePaths: string[]) {
+		this.templatePaths = templatePaths;
+	}
 
 	private async loadTemplates(): Promise<void> {
-		for (const searchPath of this.templatePaths) {
-			const stat = await fs.stat(searchPath);
-			if (stat.isDirectory()) {
-				try {
-					const template = await Template.createAllTemplates(searchPath);
-					this.templates.push(template);
-				} catch (e) {
-					console.error(`Failed to load template at ${searchPath}: ${e}`);
-					continue;
+		for (const templatePath of this.templatePaths) {
+			const rootTemplateDirsPath = path.join(templatePath, "root-templates");
+			const rootTemplateDirs = await fs.readdir(rootTemplateDirsPath);
+			for (const rootTemplateDir of rootTemplateDirs) {
+				const stat = await fs.stat(rootTemplateDir);
+				if (stat.isDirectory()) {
+					try {
+						const template = await Template.createAllTemplates(rootTemplateDir);
+						this.templates.push(template);
+					} catch (e) {
+						console.error(`Failed to load template at ${rootTemplateDir}: ${e}`);
+						continue;
+					}
 				}
 			}
 		}
@@ -58,5 +68,5 @@ export class RootTemplateRegistry {
 
 }
 
-export const ROOT_TEMPLATE_REGISTRY = new RootTemplateRegistry(TEMPLATE_PATHS);
+export const ROOT_TEMPLATE_REGISTRY = new RootTemplateRegistry(TEMPLATE_DIR_PATHS);
 

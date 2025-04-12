@@ -225,5 +225,13 @@ export class Template {
 		}
 		return null;
 	}
+
+	public findRootTemplate(): Template {
+		let currentTemplate: Template | undefined = this;
+		while (currentTemplate.parentTemplate) {
+			currentTemplate = currentTemplate.parentTemplate;
+		}
+		return currentTemplate!;
+	}
 }
 

@@ -57,7 +57,7 @@ export type AutoInstatiatedSubtemplate<TFullSettingsType extends TemplateSetting
 	 * Function to map the user settings to the subtemplate settings.
 	 * This function is called with the user settings and should return the subtemplate settings.
 	 */
-	mapSettings: (userSettings: TFullSettingsType) => Partial<UserTemplateSettings>;
+	mapSettings: (userSettings: TFullSettingsType) => UserTemplateSettings;
 };
 
 export type AiContext = {

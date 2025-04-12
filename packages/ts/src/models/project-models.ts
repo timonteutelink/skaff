@@ -45,25 +45,27 @@ export class Project {
 		return { data: undefined };
 	}
 
-	public static async addTemplateToSettings(absoluteProjectPath: string, parentInstanceId: string, template: Template, templateSettings: UserTemplateSettings): Promise<Result<void>> {
+	public static async addTemplateToSettings(absoluteProjectPath: string, parentInstanceId: string, template: Template, templateSettings: UserTemplateSettings, autoInstantiated?: boolean): Promise<Result<string>> {
 		const projectSettingsPath = path.join(absoluteProjectPath, "templateSettings.json");
 		const projectSettingsResult = await Project.loadProjectSettings(projectSettingsPath);
 		if ('error' in projectSettingsResult) {
 			return { error: projectSettingsResult.error };
 		}
 		const projectSettings = projectSettingsResult.data.settings;
+		const newTemplateInstanceId = crypto.randomUUID();
 		projectSettings.instantiatedTemplates.push({
-			id: crypto.randomUUID(),
+			id: newTemplateInstanceId,
 			parentId: parentInstanceId,
 			templateName: template.config.templateConfig.name,
 			templateSettings,
+			automaticallyInstantiatedByParent: autoInstantiated,
 		});
 		const result = await Project.writeNewProjectSettings(absoluteProjectPath, projectSettings, true);
 		if ('error' in result) {
 			return { error: result.error };
 		}
 
-		return { data: undefined };
+		return { data: newTemplateInstanceId };
 	}
 
 	private static async loadProjectSettings(projectSettingsPath: string): Promise<Result<{ settings: ProjectSettings, rootTemplate: Template }>> {

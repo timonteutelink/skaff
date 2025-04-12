@@ -9,7 +9,7 @@ const templateSettingsSchema = z.object({
 export type FullTemplateSettings = TemplateSettingsType<typeof templateSettingsSchema, ParentTemplateSettings>;
 
 const templateConfig: TemplateConfig = {
-	name: 'rust-axum',
+	name: 'rust_axum',
 	description: 'Axum template',
 	author: "Timon Teutelink"
 };
