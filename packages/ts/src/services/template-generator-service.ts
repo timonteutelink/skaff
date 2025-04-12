@@ -15,6 +15,12 @@ export class TemplateGeneratorService {
   public rootTemplate: Template;
   public parsedUserSettings: UserTemplateSettings;
 
+
+  // Values set when generating a template. Should always be set again before generating a new template.
+  private currentlyGeneratingTemplate?: Template;
+  private currentlyGeneratingTemplateParentInstanceId?: string;
+  private currentlyGeneratingTemplateFullSettings?: TemplateSettingsType<z.AnyZodObject>;
+
   constructor(rootTemplate: Template, userSettings: UserTemplateSettings, absDestinationProjectPath: string, destinationProject?: Project) {
     this.absDestinationProjectPath = absDestinationProjectPath;
     this.destinationProject = destinationProject;
@@ -22,17 +28,17 @@ export class TemplateGeneratorService {
     this.parsedUserSettings = rootTemplate.config.templateSettingsSchema.parse(userSettings);
   }
 
-  private getParsedUserSettingsWithParentSettings(template: Template, parentInstanceId?: string): TemplateSettingsType<z.AnyZodObject> {
+  private updateParsedUserSettingsWithParentSettings(): void {
     let newUserSettings: TemplateSettingsType<z.AnyZodObject> = this.parsedUserSettings as TemplateSettingsType<z.AnyZodObject>;
     if (this.destinationProject) {
       newUserSettings = {
         ...newUserSettings,
         project_name: this.destinationProject.instantiatedProjectSettings.projectName,
       };
-      if (template.parentTemplate && parentInstanceId) {
+      if (this.currentlyGeneratingTemplate?.parentTemplate && this.currentlyGeneratingTemplateParentInstanceId) {
         newUserSettings = {
           ...newUserSettings,
-          ...this.destinationProject.getInstantiatedSettings(template.parentTemplate, parentInstanceId),
+          ...this.destinationProject.getInstantiatedSettings(this.currentlyGeneratingTemplate.parentTemplate, this.currentlyGeneratingTemplateParentInstanceId),
         };
       }
     } else {
@@ -41,28 +47,34 @@ export class TemplateGeneratorService {
         project_name: path.basename(this.absDestinationProjectPath),
       };
     }
-    return newUserSettings;
+    this.currentlyGeneratingTemplateFullSettings = newUserSettings;
   }
 
-  private getTargetPath(template: Template, parentInstanceId?: string): string {
-    const targetPath = template.config.targetPath;
+  private getTargetPath(): string {
+    if (!this.currentlyGeneratingTemplate || !this.currentlyGeneratingTemplateFullSettings) {
+      throw new Error('No template is currently being generated.');
+    }
+    const targetPath = this.currentlyGeneratingTemplate.config.targetPath;
     if (!targetPath) {
       return '.';
     }
-    return stringOrCallbackToString(targetPath, this.getParsedUserSettingsWithParentSettings(template, parentInstanceId));
+    return stringOrCallbackToString(targetPath, this.currentlyGeneratingTemplateFullSettings);
   }
 
-  private getAbsoluteTargetPath(template: Template, parentInstanceId?: string): string {
-    return path.join(this.absDestinationProjectPath, this.getTargetPath(template, parentInstanceId));
+  private getAbsoluteTargetPath(): string {
+    return path.join(this.absDestinationProjectPath, this.getTargetPath());
   }
 
   /**
    * Copies all files from the template’s adjacent "templates" directory to the destination.
    * Files are processed with Handlebars. If a file ends in ".hbs", the extension is removed.
    */
-  private async copyDirectory(template: Template, parentInstanceId?: string): Promise<void> {
-    const src = template.absoluteTemplatesDir;
-    const dest = this.getAbsoluteTargetPath(template, parentInstanceId);
+  private async copyDirectory(): Promise<void> {
+    if (!this.currentlyGeneratingTemplate) {
+      throw new Error('No template is currently being generated.');
+    }
+    const src = this.currentlyGeneratingTemplate.absoluteTemplatesDir;
+    const dest = this.getAbsoluteTargetPath();
 
     await fs.mkdir(dest, { recursive: true });
 
@@ -81,7 +93,7 @@ export class TemplateGeneratorService {
 
       const content = await fs.readFile(srcPath, "utf-8");
       const compiled = Handlebars.compile(content);
-      const result = compiled(this.getParsedUserSettingsWithParentSettings(template, parentInstanceId));
+      const result = compiled(this.currentlyGeneratingTemplateFullSettings);
 
       await fs.ensureDir(path.dirname(destPath));
       await fs.writeFile(destPath, result, "utf-8");
@@ -93,12 +105,14 @@ export class TemplateGeneratorService {
   /**
    * Applies side effects defined in the template configuration.
    */
-  private async applySideEffects(template: Template, parentInstanceId?: string): Promise<void> {
-    const sideEffects = template.config.sideEffects;
+  private async applySideEffects(): Promise<void> {
+    if (!this.currentlyGeneratingTemplate || !this.currentlyGeneratingTemplateFullSettings) {
+      throw new Error('No template is currently being generated.');
+    }
+    const sideEffects = this.currentlyGeneratingTemplate.config.sideEffects;
     await Promise.all(
       sideEffects.map(({ filePath, apply }) => {
-        const parsedUserSettings = this.getParsedUserSettingsWithParentSettings(template, parentInstanceId);
-        return this.applySideEffect(parsedUserSettings, stringOrCallbackToString(filePath, parsedUserSettings), apply);
+        return this.applySideEffect(stringOrCallbackToString(filePath, this.currentlyGeneratingTemplateFullSettings), apply);
       })
     );
   }
@@ -107,7 +121,6 @@ export class TemplateGeneratorService {
    * Reads the target file, applies the side effect function using Handlebars templating data, and writes the new content.
    */
   private async applySideEffect(
-    userSettings: TemplateSettingsType<z.AnyZodObject>,
     filePath: string,
     sideEffectFunction: SideEffectFunction
   ) {
@@ -118,11 +131,17 @@ export class TemplateGeneratorService {
     } catch {
       // ignore so just creates file
     }
-    const sideEffectResult = await sideEffectFunction(userSettings, oldFileContents);
+    const sideEffectResult = await sideEffectFunction(this.currentlyGeneratingTemplateFullSettings, oldFileContents);
     if (!sideEffectResult) {
       return;
     }
     await fs.writeFile(absoluteFilePath, sideEffectResult, 'utf8');
+  }
+
+  private setTemplateGenerationValues(template: Template, parentInstanceId?: string) {
+    this.currentlyGeneratingTemplate = template;
+    this.currentlyGeneratingTemplateParentInstanceId = parentInstanceId;
+    this.updateParsedUserSettingsWithParentSettings();
   }
 
   /**
@@ -150,16 +169,19 @@ export class TemplateGeneratorService {
       }
     }
 
+    this.setTemplateGenerationValues(template, parentInstanceId);
+
     try {
-      await this.copyDirectory(template, parentInstanceId);
-      await this.applySideEffects(template, parentInstanceId);
+      await this.copyDirectory();
+      await this.applySideEffects();
       await Project.addTemplateToSettings(this.absDestinationProjectPath, parentInstanceId, template, this.parsedUserSettings);
     } catch (e) {
       console.error(`Failed to instantiate template: ${e}`);
       return { error: `Failed to instantiate template: ${e}` };
     }
-    return { data: this.getAbsoluteTargetPath(template, parentInstanceId) };
+    return { data: this.getAbsoluteTargetPath() };
   }
+
 
   /**
    * Instantiates a new project by copying the root template to the specified destination.
@@ -191,10 +213,12 @@ export class TemplateGeneratorService {
       ],
     };
 
+    this.setTemplateGenerationValues(this.rootTemplate);
+
     try {
       await fs.mkdir(this.absDestinationProjectPath, { recursive: true });
-      await this.copyDirectory(this.rootTemplate);
-      await this.applySideEffects(this.rootTemplate);
+      await this.copyDirectory();
+      await this.applySideEffects();
       await Project.writeNewProjectSettings(this.absDestinationProjectPath, newProjectSettings);
     } catch (e) {
       console.error(`Failed to instantiate new project: ${e}`);

@@ -170,6 +170,7 @@ export class Template {
 		return resultPath;
 	}
 	//TODO add support for loose templates which can be instantiated anywhere and will not be tracked using a templateSettings.json
+	//TODO allow a file to contain just a ref to another file in files dir. Name will be decided by file doing reference.
 
 	/**
 	 * Instantiates the root template using the TemplateGeneratorService.

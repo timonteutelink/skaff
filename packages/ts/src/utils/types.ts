@@ -17,8 +17,11 @@ export interface TemplateDTO {
 export const InstantiatedTemplateSchema = z.object({
   id: z.string().min(1),
   parentId: z.string().optional(),
+
   templateName: z.string().min(1),
-  templateSettings: z.any() //UserTemplateSettings
+  templateSettings: z.any(), //UserTemplateSettings
+
+  automaticallyInstantiatedByParent: z.boolean().optional(),
 });
 
 export type InstantiatedTemplate = z.infer<typeof InstantiatedTemplateSchema>;

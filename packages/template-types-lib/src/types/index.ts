@@ -1,8 +1,14 @@
-export type { UserTemplateSettings, StringOrCallback, TemplateSettingsType } from './utils';
+export type { UserTemplateSettings, StringOrCallback, AnyOrCallback, TemplateSettingsType } from './utils';
 export type {
 	TemplateConfig,
 	SideEffectFunction,
 	SideEffect,
+	RedirectFile,
+	AutoInstatiatedSubtemplate,
+	AiContext,
+	AiCallbackFunction,
+	AiAutoGenerateSettings,
+	AiUserConversationSettings,
 	TemplateConfigModule,
 } from './template-config-types';
 
