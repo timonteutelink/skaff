@@ -1,8 +1,9 @@
 "use client";
-import { retrieveProject, retrieveTemplate } from "@/app/actions";
+import { instantiateTemplate, reloadProjects, retrieveProject, retrieveTemplate } from "@/app/actions";
 import { TemplateSettingsForm } from "@/components/general/template-settings/template-settings-form";
 import { ProjectDTO, TemplateDTO } from "@repo/ts/utils/types";
 import { findTemplate } from "@repo/ts/utils/utils";
+import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -80,9 +81,47 @@ const ProjectTemplateTreePage: React.FC = () => {
     return findTemplate(rootTemplate, templateNameParam);
   }, [rootTemplate, templateNameParam]);
 
-  const handleSubmitSettings = useCallback(async (data: any) => {
-    alert(JSON.stringify(data, null, 2));
-  }, []);
+  const handleSubmitSettings = useCallback(async (data: UserTemplateSettings) => {
+    if (!projectNameParam || !rootTemplate || !subTemplate) {
+      console.error("Project name or root template not found.");
+      return;
+    }
+    if (!parentTemplateInstanceIdParam && !createProject) {
+      console.error("No parent template instance ID provided.");
+      return;
+    }
+    if (subTemplate.config.templateConfig.name === rootTemplate.config.templateConfig.name && !createProject) {
+      console.error(
+        "Root template cannot be instantiated as a sub-template.",
+      );
+      return;
+    }
+
+    if (createProject) {
+
+    } else {
+      const result = await instantiateTemplate(
+        rootTemplate.config.templateConfig.name,
+        subTemplate.config.templateConfig.name,
+        parentTemplateInstanceIdParam!,
+        projectNameParam,
+        data
+      );
+      if ("error" in result) {
+        console.error("Error instantiating template:", result.error);
+      } else {
+        await reloadProjects();
+        router.push(`/projects/project/?projectName=${projectNameParam}`);
+      }
+    }
+  }, [
+    projectNameParam,
+    rootTemplate,
+    subTemplate,
+    parentTemplateInstanceIdParam,
+    router,
+    createProject,
+  ]);
 
   if (!projectNameParam || !rootTemplateNameParam || !templateNameParam) {
     return (

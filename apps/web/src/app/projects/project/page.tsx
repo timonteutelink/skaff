@@ -259,36 +259,6 @@ const ProjectTemplateTreePage: React.FC = () => {
     setSelectedNode(node);
   }, []);
 
-  // Instantiation handler: called when the TemplateSettingsDialog is confirmed.
-  const handleCreateTemplateInstance = useCallback(
-    async (userSettings: UserTemplateSettings, node: CreateInstanceNode) => {
-      const candidate = node.candidateTemplate;
-      const result = await instantiateTemplate(
-        rootTemplate!.config.templateConfig.name,
-        candidate.config.templateConfig.name,
-        node.parentId,
-        projectNameParam!,
-        userSettings,
-      );
-      if ("error" in result) {
-        console.error("Error instantiating template:", result.error);
-      } else {
-        await reloadProjects();
-        const refreshedProject = await retrieveProject(projectNameParam!);
-        if (refreshedProject && rootTemplate) {
-          setProject(refreshedProject);
-          const templateMap = collectTemplates(rootTemplate);
-          const newTree = buildProjectTree(
-            refreshedProject.settings.instantiatedTemplates,
-            templateMap,
-          );
-          setProjectTree(newTree);
-        }
-      }
-    },
-    [projectNameParam, rootTemplate],
-  );
-
   /* ----------------------------------------------------------------------------
      Custom tree label renderer
 
@@ -312,9 +282,8 @@ const ProjectTemplateTreePage: React.FC = () => {
         return (
           <div
             style={style}
-            className={`flex items-center p-2 cursor-pointer hover:bg-blue-100 select-none ${
-              isSelected ? "bg-blue-200" : ""
-            }`}
+            className={`flex items-center p-2 cursor-pointer hover:bg-blue-100 select-none ${isSelected ? "bg-blue-200" : ""
+              }`}
             onClick={onClick}
           >
             {hasChildren && (
@@ -461,10 +430,10 @@ const ProjectTemplateTreePage: React.FC = () => {
             <span className="font-medium">{selectedNode.parentId}</span>.
           </p>
           <Button
-            disabled={!projectNameParam}
+            disabled={!projectNameParam || !project}
             onClick={() => {
               router.push(
-                `/projects/instantiate-template/?projectName=${projectNameParam}&rootTemplate=${project?.rootTemplateName}&template=${candidate.config.templateConfig.name}&parentId=${selectedNode.parentId}`,
+                `/projects/instantiate-template/?projectName=${projectNameParam}&rootTemplate=${project?.rootTemplateName}&template=${candidate.config.templateConfig.name}&parentTemplateInstanceId=${selectedNode.parentId}`,
               );
             }}
           >
