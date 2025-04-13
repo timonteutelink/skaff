@@ -16,3 +16,5 @@ export const TEMPLATE_DIR_PATHS: string[] = !process.env.TEMPLATE_DIR_PATHS
 export const PROJECT_SEARCH_PATHS: { id: string, path: string }[] = (!process.env.PROJECT_SEARCH_PATHS
   ? [`${HOME}/projects`]
   : splitReplaceHome(process.env.PROJECT_SEARCH_PATHS)).map((path, index) => ({ id: `project-path-${index}`, path }));
+
+export const GENERATE_DIFF_SCRIPT_PATH = process.env.GENERATE_DIFF_SCRIPT_PATH || "./../../scripts/generate-diff-patch.sh";

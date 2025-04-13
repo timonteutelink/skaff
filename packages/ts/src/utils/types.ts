@@ -44,3 +44,17 @@ export interface ProjectDTO {
 
   settings: ProjectSettings;
 }
+
+export interface ParsedFile {
+  path: string
+  status: "added" | "modified" | "deleted"
+  hunks: DiffHunk[]
+}
+
+export interface DiffHunk {
+  oldStart: number
+  oldLines: number
+  newStart: number
+  newLines: number
+  lines: string[]
+}
