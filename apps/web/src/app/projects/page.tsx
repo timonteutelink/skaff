@@ -81,7 +81,7 @@ export default function TemplatesListPage() {
         Create Project
       </Button>
     );
-  }, [projectName, selectedTemplate, templates, router]);
+  }, [projectName, selectedTemplate, templates, router, selectedDirectory]);
 
   const createProjectDialog = useMemo(
     () => (

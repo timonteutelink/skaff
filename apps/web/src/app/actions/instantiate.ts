@@ -1,63 +1,8 @@
-"use server";
-
 import { ROOT_TEMPLATE_REGISTRY } from "@repo/ts/services/root-template-registry-service";
-import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
-import { ProjectDTO, Result, TemplateDTO } from "@repo/ts/utils/types";
-import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
+import { ProjectDTO, Result } from "@repo/ts/utils/types";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
-
-export async function retrieveProjectSearchPaths(): Promise<{ id: string; path: string }[]> {
-  return PROJECT_SEARCH_PATHS;
-}
-
-export async function retrieveTemplates(): Promise<TemplateDTO[]> {
-  await ROOT_TEMPLATE_REGISTRY.getTemplates();
-
-  const templates = ROOT_TEMPLATE_REGISTRY.templates.map((template) =>
-    template.mapToDTO(),
-  );
-
-  return templates;
-}
-
-export async function retrieveTemplate(
-  templateName: string,
-): Promise<TemplateDTO | null> {
-  const template = await ROOT_TEMPLATE_REGISTRY.findTemplate(templateName);
-
-  if ("error" in template) {
-    console.error(template.error);
-    return null;
-  }
-
-  return template.data.mapToDTO();
-}
-
-export async function reloadProjects(): Promise<void> {
-  await PROJECT_REGISTRY.reloadProjects();
-}
-
-export async function retrieveProjects(): Promise<ProjectDTO[]> {
-  await PROJECT_REGISTRY.getProjects();
-
-  const projects = PROJECT_REGISTRY.projects.map((project) =>
-    project.mapToDTO(),
-  );
-
-  return projects;
-}
-
-export async function retrieveProject(
-  projectName: string,
-): Promise<ProjectDTO | null> {
-  const project = await PROJECT_REGISTRY.findProject(projectName);
-
-  if (project) {
-    return project.mapToDTO();
-  }
-
-  return null;
-}
+import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
+import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
 
 export async function createNewProject(
   projectName: string,
