@@ -2,94 +2,78 @@
 import { retrieveProject, retrieveTemplate } from "@/app/actions";
 import { TemplateSettingsForm } from "@/components/general/template-settings/template-settings-form";
 import { ProjectDTO, TemplateDTO } from "@repo/ts/utils/types";
+import { findTemplate } from "@repo/ts/utils/utils";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-function findTemplate(rootTemplate: TemplateDTO, subTemplateName: string): TemplateDTO | null {
-  if (rootTemplate.config.templateConfig.name === subTemplateName) {
-    return rootTemplate;
-  }
-
-  for (const subTemplates of Object.values(rootTemplate.subTemplates)) {
-    for (const subTemplate of subTemplates) {
-      const foundTemplate = findTemplate(subTemplate, subTemplateName);
-      if (foundTemplate) {
-        return foundTemplate;
-      }
-    }
-  }
-
-  return null;
-}
 
 const ProjectTemplateTreePage: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const projectNameParam = useMemo(() => searchParams.get('projectName'), [searchParams]);
-  const rootTemplateParam = useMemo(() => searchParams.get('rootTemplate'), [searchParams]);
-  const templateParam = useMemo(() => searchParams.get('template'), [searchParams]);
+  const rootTemplateNameParam = useMemo(() => searchParams.get('rootTemplate'), [searchParams]);
+  const templateNameParam = useMemo(() => searchParams.get('template'), [searchParams]);
   const parentTemplateInstanceIdParam = useMemo(() => searchParams.get('parentTemplateInstanceId'), [searchParams]);
   const [project, setProject] = useState<ProjectDTO>();
   const [rootTemplate, setRootTemplate] = useState<TemplateDTO>();
+  const [createProject, setCreateProject] = useState(false);
 
-  // Fetch project data.
   useEffect(() => {
     if (!projectNameParam) {
       console.error('No project name provided in search params.');
+      router.push('/projects');
+      return;
+    }
+    if (!rootTemplateNameParam) {
+      console.error('No root template name provided in search params.');
+      router.push('/projects');
+      return;
+    }
+    if (!parentTemplateInstanceIdParam && rootTemplateNameParam !== templateNameParam) {
+      console.error('No parent template instance ID provided in search params. Provide it or make sure the root template name is the same as the template name.');
+      router.push('/projects');
       return;
     }
     retrieveProject(projectNameParam).then((data: ProjectDTO | null) => {
       if (!data) {
-        console.error('Project not found:', projectNameParam);
+        setCreateProject(true);
         return;
       }
       setProject(data);
     });
-  }, [projectNameParam, router]);
-
-  // Fetch the root template definition.
-  useEffect(() => {
-    if (project) {
-      retrieveTemplate(project.rootTemplateName).then((data: TemplateDTO | null) => {
-        if (!data) {
-          console.error('Template not found:', project.rootTemplateName);
-          return;
-        }
-        setRootTemplate(data);
-      });
-    }
-  }, [project]);
+    retrieveTemplate(rootTemplateNameParam).then((data: TemplateDTO | null) => {
+      if (!data) {
+        console.error('Template not found:', rootTemplateNameParam);
+        router.push('/projects');
+        return;
+      }
+      setRootTemplate(data);
+    });
+  }, [projectNameParam, router, rootTemplateNameParam, templateNameParam, parentTemplateInstanceIdParam]);
 
   const subTemplate = useMemo(() => {
-    if (!rootTemplate) return null;
-    return findTemplate(rootTemplate, templateParam || '');
-  }, [rootTemplate, templateParam]);
+    if (!rootTemplate || !templateNameParam) {
+      return null;
+    }
+    return findTemplate(rootTemplate, templateNameParam);
+  }, [rootTemplate, templateNameParam]);
 
-  if (!projectNameParam) {
+  const handleSubmitSettings = useCallback(async (data: any) => {
+    alert(JSON.stringify(data, null, 2));
+
+  }, []);
+
+  if (!projectNameParam || !rootTemplateNameParam || !templateNameParam) {
     return (
       <div className="container mx-auto py-10">
-        <h1 className="text-2xl font-bold">Project name not provided</h1>
+        <h1 className="text-2xl font-bold">
+          Project name, root template name or template name not provided in search params.
+        </h1>
       </div>
     );
   }
 
-  if (!rootTemplateParam) {
-    return (
-      <div className="container mx-auto py-10">
-        <h1 className="text-2xl font-bold">Root template not provided</h1>
-      </div>
-    );
-  }
-
-  if (!templateParam) {
-    return (
-      <div className="container mx-auto py-10">
-        <h1 className="text-2xl font-bold">Template to be created not provided</h1>
-      </div>
-    );
-  }
-
-  if (!rootTemplate) {
+  if (!rootTemplate || !project) {
     return (
       <div className="container mx-auto py-10">
         <h1 className="text-2xl font-bold">Loading...</h1>
@@ -97,24 +81,18 @@ const ProjectTemplateTreePage: React.FC = () => {
     );
   }
 
-  if (!project) { //if the project doesnt exist then it should be created and template should be equal to the root template. So show loader until knowledge is fetched
-    return (
-      <div className="container mx-auto py-10">
-        <h1 className="text-2xl font-bold">Project creation not yet implemented</h1>
-      </div>
-    );
-  }
-
   if (!subTemplate) {
     return (
       <div className="container mx-auto py-10">
-        <h1 className="text-2xl font-bold">Template not found</h1>
+        <h1 className="text-2xl font-bold">SubTemplate not found in template</h1>
       </div>
     );
   }
 
   return (
-    <TemplateSettingsForm projectName={projectNameParam} selectedTemplate={templateParam} selectedTemplateSettingsSchema={subTemplate.config.templateSettingsSchema} action={async (a) => alert(JSON.stringify(a))} />
+    <TemplateSettingsForm projectName={projectNameParam} selectedTemplate={templateNameParam} selectedTemplateSettingsSchema={subTemplate.config.templateSettingsSchema} action={handleSubmitSettings} cancel={() => {
+      router.push(`/projects/`);
+    }} />
   )
 }
 

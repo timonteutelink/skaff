@@ -1,17 +1,15 @@
 'use client';
-import { createNewProject, retrieveProjects, retrieveProjectSearchPaths, retrieveTemplates } from "@/app/actions";
+import { retrieveProjects, retrieveProjectSearchPaths, retrieveTemplates } from "@/app/actions";
 import TablePage, { FieldInfo } from "@/components/general/TablePage";
-import { TemplateSettingsDialog } from "@/components/general/template-settings/template-settings-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProjectDTO, TemplateDTO } from "@repo/ts/utils/types";
-import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const columnMapping: FieldInfo<ProjectDTO>[] = [
   {
@@ -34,24 +32,6 @@ export default function TemplatesListPage() {
   const [projectName, setProjectName] = useState("")
   const [selectedDirectory, setSelectedDirectory] = useState("")
 
-  const handleCreateProject = useCallback(async (userSettings: UserTemplateSettings) => {
-    console.log("Creating project:", { name: projectName, template: selectedTemplate, parentDirPath: selectedDirectory });
-
-    const newProject = await createNewProject(projectName, selectedTemplate, selectedDirectory, userSettings);
-    if ('error' in newProject) {
-      console.error("Failed to create project");
-      console.error(newProject.error);
-      return;
-    }
-
-    setOpen(false)
-    setProjectName("")
-    setSelectedTemplate("")
-    setSelectedDirectory("")
-
-    setProjects((prev) => [...prev, newProject.data]);
-  }, [projectName, selectedTemplate, selectedDirectory]);
-
   useEffect(() => {
     retrieveProjects().then((projects) => {
       setProjects(projects);
@@ -64,30 +44,19 @@ export default function TemplatesListPage() {
     });
   }, []);
 
-  const templateSettingsDialog = useMemo(() => {
-    const selectedTemplateSettingsSchema = templates.find((template) => template.config.templateConfig.name === selectedTemplate)?.config.templateSettingsSchema;
-    if (!selectedTemplateSettingsSchema) {
-      return null;
-    }
-    return (<TemplateSettingsDialog
-      projectName={projectName}
-      selectedTemplate={selectedTemplate}
-      selectedTemplateSettingsSchema={selectedTemplateSettingsSchema}
-
-      action={handleCreateProject}
-      cancel={() => {
+  const templateSettingsLink = useMemo(() => {
+    return (
+      <Button disabled={!projectName || !selectedTemplate} onClick={() => {
+        router.push(`/projects/instantiate-template/?projectName=${projectName}&rootTemplate=${selectedTemplate}&template=${selectedTemplate}`);
         setOpen(false);
         setProjectName("");
         setSelectedTemplate("");
         setSelectedDirectory("");
-      }}
-    >
-      <Button disabled={!projectName || !selectedTemplate}>
+      }}>
         Create Project
-      </Button>
-    </TemplateSettingsDialog>)
-  }, [projectName, selectedTemplate, handleCreateProject, templates]);
-
+      </Button >
+    )
+  }, [projectName, selectedTemplate, templates]);
 
   const createProjectDialog = useMemo(() => (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -150,11 +119,11 @@ export default function TemplatesListPage() {
           </div>
         </div>
         <DialogFooter>
-          {templateSettingsDialog}
+          {templateSettingsLink}
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  ), [open, projectName, selectedTemplate, templates, selectedDirectory, projectSearchPaths, templateSettingsDialog]);
+  ), [open, projectName, selectedTemplate, templates, selectedDirectory, projectSearchPaths, templateSettingsLink]);
 
   return (
     <TablePage<ProjectDTO>

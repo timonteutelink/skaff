@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import * as z from "zod"
+import z from "zod"
 
 import type { TemplateSettingsFormProps } from "./types"
 import { buildSchemaAndDefaults, createDefaultItem } from "./schema-utils"

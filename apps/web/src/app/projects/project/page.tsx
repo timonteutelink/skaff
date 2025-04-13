@@ -6,7 +6,6 @@ import {
   instantiateTemplate,
   reloadProjects,
 } from '@/app/actions';
-import { TemplateSettingsDialog } from '@/components/general/template-settings/template-settings-dialog';
 import { Tree } from '@/components/general/Tree';
 import { Button } from '@/components/ui/button';
 import type { InstantiatedTemplate, ProjectDTO, TemplateDTO } from '@repo/ts/utils/types';
@@ -434,17 +433,9 @@ const ProjectTemplateTreePage: React.FC = () => {
             </span>{' '}
             instance under the parent with ID <span className="font-medium">{selectedNode.parentId}</span>.
           </p>
-          <TemplateSettingsDialog
-            projectName={projectNameParam!}
-            selectedTemplate={candidate.config.templateConfig.name}
-            selectedTemplateSettingsSchema={candidate.config.templateSettingsSchema}
-            action={async (userSettings) => {
-              await handleCreateTemplateInstance(userSettings, selectedNode);
-            }}
-            cancel={() => { }}
-          >
-            <Button disabled={!projectNameParam}>Create</Button>
-          </TemplateSettingsDialog>
+          <Button disabled={!projectNameParam} onClick={() => {
+            router.push(`/projects/instantiate-template/?projectName=${projectNameParam}&rootTemplate=${project?.rootTemplateName}&template=${candidate.config.templateConfig.name}&parentId=${selectedNode.parentId}`);
+          }}>Create</Button>
         </div>
       );
     }
