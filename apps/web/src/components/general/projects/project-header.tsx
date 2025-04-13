@@ -54,7 +54,7 @@ export function ProjectHeader({ project, onBranchChange }: ProjectHeaderProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button variant="outline" onClick={() => router.push(`/project-diff-details?projectName=${project.name}`)}>
+        <Button variant="outline" onClick={() => router.push(`/projects/project-diff-details?projectName=${project.name}`)}>
           <GitCommitIcon className="w-4 h-4 mr-2" />
           Details
         </Button>

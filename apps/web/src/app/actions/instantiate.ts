@@ -1,10 +1,10 @@
 'use server';
+import { deleteRepo, parseGitDiff } from "@repo/ts/services/git-service";
+import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import { ROOT_TEMPLATE_REGISTRY } from "@repo/ts/services/root-template-registry-service";
+import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
 import { ParsedFile, ProjectDTO, Result } from "@repo/ts/utils/types";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
-import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
-import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
-import { parseGitDiff } from "@repo/ts/services/git-service";
 
 export interface ProjectCreationResult {
   newProject: ProjectDTO;
@@ -89,7 +89,35 @@ export async function instantiateTemplate(
     return { error: "Failed to instantiate template" };
   }
 
+  PROJECT_REGISTRY.reloadProjects();
+
   return { data: instatiationResult.data };
+}
+
+export async function cancelProjectCreation(
+  absoluteProjectPath: string,
+): Promise<Result<void>> {
+  let pathExists = false;
+  for (const searchPath of PROJECT_SEARCH_PATHS) {
+    if (absoluteProjectPath.startsWith(searchPath.path)) {
+      pathExists = true;
+      break;
+    }
+  }
+
+  if (!pathExists) {
+    return { error: "Invalid project path" };
+  }
+
+  const deleteResult = await deleteRepo(absoluteProjectPath);
+
+  if (!deleteResult) {
+    return { error: "Failed to delete project" };
+  }
+
+  PROJECT_REGISTRY.reloadProjects();
+
+  return { data: undefined };
 }
 
 // export async function commitAndFinalizeTemplateCreation(

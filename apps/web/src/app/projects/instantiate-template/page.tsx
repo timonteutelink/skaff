@@ -227,6 +227,7 @@ const ProjectTemplateTreePage: React.FC = () => {
       selectedTemplateSettingsSchema={subTemplate.config.templateSettingsSchema}
       action={handleSubmitSettings}
       cancel={() => {
+        //TODO would delete project here if it was created. Should but now i realise editing a newly created project by going back from the diff is currently not possible. Maybe now going back from the diff should delete the project and then when settings are changed we can just recreate the project.
         router.push(`/projects/`);
       }}
     />
