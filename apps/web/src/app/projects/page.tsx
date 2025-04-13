@@ -1,7 +1,7 @@
 'use client';
 import { createNewProject, retrieveProjects, retrieveProjectSearchPaths, retrieveTemplates } from "@/app/actions";
 import TablePage, { FieldInfo } from "@/components/general/TablePage";
-import { TemplateSettingsDialog } from "@/components/general/TemplateSettingsDialog";
+import { TemplateSettingsDialog } from "@/components/general/template-settings/template-settings-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";

@@ -6,7 +6,7 @@ import {
   instantiateTemplate,
   reloadProjects,
 } from '@/app/actions';
-import { TemplateSettingsDialog } from '@/components/general/TemplateSettingsDialog';
+import { TemplateSettingsDialog } from '@/components/general/template-settings/template-settings-dialog';
 import { Tree } from '@/components/general/Tree';
 import { Button } from '@/components/ui/button';
 import type { InstantiatedTemplate, ProjectDTO, TemplateDTO } from '@repo/ts/utils/types';
