@@ -22,6 +22,18 @@ export async function addAllAndDiff(
   }
 }
 
+export async function deleteRepo(
+  repoPath: string,
+): Promise<boolean> {
+  try {
+    await asyncExec(`rm -rf ${repoPath}`);
+    return true;
+  } catch (error) {
+    console.error("Error deleting git repository:", error);
+    return false;
+  }
+}
+
 export async function createGitRepo(
   repoPath: string,
 ): Promise<boolean> {
