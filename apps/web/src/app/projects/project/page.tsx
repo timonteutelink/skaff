@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 // import { getProjectGitStatus, switchProjectBranch } from "@/app/actions/git"
 import type { ProjectTreeNode } from "@/components/general/projects/types"
 import type { InstantiatedTemplate, ProjectDTO, TemplateDTO } from "@repo/ts/utils/types"
+import { switchProjectBranch } from "@/app/actions/git"
 
 /* =============================================================================
    Helper: collectTemplates()
@@ -223,20 +224,13 @@ export default function ProjectTemplateTreePage() {
     async (branch: string) => {
       if (!projectNameParam) return
 
-      alert(`Switching to branch: ${branch}`)
-      // const success = await switchProjectBranch(projectNameParam, branch)
-      // if (success) {
-      //   setGitStatus((prev) => ({
-      //     ...prev,
-      //     currentBranch: branch,
-      //   }))
-      //
-      //   // Reload project data after branch change
-      //   const updatedProject = await retrieveProject(projectNameParam)
-      //   if (updatedProject) {
-      //     setProject(updatedProject)
-      //   }
-      // }
+      const result = await switchProjectBranch(projectNameParam, branch)
+      if ('error' in result) {
+        const updatedProject = await retrieveProject(projectNameParam)
+        if (updatedProject) {
+          setProject(updatedProject)
+        }
+      }
     },
     [projectNameParam],
   )

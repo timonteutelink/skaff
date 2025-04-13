@@ -2,10 +2,87 @@ import "server-only";
 import { exec, execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { GENERATE_DIFF_SCRIPT_PATH } from "../utils/env";
-import { DiffHunk, ParsedFile } from "../utils/types";
+import { DiffHunk, GitStatus, ParsedFile } from "../utils/types";
 
 const asyncExecFile = promisify(execFile);
 const asyncExec = promisify(exec);
+
+export async function switchBranch(
+  repoPath: string,
+  branchName: string,
+): Promise<boolean> {
+  try {
+    const isClean = await isGitRepoClean(repoPath);
+
+    if (!isClean) {
+      console.error("Cannot switch branches with uncommitted changes.");
+      return false;
+    }
+
+    await asyncExec(`cd ${repoPath} && git checkout ${branchName}`);
+    return true;
+  } catch (error) {
+    console.error("Error switching branches:", error);
+    return false;
+  }
+}
+
+export async function listBranches(repoPath: string): Promise<string[] | null> {
+  try {
+    const { stdout } = await asyncExec(`cd ${repoPath} && git branch --list`);
+    return stdout
+      .split("\n")
+      .map((branch) => branch.trim())
+      .filter((branch) => branch.length > 0);
+  } catch (error) {
+    console.error("Error listing branches:", error);
+    return null;
+  }
+}
+
+export async function getCurrentBranch(repoPath: string): Promise<string | null> {
+  try {
+    const { stdout } = await asyncExec(`cd ${repoPath} && git rev-parse --abbrev-ref HEAD`);
+    return stdout.trim();
+  } catch (error) {
+    console.error("Error getting current branch:", error);
+    return null;
+  }
+}
+
+export async function loadGitStatus(repoPath: string): Promise<GitStatus | null> {
+  const [branches, isClean, currentBranch] = await Promise.all([
+    listBranches(repoPath),
+    isGitRepoClean(repoPath),
+    getCurrentBranch(repoPath),
+  ]);
+
+  if (!branches || branches.length === 0) {
+    console.error("No branches found or error listing branches.");
+    return null;
+  }
+
+  if (!currentBranch) {
+    console.error("Error getting current branch.");
+    return null;
+  }
+
+  return { branches, isClean, currentBranch };
+}
+
+export async function commitAll(
+  repoPath: string,
+  commitMessage: string,
+): Promise<boolean> {
+  try {
+    await asyncExec(`cd ${repoPath} && git add .`);
+    await asyncExec(`cd ${repoPath} && git commit -m "${commitMessage}"`);
+    return true;
+  } catch (error) {
+    console.error("Error committing changes:", error);
+    return false;
+  }
+}
 
 export async function addAllAndDiff(
   repoPath: string,

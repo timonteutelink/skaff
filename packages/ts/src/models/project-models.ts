@@ -1,6 +1,7 @@
 import * as fs from "node:fs/promises";
 import path from "node:path";
 import {
+  GitStatus,
   ProjectDTO,
   ProjectSettings,
   ProjectSettingsSchema,
@@ -9,6 +10,7 @@ import {
 import { Template } from "./template-models";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { ROOT_TEMPLATE_REGISTRY } from "../services/root-template-registry-service";
+import { loadGitStatus } from "../services/git-service";
 
 // every project name inside a root project should be unique.
 //
@@ -23,16 +25,20 @@ export class Project {
 
   public rootTemplate: Template;
 
+  public gitStatus: GitStatus;
+
   constructor(
     absDir: string,
     absSettingsPath: string,
     projectSettings: ProjectSettings,
     rootTemplate: Template,
+    gitStatus: GitStatus,
   ) {
     this.absoluteRootDir = absDir;
     this.absoluteSettingsPath = absSettingsPath;
     this.instantiatedProjectSettings = projectSettings;
     this.rootTemplate = rootTemplate;
+    this.gitStatus = gitStatus;
   }
 
   public static async writeNewProjectSettings(
@@ -199,12 +205,25 @@ export class Project {
     if ("error" in projectSettings) {
       return { error: projectSettings.error };
     }
+
+    const gitStatus = await loadGitStatus(absDir);
+
+    if (!gitStatus) {
+      console.error(
+        `Failed to load git status for project at ${absDir}`
+      );
+      return {
+        error: `Failed to load git status for project at ${absDir}`,
+      };
+    }
+
     return {
       data: new Project(
         absDir,
         projectSettingsPath,
         projectSettings.data.settings,
         projectSettings.data.rootTemplate,
+        gitStatus
       ),
     };
   }
@@ -215,6 +234,7 @@ export class Project {
       absPath: this.absoluteRootDir,
       rootTemplateName: this.instantiatedProjectSettings.rootTemplateName,
       settings: this.instantiatedProjectSettings,
+      gitStatus: this.gitStatus,
     };
   }
 }

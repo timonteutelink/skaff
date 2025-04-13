@@ -13,7 +13,7 @@ import { Project } from "../models/project-models";
 import { ProjectSettings, Result } from "../utils/types";
 import z from "zod";
 import { PROJECT_REGISTRY } from "./project-registry-service";
-import { addAllAndDiff, createGitRepo } from "./git-service";
+import { addAllAndDiff, commitAll, createGitRepo } from "./git-service";
 
 export class TemplateGeneratorService {
   public absDestinationProjectPath: string;
@@ -436,12 +436,13 @@ export class TemplateGeneratorService {
     try {
       await fs.mkdir(this.absDestinationProjectPath, { recursive: true });
       await createGitRepo(this.absDestinationProjectPath);
-      await this.copyDirectory();
-      await this.applySideEffects();
       await Project.writeNewProjectSettings(
         this.absDestinationProjectPath,
         newProjectSettings,
       );
+      await commitAll(this.absDestinationProjectPath, "Initial commit");
+      await this.copyDirectory();
+      await this.applySideEffects();
 
       await PROJECT_REGISTRY.reloadProjects();
       const destinationProject =
