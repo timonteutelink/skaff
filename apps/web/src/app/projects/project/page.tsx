@@ -1,17 +1,21 @@
-'use client';
+"use client";
 
 import {
   retrieveProject,
   retrieveTemplate,
   instantiateTemplate,
   reloadProjects,
-} from '@/app/actions';
-import { Tree } from '@/components/general/Tree';
-import { Button } from '@/components/ui/button';
-import type { InstantiatedTemplate, ProjectDTO, TemplateDTO } from '@repo/ts/utils/types';
-import { UserTemplateSettings } from '@timonteutelink/template-types-lib';
-import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+} from "@/app/actions";
+import { Tree } from "@/components/general/Tree";
+import { Button } from "@/components/ui/button";
+import type {
+  InstantiatedTemplate,
+  ProjectDTO,
+  TemplateDTO,
+} from "@repo/ts/utils/types";
+import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 /* =============================================================================
    Tree Node Types
@@ -29,7 +33,7 @@ export type ProjectTreeNode =
   | CreateInstanceNode;
 
 export interface InstantiatedNode {
-  type: 'instantiated';
+  type: "instantiated";
   id: string;
   name: string;
   instanceData: {
@@ -39,21 +43,21 @@ export interface InstantiatedNode {
 }
 
 export interface SubCategoryNode {
-  type: 'subCategory';
+  type: "subCategory";
   id: string;
   name: string; // category name (e.g. "Components", "Pages", etc.)
   children: ProjectTreeNode[];
 }
 
 export interface ChildTemplateNode {
-  type: 'childTemplate';
+  type: "childTemplate";
   id: string;
   templateDefinition: TemplateDTO;
   children: ProjectTreeNode[];
 }
 
 export interface CreateInstanceNode {
-  type: 'createInstance';
+  type: "createInstance";
   id: string;
   parentId: string;
   candidateTemplate: TemplateDTO;
@@ -95,7 +99,7 @@ const collectTemplates = (tpl: TemplateDTO): Record<string, TemplateDTO> => {
 ------------------------------------------------------------------------------- */
 const buildProjectTree = (
   instances: InstantiatedTemplate[],
-  templateMap: Record<string, TemplateDTO>
+  templateMap: Record<string, TemplateDTO>,
 ): ProjectTreeNode[] => {
   // Group instantiated templates by parentId.
   const childrenByParent: Record<string, InstantiatedTemplate[]> = {};
@@ -115,7 +119,7 @@ const buildProjectTree = (
   // Recursively build an instantiated node.
   const buildNode = (inst: InstantiatedTemplate): InstantiatedNode => {
     const node: InstantiatedNode = {
-      type: 'instantiated',
+      type: "instantiated",
       id: inst.id,
       name: inst.templateName,
       instanceData: { templateSettings: inst.templateSettings },
@@ -128,36 +132,45 @@ const buildProjectTree = (
       Object.keys(parentDef.subTemplates).forEach((category) => {
         const candidateTemplates = parentDef.subTemplates[category]!;
         // For this category, build a childTemplate node for each candidate.
-        const childTemplateNodes: ChildTemplateNode[] = candidateTemplates.map((candidate) => {
-          const candidateId = candidate.config.templateConfig.name;
-          // Find already instantiated children whose templateName matches the candidate.
-          const childInstances = (childrenByParent[inst.id] || []).filter(
-            (child) => child.templateName === candidateId
-          );
-          const childInstantiatedNodes = childInstances.map((child) => buildNode(child));
+        const childTemplateNodes: ChildTemplateNode[] = candidateTemplates.map(
+          (candidate) => {
+            const candidateId = candidate.config.templateConfig.name;
+            // Find already instantiated children whose templateName matches the candidate.
+            const childInstances = (childrenByParent[inst.id] || []).filter(
+              (child) => child.templateName === candidateId,
+            );
+            const childInstantiatedNodes = childInstances.map((child) =>
+              buildNode(child),
+            );
 
-          const finalChildren: ProjectTreeNode[] = [...childInstantiatedNodes];
-          if (childInstances.length == 0 || candidate.config.templateConfig.multiInstance) {
-            // Create a createInstance action node for this candidate.
-            const createNode: CreateInstanceNode = {
-              type: 'createInstance',
-              id: `${inst.id}-${category}-${candidateId}-create`,
-              parentId: inst.id,
-              candidateTemplate: candidate,
-            };
-            finalChildren.push(createNode);
-          }
-          return {
-            type: 'childTemplate',
-            id: `${inst.id}-${category}-${candidateId}`,
-            templateDefinition: candidate,
-            children: finalChildren,
-          } as ChildTemplateNode;
-        });
+            const finalChildren: ProjectTreeNode[] = [
+              ...childInstantiatedNodes,
+            ];
+            if (
+              childInstances.length == 0 ||
+              candidate.config.templateConfig.multiInstance
+            ) {
+              // Create a createInstance action node for this candidate.
+              const createNode: CreateInstanceNode = {
+                type: "createInstance",
+                id: `${inst.id}-${category}-${candidateId}-create`,
+                parentId: inst.id,
+                candidateTemplate: candidate,
+              };
+              finalChildren.push(createNode);
+            }
+            return {
+              type: "childTemplate",
+              id: `${inst.id}-${category}-${candidateId}`,
+              templateDefinition: candidate,
+              children: finalChildren,
+            } as ChildTemplateNode;
+          },
+        );
 
         // Create the subCategory node with the candidate childTemplate nodes.
         const subCategoryNode: SubCategoryNode = {
-          type: 'subCategory',
+          type: "subCategory",
           id: `${inst.id}-${category}`,
           name: category,
           children: childTemplateNodes,
@@ -185,23 +198,28 @@ const buildProjectTree = (
 const ProjectTemplateTreePage: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const projectNameParam = useMemo(() => searchParams.get('projectName'), [searchParams]);
+  const projectNameParam = useMemo(
+    () => searchParams.get("projectName"),
+    [searchParams],
+  );
   const [project, setProject] = useState<ProjectDTO>();
   const [rootTemplate, setRootTemplate] = useState<TemplateDTO>();
   const [projectTree, setProjectTree] = useState<ProjectTreeNode[]>([]);
-  const [selectedNode, setSelectedNode] = useState<ProjectTreeNode | null>(null);
+  const [selectedNode, setSelectedNode] = useState<ProjectTreeNode | null>(
+    null,
+  );
 
   // Fetch project data.
   useEffect(() => {
     if (!projectNameParam) {
-      console.error('No project name provided in search params.');
-      router.push('/projects');
+      console.error("No project name provided in search params.");
+      router.push("/projects");
       return;
     }
     retrieveProject(projectNameParam).then((data: ProjectDTO | null) => {
       if (!data) {
-        console.error('Project not found:', projectNameParam);
-        router.push('/projects');
+        console.error("Project not found:", projectNameParam);
+        router.push("/projects");
         return;
       }
       setProject(data);
@@ -211,13 +229,15 @@ const ProjectTemplateTreePage: React.FC = () => {
   // Fetch the root template definition.
   useEffect(() => {
     if (project) {
-      retrieveTemplate(project.rootTemplateName).then((data: TemplateDTO | null) => {
-        if (!data) {
-          console.error('Template not found:', project.rootTemplateName);
-          return;
-        }
-        setRootTemplate(data);
-      });
+      retrieveTemplate(project.rootTemplateName).then(
+        (data: TemplateDTO | null) => {
+          if (!data) {
+            console.error("Template not found:", project.rootTemplateName);
+            return;
+          }
+          setRootTemplate(data);
+        },
+      );
     }
   }, [project]);
 
@@ -225,8 +245,11 @@ const ProjectTemplateTreePage: React.FC = () => {
   useEffect(() => {
     if (project && rootTemplate) {
       const templateMap = collectTemplates(rootTemplate);
-      console.log('Template map:', templateMap);
-      const tree = buildProjectTree(project.settings.instantiatedTemplates, templateMap);
+      console.log("Template map:", templateMap);
+      const tree = buildProjectTree(
+        project.settings.instantiatedTemplates,
+        templateMap,
+      );
       setProjectTree(tree);
     }
   }, [project, rootTemplate]);
@@ -245,10 +268,10 @@ const ProjectTemplateTreePage: React.FC = () => {
         candidate.config.templateConfig.name,
         node.parentId,
         projectNameParam!,
-        userSettings
+        userSettings,
       );
-      if ('error' in result) {
-        console.error('Error instantiating template:', result.error);
+      if ("error" in result) {
+        console.error("Error instantiating template:", result.error);
       } else {
         await reloadProjects();
         const refreshedProject = await retrieveProject(projectNameParam!);
@@ -257,13 +280,13 @@ const ProjectTemplateTreePage: React.FC = () => {
           const templateMap = collectTemplates(rootTemplate);
           const newTree = buildProjectTree(
             refreshedProject.settings.instantiatedTemplates,
-            templateMap
+            templateMap,
           );
           setProjectTree(newTree);
         }
       }
     },
-    [projectNameParam, rootTemplate]
+    [projectNameParam, rootTemplate],
   );
 
   /* ----------------------------------------------------------------------------
@@ -283,14 +306,15 @@ const ProjectTemplateTreePage: React.FC = () => {
       isOpen: boolean,
       hasChildren: boolean,
       style: React.CSSProperties,
-      onClick: () => void
+      onClick: () => void,
     ) => {
-      if (node.type === 'instantiated') {
+      if (node.type === "instantiated") {
         return (
           <div
             style={style}
-            className={`flex items-center p-2 cursor-pointer hover:bg-blue-100 select-none ${isSelected ? 'bg-blue-200' : ''
-              }`}
+            className={`flex items-center p-2 cursor-pointer hover:bg-blue-100 select-none ${
+              isSelected ? "bg-blue-200" : ""
+            }`}
             onClick={onClick}
           >
             {hasChildren && (
@@ -301,13 +325,13 @@ const ProjectTemplateTreePage: React.FC = () => {
                 }}
                 className="mr-2 focus:outline-none"
               >
-                {isOpen ? '▼' : '▶'}
+                {isOpen ? "▼" : "▶"}
               </button>
             )}
             <span className="flex-1">{node.name}</span>
           </div>
         );
-      } else if (node.type === 'subCategory') {
+      } else if (node.type === "subCategory") {
         return (
           <div
             style={style}
@@ -322,13 +346,13 @@ const ProjectTemplateTreePage: React.FC = () => {
                 }}
                 className="mr-2 focus:outline-none"
               >
-                {isOpen ? '▼' : '▶'}
+                {isOpen ? "▼" : "▶"}
               </button>
             )}
             <span className="flex-1">{node.name}</span>
           </div>
         );
-      } else if (node.type === 'childTemplate') {
+      } else if (node.type === "childTemplate") {
         return (
           <div
             style={style}
@@ -343,7 +367,7 @@ const ProjectTemplateTreePage: React.FC = () => {
                 }}
                 className="mr-2 focus:outline-none"
               >
-                {isOpen ? '▼' : '▶'}
+                {isOpen ? "▼" : "▶"}
               </button>
             )}
             <span className="flex-1">
@@ -351,7 +375,7 @@ const ProjectTemplateTreePage: React.FC = () => {
             </span>
           </div>
         );
-      } else if (node.type === 'createInstance') {
+      } else if (node.type === "createInstance") {
         return (
           <div
             style={style}
@@ -368,7 +392,7 @@ const ProjectTemplateTreePage: React.FC = () => {
       }
       return null;
     },
-    []
+    [],
   );
 
   /* ----------------------------------------------------------------------------
@@ -388,7 +412,7 @@ const ProjectTemplateTreePage: React.FC = () => {
         </div>
       );
     }
-    if (selectedNode.type === 'instantiated') {
+    if (selectedNode.type === "instantiated") {
       return (
         <div>
           <h2 className="text-2xl font-bold mb-4">{selectedNode.name}</h2>
@@ -398,7 +422,7 @@ const ProjectTemplateTreePage: React.FC = () => {
         </div>
       );
     }
-    if (selectedNode.type === 'subCategory') {
+    if (selectedNode.type === "subCategory") {
       return (
         <div>
           <h2 className="text-2xl font-bold mb-4">
@@ -410,11 +434,12 @@ const ProjectTemplateTreePage: React.FC = () => {
         </div>
       );
     }
-    if (selectedNode.type === 'childTemplate') {
+    if (selectedNode.type === "childTemplate") {
       return (
         <div>
           <h2 className="text-2xl font-bold mb-4">
-            Child Template: {selectedNode.templateDefinition.config.templateConfig.name}
+            Child Template:{" "}
+            {selectedNode.templateDefinition.config.templateConfig.name}
           </h2>
           <pre className="bg-gray-100 p-4 rounded text-sm">
             {JSON.stringify(selectedNode.templateDefinition, null, 2)}
@@ -422,20 +447,29 @@ const ProjectTemplateTreePage: React.FC = () => {
         </div>
       );
     }
-    if (selectedNode.type === 'createInstance') {
+    if (selectedNode.type === "createInstance") {
       const candidate = selectedNode.candidateTemplate;
       return (
         <div>
           <h2 className="text-2xl font-bold mb-4">Create New Instance</h2>
           <p className="mb-4 text-sm">
-            This will create a new <span className="font-medium">
+            This will create a new{" "}
+            <span className="font-medium">
               {candidate.config.templateConfig.name}
-            </span>{' '}
-            instance under the parent with ID <span className="font-medium">{selectedNode.parentId}</span>.
+            </span>{" "}
+            instance under the parent with ID{" "}
+            <span className="font-medium">{selectedNode.parentId}</span>.
           </p>
-          <Button disabled={!projectNameParam} onClick={() => {
-            router.push(`/projects/instantiate-template/?projectName=${projectNameParam}&rootTemplate=${project?.rootTemplateName}&template=${candidate.config.templateConfig.name}&parentId=${selectedNode.parentId}`);
-          }}>Create</Button>
+          <Button
+            disabled={!projectNameParam}
+            onClick={() => {
+              router.push(
+                `/projects/instantiate-template/?projectName=${projectNameParam}&rootTemplate=${project?.rootTemplateName}&template=${candidate.config.templateConfig.name}&parentId=${selectedNode.parentId}`,
+              );
+            }}
+          >
+            Create
+          </Button>
         </div>
       );
     }
@@ -468,4 +502,3 @@ const ProjectTemplateTreePage: React.FC = () => {
 };
 
 export default ProjectTemplateTreePage;
-

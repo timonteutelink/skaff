@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { retrieveTemplates } from "@/app/actions";
 import TablePage, { FieldInfo } from "@/components/general/TablePage";
 import { TemplateDTO } from "@repo/ts/utils/types";
@@ -13,8 +13,8 @@ const columnMapping: FieldInfo<TemplateDTO>[] = [
   {
     name: "Directory",
     data: (item: TemplateDTO) => item.dir,
-  }
-]
+  },
+];
 
 export default function TemplatesListPage() {
   const router = useRouter();
@@ -33,8 +33,10 @@ export default function TemplatesListPage() {
       columnMapping={columnMapping}
       caption="A list of your templates."
       onClick={(item) => {
-        router.push(`/templates/template?templateName=${item.config.templateConfig.name}`);
+        router.push(
+          `/templates/template?templateName=${item.config.templateConfig.name}`,
+        );
       }}
     />
-  )
+  );
 }

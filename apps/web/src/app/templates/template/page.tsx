@@ -1,11 +1,10 @@
-'use client';
+"use client";
 
-import type { TemplateDTO } from '@repo/ts/utils/types';
-import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { retrieveTemplate } from '@/app/actions';
-import { Tree } from '@/components/general/Tree';
-
+import type { TemplateDTO } from "@repo/ts/utils/types";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { retrieveTemplate } from "@/app/actions";
+import { Tree } from "@/components/general/Tree";
 
 /* =============================================================================
    Template Tree and Helper Functions
@@ -15,28 +14,30 @@ import { Tree } from '@/components/general/Tree';
 export interface TemplateTreeNode {
   id: string;
   name: string;
-  type: 'template' | 'category';
+  type: "template" | "category";
   data?: TemplateDTO;
   children?: TemplateTreeNode[];
 }
 
 const buildTemplateNode = (template: TemplateDTO): TemplateTreeNode => {
-  const categoryNodes: TemplateTreeNode[] = Object.entries(template.subTemplates).map(
-    ([category, templates]) => {
-      const childNodes: TemplateTreeNode[] = templates.map((tmpl) => buildTemplateNode(tmpl));
-      return {
-        id: `${template.dir}-${category}`,
-        name: category,
-        type: 'category',
-        children: childNodes,
-      };
-    }
-  );
+  const categoryNodes: TemplateTreeNode[] = Object.entries(
+    template.subTemplates,
+  ).map(([category, templates]) => {
+    const childNodes: TemplateTreeNode[] = templates.map((tmpl) =>
+      buildTemplateNode(tmpl),
+    );
+    return {
+      id: `${template.dir}-${category}`,
+      name: category,
+      type: "category",
+      children: childNodes,
+    };
+  });
 
   return {
     id: template.dir,
     name: template.config.templateConfig.name,
-    type: 'template',
+    type: "template",
     data: template,
     children: categoryNodes.length > 0 ? categoryNodes : undefined,
   };
@@ -89,7 +90,11 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ node }) => {
             <div>
               <span className="font-semibold">Settings Schema: </span>
               <pre className="bg-gray-100 p-2 rounded text-sm overflow-auto">
-                {JSON.stringify(node.data.config.templateSettingsSchema, null, 2)}
+                {JSON.stringify(
+                  node.data.config.templateSettingsSchema,
+                  null,
+                  2,
+                )}
               </pre>
             </div>
           </>
@@ -109,28 +114,36 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ node }) => {
 const TemplateArboristTreePage: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const templateName = useMemo(() => searchParams.get('templateName'), [searchParams]);
+  const templateName = useMemo(
+    () => searchParams.get("templateName"),
+    [searchParams],
+  );
   const [template, setTemplate] = useState<TemplateDTO>();
-  const [selectedNode, setSelectedNode] = useState<TemplateTreeNode | null>(null);
+  const [selectedNode, setSelectedNode] = useState<TemplateTreeNode | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!templateName) {
-      console.error('No template name provided in search params.');
-      router.push('/templates');
+      console.error("No template name provided in search params.");
+      router.push("/templates");
       return;
     }
 
     retrieveTemplate(templateName).then((data: TemplateDTO | null) => {
       if (!data) {
-        console.error('Template not found:', templateName);
-        router.push('/templates');
+        console.error("Template not found:", templateName);
+        router.push("/templates");
         return;
       }
       setTemplate(data);
     });
   }, [templateName, router]);
 
-  const treeNodes: TemplateTreeNode[] = useMemo(() => (template ? [buildTemplateNode(template)] : []), [template]);
+  const treeNodes: TemplateTreeNode[] = useMemo(
+    () => (template ? [buildTemplateNode(template)] : []),
+    [template],
+  );
 
   const handleSelect = useCallback((node: TemplateTreeNode) => {
     setSelectedNode(node);
@@ -168,7 +181,9 @@ const TemplateArboristTreePage: React.FC = () => {
           <DetailsPanel node={selectedNode} />
         ) : (
           <div className="p-6">
-            <h2 className="text-2xl font-bold">Select a template from the tree</h2>
+            <h2 className="text-2xl font-bold">
+              Select a template from the tree
+            </h2>
           </div>
         )}
       </div>
@@ -177,4 +192,3 @@ const TemplateArboristTreePage: React.FC = () => {
 };
 
 export default TemplateArboristTreePage;
-

@@ -20,9 +20,7 @@ export default function RootLayout({
         <SidebarProvider>
           <MainSidebar />
           <SidebarInset>
-            <Suspense fallback={<div>Loading...</div>}>
-              {children}
-            </Suspense>
+            <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
           </SidebarInset>
         </SidebarProvider>
       </body>

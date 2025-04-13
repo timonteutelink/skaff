@@ -1,16 +1,28 @@
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Badge } from "@/components/ui/badge"
-import { InfoIcon } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { renderInputByType } from "../input-renderers"
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Badge } from "@/components/ui/badge";
+import { InfoIcon } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { renderInputByType } from "../input-renderers";
 
 interface PrimitiveFieldRendererProps {
-  fieldPath: string
-  property: any
-  isRequired: boolean
-  isReadOnly: boolean
-  form: any
-  label?: string
+  fieldPath: string;
+  property: any;
+  isRequired: boolean;
+  isReadOnly: boolean;
+  form: any;
+  label?: string;
 }
 
 export function PrimitiveFieldRenderer({
@@ -54,12 +66,16 @@ export function PrimitiveFieldRenderer({
             )}
           </div>
 
-          <FormControl>{renderInputByType({ property, field, isReadOnly })}</FormControl>
+          <FormControl>
+            {renderInputByType({ property, field, isReadOnly })}
+          </FormControl>
 
           {property.examples && property.examples.length > 0 && (
             <FormDescription>
               Example:{" "}
-              {Array.isArray(property.examples) ? property.examples[0]?.toString() : property.examples.toString()}
+              {Array.isArray(property.examples)
+                ? property.examples[0]?.toString()
+                : property.examples.toString()}
             </FormDescription>
           )}
 
@@ -67,6 +83,5 @@ export function PrimitiveFieldRenderer({
         </FormItem>
       )}
     />
-  )
+  );
 }
-

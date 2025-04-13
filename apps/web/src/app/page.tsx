@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
 import { useCallback } from "react";
 
 export default function Home() {
   const handleRunStuff = useCallback(async () => {
-    console.log('Running stuff');
+    console.log("Running stuff");
   }, []);
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
@@ -12,4 +12,3 @@ export default function Home() {
     </div>
   );
 }
-

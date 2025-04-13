@@ -6,7 +6,7 @@ export type Result<T> = { data: T } | { error: string };
 export interface TemplateDTO {
   dir: string;
   config: {
-    templateConfig: TemplateConfig
+    templateConfig: TemplateConfig;
     templateSettingsSchema: object;
   };
   templatesDir: string;
@@ -44,5 +44,3 @@ export interface ProjectDTO {
 
   settings: ProjectSettings;
 }
-
-
