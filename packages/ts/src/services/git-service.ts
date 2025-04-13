@@ -115,7 +115,7 @@ export async function createGitRepo(
   repoPath: string,
 ): Promise<boolean> {
   try {
-    await asyncExec(`cd ${repoPath} && git init`);
+    await asyncExec(`cd ${repoPath} && git init && git config commit.gpgsign false`);
     return true;
   } catch (error) {
     console.error("Error creating git repository:", error);
