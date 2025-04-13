@@ -18,7 +18,7 @@ export class TemplateGeneratorService {
   public absDestinationProjectPath: string;
   public destinationProject?: Project;
   public rootTemplate: Template;
-  public parsedUserSettings: UserTemplateSettings;
+  public userSettings: UserTemplateSettings;
 
   // Values set when generating a template. Should always be set again before generating a new template.
   private currentlyGeneratingTemplate?: Template;
@@ -34,13 +34,18 @@ export class TemplateGeneratorService {
     this.absDestinationProjectPath = absDestinationProjectPath;
     this.destinationProject = destinationProject;
     this.rootTemplate = rootTemplate.findRootTemplate();
-    this.parsedUserSettings =
-      rootTemplate.config.templateSettingsSchema.parse(userSettings);
+    this.userSettings = userSettings;
   }
 
   private updateParsedUserSettingsWithParentSettings(): void {
-    let newUserSettings: TemplateSettingsType<z.AnyZodObject> = this
-      .parsedUserSettings as TemplateSettingsType<z.AnyZodObject>;
+    const parsedUserSettings = this.currentlyGeneratingTemplate?.config.templateSettingsSchema.safeParse(this.userSettings);
+    if (!parsedUserSettings?.success) {
+      console.error(
+        `Failed to parse user settings: ${parsedUserSettings?.error}`,
+      );
+      return;
+    }
+    let newUserSettings: TemplateSettingsType<z.AnyZodObject> = parsedUserSettings.data as TemplateSettingsType<z.AnyZodObject>;
     if (this.destinationProject) {
       newUserSettings = {
         ...newUserSettings,
@@ -325,6 +330,14 @@ export class TemplateGeneratorService {
       return { error: `Template ${templateName} failed assertions.` };
     }
 
+    const parsedUserSettings = template.config.templateSettingsSchema.safeParse(this.userSettings);
+    if (!parsedUserSettings.success) {
+      console.error(
+        `Failed to parse user settings: ${parsedUserSettings.error}`,
+      );
+      return { error: `Failed to parse user settings: ${parsedUserSettings.error}` };
+    }
+
     try {
       await this.copyDirectory();
       await this.applySideEffects();
@@ -332,7 +345,7 @@ export class TemplateGeneratorService {
         this.absDestinationProjectPath,
         parentInstanceId,
         template,
-        this.parsedUserSettings,
+        parsedUserSettings.data,
         autoInstantiated,
       );
 
@@ -383,16 +396,18 @@ export class TemplateGeneratorService {
 
     const newProjectId = crypto.randomUUID();
 
+    const parsedUserSettings = this.rootTemplate.config.templateSettingsSchema.safeParse(this.userSettings);
+
     const newProjectSettings: ProjectSettings = {
       projectName,
-      projectAuthor: this.parsedUserSettings.author,
+      projectAuthor: parsedUserSettings.data && 'author' in parsedUserSettings.data ? parsedUserSettings.data.author as string : this.rootTemplate.config.templateConfig.author,
       rootTemplateName: this.rootTemplate.config.templateConfig.name,
       instantiatedTemplates: [
         {
           id: newProjectId,
           parentId: undefined,
           templateName: this.rootTemplate.config.templateConfig.name,
-          templateSettings: this.parsedUserSettings,
+          templateSettings: parsedUserSettings.data,
         },
       ],
     };

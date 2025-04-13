@@ -67,7 +67,7 @@ export default function TemplatesListPage() {
   const templateSettingsLink = useMemo(() => {
     return (
       <Button
-        disabled={!projectName || !selectedTemplate}
+        disabled={!projectName || !selectedTemplate || !selectedDirectory}
         onClick={() => {
           router.push(
             `/projects/instantiate-template/?projectName=${projectName}&rootTemplate=${selectedTemplate}&template=${selectedTemplate}&selectedProjectDirectoryId=${selectedDirectory}`,

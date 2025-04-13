@@ -32,7 +32,6 @@ const ProjectTemplateTreePage: React.FC = () => {
   );
   const [project, setProject] = useState<ProjectDTO>();
   const [rootTemplate, setRootTemplate] = useState<TemplateDTO>();
-  const [createProject, setCreateProject] = useState(false);
 
   useEffect(() => {
     if (!projectNameParam) {
@@ -57,7 +56,10 @@ const ProjectTemplateTreePage: React.FC = () => {
     }
     retrieveProject(projectNameParam).then((data: ProjectDTO | null) => {
       if (!data) {
-        setCreateProject(true);
+        if (!selectedDirectoryIdParam || parentTemplateInstanceIdParam) {
+          console.error("Project not found:", projectNameParam);
+          router.push("/projects");
+        }
         return;
       }
       setProject(data);
@@ -76,6 +78,7 @@ const ProjectTemplateTreePage: React.FC = () => {
     rootTemplateNameParam,
     templateNameParam,
     parentTemplateInstanceIdParam,
+    selectedDirectoryIdParam,
   ]);
 
   const subTemplate = useMemo(() => {
@@ -91,11 +94,7 @@ const ProjectTemplateTreePage: React.FC = () => {
       return;
     }
 
-    if (createProject) {
-      if (!selectedDirectoryIdParam) {
-        console.error("No selected directory ID provided for where to create the project.");
-        return;
-      }
+    if (selectedDirectoryIdParam) {
       const newProject = await createNewProject(projectNameParam, templateNameParam, selectedDirectoryIdParam, data);
 
       if ('error' in newProject) {
@@ -103,12 +102,7 @@ const ProjectTemplateTreePage: React.FC = () => {
         console.error(newProject.error);
         return;
       }
-    } else {
-      if (!parentTemplateInstanceIdParam) {
-        console.error("No parent template instance ID provided.");
-        return;
-      }
-
+    } else if (parentTemplateInstanceIdParam) {
       if (!project) {
         console.error("Project not found.");
         return;
@@ -136,6 +130,9 @@ const ProjectTemplateTreePage: React.FC = () => {
         console.error("Error instantiating template:", result.error);
         return;
       }
+    } else {
+      console.error("No parent template instance ID or selected directory ID provided.");
+      return;
     }
     await reloadProjects();
     router.push(`/projects/project/?projectName=${projectNameParam}`);
@@ -145,7 +142,6 @@ const ProjectTemplateTreePage: React.FC = () => {
     subTemplate,
     parentTemplateInstanceIdParam,
     router,
-    createProject,
     selectedDirectoryIdParam,
     templateNameParam,
     project,
@@ -163,7 +159,7 @@ const ProjectTemplateTreePage: React.FC = () => {
     );
   }
 
-  if (!rootTemplate || !project) {
+  if (!rootTemplate || (!project && (!selectedDirectoryIdParam && parentTemplateInstanceIdParam))) {
     return (
       <div className="container mx-auto py-10">
         <h1 className="text-2xl font-bold">Loading...</h1>
