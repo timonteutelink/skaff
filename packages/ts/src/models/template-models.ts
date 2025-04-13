@@ -234,7 +234,7 @@ export class Template {
     if ("error" in result) {
       console.error(`Failed to instantiate new project: ${result.error}`);
     } else {
-      console.log(`New project created at: ${result.data}`);
+      console.log(`New project created at: ${result.data.resultPath}`);
     }
     return result;
   }

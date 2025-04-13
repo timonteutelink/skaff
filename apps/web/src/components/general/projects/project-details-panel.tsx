@@ -2,14 +2,14 @@
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import type { ProjectTreeNode } from "./types"
+import { ProjectDTO } from "@repo/ts/utils/types"
 
 interface ProjectDetailsPanelProps {
   selectedNode: ProjectTreeNode | null
-  projectName: string | null
-  project: any // Using any for now, replace with proper type
+  project: ProjectDTO
 }
 
-export function ProjectDetailsPanel({ selectedNode, projectName, project }: ProjectDetailsPanelProps) {
+export function ProjectDetailsPanel({ selectedNode, project }: ProjectDetailsPanelProps) {
   const router = useRouter()
 
   if (!selectedNode) {
@@ -61,10 +61,10 @@ export function ProjectDetailsPanel({ selectedNode, projectName, project }: Proj
           under the parent with ID <span className="font-medium">{selectedNode.parentId}</span>.
         </p>
         <Button
-          disabled={!projectName || !project}
+          disabled={!project || !project.name}
           onClick={() => {
             router.push(
-              `/projects/instantiate-template/?projectName=${projectName}&rootTemplate=${project?.rootTemplateName}&template=${candidate.config.templateConfig.name}&parentTemplateInstanceId=${selectedNode.parentId}`,
+              `/projects/instantiate-template/?projectName=${project.name}&rootTemplate=${project.rootTemplateName}&template=${candidate.config.templateConfig.name}&parentTemplateInstanceId=${selectedNode.parentId}`,
             )
           }}
         >

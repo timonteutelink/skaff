@@ -241,10 +241,18 @@ export default function ProjectTemplateTreePage() {
     [projectNameParam],
   )
 
+  if (!project) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Loading project...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col h-screen">
       {projectNameParam && (
-        <ProjectHeader projectName={projectNameParam} gitStatus={gitStatus} onBranchChange={handleBranchChange} />
+        <ProjectHeader project={project} onBranchChange={handleBranchChange} />
       )}
 
       <div className="flex flex-1 overflow-hidden">
@@ -257,7 +265,7 @@ export default function ProjectTemplateTreePage() {
 
         {/* Right: Details panel */}
         <div className="w-2/3 overflow-auto p-6">
-          <ProjectDetailsPanel selectedNode={selectedNode} projectName={projectNameParam} project={project} />
+          <ProjectDetailsPanel selectedNode={selectedNode} project={project} />
         </div>
       </div>
     </div>

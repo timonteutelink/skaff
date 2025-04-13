@@ -359,6 +359,18 @@ export class TemplateGeneratorService {
           error: `Failed to add template to settings: ${newTemplateInstanceId.error}`,
         };
       }
+      await PROJECT_REGISTRY.reloadProjects();
+      const destinationProject =
+        await PROJECT_REGISTRY.findProject(projectName);
+
+      if (!destinationProject) {
+        console.error(
+          `Failed to find project ${projectName} after creating it.`,
+        );
+        return {
+          error: `Failed to find project ${projectName} after creating it.`,
+        };
+      }
 
       await TemplateGeneratorService.autoInstantiateSubTemplates(
         template,

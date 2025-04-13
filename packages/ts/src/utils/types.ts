@@ -37,11 +37,18 @@ export const ProjectSettingsSchema = z.object({
 
 export type ProjectSettings = z.infer<typeof ProjectSettingsSchema>;
 
-// isClean, branch, branches
+export interface GitStatus {
+  isClean: boolean
+  currentBranch: string
+  branches: string[]
+}
+
 export interface ProjectDTO {
   name: string;
   absPath: string;
   rootTemplateName: string;
+
+  gitStatus: GitStatus;
 
   settings: ProjectSettings;
 }

@@ -42,18 +42,4 @@ export interface CreateInstanceNode {
 	candidateTemplate: TemplateDTO
 }
 
-export interface GitStatus {
-	isClean: boolean
-	currentBranch: string
-	branches: string[]
-}
-
-export interface ProjectData {
-	name: string
-	rootTemplateName: string
-	gitStatus: GitStatus
-	settings: {
-		instantiatedTemplates: InstantiatedTemplate[]
-	}
-}
 

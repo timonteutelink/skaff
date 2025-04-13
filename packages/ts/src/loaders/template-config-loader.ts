@@ -12,6 +12,8 @@ import { pathToFileURL } from "node:url";
 import ts from "typescript";
 import z from "zod";
 
+//TODO renovate, mkDocs, .github/settings.yml
+
 /**
  * Holds information about a template configuration file and its optional reference.
  */

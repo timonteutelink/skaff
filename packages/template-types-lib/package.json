@@ -1,6 +1,6 @@
 {
   "name": "@timonteutelink/template-types-lib",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "exports": {
     ".": "./dist/index.js"
   },
@@ -15,12 +15,12 @@
     "publish": "pnpm publish --access public"
   },
   "devDependencies": {
-    "@eslint/js": "^9.23.0",
-    "eslint": "^9.23.0",
-    "eslint-config-prettier": "^10.1.1",
+    "@eslint/js": "^9.24.0",
+    "eslint": "^9.24.0",
+    "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-only-warn": "^1.1.0",
-    "typescript": "5.8.2",
-    "typescript-eslint": "^8.27.0"
+    "typescript": "5.8.3",
+    "typescript-eslint": "^8.29.1"
   },
   "dependencies": {
     "zod": "^3.24.2"
