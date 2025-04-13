@@ -1,7 +1,7 @@
 {
   "name": "templates",
   "version": "1.0.0",
-  "packageManager": "pnpm@10.6.2",
+  "packageManager": "pnpm@10.8.0",
   "devDependencies": {
     "@timonteutelink/template-types-lib": "0.0.23",
     "zod": "^3.24.2"

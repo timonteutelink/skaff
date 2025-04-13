@@ -27,8 +27,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ts
       '@timonteutelink/template-types-lib':
-        specifier: 0.0.22
-        version: 0.0.22
+        specifier: 0.0.23
+        version: 0.0.23
       esbuild:
         specifier: ^0.25.2
         version: 0.25.2
@@ -139,8 +139,8 @@ importers:
         specifier: ^4.1.3
         version: 4.1.3
       '@timonteutelink/template-types-lib':
-        specifier: 0.0.22
-        version: 0.0.22
+        specifier: 0.0.23
+        version: 0.0.23
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -327,8 +327,8 @@ importers:
   packages/ts:
     dependencies:
       '@timonteutelink/template-types-lib':
-        specifier: 0.0.22
-        version: 0.0.22
+        specifier: 0.0.23
+        version: 0.0.23
       '@types/fs-extra':
         specifier: ^11.0.4
         version: 11.0.4
@@ -1538,8 +1538,8 @@ packages:
   '@tailwindcss/postcss@4.1.3':
     resolution: {integrity: sha512-6s5nJODm98F++QT49qn8xJKHQRamhYHfMi3X7/ltxiSQ9dyRsaFSfFkfaMsanWzf+TMYQtbk8mt5f6cCVXJwfg==}
 
-  '@timonteutelink/template-types-lib@0.0.22':
-    resolution: {integrity: sha512-ZUKBN30IAvJfg7LzgBsWvqL3ujWRPVM5MqaBRl1sUHkq1SxOetCYS0+lS/7jJVEGB9Z1uTIJqS2Te04LsNbWNQ==}
+  '@timonteutelink/template-types-lib@0.0.23':
+    resolution: {integrity: sha512-8w84cIDkq2YeuxwOr5cYTOEyxXTgmBuvVGNvlXmaMHxdgH20X4OFDpqsa3C3ohG5QYi62geTYO6fJfFL7Nd6SQ==}
 
   '@types/d3-array@3.2.1':
     resolution: {integrity: sha512-Y2Jn2idRrLzUfAKV2LyRImR+y4oa2AntrgID95SHJxuMUrkNXmanDSed71sRNZysveJVt1hLLemQZIady0FpEg==}
@@ -4304,7 +4304,7 @@ snapshots:
       postcss: 8.5.3
       tailwindcss: 4.1.3
 
-  '@timonteutelink/template-types-lib@0.0.22':
+  '@timonteutelink/template-types-lib@0.0.23':
     dependencies:
       zod: 3.24.2
 

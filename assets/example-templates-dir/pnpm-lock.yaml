@@ -9,23 +9,23 @@ importers:
   .:
     devDependencies:
       '@timonteutelink/template-types-lib':
-        specifier: 0.0.22
-        version: 0.0.22
+        specifier: 0.0.23
+        version: 0.0.23
       zod:
         specifier: ^3.24.2
         version: 3.24.2
 
 packages:
 
-  '@timonteutelink/template-types-lib@0.0.22':
-    resolution: {integrity: sha512-ZUKBN30IAvJfg7LzgBsWvqL3ujWRPVM5MqaBRl1sUHkq1SxOetCYS0+lS/7jJVEGB9Z1uTIJqS2Te04LsNbWNQ==}
+  '@timonteutelink/template-types-lib@0.0.23':
+    resolution: {integrity: sha512-8w84cIDkq2YeuxwOr5cYTOEyxXTgmBuvVGNvlXmaMHxdgH20X4OFDpqsa3C3ohG5QYi62geTYO6fJfFL7Nd6SQ==}
 
   zod@3.24.2:
     resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
 
 snapshots:
 
-  '@timonteutelink/template-types-lib@0.0.22':
+  '@timonteutelink/template-types-lib@0.0.23':
     dependencies:
       zod: 3.24.2
 
