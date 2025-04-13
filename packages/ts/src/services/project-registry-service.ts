@@ -4,9 +4,12 @@ import { Project } from "../models/project-models";
 import path from "node:path";
 
 export class ProjectRegistry {
+  private searchPaths: string[] = [];
   public projects: Project[] = [];
 
-  constructor(private searchPaths: string[]) {}
+  constructor(searchPaths: { id: string; path: string }[]) {
+    this.searchPaths = searchPaths.map((searchPath) => searchPath.path);
+  }
 
   private async loadProjects(): Promise<void> {
     for (const searchPath of this.searchPaths) {

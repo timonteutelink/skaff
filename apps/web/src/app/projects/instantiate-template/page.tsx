@@ -1,5 +1,5 @@
 "use client";
-import { instantiateTemplate, reloadProjects, retrieveProject, retrieveTemplate } from "@/app/actions";
+import { createNewProject, instantiateTemplate, reloadProjects, retrieveProject, retrieveTemplate } from "@/app/actions";
 import { TemplateSettingsForm } from "@/components/general/template-settings/template-settings-form";
 import { ProjectDTO, TemplateDTO } from "@repo/ts/utils/types";
 import { findTemplate } from "@repo/ts/utils/utils";
@@ -24,6 +24,10 @@ const ProjectTemplateTreePage: React.FC = () => {
   );
   const parentTemplateInstanceIdParam = useMemo(
     () => searchParams.get("parentTemplateInstanceId"),
+    [searchParams],
+  );
+  const selectedDirectoryIdParam = useMemo(
+    () => searchParams.get("selectedProjectDirectoryId"),
     [searchParams],
   );
   const [project, setProject] = useState<ProjectDTO>();
@@ -82,24 +86,44 @@ const ProjectTemplateTreePage: React.FC = () => {
   }, [rootTemplate, templateNameParam]);
 
   const handleSubmitSettings = useCallback(async (data: UserTemplateSettings) => {
-    if (!projectNameParam || !rootTemplate || !subTemplate) {
+    if (!projectNameParam || !templateNameParam || !rootTemplateNameParam || !rootTemplate || !subTemplate) {
       console.error("Project name or root template not found.");
-      return;
-    }
-    if (!parentTemplateInstanceIdParam && !createProject) {
-      console.error("No parent template instance ID provided.");
-      return;
-    }
-    if (subTemplate.config.templateConfig.name === rootTemplate.config.templateConfig.name && !createProject) {
-      console.error(
-        "Root template cannot be instantiated as a sub-template.",
-      );
       return;
     }
 
     if (createProject) {
+      if (!selectedDirectoryIdParam) {
+        console.error("No selected directory ID provided for where to create the project.");
+        return;
+      }
+      const newProject = await createNewProject(projectNameParam, templateNameParam, selectedDirectoryIdParam, data);
 
+      if ('error' in newProject) {
+        console.error("Failed to create project");
+        console.error(newProject.error);
+        return;
+      }
     } else {
+      if (!parentTemplateInstanceIdParam) {
+        console.error("No parent template instance ID provided.");
+        return;
+      }
+
+      if (!project) {
+        console.error("Project not found.");
+        return;
+      }
+
+      if (project.settings.projectName !== projectNameParam) {
+        console.error("Project name does not match.");
+        return;
+      }
+
+      if (subTemplate.config.templateConfig.name === rootTemplate.config.templateConfig.name) {
+        console.error("Root template cannot be instantiated as a sub-template.");
+        return;
+      }
+
       const result = await instantiateTemplate(
         rootTemplate.config.templateConfig.name,
         subTemplate.config.templateConfig.name,
@@ -107,13 +131,14 @@ const ProjectTemplateTreePage: React.FC = () => {
         projectNameParam,
         data
       );
+
       if ("error" in result) {
         console.error("Error instantiating template:", result.error);
-      } else {
-        await reloadProjects();
-        router.push(`/projects/project/?projectName=${projectNameParam}`);
+        return;
       }
     }
+    await reloadProjects();
+    router.push(`/projects/project/?projectName=${projectNameParam}`);
   }, [
     projectNameParam,
     rootTemplate,
@@ -121,6 +146,10 @@ const ProjectTemplateTreePage: React.FC = () => {
     parentTemplateInstanceIdParam,
     router,
     createProject,
+    selectedDirectoryIdParam,
+    templateNameParam,
+    project,
+    rootTemplateNameParam,
   ]);
 
   if (!projectNameParam || !rootTemplateNameParam || !templateNameParam) {

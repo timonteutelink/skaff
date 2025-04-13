@@ -7,7 +7,7 @@ import path from "node:path";
 // now only stores the root templates at: <templateDirPath>/root-templates/*
 // later also store reference to files and generic templates to allow direct instantiation without saving state of subtemplates
 export class RootTemplateRegistry {
-  public templatePaths: string[] = [];
+  private templatePaths: string[] = [];
   public templates: Template[] = [];
 
   constructor(templatePaths: string[]) {

@@ -6,7 +6,7 @@ import { ProjectDTO, Result, TemplateDTO } from "@repo/ts/utils/types";
 import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 
-export async function retrieveProjectSearchPaths(): Promise<string[]> {
+export async function retrieveProjectSearchPaths(): Promise<{ id: string; path: string }[]> {
   return PROJECT_SEARCH_PATHS;
 }
 
@@ -62,9 +62,14 @@ export async function retrieveProject(
 export async function createNewProject(
   projectName: string,
   templateName: string,
-  parentDirPath: string,
+  projectDirPathId: string,
   userTemplateSettings: UserTemplateSettings,
 ): Promise<Result<ProjectDTO>> {
+  const parentDirPath = PROJECT_SEARCH_PATHS.find((dir) => dir.id === projectDirPathId)?.path;
+  if (!parentDirPath) {
+    return { error: "Invalid project directory path ID" };
+  }
+
   const template = await ROOT_TEMPLATE_REGISTRY.findTemplate(templateName);
 
   if ("error" in template) {

@@ -12,6 +12,7 @@ const splitReplaceHome = (input: string) =>
 export const TEMPLATE_DIR_PATHS: string[] = !process.env.TEMPLATE_DIR_PATHS
   ? ["./assets/example-templates-dir/"]
   : splitReplaceHome(process.env.TEMPLATE_DIR_PATHS);
-export const PROJECT_SEARCH_PATHS: string[] = !process.env.PROJECT_SEARCH_PATHS
+
+export const PROJECT_SEARCH_PATHS: { id: string, path: string }[] = (!process.env.PROJECT_SEARCH_PATHS
   ? [`${HOME}/projects`]
-  : splitReplaceHome(process.env.PROJECT_SEARCH_PATHS);
+  : splitReplaceHome(process.env.PROJECT_SEARCH_PATHS)).map((path, index) => ({ id: `project-path-${index}`, path }));

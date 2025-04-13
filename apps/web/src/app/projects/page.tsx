@@ -46,7 +46,7 @@ export default function TemplatesListPage() {
   const router = useRouter();
   const [projects, setProjects] = useState<ProjectDTO[]>([]);
   const [templates, setTemplates] = useState<TemplateDTO[]>([]);
-  const [projectSearchPaths, setProjectSearchPaths] = useState<string[]>([]);
+  const [projectSearchPaths, setProjectSearchPaths] = useState<{ id: string; path: string }[]>([]);
   const [open, setOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [projectName, setProjectName] = useState("");
@@ -70,7 +70,7 @@ export default function TemplatesListPage() {
         disabled={!projectName || !selectedTemplate}
         onClick={() => {
           router.push(
-            `/projects/instantiate-template/?projectName=${projectName}&rootTemplate=${selectedTemplate}&template=${selectedTemplate}`,
+            `/projects/instantiate-template/?projectName=${projectName}&rootTemplate=${selectedTemplate}&template=${selectedTemplate}&selectedProjectDirectoryId=${selectedDirectory}`,
           );
           setOpen(false);
           setProjectName("");
@@ -81,7 +81,7 @@ export default function TemplatesListPage() {
         Create Project
       </Button>
     );
-  }, [projectName, selectedTemplate, templates]);
+  }, [projectName, selectedTemplate, templates, router]);
 
   const createProjectDialog = useMemo(
     () => (
@@ -146,8 +146,8 @@ export default function TemplatesListPage() {
                   <SelectGroup>
                     <SelectLabel>Directories</SelectLabel>
                     {projectSearchPaths.map((path) => (
-                      <SelectItem key={path} value={path}>
-                        {path}
+                      <SelectItem key={path.id} value={path.id}>
+                        {path.path}
                       </SelectItem>
                     ))}
                   </SelectGroup>
