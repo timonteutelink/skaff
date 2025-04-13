@@ -8,7 +8,7 @@ import {
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { Result, TemplateDTO } from "../utils/types";
+import { CreateProjectResult, Result, TemplateDTO } from "../utils/types";
 import { Project } from "./project-models";
 import z from "zod";
 
@@ -224,7 +224,7 @@ export class Template {
     rootTemplateSettings: UserTemplateSettings,
     destinationDir: string,
     projectName: string,
-  ): Promise<Result<string>> {
+  ): Promise<Result<CreateProjectResult>> {
     const generatorService = new TemplateGeneratorService(
       this,
       rootTemplateSettings,

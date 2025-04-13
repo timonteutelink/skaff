@@ -23,6 +23,7 @@ trap cleanup EXIT
 cp -r "$BASE_PROJECT"/. "$TMP_DIR"
 cd "$TMP_DIR"
 git init -q
+git config commit.gpgsign false # TEMPORARELY BECAUSE NEED TO GENERATE NEW GPG KEY
 git add .
 git commit -m "Base version" -q
 

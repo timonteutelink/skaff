@@ -2,26 +2,25 @@
 
 // instead of tests folder maybe use storybook.
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { DiffVisualizer } from "@/components/general/git/diff-visualizer"
 import { FileTree } from "@/components/general/git/file-tree"
 import { parseGitDiff } from "@/components/general/git/parse-git-diff"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { ParsedFile } from "@repo/ts/utils/types"
+
+
 
 export default function Home() {
   const [diffText, setDiffText] = useState("")
   const [parsedDiff, setParsedDiff] = useState<ReturnType<typeof parseGitDiff> | null>(null)
-  const [selectedFile, setSelectedFile] = useState<string | null>(null)
 
   const handleVisualize = useCallback(() => {
     if (!diffText.trim()) return
     const parsed = parseGitDiff(diffText)
     setParsedDiff(parsed)
-    if (parsed.files.length > 0) {
-      setSelectedFile(parsed.files[0]!.path)
-    }
   }, [diffText])
 
   return (

@@ -1,4 +1,4 @@
-import { exec, execFile, spawn } from "node:child_process";
+import { exec, execFile } from "node:child_process";
 import { promisify } from "node:util";
 import "server-only";
 import { GENERATE_DIFF_SCRIPT_PATH } from "../utils/env";
@@ -7,20 +7,30 @@ import { DiffHunk, ParsedFile } from "../utils/types";
 const asyncExecFile = promisify(execFile);
 const asyncExec = promisify(exec);
 
-export async function showGitDiff(cwd: string): Promise<void> {
+export async function addAllAndDiff(
+  repoPath: string,
+): Promise<string | null> {
   try {
-    const gitDiff = spawn("git", ["diff"], {
-      cwd,
-      stdio: "inherit",
-      env: { ...process.env, GIT_PAGER: "less" },
-    });
-
-    await new Promise((resolve, reject) => {
-      gitDiff.on("close", resolve);
-      gitDiff.on("error", reject);
-    });
+    await asyncExec(`cd ${repoPath} && git add .`);
+    const { stdout } = await asyncExec(
+      `cd ${repoPath} && git diff --staged --no-color --no-ext-diff`,
+    );
+    return stdout;
   } catch (error) {
-    console.error("Error showing git diff:", error);
+    console.error("Error adding files and generating diff:", error);
+    return null;
+  }
+}
+
+export async function createGitRepo(
+  repoPath: string,
+): Promise<boolean> {
+  try {
+    await asyncExec(`cd ${repoPath} && git init`);
+    return true;
+  } catch (error) {
+    console.error("Error creating git repository:", error);
+    return false;
   }
 }
 

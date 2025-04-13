@@ -1,7 +1,11 @@
 "use client";
-import { createNewProject, instantiateTemplate, reloadProjects, retrieveProject, retrieveTemplate } from "@/app/actions";
+import { createNewProject, instantiateTemplate } from "@/app/actions/instantiate";
+import { reloadProjects, retrieveProject } from "@/app/actions/project";
+import { retrieveTemplate } from "@/app/actions/template";
+import { DiffVisualizerPage } from "@/components/general/git/diff-visualizer-page";
 import { TemplateSettingsForm } from "@/components/general/template-settings/template-settings-form";
-import { ProjectDTO, TemplateDTO } from "@repo/ts/utils/types";
+import { Button } from "@/components/ui/button";
+import { ParsedFile, ProjectDTO, TemplateDTO } from "@repo/ts/utils/types";
 import { findTemplate } from "@repo/ts/utils/utils";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -32,6 +36,7 @@ const ProjectTemplateTreePage: React.FC = () => {
   );
   const [project, setProject] = useState<ProjectDTO>();
   const [rootTemplate, setRootTemplate] = useState<TemplateDTO>();
+  const [diff, setDiff] = useState<ParsedFile[] | null>(null);
 
   useEffect(() => {
     if (!projectNameParam) {
@@ -95,13 +100,15 @@ const ProjectTemplateTreePage: React.FC = () => {
     }
 
     if (selectedDirectoryIdParam) {
-      const newProject = await createNewProject(projectNameParam, templateNameParam, selectedDirectoryIdParam, data);
+      const newProjectResult = await createNewProject(projectNameParam, templateNameParam, selectedDirectoryIdParam, data);
 
-      if ('error' in newProject) {
+      if ('error' in newProjectResult) {
         console.error("Failed to create project");
-        console.error(newProject.error);
+        console.error(newProjectResult.error);
         return;
       }
+
+      setDiff(newProjectResult.data.diff);
     } else if (parentTemplateInstanceIdParam) {
       if (!project) {
         console.error("Project not found.");
@@ -124,7 +131,7 @@ const ProjectTemplateTreePage: React.FC = () => {
         parentTemplateInstanceIdParam!,
         projectNameParam,
         data
-      );
+      ); //TODO: first show the generic diff from clean projects. Then the actually applying diff
 
       if ("error" in result) {
         console.error("Error instantiating template:", result.error);
@@ -147,6 +154,20 @@ const ProjectTemplateTreePage: React.FC = () => {
     project,
     rootTemplateNameParam,
   ]);
+
+  const handleConfirmChanges = useCallback(async () => {
+    if (!project) {
+      console.error("Project not found.");
+      return;
+    }
+
+    if (diff) {
+      const diffString = JSON.stringify(diff, null, 2);
+      alert(diffString);
+    } else {
+      console.error("No diff available.");
+    }
+  }, [diff, project]);
 
   if (!projectNameParam || !rootTemplateNameParam || !templateNameParam) {
     return (
@@ -175,6 +196,28 @@ const ProjectTemplateTreePage: React.FC = () => {
         </h1>
       </div>
     );
+  }
+
+  if (diff) {
+    return (
+      <div className="container py-10 mx-auto">
+        <h1 className="text-2xl font-bold mb-4">Diff</h1>
+        <DiffVisualizerPage parsedDiff={diff} />
+        <div className="flex justify-between mt-4">
+          <Button
+            variant="outline"
+            onClick={() => setDiff(null)}
+          >
+            Back
+          </Button>
+          <Button
+            onClick={handleConfirmChanges}
+          >
+            Continue
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (

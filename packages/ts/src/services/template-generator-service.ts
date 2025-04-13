@@ -13,6 +13,7 @@ import { Project } from "../models/project-models";
 import { ProjectSettings, Result } from "../utils/types";
 import z from "zod";
 import { PROJECT_REGISTRY } from "./project-registry-service";
+import { addAllAndDiff, createGitRepo } from "./git-service";
 
 export class TemplateGeneratorService {
   public absDestinationProjectPath: string;
@@ -380,7 +381,7 @@ export class TemplateGeneratorService {
    * @returns The absolute path of the new project.
    * @throws Error if the project cannot be created.
    */
-  public async instantiateNewProject(): Promise<Result<string>> {
+  public async instantiateNewProject(): Promise<Result<CreateProjectResult>> {
     const dirStat = await fs
       .stat(this.absDestinationProjectPath)
       .catch(() => null);
@@ -422,6 +423,7 @@ export class TemplateGeneratorService {
 
     try {
       await fs.mkdir(this.absDestinationProjectPath, { recursive: true });
+      await createGitRepo(this.absDestinationProjectPath);
       await this.copyDirectory();
       await this.applySideEffects();
       await Project.writeNewProjectSettings(
@@ -453,6 +455,17 @@ export class TemplateGeneratorService {
       console.error(`Failed to instantiate new project: ${e}`);
       return { error: `Failed to instantiate new project: ${e}` };
     }
-    return { data: this.absDestinationProjectPath };
+
+    const diff = await addAllAndDiff(this.absDestinationProjectPath);
+
+    if (!diff) {
+      console.error("Failed to generate diff.");
+      return { error: "Failed to generate diff." };
+    }
+
+    // TODO: if any failure return error result with short message and console error actual error. Then ALWAYS rollback project creation by deleting the directory.
+
+    return { data: { resultPath: this.absDestinationProjectPath, diff } };
   }
 }
+

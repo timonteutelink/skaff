@@ -45,6 +45,11 @@ export interface ProjectDTO {
   settings: ProjectSettings;
 }
 
+export interface CreateProjectResult {
+  resultPath: string;
+  diff: string;
+}
+
 export interface ParsedFile {
   path: string
   status: "added" | "modified" | "deleted"

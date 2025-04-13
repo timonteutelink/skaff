@@ -1,15 +1,21 @@
 import { ROOT_TEMPLATE_REGISTRY } from "@repo/ts/services/root-template-registry-service";
-import { ProjectDTO, Result } from "@repo/ts/utils/types";
+import { ParsedFile, ProjectDTO, Result } from "@repo/ts/utils/types";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
+import { parseGitDiff } from "@repo/ts/services/git-service";
+
+export interface ProjectCreationResult {
+  newProject: ProjectDTO;
+  diff: ParsedFile[];
+}
 
 export async function createNewProject(
   projectName: string,
   templateName: string,
   projectDirPathId: string,
   userTemplateSettings: UserTemplateSettings,
-): Promise<Result<ProjectDTO>> {
+): Promise<Result<ProjectCreationResult>> {
   const parentDirPath = PROJECT_SEARCH_PATHS.find((dir) => dir.id === projectDirPathId)?.path;
   if (!parentDirPath) {
     return { error: "Invalid project directory path ID" };
@@ -39,7 +45,9 @@ export async function createNewProject(
     return { error: "Failed to create project" };
   }
 
-  return { data: project.mapToDTO() };
+  const processedDiff = parseGitDiff(instatiationResult.data.diff);
+
+  return { data: { newProject: project.mapToDTO(), diff: processedDiff } };
 }
 
 export async function instantiateTemplate(
@@ -82,3 +90,23 @@ export async function instantiateTemplate(
 
   return { data: instatiationResult.data };
 }
+
+// export async function commitAndFinalizeTemplateCreation(
+//   projectName: string,
+//   templateName: string,
+// ): Promise<Result<string>> {
+//   const project = await PROJECT_REGISTRY.findProject(projectName);
+//
+//   if (!project) {
+//     return { error: "Project not found" };
+//   }
+//
+//   const template = project.findTemplate(templateName);
+//
+//   if (!template) {
+//     return { error: "Template not found" };
+//   }
+//
+//
+//   return { data: commitResult.data };
+// }
