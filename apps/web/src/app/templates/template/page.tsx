@@ -3,7 +3,7 @@
 import type { TemplateDTO } from "@repo/ts/utils/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { retrieveTemplate } from "@/app/actions";
+import { retrieveTemplate } from "@/app/actions/template";
 import { Tree } from "@/components/general/Tree";
 
 /* =============================================================================

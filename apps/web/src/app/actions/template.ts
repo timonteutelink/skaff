@@ -1,3 +1,4 @@
+'use server';
 import { ROOT_TEMPLATE_REGISTRY } from "@repo/ts/services/root-template-registry-service";
 import { TemplateDTO } from "@repo/ts/utils/types";
 

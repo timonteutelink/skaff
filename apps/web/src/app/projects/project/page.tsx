@@ -1,13 +1,14 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { retrieveProject, retrieveTemplate } from "@/app/actions"
-import { ProjectTree } from "@/components/general/projects/project-tree"
+import { retrieveProject } from "@/app/actions/project"
+import { retrieveTemplate } from "@/app/actions/template"
 import { ProjectDetailsPanel } from "@/components/general/projects/project-details-panel"
 import { ProjectHeader } from "@/components/general/projects/project-header"
-import { getProjectGitStatus, switchProjectBranch } from "@/app/actions/git"
-import type { ProjectTreeNode, GitStatus } from "@/components/general/projects/types"
+import { ProjectTree } from "@/components/general/projects/project-tree"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useCallback, useEffect, useMemo, useState } from "react"
+// import { getProjectGitStatus, switchProjectBranch } from "@/app/actions/git"
+import type { ProjectTreeNode } from "@/components/general/projects/types"
 import type { InstantiatedTemplate, ProjectDTO, TemplateDTO } from "@repo/ts/utils/types"
 
 /* =============================================================================
@@ -169,11 +170,6 @@ export default function ProjectTemplateTreePage() {
   const [rootTemplate, setRootTemplate] = useState<TemplateDTO>()
   const [projectTree, setProjectTree] = useState<ProjectTreeNode[]>([])
   const [selectedNode, setSelectedNode] = useState<ProjectTreeNode | null>(null)
-  const [gitStatus, setGitStatus] = useState<GitStatus>({
-    isClean: true,
-    currentBranch: "main",
-    branches: ["main"],
-  })
 
   // Fetch project data.
   useEffect(() => {
@@ -191,11 +187,6 @@ export default function ProjectTemplateTreePage() {
         return
       }
       setProject(data)
-    })
-
-    // Fetch git status
-    getProjectGitStatus(projectNameParam).then((status) => {
-      setGitStatus(status)
     })
   }, [projectNameParam, router])
 
@@ -232,19 +223,20 @@ export default function ProjectTemplateTreePage() {
     async (branch: string) => {
       if (!projectNameParam) return
 
-      const success = await switchProjectBranch(projectNameParam, branch)
-      if (success) {
-        setGitStatus((prev) => ({
-          ...prev,
-          currentBranch: branch,
-        }))
-
-        // Reload project data after branch change
-        const updatedProject = await retrieveProject(projectNameParam)
-        if (updatedProject) {
-          setProject(updatedProject)
-        }
-      }
+      alert(`Switching to branch: ${branch}`)
+      // const success = await switchProjectBranch(projectNameParam, branch)
+      // if (success) {
+      //   setGitStatus((prev) => ({
+      //     ...prev,
+      //     currentBranch: branch,
+      //   }))
+      //
+      //   // Reload project data after branch change
+      //   const updatedProject = await retrieveProject(projectNameParam)
+      //   if (updatedProject) {
+      //     setProject(updatedProject)
+      //   }
+      // }
     },
     [projectNameParam],
   )

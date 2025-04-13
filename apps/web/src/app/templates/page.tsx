@@ -1,5 +1,5 @@
 "use client";
-import { retrieveTemplates } from "@/app/actions";
+import { retrieveTemplates } from "@/app/actions/template";
 import TablePage, { FieldInfo } from "@/components/general/TablePage";
 import { TemplateDTO } from "@repo/ts/utils/types";
 import { useRouter } from "next/navigation";

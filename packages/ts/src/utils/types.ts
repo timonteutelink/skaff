@@ -37,6 +37,7 @@ export const ProjectSettingsSchema = z.object({
 
 export type ProjectSettings = z.infer<typeof ProjectSettingsSchema>;
 
+// isClean, branch, branches
 export interface ProjectDTO {
   name: string;
   absPath: string;
