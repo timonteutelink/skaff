@@ -222,16 +222,16 @@ export class TemplateGeneratorService {
   }
 
   private static async autoInstantiateSubTemplates(
-    rootTemplate: Template,
+    template: Template,
     fullParentSettings: TemplateSettingsType<z.AnyZodObject>,
     absDestinationProjectPath: string,
     destinationProject: Project,
     newProjectId: string,
   ) {
-    if (!rootTemplate.config.autoInstatiatedSubtemplates) {
+    if (!template.config.autoInstatiatedSubtemplates) {
       return;
     }
-    for (const templateToAutoInstantiate of rootTemplate.config
+    for (const templateToAutoInstantiate of template.config
       .autoInstatiatedSubtemplates) {
       const nameOfTemplateToAutoInstantiate = stringOrCallbackToString(
         templateToAutoInstantiate.subTemplateName,
@@ -239,12 +239,13 @@ export class TemplateGeneratorService {
       );
       const newTemplateSettings =
         templateToAutoInstantiate.mapSettings(fullParentSettings);
-      const template = rootTemplate.findSubTemplate(
+      const templateToInstantiate = template.findSubTemplate(
         nameOfTemplateToAutoInstantiate,
       );
-      if (template) {
+
+      if (templateToInstantiate) {
         const newTemplateGeneratorService = new TemplateGeneratorService(
-          rootTemplate,
+          templateToInstantiate,
           newTemplateSettings,
           absDestinationProjectPath,
           destinationProject,
@@ -359,7 +360,7 @@ export class TemplateGeneratorService {
       }
 
       await TemplateGeneratorService.autoInstantiateSubTemplates(
-        this.rootTemplate,
+        template,
         this.currentlyGeneratingTemplateFullSettings,
         this.absDestinationProjectPath,
         this.destinationProject,
