@@ -33,3 +33,19 @@ export async function isGitRepoClean(hostRepoPath: string): Promise<boolean> {
     return false;
   }
 }
+
+export async function diffDirectories(absoluteBaseProjectPath: string, absoluteNewProjectPath: string): Promise<void> {
+  try {
+    const diff = spawn("git", ["diff", absoluteBaseProjectPath, absoluteNewProjectPath], {
+      stdio: "inherit",
+      env: { ...process.env, GIT_PAGER: "less" },
+    });
+
+    await new Promise((resolve, reject) => {
+      diff.on("close", resolve);
+      diff.on("error", reject);
+    });
+  } catch (error) {
+    console.error("Error showing git diff:", error);
+  }
+}
