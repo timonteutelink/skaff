@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000",
-    "build": "next build",
+    "build": "tsc --noEmit && next build",
     "start": "next start",
     "lint": "next lint --max-warnings 0",
     "check-types": "tsc --noEmit"
@@ -54,7 +54,7 @@
     "next-themes": "^0.4.6",
     "react": "^19.1.0",
     "react-arborist": "^3.4.3",
-    "react-day-picker": "9.6.6",
+    "react-day-picker": "8.10.1",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.55.0",
     "react-resizable-panels": "^2.1.7",

@@ -1,7 +1,9 @@
 "use client";
+import { commitChanges } from "@/app/actions/git";
 import { createNewProject, instantiateTemplate } from "@/app/actions/instantiate";
 import { reloadProjects, retrieveProject } from "@/app/actions/project";
 import { retrieveTemplate } from "@/app/actions/template";
+import CommitButton from "@/components/general/git/commit-dialog";
 import { DiffVisualizerPage } from "@/components/general/git/diff-visualizer-page";
 import { TemplateSettingsForm } from "@/components/general/template-settings/template-settings-form";
 import { Button } from "@/components/ui/button";
@@ -34,6 +36,10 @@ const ProjectTemplateTreePage: React.FC = () => {
     () => searchParams.get("selectedProjectDirectoryId"),
     [searchParams],
   );
+  const creatingNewProject = useMemo(() => selectedDirectoryIdParam && !parentTemplateInstanceIdParam, [
+    selectedDirectoryIdParam,
+    parentTemplateInstanceIdParam,
+  ]);
   const [project, setProject] = useState<ProjectDTO>();
   const [rootTemplate, setRootTemplate] = useState<TemplateDTO>();
   const [diff, setDiff] = useState<ParsedFile[] | null>(null);
@@ -50,7 +56,7 @@ const ProjectTemplateTreePage: React.FC = () => {
       return;
     }
     if (
-      !parentTemplateInstanceIdParam &&
+      creatingNewProject &&
       rootTemplateNameParam !== templateNameParam
     ) {
       console.error(
@@ -61,7 +67,7 @@ const ProjectTemplateTreePage: React.FC = () => {
     }
     retrieveProject(projectNameParam).then((data: ProjectDTO | null) => {
       if (!data) {
-        if (!selectedDirectoryIdParam || parentTemplateInstanceIdParam) {
+        if (!creatingNewProject) {
           console.error("Project not found:", projectNameParam);
           router.push("/projects");
         }
@@ -137,12 +143,12 @@ const ProjectTemplateTreePage: React.FC = () => {
         console.error("Error instantiating template:", result.error);
         return;
       }
+      await reloadProjects();
+      router.push(`/projects/project/?projectName=${projectNameParam}`);
     } else {
       console.error("No parent template instance ID or selected directory ID provided.");
       return;
     }
-    await reloadProjects();
-    router.push(`/projects/project/?projectName=${projectNameParam}`);
   }, [
     projectNameParam,
     rootTemplate,
@@ -155,19 +161,31 @@ const ProjectTemplateTreePage: React.FC = () => {
     rootTemplateNameParam,
   ]);
 
-  const handleConfirmChanges = useCallback(async () => {
-    if (!project) {
-      console.error("Project not found.");
+  const handleConfirmChanges = useCallback(async (commitMessage: string) => {
+    if (!projectNameParam || !commitMessage) {
+      console.error("Project name or commit message not found.");
+      return;
+    }
+    if (!commitMessage) {
+      console.error("Commit message is required.");
       return;
     }
 
-    if (diff) {
-      const diffString = JSON.stringify(diff, null, 2);
-      alert(diffString);
+    if (creatingNewProject) {
+      const result = await commitChanges(projectNameParam, commitMessage);
+      if ("error" in result) {
+        console.error("Error committing changes:", result.error);
+        return;
+      }
+      router.push(`/projects/project/?projectName=${projectNameParam}`);
     } else {
-      console.error("No diff available.");
+      if (!project) {
+        console.error("Project not found.");
+        return;
+      }
+      //TODO: more complicated maybe another step.
     }
-  }, [diff, project]);
+  }, [diff, project, creatingNewProject, router]);
 
   if (!projectNameParam || !rootTemplateNameParam || !templateNameParam) {
     return (
@@ -210,11 +228,10 @@ const ProjectTemplateTreePage: React.FC = () => {
           >
             Back
           </Button>
-          <Button
-            onClick={handleConfirmChanges}
-          >
-            Continue
-          </Button>
+          <CommitButton
+            onCommit={handleConfirmChanges}
+            onCancel={() => { }}
+          />
         </div>
       </div>
     )

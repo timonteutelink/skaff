@@ -10,7 +10,7 @@ import * as path from "node:path";
 import { Template } from "../models/template-models";
 import { anyOrCallbackToAny, stringOrCallbackToString } from "../utils/utils";
 import { Project } from "../models/project-models";
-import { ProjectSettings, Result } from "../utils/types";
+import { CreateProjectResult, ProjectSettings, Result } from "../utils/types";
 import z from "zod";
 import { PROJECT_REGISTRY } from "./project-registry-service";
 import { addAllAndDiff, commitAll, createGitRepo } from "./git-service";
@@ -267,6 +267,7 @@ export class TemplateGeneratorService {
    * @param templateName The name of the template to instantiate.s
    * @returns The absolute path where templated files are written.
    */
+  // TODO: add git. if autoInstanted ignore git because will happen after parent calls this
   public async instantiateTemplate(
     templateName: string,
     parentInstanceId: string,
@@ -285,6 +286,8 @@ export class TemplateGeneratorService {
         error: `Template ${templateName} could not be found in rootTemplate ${this.rootTemplate.config.templateConfig.name}`,
       };
     }
+
+    const projectName = this.destinationProject.instantiatedProjectSettings.projectName;
 
     this.setTemplateGenerationValues(template, parentInstanceId);
 
@@ -435,12 +438,32 @@ export class TemplateGeneratorService {
 
     try {
       await fs.mkdir(this.absDestinationProjectPath, { recursive: true });
-      await createGitRepo(this.absDestinationProjectPath);
-      await Project.writeNewProjectSettings(
+      const createRepoResult = await createGitRepo(this.absDestinationProjectPath);
+      if (!createRepoResult) {
+        console.error(
+          `Failed to create git repository in ${this.absDestinationProjectPath}`,
+        );
+        return {
+          error: `Failed to create git repository in ${this.absDestinationProjectPath}`,
+        };
+      }
+      const writeSettingsResult = await Project.writeNewProjectSettings(
         this.absDestinationProjectPath,
         newProjectSettings,
       );
-      await commitAll(this.absDestinationProjectPath, "Initial commit");
+      if ("error" in writeSettingsResult) {
+        console.error(
+          `Failed to write project settings: ${writeSettingsResult.error}`,
+        );
+        return { error: `Failed to write project settings: ${writeSettingsResult.error}` };
+      }
+      const commitResult = await commitAll(this.absDestinationProjectPath, "Initial commit");
+      if (!commitResult) {
+        console.error(
+          `Failed to commit project settings: ${commitResult}`,
+        );
+        return { error: `Failed to commit project settings: ${commitResult}` };
+      }
       await this.copyDirectory();
       await this.applySideEffects();
 

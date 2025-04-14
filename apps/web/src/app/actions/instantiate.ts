@@ -120,6 +120,7 @@ export async function cancelProjectCreation(
   return { data: undefined };
 }
 
+// This function will only need to be used when instantiating a template in an existing project not when creating a new project. Then we only need to commit the change. In this function we need to actually apply the patch to the existing project. Instatiation of a template in existing project is more complicated than just creating a new project.
 // export async function commitAndFinalizeTemplateCreation(
 //   projectName: string,
 //   templateName: string,
