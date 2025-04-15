@@ -4,9 +4,14 @@ import * as fs from "node:fs/promises";
 
 export type CacheKey = 'template-config' | 'new-template-diff';
 
-export async function pathInCache(fileOrDirName: string): Promise<string> {
+export async function getCacheDir(): Promise<string> {
   const cacheDir = path.join(tmpdir(), "code-templator-cache");
   await fs.mkdir(cacheDir, { recursive: true });
+  return cacheDir;
+}
+
+export async function pathInCache(fileOrDirName: string): Promise<string> {
+  const cacheDir = await getCacheDir();
   const cacheFilePath = path.join(cacheDir, fileOrDirName);
 
   return cacheFilePath;

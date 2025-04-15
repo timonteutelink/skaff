@@ -43,13 +43,14 @@ export class Project {
    * Aggregates all settings of the provided template and all parent templates inside of this project. If the template or any of the parents are not initialized in this project return an empty object
    * can be called recursively with parent templates to assemble a final object of all templates up to the root template.
    */
-  getInstantiatedSettings(
+  public static getInstantiatedSettings(
     template: Template,
     instanceId: string,
+    instantiatedProjectSettings: ProjectSettings,
   ): UserTemplateSettings {
     const instantiatedSettings: UserTemplateSettings = {};
     const projectTemplateSettings =
-      this.instantiatedProjectSettings.instantiatedTemplates.find(
+      instantiatedProjectSettings.instantiatedTemplates.find(
         (t) =>
           t.id === instanceId &&
           t.templateName === template.config.templateConfig.name,
@@ -64,9 +65,10 @@ export class Project {
 
     const parentTemplate = template.parentTemplate;
     if (parentTemplate && projectTemplateSettings.parentId) {
-      const parentSettings = this.getInstantiatedSettings(
+      const parentSettings = Project.getInstantiatedSettings(
         parentTemplate,
         projectTemplateSettings.parentId,
+        instantiatedProjectSettings,
       );
       Object.assign(instantiatedSettings, parentSettings);
     }

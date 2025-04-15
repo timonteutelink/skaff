@@ -1,14 +1,97 @@
-import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
+import { TemplateSettingsType, UserTemplateSettings } from "@timonteutelink/template-types-lib";
+import { createHash } from "node:crypto";
+import * as fs from "node:fs/promises";
 import path from "node:path";
+import { AnyZodObject, z } from "zod";
+import { Template } from "../models/template-models";
 import { NewTemplateDiffResult, ParsedFile, ProjectCreationResult, ProjectSettings, Result } from "../utils/types";
+import { stringOrCallbackToString } from "../utils/utils";
+import { getCacheDir, retrieveFromCache, saveToCache } from "./cache-service";
 import { addAllAndDiff, applyDiffToGitRepo, diffDirectories, isConflictAfterApply, parseGitDiff } from "./git-service";
 import { PROJECT_REGISTRY } from "./project-registry-service";
 import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
 import { TemplateGeneratorService } from "./template-generator-service";
-import { pathInCache, retrieveFromCache, saveToCache } from "./cache-service";
-import * as fs from "node:fs/promises";
-import { createHash } from "node:crypto";
+import { Project } from "../models/project-models";
 
+
+export function getParsedUserSettingsWithParentSettings(userSettings: UserTemplateSettings, currentlyGeneratingTemplate: Template, currentlyGeneratingTemplateParentInstanceId: string, projectName: string, destinationProjectSettings?: ProjectSettings): Result<TemplateSettingsType<AnyZodObject>> {
+  const parsedUserSettings = currentlyGeneratingTemplate.config.templateSettingsSchema.safeParse(userSettings);
+  if (!parsedUserSettings?.success) {
+    console.error(
+      `Failed to parse user settings: ${parsedUserSettings?.error}`,
+    );
+    return {
+      error: `Failed to parse user settings: ${parsedUserSettings?.error}`,
+    }
+  }
+  let newUserSettings: TemplateSettingsType<z.AnyZodObject> = parsedUserSettings.data as TemplateSettingsType<z.AnyZodObject>;
+  if (destinationProjectSettings) {
+    newUserSettings = {
+      ...newUserSettings,
+      project_name:
+        destinationProjectSettings.projectName,
+    };
+    if (
+      currentlyGeneratingTemplate?.parentTemplate &&
+      currentlyGeneratingTemplateParentInstanceId
+    ) {
+      newUserSettings = {
+        ...newUserSettings,
+        ...Project.getInstantiatedSettings(
+          currentlyGeneratingTemplate.parentTemplate,
+          currentlyGeneratingTemplateParentInstanceId,
+          destinationProjectSettings,
+        ),
+      };
+    }
+  } else {
+    newUserSettings = {
+      ...newUserSettings,
+      project_name: projectName,
+    };
+  }
+  return { data: newUserSettings };
+}
+
+async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
+  projectSettings: ProjectSettings,
+  currentTemplateToAddChildren: Template,
+  parentInstanceId: string,
+  parentTemplateSettings: UserTemplateSettings,
+): Promise<Result<ProjectSettings>> {
+  for (const autoInstantiatedTemplate of currentTemplateToAddChildren.config.autoInstatiatedSubtemplates || []) {
+    const autoInstantiatedTemplateInstanceId = crypto.randomUUID();
+    const newFullTemplateSettings = getParsedUserSettingsWithParentSettings(parentTemplateSettings, currentTemplateToAddChildren, parentInstanceId, projectSettings.projectName, projectSettings);
+    if ('error' in newFullTemplateSettings) {
+      return { error: newFullTemplateSettings.error };
+    }
+    const newTemplateSettings = autoInstantiatedTemplate.mapSettings(newFullTemplateSettings.data);
+    const subTemplateName = stringOrCallbackToString(autoInstantiatedTemplate.subTemplateName, newFullTemplateSettings.data);
+    projectSettings.instantiatedTemplates.push({
+      id: autoInstantiatedTemplateInstanceId,
+      parentId: parentInstanceId,
+      templateName: subTemplateName,
+      templateSettings: newTemplateSettings,
+    });
+
+    const rootTemplate = await ROOT_TEMPLATE_REGISTRY.findTemplate(projectSettings.rootTemplateName);
+
+    if ("error" in rootTemplate) {
+      return { error: rootTemplate.error };
+    }
+
+    const subTemplate = rootTemplate.data.findSubTemplate(subTemplateName);
+
+    if (!subTemplate) {
+      return { error: `Subtemplate ${autoInstantiatedTemplate.subTemplateName} not found` };
+    }
+
+    const newTemplateSettingsForChild = Object.assign({}, parentTemplateSettings, newTemplateSettings);
+
+    await recursivelyAddAutoInstantiatedTemplatesToProjectSettings(projectSettings, subTemplate, autoInstantiatedTemplateInstanceId, newTemplateSettingsForChild);
+  }
+  return { data: projectSettings };
+}
 
 // First step for template instantiation. Takes all params and returns a diff of the changes that would be made to the project if the template was instantiated. This diff doesnt show changes on the real project but from a clean project.
 export async function generateNewTemplateDiff(rootTemplateName: string, templateName: string, parentInstanceId: string, destinationProjectName: string, userTemplateSettings: UserTemplateSettings): Promise<Result<NewTemplateDiffResult>> {
@@ -33,23 +116,21 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
   const tempOldProjectName = `${destinationProjectName}-${crypto.randomUUID()}`;
   const tempNewProjectName = `${destinationProjectName}-${crypto.randomUUID()}`;
 
-  const tempCleanProjectOldSettingsPath = await pathInCache(tempOldProjectName);
-  const tempCleanProjectNewSettingsPath = await pathInCache(tempNewProjectName);
-  console.log("tempCleanProjectOldSettingsPath", tempCleanProjectOldSettingsPath);
-  console.log("tempCleanProjectNewSettingsPath", tempCleanProjectNewSettingsPath);
+  const cacheDir = await getCacheDir();
   try {
     const cleanProjectFromCurrentProjectSettingsResult = await generateProjectFromTemplateSettings(
       destinationProject.instantiatedProjectSettings,
       tempOldProjectName,
-      tempCleanProjectOldSettingsPath,
+      cacheDir,
     );
 
-    const newProjectSettings: ProjectSettings = {//TODO add autoInstantiated templates
+    const templateInstanceId = crypto.randomUUID();
+    const newProjectSettings: ProjectSettings = {//TODO add autoInstantiated templates when autogenerating.
       ...destinationProject.instantiatedProjectSettings,
       instantiatedTemplates: [
         ...destinationProject.instantiatedProjectSettings.instantiatedTemplates,
         {
-          id: crypto.randomUUID(),
+          id: templateInstanceId,
           parentId: parentInstanceId,
           templateName: template.config.templateConfig.name,
           templateSettings: userTemplateSettings,
@@ -57,10 +138,12 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
       ],
     };
 
+    await recursivelyAddAutoInstantiatedTemplatesToProjectSettings(newProjectSettings, template, templateInstanceId, userTemplateSettings);
+
     const cleanProjectFromNewSettingsResult = await generateProjectFromTemplateSettings(
       newProjectSettings,
       tempNewProjectName,
-      tempCleanProjectNewSettingsPath,
+      cacheDir,
     );
 
     if ("error" in cleanProjectFromCurrentProjectSettingsResult) {
@@ -73,8 +156,6 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
 
     const cleanProjectFromCurrentProjectSettingsPath = cleanProjectFromCurrentProjectSettingsResult.data;
     const cleanProjectFromNewSettingsPath = cleanProjectFromNewSettingsResult.data;
-
-    console.log('verynice', cleanProjectFromCurrentProjectSettingsPath, cleanProjectFromNewSettingsPath);
 
     const diff = await diffDirectories(cleanProjectFromCurrentProjectSettingsPath, cleanProjectFromNewSettingsPath);
 
@@ -98,8 +179,7 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
     console.error(e);
     return { error: "Failed to create clean project from current project settings" };
   } finally {
-    await fs.rm(tempCleanProjectOldSettingsPath, { recursive: true });
-    await fs.rm(tempCleanProjectNewSettingsPath, { recursive: true });
+    await fs.rm(cacheDir, { recursive: true });
   }
 }
 

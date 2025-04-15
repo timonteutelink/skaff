@@ -15,6 +15,7 @@ import { PROJECT_REGISTRY } from "./project-registry-service";
 import { addAllAndDiff, commitAll, createGitRepo } from "./git-service";
 import { Project } from "../models/project-models";
 import { addTemplateToSettings, writeNewProjectSettings } from "./project-settings.service";
+import { getParsedUserSettingsWithParentSettings } from "./project-service";
 
 export interface GeneratorOptions {
   /**
@@ -54,40 +55,19 @@ export class TemplateGeneratorService {
     this.rootTemplate = rootTemplate.findRootTemplate();
   }
 
-  private updateParsedUserSettingsWithParentSettings(userSettings: UserTemplateSettings): void {
-    const parsedUserSettings = this.currentlyGeneratingTemplate?.config.templateSettingsSchema.safeParse(userSettings);
-    if (!parsedUserSettings?.success) {
-      console.error(
-        `Failed to parse user settings: ${parsedUserSettings?.error}`,
-      );
-      return;
+  private updateParsedUserSettingsWithParentSettings(userSettings: UserTemplateSettings): Result<void> {
+    if (!this.currentlyGeneratingTemplate || !this.currentlyGeneratingTemplateParentInstanceId) {
+      return { error: "No template is currently being generated." };
     }
-    let newUserSettings: TemplateSettingsType<z.AnyZodObject> = parsedUserSettings.data as TemplateSettingsType<z.AnyZodObject>;
-    if (this.destinationProject) {
-      newUserSettings = {
-        ...newUserSettings,
-        project_name:
-          this.destinationProject.instantiatedProjectSettings.projectName,
-      };
-      if (
-        this.currentlyGeneratingTemplate?.parentTemplate &&
-        this.currentlyGeneratingTemplateParentInstanceId
-      ) {
-        newUserSettings = {
-          ...newUserSettings,
-          ...this.destinationProject.getInstantiatedSettings(
-            this.currentlyGeneratingTemplate.parentTemplate,
-            this.currentlyGeneratingTemplateParentInstanceId,
-          ),
-        };
-      }
-    } else {
-      newUserSettings = {
-        ...newUserSettings,
-        project_name: path.basename(this.options.absoluteDestinationPath),
-      };
+    const result = getParsedUserSettingsWithParentSettings(userSettings, this.currentlyGeneratingTemplate, this.currentlyGeneratingTemplateParentInstanceId, path.basename(this.options.absoluteDestinationPath), this.destinationProject?.instantiatedProjectSettings);
+    if ("error" in result) {
+      console.error(`Failed to parse user settings: ${result.error}`);
+      return { error: `Failed to parse user settings: ${result.error}` };
     }
-    this.currentlyGeneratingTemplateFullSettings = newUserSettings;
+
+    this.currentlyGeneratingTemplateFullSettings = result.data;
+
+    return { data: undefined };
   }
 
   private getTargetPath(): string {
