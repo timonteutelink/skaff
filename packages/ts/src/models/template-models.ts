@@ -193,12 +193,12 @@ export class Template {
     parentInstanceId: string,
   ): Promise<Result<string>> {
     const generatorService = new TemplateGeneratorService(
+      { mode: 'traditional', absoluteDestinationPath: destinationProject.absoluteRootDir },
       this,
-      userSettings,
-      destinationProject.absoluteRootDir,
       destinationProject,
     );
     const resultPath = await generatorService.instantiateTemplate(
+      userSettings,
       this.config.templateConfig.name,
       parentInstanceId,
     );
@@ -226,11 +226,10 @@ export class Template {
     projectName: string,
   ): Promise<Result<CreateProjectResult>> {
     const generatorService = new TemplateGeneratorService(
+      { mode: 'traditional', absoluteDestinationPath: path.join(destinationDir, projectName) },
       this,
-      rootTemplateSettings,
-      path.join(destinationDir, projectName),
     );
-    const result = await generatorService.instantiateNewProject();
+    const result = await generatorService.instantiateNewProject(rootTemplateSettings);
     if ("error" in result) {
       console.error(`Failed to instantiate new project: ${result.error}`);
     } else {

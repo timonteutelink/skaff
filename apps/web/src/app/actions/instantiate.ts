@@ -1,7 +1,9 @@
 'use server';
+import { generateProjectFromTemplateSettings } from "@repo/ts/models/project-models";
 import { deleteRepo, parseGitDiff } from "@repo/ts/services/git-service";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import { ROOT_TEMPLATE_REGISTRY } from "@repo/ts/services/root-template-registry-service";
+import { TemplateGeneratorService } from "@repo/ts/services/template-generator-service";
 import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
 import { ParsedFile, ProjectDTO, Result } from "@repo/ts/utils/types";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
@@ -120,6 +122,9 @@ export async function cancelProjectCreation(
   return { data: undefined };
 }
 
+// instantiate new project has 2 actions. Generate project and see diff(will be left with staged changes). And commit all changes after user accepted.
+// instantiate template in existing project has 3 actions. Generate diff, apply diff to project, and commit all changes after user accepted/fixed prs.
+
 // This function will only need to be used when instantiating a template in an existing project not when creating a new project. Then we only need to commit the change. In this function we need to actually apply the patch to the existing project. Instatiation of a template in existing project is more complicated than just creating a new project.
 // export async function commitAndFinalizeTemplateCreation(
 //   projectName: string,
@@ -140,3 +145,19 @@ export async function cancelProjectCreation(
 //
 //   return { data: commitResult.data };
 // }
+
+// can be used by user manually.
+export async function generateNewProjectFromExisting(currentProjectName: string, newProjectDestinationDirPathId: string, newProjectName: string): Promise<Result<string>> {
+  const parentDirPath = PROJECT_SEARCH_PATHS.find((dir) => dir.id === newProjectDestinationDirPathId)?.path;
+  if (!parentDirPath) {
+    return { error: "Invalid project directory path ID" };
+  }
+
+  const result = await generateProjectFromTemplateSettings(currentProjectName, newProjectName, parentDirPath);
+
+  if ("error" in result) {
+    return { error: result.error };
+  }
+
+  return { data: result.data };
+}

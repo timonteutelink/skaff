@@ -11,6 +11,9 @@ import { Template } from "./template-models";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { ROOT_TEMPLATE_REGISTRY } from "../services/root-template-registry-service";
 import { loadGitStatus } from "../services/git-service";
+import { PROJECT_REGISTRY } from "../services/project-registry-service";
+import { TemplateGeneratorService } from "../services/template-generator-service";
+import { PROJECT_SEARCH_PATHS } from "../utils/env";
 
 // every project name inside a root project should be unique.
 //
@@ -84,6 +87,7 @@ export class Project {
     template: Template,
     templateSettings: UserTemplateSettings,
     autoInstantiated?: boolean,
+    uuid?: string,
   ): Promise<Result<string>> {
     const projectSettingsPath = path.join(
       absoluteProjectPath,
@@ -95,7 +99,7 @@ export class Project {
       return { error: projectSettingsResult.error };
     }
     const projectSettings = projectSettingsResult.data.settings;
-    const newTemplateInstanceId = crypto.randomUUID();
+    const newTemplateInstanceId = uuid || crypto.randomUUID();
     projectSettings.instantiatedTemplates.push({
       id: newTemplateInstanceId,
       parentId: parentInstanceId,
@@ -237,4 +241,38 @@ export class Project {
       gitStatus: this.gitStatus,
     };
   }
+}
+
+// Will be used manually by user and when generating diff for adding template to project
+export async function generateProjectFromTemplateSettings(currentProjectName: string, newProjectName: string, destinationDirPath: string): Promise<Result<string>> {
+  const project = await PROJECT_REGISTRY.findProject(currentProjectName);
+
+  if (!project) {
+    return { error: "Project not found" };
+  }
+
+  const templateSettings = project.instantiatedProjectSettings;
+
+  const rootTemplate = await ROOT_TEMPLATE_REGISTRY.findTemplate(templateSettings.rootTemplateName);
+
+  if ("error" in rootTemplate) {
+    return { error: rootTemplate.error };
+  }
+
+  const newProjectPath = `${destinationDirPath}/${newProjectName}`;
+
+  const newProjectGenerator = new TemplateGeneratorService(
+    {
+      mode: 'standalone', absoluteDestinationPath: newProjectPath,
+    },
+    rootTemplate.data,
+  );
+
+  const instatiationResult = await newProjectGenerator.instantiateFullProjectFromSettings(templateSettings);
+
+  if ("error" in instatiationResult) {
+    return { error: "Failed to create project" };
+  }
+
+  return { data: newProjectPath };
 }

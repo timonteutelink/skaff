@@ -1,5 +1,7 @@
+import { generateProjectFromTemplateSettings } from "@repo/ts/models/project-models";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import { ROOT_TEMPLATE_REGISTRY } from "@repo/ts/services/root-template-registry-service";
+import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { Command } from "commander";
 import inquirer from "inquirer";
@@ -155,5 +157,23 @@ program
 
     console.log("Template instantiated with ID:", result.data);
   });
+
+program.command("instantiate-full-project-from-existing").action(async () => {
+  const existingProjects = await PROJECT_REGISTRY.getProjects();
+  const answers = await inquirer.prompt([
+    { name: "existingProjectName", message: "Project name:", choices: existingProjects.map((p) => p.instantiatedProjectSettings.projectName) },
+    { name: "newProjectName", message: "New project name:" },
+    { name: "destinationDirPath", message: "Destination directory pathId:", choices: PROJECT_SEARCH_PATHS.map((p) => p.path) },
+  ]);
+
+  const instantiateResult = await generateProjectFromTemplateSettings(answers.existingProjectName, answers.newProjectName, answers.destinationDirPath);
+
+  if ("error" in instantiateResult) {
+    console.error(instantiateResult.error);
+    process.exit(1);
+  }
+
+  console.log("Project instantiated successfully:", instantiateResult.data);
+});
 
 program.parseAsync(process.argv);
