@@ -142,7 +142,7 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
   try {
     const cleanProjectFromCurrentProjectSettingsResult = await generateProjectFromTemplateSettings(
       destinationProject.instantiatedProjectSettings,
-      tempOldProjectName,
+      destinationProjectName,
       tempOldProjectPath,
     );
 
@@ -164,7 +164,7 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
 
     const cleanProjectFromNewSettingsResult = await generateProjectFromTemplateSettings(
       newProjectSettings,
-      tempNewProjectName,
+      destinationProjectName,
       tempNewProjectPath,
     );
 

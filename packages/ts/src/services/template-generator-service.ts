@@ -29,6 +29,11 @@ export interface GeneratorOptions {
   mode: "traditional" | "standalone";
 
   /**
+   * If true, the template generator will not generate the template settings file.
+   */
+  dontGenerateTemplateSettings?: boolean;
+
+  /**
    * The absolute path to the destination directory where the template will be generated.
    * Should be the root project dir or the directory where the individual template should be stored.
    * This should be a valid path on the filesystem.
@@ -362,7 +367,7 @@ export class TemplateGeneratorService {
     try {
       await this.copyDirectory();
       await this.applySideEffects();
-      if (this.options.mode === "traditional") {
+      if (!this.options.dontGenerateTemplateSettings) {
         const newTemplateInstanceId = await addTemplateToSettings(
           this.options.absoluteDestinationPath,
           parentInstanceId!,
@@ -380,19 +385,20 @@ export class TemplateGeneratorService {
             error: `Failed to add template to settings: ${newTemplateInstanceId.error}`,
           };
         }
+        if (this.options.mode === "traditional") {
+          await PROJECT_REGISTRY.reloadProjects();
+          const destinationProject = await PROJECT_REGISTRY.findProject(this.projectName);
 
-        await PROJECT_REGISTRY.reloadProjects();
-        const destinationProject = await PROJECT_REGISTRY.findProject(this.projectName);
+          if (!destinationProject) {
+            console.error(
+              `Failed to find project ${this.projectName} after creating it.`,
+            );
+            return {
+              error: `Failed to find project ${this.projectName} after creating it.`,
+            };
+          }
 
-        if (!destinationProject) {
-          console.error(
-            `Failed to find project ${this.projectName} after creating it.`,
-          );
-          return {
-            error: `Failed to find project ${this.projectName} after creating it.`,
-          };
         }
-
         await TemplateGeneratorService.autoInstantiateSubTemplates(
           this.options,
           template,
@@ -471,6 +477,8 @@ export class TemplateGeneratorService {
             error: `Failed to create git repository in ${this.options.absoluteDestinationPath}`,
           };
         }
+      }
+      if (!this.options.dontGenerateTemplateSettings) {
         const writeSettingsResult = await writeNewProjectSettings(
           this.options.absoluteDestinationPath,
           newProjectSettings,
@@ -481,6 +489,8 @@ export class TemplateGeneratorService {
           );
           return { error: `Failed to write project settings: ${writeSettingsResult.error}` };
         }
+      }
+      if (this.options.mode === "traditional") {
         const commitResult = await commitAll(this.options.absoluteDestinationPath, `Initial commit for ${this.projectName}`);
         if (!commitResult) {
           console.error(
