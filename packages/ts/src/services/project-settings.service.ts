@@ -4,6 +4,7 @@ import * as fs from "node:fs/promises";
 import { Template } from "../models/template-models";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
+import { makeDir } from "./file-service";
 
 export async function writeNewProjectSettings(
   absoluteProjectPath: string,
@@ -25,7 +26,7 @@ export async function writeNewProjectSettings(
     }
   }
   try {
-    await fs.mkdir(absoluteProjectPath, { recursive: true });
+    await makeDir(absoluteProjectPath);
     const serializedProjectSettings = JSON.stringify(
       projectSettings,
       null,

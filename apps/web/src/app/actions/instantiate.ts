@@ -5,6 +5,7 @@ import { applyDiffToProject, generateNewTemplateDiff, generateProjectFromTemplat
 import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
 import { NewTemplateDiffResult, ParsedFile, ProjectCreationResult, Result } from "@repo/ts/utils/types";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
+import path from "node:path";
 
 export async function createNewProject(
   projectName: string,
@@ -134,7 +135,7 @@ export async function generateNewProjectFromExisting(currentProjectName: string,
     return { error: "Project not found" };
   }
 
-  const result = await generateProjectFromTemplateSettings(project.instantiatedProjectSettings, newProjectName, parentDirPath);
+  const result = await generateProjectFromTemplateSettings(project.instantiatedProjectSettings, newProjectName, path.join(parentDirPath, newProjectName));
 
   if ("error" in result) {
     return { error: result.error };

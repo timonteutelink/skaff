@@ -1,12 +1,13 @@
 import { tmpdir } from "node:os";
 import path from "node:path";
 import * as fs from "node:fs/promises";
+import { makeDir } from "./file-service";
 
 export type CacheKey = 'template-config' | 'new-template-diff';
 
 export async function getCacheDir(): Promise<string> {
   const cacheDir = path.join(tmpdir(), "code-templator-cache");
-  await fs.mkdir(cacheDir, { recursive: true });
+  await makeDir(cacheDir);
   return cacheDir;
 }
 

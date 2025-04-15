@@ -195,6 +195,7 @@ export class Template {
     const generatorService = new TemplateGeneratorService(
       { mode: 'traditional', absoluteDestinationPath: destinationProject.absoluteRootDir },
       this,
+      destinationProject.instantiatedProjectSettings.projectName,
       destinationProject,
     );
     const resultPath = await generatorService.instantiateTemplateInProject(
@@ -228,6 +229,7 @@ export class Template {
     const generatorService = new TemplateGeneratorService(
       { mode: 'traditional', absoluteDestinationPath: path.join(destinationDir, projectName) },
       this,
+      projectName,
     );
     const result = await generatorService.instantiateNewProject(rootTemplateSettings);
     if ("error" in result) {

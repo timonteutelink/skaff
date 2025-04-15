@@ -3,15 +3,15 @@ import { createHash } from "node:crypto";
 import * as fs from "node:fs/promises";
 import path from "node:path";
 import { AnyZodObject, z } from "zod";
+import { Project } from "../models/project-models";
 import { Template } from "../models/template-models";
 import { NewTemplateDiffResult, ParsedFile, ProjectCreationResult, ProjectSettings, Result } from "../utils/types";
 import { stringOrCallbackToString } from "../utils/utils";
-import { getCacheDir, retrieveFromCache, saveToCache } from "./cache-service";
+import { pathInCache, retrieveFromCache, saveToCache } from "./cache-service";
 import { addAllAndDiff, applyDiffToGitRepo, diffDirectories, isConflictAfterApply, parseGitDiff } from "./git-service";
 import { PROJECT_REGISTRY } from "./project-registry-service";
 import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
 import { TemplateGeneratorService } from "./template-generator-service";
-import { Project } from "../models/project-models";
 
 
 export function getParsedUserSettingsWithParentSettings(userSettings: UserTemplateSettings, currentlyGeneratingTemplate: Template, projectName: string, currentlyGeneratingTemplateParentInstanceId?: string, destinationProjectSettings?: ProjectSettings): Result<TemplateSettingsType<AnyZodObject>> {
@@ -105,6 +105,7 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
     }
 
     const result = await recursivelyAddAutoInstantiatedTemplatesToProjectSettings(projectSettings, subTemplate, autoInstantiatedTemplateInstanceId, newFullTemplateSettings);
+
     if ("error" in result) {
       return { error: result.error };
     }
@@ -136,12 +137,13 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
   const tempOldProjectName = `${destinationProjectName}-${crypto.randomUUID()}`;
   const tempNewProjectName = `${destinationProjectName}-${crypto.randomUUID()}`;
 
-  const cacheDir = await getCacheDir();
+  const tempOldProjectPath = await pathInCache(tempOldProjectName);
+  const tempNewProjectPath = await pathInCache(tempNewProjectName);
   try {
     const cleanProjectFromCurrentProjectSettingsResult = await generateProjectFromTemplateSettings(
       destinationProject.instantiatedProjectSettings,
       tempOldProjectName,
-      cacheDir,
+      tempOldProjectPath,
     );
 
     const templateInstanceId = crypto.randomUUID();
@@ -163,7 +165,7 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
     const cleanProjectFromNewSettingsResult = await generateProjectFromTemplateSettings(
       newProjectSettings,
       tempNewProjectName,
-      cacheDir,
+      tempNewProjectPath,
     );
 
     if ("error" in cleanProjectFromCurrentProjectSettingsResult) {
@@ -200,10 +202,8 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
     console.error(e);
     return { error: "Failed to create clean project from current project settings" };
   } finally {
-    const oldProjectPath = path.join(cacheDir, tempOldProjectName);
-    const newProjectPath = path.join(cacheDir, tempNewProjectName);
-    await fs.rm(oldProjectPath, { recursive: true });
-    await fs.rm(newProjectPath, { recursive: true });
+    await fs.rm(tempOldProjectPath, { recursive: true });
+    await fs.rm(tempNewProjectPath, { recursive: true });
   }
 }
 

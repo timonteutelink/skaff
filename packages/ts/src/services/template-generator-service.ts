@@ -16,6 +16,7 @@ import { addAllAndDiff, commitAll, createGitRepo } from "./git-service";
 import { Project } from "../models/project-models";
 import { addTemplateToSettings, writeNewProjectSettings } from "./project-settings.service";
 import { getParsedUserSettingsWithParentSettings } from "./project-service";
+import { makeDir } from "./file-service";
 
 export interface GeneratorOptions {
   /**
@@ -125,7 +126,7 @@ export class TemplateGeneratorService {
     const dest = this.getAbsoluteTargetPath();
     const redirects = this.getRedirects();
 
-    await fs.mkdir(dest, { recursive: true });
+    await makeDir(dest);
 
     const entries = await glob(`**/*`, { cwd: src, dot: true, nodir: true });
 
@@ -276,7 +277,6 @@ export class TemplateGeneratorService {
    * @param templateName The name of the template to instantiate.s
    * @returns The absolute path where templated files are written.
    */
-  // TODO: add git. if autoInstanted ignore git because will happen after parent calls this
   // TODO: adding ai will require some more state. Probably save to file and stream file content to frontend or something. Since we need to keep the result if connection were to close.
   public async instantiateTemplateInProject(
     userSettings: UserTemplateSettings,
@@ -460,7 +460,7 @@ export class TemplateGeneratorService {
     }
 
     try {
-      await fs.mkdir(this.options.absoluteDestinationPath, { recursive: true });
+      await makeDir(this.options.absoluteDestinationPath);
       if (this.options.mode === "traditional") {
         const createRepoResult = await createGitRepo(this.options.absoluteDestinationPath);
         if (!createRepoResult) {
