@@ -53,25 +53,43 @@ export function getParsedUserSettingsWithParentSettings(userSettings: UserTempla
   return { data: newUserSettings };
 }
 
-async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
+async function addAutoInstantiatedTemplatesToProjectSettings(
   projectSettings: ProjectSettings,
   currentTemplateToAddChildren: Template,
   parentInstanceId: string,
   parentTemplateSettings: UserTemplateSettings,
 ): Promise<Result<ProjectSettings>> {
+  const newFullTemplateSettings = getParsedUserSettingsWithParentSettings(parentTemplateSettings, currentTemplateToAddChildren, parentInstanceId, projectSettings.projectName, projectSettings);
+  if ('error' in newFullTemplateSettings) {
+    return { error: newFullTemplateSettings.error };
+  }
+
+  return recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
+    projectSettings,
+    currentTemplateToAddChildren,
+    parentInstanceId,
+    newFullTemplateSettings.data,
+  );
+}
+
+async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
+  projectSettings: ProjectSettings,
+  currentTemplateToAddChildren: Template,
+  parentInstanceId: string,
+  fullParentTemplateSettings: TemplateSettingsType<AnyZodObject>,
+): Promise<Result<ProjectSettings>> {
   for (const autoInstantiatedTemplate of currentTemplateToAddChildren.config.autoInstatiatedSubtemplates || []) {
     const autoInstantiatedTemplateInstanceId = crypto.randomUUID();
-    const newFullTemplateSettings = getParsedUserSettingsWithParentSettings(parentTemplateSettings, currentTemplateToAddChildren, parentInstanceId, projectSettings.projectName, projectSettings);
-    if ('error' in newFullTemplateSettings) {
-      return { error: newFullTemplateSettings.error };
-    }
-    const newTemplateSettings = autoInstantiatedTemplate.mapSettings(newFullTemplateSettings.data);
-    const subTemplateName = stringOrCallbackToString(autoInstantiatedTemplate.subTemplateName, newFullTemplateSettings.data);
+    const newTemplateSettings = autoInstantiatedTemplate.mapSettings(fullParentTemplateSettings);
+    const newFullTemplateSettings = Object.assign({}, fullParentTemplateSettings, newTemplateSettings);
+    const subTemplateName = stringOrCallbackToString(autoInstantiatedTemplate.subTemplateName, newFullTemplateSettings);
+
     projectSettings.instantiatedTemplates.push({
       id: autoInstantiatedTemplateInstanceId,
       parentId: parentInstanceId,
       templateName: subTemplateName,
       templateSettings: newTemplateSettings,
+      automaticallyInstantiatedByParent: true,
     });
 
     const rootTemplate = await ROOT_TEMPLATE_REGISTRY.findTemplate(projectSettings.rootTemplateName);
@@ -86,9 +104,11 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
       return { error: `Subtemplate ${autoInstantiatedTemplate.subTemplateName} not found` };
     }
 
-    const newTemplateSettingsForChild = Object.assign({}, parentTemplateSettings, newTemplateSettings);
-
-    await recursivelyAddAutoInstantiatedTemplatesToProjectSettings(projectSettings, subTemplate, autoInstantiatedTemplateInstanceId, newTemplateSettingsForChild);
+    const result = await recursivelyAddAutoInstantiatedTemplatesToProjectSettings(projectSettings, subTemplate, autoInstantiatedTemplateInstanceId, newFullTemplateSettings);
+    if ("error" in result) {
+      return { error: result.error };
+    }
+    projectSettings = result.data;
   }
   return { data: projectSettings };
 }
@@ -138,7 +158,7 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
       ],
     };
 
-    await recursivelyAddAutoInstantiatedTemplatesToProjectSettings(newProjectSettings, template, templateInstanceId, userTemplateSettings);
+    await addAutoInstantiatedTemplatesToProjectSettings(newProjectSettings, template, templateInstanceId, userTemplateSettings);
 
     const cleanProjectFromNewSettingsResult = await generateProjectFromTemplateSettings(
       newProjectSettings,
@@ -276,20 +296,19 @@ export async function generateProjectFromExistingProject(existingProjectName: st
 }
 
 // Will be used manually by user and when generating diff for adding template to project
-export async function generateProjectFromTemplateSettings(projectSettings: ProjectSettings, newProjectName: string, destinationDirPath: string): Promise<Result<string>> {
+export async function generateProjectFromTemplateSettings(projectSettings: ProjectSettings, newProjectName: string, newProjectPath: string): Promise<Result<string>> {
   const rootTemplate = await ROOT_TEMPLATE_REGISTRY.findTemplate(projectSettings.rootTemplateName);
 
   if ("error" in rootTemplate) {
     return { error: rootTemplate.error };
   }
 
-  const newProjectPath = path.join(destinationDirPath, newProjectName);
-
   const newProjectGenerator = new TemplateGeneratorService(
     {
       mode: 'standalone', absoluteDestinationPath: newProjectPath,
     },
     rootTemplate.data,
+    newProjectName,
   );
 
   const instatiationResult = await newProjectGenerator.instantiateFullProjectFromSettings(projectSettings);

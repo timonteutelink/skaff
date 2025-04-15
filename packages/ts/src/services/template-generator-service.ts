@@ -38,6 +38,7 @@ export interface GeneratorOptions {
 export class TemplateGeneratorService {
   public options: GeneratorOptions;
   public destinationProject?: Project;
+  public projectName: string;
   public rootTemplate: Template;
 
   // Values set when generating a template. Should always be set again before generating a new template.
@@ -48,10 +49,12 @@ export class TemplateGeneratorService {
   constructor(
     options: GeneratorOptions,
     rootTemplate: Template,
+    projectName: string,
     destinationProject?: Project,
   ) {
     this.options = options;
     this.destinationProject = destinationProject;
+    this.projectName = projectName;
     this.rootTemplate = rootTemplate.findRootTemplate();
   }
 
@@ -59,7 +62,7 @@ export class TemplateGeneratorService {
     if (!this.currentlyGeneratingTemplate) {
       return { error: "No template is currently being generated." };
     }
-    const result = getParsedUserSettingsWithParentSettings(userSettings, this.currentlyGeneratingTemplate, path.basename(this.options.absoluteDestinationPath), this.currentlyGeneratingTemplateParentInstanceId, this.destinationProject?.instantiatedProjectSettings);
+    const result = getParsedUserSettingsWithParentSettings(userSettings, this.currentlyGeneratingTemplate, this.projectName, this.currentlyGeneratingTemplateParentInstanceId, this.destinationProject?.instantiatedProjectSettings);
 
     if ("error" in result) {
       console.error(`Failed to parse user settings: ${result.error}`);
@@ -225,19 +228,18 @@ export class TemplateGeneratorService {
     template: Template,
     fullParentSettings: TemplateSettingsType<z.AnyZodObject>,
     destinationProject: Project,
-    newProjectId: string,
+    parentTemplateInstanceId: string,
   ) {
-    if (!template.config.autoInstatiatedSubtemplates) {
-      return;
-    }
-    for (const templateToAutoInstantiate of template.config
-      .autoInstatiatedSubtemplates) {
-      const nameOfTemplateToAutoInstantiate = stringOrCallbackToString(
-        templateToAutoInstantiate.subTemplateName,
-        fullParentSettings,
-      );
+    for (const templateToAutoInstantiate of template.config.autoInstatiatedSubtemplates || []) {
       const newTemplateSettings =
         templateToAutoInstantiate.mapSettings(fullParentSettings);
+
+      const newFullTemplateSettings = Object.assign({}, fullParentSettings, newTemplateSettings);
+
+      const nameOfTemplateToAutoInstantiate = stringOrCallbackToString(
+        templateToAutoInstantiate.subTemplateName,
+        newFullTemplateSettings,
+      );
       const templateToInstantiate = template.findSubTemplate(
         nameOfTemplateToAutoInstantiate,
       );
@@ -246,13 +248,22 @@ export class TemplateGeneratorService {
         const newTemplateGeneratorService = new TemplateGeneratorService(
           options,
           templateToInstantiate,
+          fullParentSettings.projectName,
           destinationProject,
         );
         await newTemplateGeneratorService.instantiateTemplateInProject(
           newTemplateSettings,
           nameOfTemplateToAutoInstantiate,
-          newProjectId,
+          parentTemplateInstanceId,
           true,
+        );
+
+        TemplateGeneratorService.autoInstantiateSubTemplates(
+          options,
+          templateToInstantiate,
+          newFullTemplateSettings,
+          destinationProject,
+          parentTemplateInstanceId,
         );
       }
     }
@@ -287,10 +298,6 @@ export class TemplateGeneratorService {
         error: `Template ${templateName} could not be found in rootTemplate ${this.rootTemplate.config.templateConfig.name}`,
       };
     }
-
-    const projectName = this.options.mode === "traditional"
-      ? this.destinationProject!.instantiatedProjectSettings.projectName
-      : path.basename(this.options.absoluteDestinationPath);
 
     const result = this.setTemplateGenerationValues(userSettings, template, parentInstanceId!);
 
@@ -375,14 +382,14 @@ export class TemplateGeneratorService {
         }
 
         await PROJECT_REGISTRY.reloadProjects();
-        const destinationProject = await PROJECT_REGISTRY.findProject(projectName);
+        const destinationProject = await PROJECT_REGISTRY.findProject(this.projectName);
 
         if (!destinationProject) {
           console.error(
-            `Failed to find project ${projectName} after creating it.`,
+            `Failed to find project ${this.projectName} after creating it.`,
           );
           return {
-            error: `Failed to find project ${projectName} after creating it.`,
+            error: `Failed to find project ${this.projectName} after creating it.`,
           };
         }
 
@@ -422,14 +429,12 @@ export class TemplateGeneratorService {
       };
     }
 
-    const projectName = path.basename(this.options.absoluteDestinationPath);
-
     const newProjectId = newUuid || crypto.randomUUID();
 
     const parsedUserSettings = this.rootTemplate.config.templateSettingsSchema.safeParse(userSettings);
 
     const newProjectSettings: ProjectSettings = {
-      projectName,
+      projectName: this.projectName,
       projectAuthor: parsedUserSettings.data && 'author' in parsedUserSettings.data ? parsedUserSettings.data.author as string : this.rootTemplate.config.templateConfig.author,
       rootTemplateName: this.rootTemplate.config.templateConfig.name,
       instantiatedTemplates: [
@@ -476,7 +481,7 @@ export class TemplateGeneratorService {
           );
           return { error: `Failed to write project settings: ${writeSettingsResult.error}` };
         }
-        const commitResult = await commitAll(this.options.absoluteDestinationPath, `Initial commit for ${projectName}`);
+        const commitResult = await commitAll(this.options.absoluteDestinationPath, `Initial commit for ${this.projectName}`);
         if (!commitResult) {
           console.error(
             `Failed to commit project settings: ${commitResult}`,
@@ -490,14 +495,14 @@ export class TemplateGeneratorService {
       if (this.options.mode === "traditional") {
         await PROJECT_REGISTRY.reloadProjects();
         const destinationProject =
-          await PROJECT_REGISTRY.findProject(projectName);
+          await PROJECT_REGISTRY.findProject(this.projectName);
 
         if (!destinationProject) {
           console.error(
-            `Failed to find project ${projectName} after creating it.`,
+            `Failed to find project ${this.projectName} after creating it.`,
           );
           return {
-            error: `Failed to find project ${projectName} after creating it.`,
+            error: `Failed to find project ${this.projectName} after creating it.`,
           };
         }
 
@@ -553,7 +558,7 @@ export class TemplateGeneratorService {
         return { error: "No instantiated templates found in project settings." };
       }
 
-      const mainGenerator = new TemplateGeneratorService(this.options, this.rootTemplate);
+      const mainGenerator = new TemplateGeneratorService(this.options, this.rootTemplate, this.projectName);
       const projectGenerationResult = await mainGenerator.instantiateNewProject(projectSettings.instantiatedTemplates[0]!.templateSettings, projectSettings.instantiatedTemplates[0]!.id);
 
       if ("error" in projectGenerationResult) {
@@ -570,6 +575,7 @@ export class TemplateGeneratorService {
         const subGenerator = new TemplateGeneratorService(
           this.options,
           subTemplate,
+          this.projectName
         );
 
         const res = await subGenerator.instantiateTemplateInProject(instantiated.templateSettings, instantiated.templateName, instantiated.parentId || "", false, instantiated.id);
