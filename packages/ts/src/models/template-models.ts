@@ -197,7 +197,7 @@ export class Template {
       this,
       destinationProject,
     );
-    const resultPath = await generatorService.instantiateTemplate(
+    const resultPath = await generatorService.instantiateTemplateInProject(
       userSettings,
       this.config.templateConfig.name,
       parentInstanceId,

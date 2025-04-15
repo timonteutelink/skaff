@@ -4,7 +4,7 @@ import { ROOT_TEMPLATE_REGISTRY } from "@repo/ts/services/root-template-registry
 import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { Command } from "commander";
-import inquirer from "inquirer";
+import { input, select } from '@inquirer/prompts';
 
 const program = new Command();
 
@@ -67,19 +67,21 @@ program
   .command("create-project")
   .description("Create a new project from a template")
   .action(async () => {
-    const answers = await inquirer.prompt([
-      { name: "projectName", message: "Project name:" },
-      { name: "templateName", message: "Template name:" },
-      { name: "parentDirPath", message: "Parent directory path:" },
-      { name: "settings", message: "User settings (JSON):" },
-    ]);
+    const projectName = await input({ message: "Project name:" });
+    const templateName = await input({ message: "Template name:" });
+    const parentDirPath = await input({
+      message: "Parent directory path:",
+    });
+    const settings = await input({
+      message: "User settings (JSON):",
+    });
 
     const userTemplateSettings: UserTemplateSettings = JSON.parse(
-      answers.settings,
+      settings,
     );
 
     const template = await ROOT_TEMPLATE_REGISTRY.findTemplate(
-      answers.templateName,
+      templateName,
     );
     if ("error" in template) {
       console.error(template.error);
@@ -88,16 +90,16 @@ program
 
     const result = await template.data.instantiateNewProject(
       userTemplateSettings,
-      answers.parentDirPath,
-      answers.projectName,
+      parentDirPath,
+      projectName,
     );
     if ("error" in result) {
-      console.error("Failed to create project");
+      console.error("Failed to create project", result.error);
       process.exit(1);
     }
 
     await PROJECT_REGISTRY.reloadProjects();
-    const newProject = await PROJECT_REGISTRY.findProject(answers.projectName);
+    const newProject = await PROJECT_REGISTRY.findProject(projectName);
 
     if (!newProject) {
       console.error("Project creation failed");
@@ -111,34 +113,32 @@ program
   .command("instantiate-template")
   .description("Instantiate a subtemplate in an existing project")
   .action(async () => {
-    const answers = await inquirer.prompt([
-      { name: "rootTemplateName", message: "Root template name:" },
-      { name: "templateName", message: "Subtemplate name:" },
-      { name: "parentInstanceId", message: "Parent instance ID:" },
-      { name: "destinationProjectName", message: "Destination project name:" },
-      { name: "settings", message: "User settings (JSON):" },
-    ]);
+    const rootTemplateName = await input({ message: "Root template name:" });
+    const templateName = await input({ message: "Subtemplate name:" });
+    const parentInstanceId = await input({ message: "Parent instance ID:" });
+    const destinationProjectName = await input({ message: "Destination project name:" });
+    const settings = await input({ message: "User settings (JSON):" });
 
     const userTemplateSettings: UserTemplateSettings = JSON.parse(
-      answers.settings,
+      settings,
     );
 
     const rootTemplate = await ROOT_TEMPLATE_REGISTRY.findTemplate(
-      answers.rootTemplateName,
+      rootTemplateName,
     );
     if ("error" in rootTemplate) {
       console.error(rootTemplate.error);
       process.exit(1);
     }
 
-    const subTemplate = rootTemplate.data.findSubTemplate(answers.templateName);
+    const subTemplate = rootTemplate.data.findSubTemplate(templateName);
     if (!subTemplate) {
       console.error("Subtemplate not found");
       process.exit(1);
     }
 
     const project = await PROJECT_REGISTRY.findProject(
-      answers.destinationProjectName,
+      destinationProjectName,
     );
     if (!project) {
       console.error("Destination project not found");
@@ -148,7 +148,7 @@ program
     const result = await subTemplate.templateInExistingProject(
       userTemplateSettings,
       project,
-      answers.parentInstanceId,
+      parentInstanceId,
     );
     if ("error" in result) {
       console.error(result.error);
@@ -160,13 +160,12 @@ program
 
 program.command("instantiate-full-project-from-existing").action(async () => {
   const existingProjects = await PROJECT_REGISTRY.getProjects();
-  const answers = await inquirer.prompt([
-    { name: "existingProjectName", message: "Project name:", choices: existingProjects.map((p) => p.instantiatedProjectSettings.projectName) },
-    { name: "newProjectName", message: "New project name:" },
-    { name: "destinationDirPath", message: "Destination directory pathId:", choices: PROJECT_SEARCH_PATHS.map((p) => p.path) },
-  ]);
 
-  const instantiateResult = await generateProjectFromTemplateSettings(answers.existingProjectName, answers.newProjectName, answers.destinationDirPath);
+  const existingProjectName = await select<string>({ choices: existingProjects.map((p) => p.instantiatedProjectSettings.projectName), message: "Existing project name:" });
+  const newProjectName = await input({ message: "New project name:" });
+  const destinationDirPath = await select<string>({ choices: PROJECT_SEARCH_PATHS.map((p) => p.path), message: "Destination directory path:" });
+
+  const instantiateResult = await generateProjectFromTemplateSettings(existingProjectName, newProjectName, destinationDirPath);
 
   if ("error" in instantiateResult) {
     console.error(instantiateResult.error);

@@ -3,14 +3,14 @@ import {
   templateConfigSchema,
   TemplateSettingsType,
 } from "@timonteutelink/template-types-lib";
-import * as esbuild from "esbuild";
 import { createHash, randomUUID } from "node:crypto";
-import * as fs from "node:fs";
-import { tmpdir } from "node:os";
+import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { pathToFileURL } from "node:url";
 import ts from "typescript";
 import z from "zod";
+import { retrieveFromCache, saveToCache } from "../services/cache-service";
+import { getEsbuild } from "../utils/get-esbuild";
 
 //TODO renovate, mkDocs, .github/settings.yml
 
@@ -86,22 +86,24 @@ async function typeCheckFile(filePath: string): Promise<void> {
  * For templateRef.json, it reads the JSON (expecting a single key with a relative path)
  * and includes the templateConfig.ts file from that referenced folder.
  */
-function findTemplateConfigFiles(dir: string): TemplateConfigFileInfo[] {
+async function findTemplateConfigFiles(dir: string): Promise<TemplateConfigFileInfo[]> {
   let results: TemplateConfigFileInfo[] = [];
 
   const candidate = path.join(dir, "templateConfig.ts");
-  if (fs.existsSync(candidate)) {
+  const candidateStat = await fs.stat(candidate).catch(() => null);
+  if (candidateStat && candidateStat.isFile()) {
     results.push({ configPath: candidate });
   }
 
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  const entries = await fs.readdir(dir, { withFileTypes: true });
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       const refCandidate = path.join(fullPath, "templateRef.json");
-      if (fs.existsSync(refCandidate)) {
+      const refCandidateStat = await fs.stat(refCandidate).catch(() => null);
+      if (refCandidateStat && refCandidateStat.isFile()) {
         try {
-          const refData = JSON.parse(fs.readFileSync(refCandidate, "utf-8"));
+          const refData = JSON.parse(await fs.readFile(refCandidate, "utf-8"));
           const refRelativePath = Object.values(refData)[0];
           if (typeof refRelativePath === "string") {
             const resolvedRefDir = path.join(fullPath, refRelativePath);
@@ -109,10 +111,11 @@ function findTemplateConfigFiles(dir: string): TemplateConfigFileInfo[] {
               resolvedRefDir,
               "templateConfig.ts",
             );
-            if (fs.existsSync(resolvedRefPath)) {
+            const resolvedRefPathStat = await fs.stat(resolvedRefPath).catch(() => null);
+            if (resolvedRefPathStat && resolvedRefPathStat.isFile()) {
               results.push({ configPath: resolvedRefPath, refDir: fullPath });
               results = results.concat(
-                findTemplateConfigFilesInSubdirs(resolvedRefDir),
+                await findTemplateConfigFilesInSubdirs(resolvedRefDir),
               );
             } else {
               console.warn(
@@ -126,22 +129,22 @@ function findTemplateConfigFiles(dir: string): TemplateConfigFileInfo[] {
           );
         }
       } else {
-        results = results.concat(findTemplateConfigFiles(fullPath));
+        results = results.concat(await findTemplateConfigFiles(fullPath));
       }
     }
   }
   return results;
 }
 
-function findTemplateConfigFilesInSubdirs(
+async function findTemplateConfigFilesInSubdirs(
   dir: string,
-): TemplateConfigFileInfo[] {
+): Promise<TemplateConfigFileInfo[]> {
   let results: TemplateConfigFileInfo[] = [];
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  const entries = await fs.readdir(dir, { withFileTypes: true });
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      results = results.concat(findTemplateConfigFiles(fullPath));
+      results = results.concat(await findTemplateConfigFiles(fullPath));
     }
   }
   return results;
@@ -195,7 +198,7 @@ async function importTemplateConfigModule(
 export async function loadAllTemplateConfigs(
   rootDir: string,
 ): Promise<Record<string, TemplateConfigWithFileInfo>> {
-  const configFiles = findTemplateConfigFiles(rootDir);
+  const configFiles = await findTemplateConfigFiles(rootDir);
 
   if (configFiles.length === 0) {
     throw new Error(`No templateConfig.ts files found under ${rootDir}`);
@@ -206,17 +209,15 @@ export async function loadAllTemplateConfigs(
   );
   let combinedContent = "";
   for (const fileInfo of sortedFiles) {
-    combinedContent += fs.readFileSync(fileInfo.configPath, "utf-8");
+    combinedContent += await fs.readFile(fileInfo.configPath, "utf-8");
   }
   const hash = createHash("sha256").update(combinedContent).digest("hex");
 
-  const tmpDir = path.join(tmpdir(), "code-templator-cache");
-  fs.mkdirSync(tmpDir, { recursive: true });
-  const cachePath = path.join(tmpDir, `${hash}.mjs`);
+  const cachedBundle = await retrieveFromCache('template-config', hash, "mjs");
 
-  if (fs.existsSync(cachePath)) {
-    console.log(`Using cached bundle at ${cachePath}`);
-    return importTemplateConfigModule(cachePath);
+  if (cachedBundle) {
+    console.log(`Using cached bundle at ${cachedBundle.path}`);
+    return importTemplateConfigModule(cachedBundle.path);
   }
 
   let importsCode = "";
@@ -245,15 +246,17 @@ export async function loadAllTemplateConfigs(
   )}\n};`;
 
   const tempIndexPath = path.join(rootDir, `.__temp_index_${randomUUID()}.ts`);
-  fs.writeFileSync(tempIndexPath, indexCode, "utf-8");
+  await fs.writeFile(tempIndexPath, indexCode, "utf-8");
   try {
     await typeCheckFile(tempIndexPath);
     console.log(
       `Temporary index file at ${tempIndexPath} passed type checking.`,
     );
   } finally {
-    fs.unlinkSync(tempIndexPath);
+    await fs.unlink(tempIndexPath);
   }
+
+  const esbuild = await getEsbuild();
 
   const result = await esbuild.build({
     stdin: {
@@ -273,8 +276,12 @@ export async function loadAllTemplateConfigs(
     throw new Error(`Failed to bundle template configs from ${rootDir}`);
   }
 
-  fs.writeFileSync(cachePath, bundledCode, "utf-8");
-  console.log(`Created bundled template configs at ${cachePath}`);
+  const resultPath = await saveToCache('template-config', hash, "mjs", bundledCode);
+  console.log(`Created bundled template configs at ${resultPath}`);
 
-  return importTemplateConfigModule(cachePath);
+  if ('stop' in esbuild) {
+    await esbuild.stop();
+  }
+
+  return importTemplateConfigModule(resultPath);
 }

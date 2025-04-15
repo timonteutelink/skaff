@@ -1,6 +1,6 @@
 "use server";
 
-import { addAllAndDiff, commitAll, parseGitDiff, switchBranch } from "@repo/ts/services/git-service";
+import { addAllAndDiff, commitAll, deleteRepo, parseGitDiff, switchBranch } from "@repo/ts/services/git-service";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import { ParsedFile, Result } from "@repo/ts/utils/types";
 
@@ -86,4 +86,17 @@ export async function addAllAndRetrieveCurrentDiff(
   return { data: parsedDiff };
 }
 
+// This code is still heavily vulnerable since for example the list of projects in this case is controllable by user they can probably delete anything on system. So only use locally and with templates that are trusted.
+export async function deleteProject(
+  projectName: string,
+): Promise<Result<void>> {
+  const project = await PROJECT_REGISTRY.findProject(projectName);
 
+  if (!project) {
+    console.error("Project not found");
+    return { error: "Project not found" };
+  }
+  deleteRepo(project.absoluteRootDir);
+
+  return { data: undefined };
+}

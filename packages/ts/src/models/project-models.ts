@@ -1,22 +1,16 @@
-import * as fs from "node:fs/promises";
+import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import path from "node:path";
+import { loadGitStatus } from "../services/git-service";
 import {
   GitStatus,
   ProjectDTO,
   ProjectSettings,
-  ProjectSettingsSchema,
-  Result,
+  Result
 } from "../utils/types";
 import { Template } from "./template-models";
-import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
-import { ROOT_TEMPLATE_REGISTRY } from "../services/root-template-registry-service";
-import { loadGitStatus } from "../services/git-service";
-import { PROJECT_REGISTRY } from "../services/project-registry-service";
-import { TemplateGeneratorService } from "../services/template-generator-service";
-import { PROJECT_SEARCH_PATHS } from "../utils/env";
+import { loadProjectSettings } from "../services/project-settings.service";
 
 // every project name inside a root project should be unique.
-//
 // The root project can be uniquely identified by its name and author.(and version)
 
 export class Project {
@@ -44,129 +38,6 @@ export class Project {
     this.gitStatus = gitStatus;
   }
 
-  public static async writeNewProjectSettings(
-    absoluteProjectPath: string,
-    projectSettings: ProjectSettings,
-    overwrite?: boolean,
-  ): Promise<Result<void>> {
-    const projectSettingsPath = path.join(
-      absoluteProjectPath,
-      "templateSettings.json",
-    );
-    if (!overwrite) {
-      try {
-        await fs.access(projectSettingsPath);
-        return {
-          error: `Project settings file already exists at ${projectSettingsPath}`,
-        };
-      } catch {
-        // File does not exist, continue
-      }
-    }
-    try {
-      await fs.mkdir(absoluteProjectPath, { recursive: true });
-      const serializedProjectSettings = JSON.stringify(
-        projectSettings,
-        null,
-        2,
-      );
-      await fs.writeFile(
-        projectSettingsPath,
-        serializedProjectSettings,
-        "utf-8",
-      );
-    } catch (error) {
-      return { error: `Failed to write templateSettings.json: ${error}` };
-    }
-    return { data: undefined };
-  }
-
-  public static async addTemplateToSettings(
-    absoluteProjectPath: string,
-    parentInstanceId: string,
-    template: Template,
-    templateSettings: UserTemplateSettings,
-    autoInstantiated?: boolean,
-    uuid?: string,
-  ): Promise<Result<string>> {
-    const projectSettingsPath = path.join(
-      absoluteProjectPath,
-      "templateSettings.json",
-    );
-    const projectSettingsResult =
-      await Project.loadProjectSettings(projectSettingsPath);
-    if ("error" in projectSettingsResult) {
-      return { error: projectSettingsResult.error };
-    }
-    const projectSettings = projectSettingsResult.data.settings;
-    const newTemplateInstanceId = uuid || crypto.randomUUID();
-    projectSettings.instantiatedTemplates.push({
-      id: newTemplateInstanceId,
-      parentId: parentInstanceId,
-      templateName: template.config.templateConfig.name,
-      templateSettings,
-      automaticallyInstantiatedByParent: autoInstantiated,
-    });
-    const result = await Project.writeNewProjectSettings(
-      absoluteProjectPath,
-      projectSettings,
-      true,
-    );
-    if ("error" in result) {
-      return { error: result.error };
-    }
-
-    return { data: newTemplateInstanceId };
-  }
-
-  private static async loadProjectSettings(
-    projectSettingsPath: string,
-  ): Promise<Result<{ settings: ProjectSettings; rootTemplate: Template }>> {
-    const projectSettings = await fs.readFile(projectSettingsPath, "utf-8");
-    const parsedProjectSettings = JSON.parse(projectSettings);
-    const finalProjectSettings = ProjectSettingsSchema.safeParse(
-      parsedProjectSettings,
-    );
-    if (!finalProjectSettings.success) {
-      return {
-        error: `Invalid templateSettings.json: ${finalProjectSettings.error}`,
-      };
-    }
-    const rootTemplate = await ROOT_TEMPLATE_REGISTRY.findTemplate(
-      finalProjectSettings.data.rootTemplateName,
-    );
-    if ("error" in rootTemplate) {
-      return { error: rootTemplate.error };
-    }
-
-    for (const subTemplateSettings of finalProjectSettings.data
-      .instantiatedTemplates) {
-      const subTemplate = rootTemplate.data.findSubTemplate(
-        subTemplateSettings.templateName,
-      );
-      if (!subTemplate) {
-        return {
-          error: `Template ${subTemplateSettings.templateName} not found in root template ${finalProjectSettings.data.rootTemplateName}`,
-        };
-      }
-
-      const subTemplateSettingsSchema =
-        subTemplate.config.templateSettingsSchema.safeParse(
-          subTemplateSettings.templateSettings,
-        );
-      if (!subTemplateSettingsSchema.success) {
-        return {
-          error: `Invalid templateSettings.json for template ${subTemplateSettings.templateName}: ${subTemplateSettingsSchema.error}`,
-        };
-      }
-    }
-
-    const instantiatedProjectSettings = {
-      settings: finalProjectSettings.data,
-      rootTemplate: rootTemplate.data,
-    };
-    return { data: instantiatedProjectSettings };
-  }
 
   /**
    * Aggregates all settings of the provided template and all parent templates inside of this project. If the template or any of the parents are not initialized in this project return an empty object
@@ -205,7 +76,7 @@ export class Project {
   static async create(absDir: string): Promise<Result<Project>> {
     const projectSettingsPath = path.join(absDir, "templateSettings.json");
     const projectSettings =
-      await Project.loadProjectSettings(projectSettingsPath);
+      await loadProjectSettings(projectSettingsPath);
     if ("error" in projectSettings) {
       return { error: projectSettings.error };
     }
@@ -213,9 +84,6 @@ export class Project {
     const gitStatus = await loadGitStatus(absDir);
 
     if (!gitStatus) {
-      console.error(
-        `Failed to load git status for project at ${absDir}`
-      );
       return {
         error: `Failed to load git status for project at ${absDir}`,
       };
@@ -243,36 +111,3 @@ export class Project {
   }
 }
 
-// Will be used manually by user and when generating diff for adding template to project
-export async function generateProjectFromTemplateSettings(currentProjectName: string, newProjectName: string, destinationDirPath: string): Promise<Result<string>> {
-  const project = await PROJECT_REGISTRY.findProject(currentProjectName);
-
-  if (!project) {
-    return { error: "Project not found" };
-  }
-
-  const templateSettings = project.instantiatedProjectSettings;
-
-  const rootTemplate = await ROOT_TEMPLATE_REGISTRY.findTemplate(templateSettings.rootTemplateName);
-
-  if ("error" in rootTemplate) {
-    return { error: rootTemplate.error };
-  }
-
-  const newProjectPath = `${destinationDirPath}/${newProjectName}`;
-
-  const newProjectGenerator = new TemplateGeneratorService(
-    {
-      mode: 'standalone', absoluteDestinationPath: newProjectPath,
-    },
-    rootTemplate.data,
-  );
-
-  const instatiationResult = await newProjectGenerator.instantiateFullProjectFromSettings(templateSettings);
-
-  if ("error" in instatiationResult) {
-    return { error: "Failed to create project" };
-  }
-
-  return { data: newProjectPath };
-}

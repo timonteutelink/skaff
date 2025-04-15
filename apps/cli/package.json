@@ -7,9 +7,9 @@
   },
   "scripts": {},
   "dependencies": {
+    "@inquirer/prompts": "^7.4.1",
     "@repo/ts": "workspace:*",
-    "@timonteutelink/template-types-lib": "0.0.23",
-    "esbuild": "^0.25.2"
+    "@timonteutelink/template-types-lib": "0.0.23"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

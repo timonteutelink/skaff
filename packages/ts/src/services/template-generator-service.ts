@@ -9,11 +9,12 @@ import Handlebars from "handlebars";
 import * as path from "node:path";
 import { Template } from "../models/template-models";
 import { anyOrCallbackToAny, stringOrCallbackToString } from "../utils/utils";
-import { Project } from "../models/project-models";
 import { CreateProjectResult, ProjectSettings, Result } from "../utils/types";
 import z from "zod";
 import { PROJECT_REGISTRY } from "./project-registry-service";
 import { addAllAndDiff, commitAll, createGitRepo } from "./git-service";
+import { Project } from "../models/project-models";
+import { addTemplateToSettings, writeNewProjectSettings } from "./project-settings.service";
 
 export interface GeneratorOptions {
   /**
@@ -266,7 +267,7 @@ export class TemplateGeneratorService {
           templateToInstantiate,
           destinationProject,
         );
-        await newTemplateGeneratorService.instantiateTemplate(
+        await newTemplateGeneratorService.instantiateTemplateInProject(
           newTemplateSettings,
           nameOfTemplateToAutoInstantiate,
           newProjectId,
@@ -284,7 +285,8 @@ export class TemplateGeneratorService {
    * @returns The absolute path where templated files are written.
    */
   // TODO: add git. if autoInstanted ignore git because will happen after parent calls this
-  public async instantiateTemplate(
+  // TODO: adding ai will require some more state. Probably save to file and stream file content to frontend or something. Since we need to keep the result if connection were to close.
+  public async instantiateTemplateInProject(
     userSettings: UserTemplateSettings,
     templateName: string,
     parentInstanceId?: string,
@@ -368,7 +370,7 @@ export class TemplateGeneratorService {
       await this.copyDirectory();
       await this.applySideEffects();
       if (this.options.mode === "traditional") {
-        const newTemplateInstanceId = await Project.addTemplateToSettings(
+        const newTemplateInstanceId = await addTemplateToSettings(
           this.options.absoluteDestinationPath,
           parentInstanceId!,
           template,
@@ -473,7 +475,7 @@ export class TemplateGeneratorService {
             error: `Failed to create git repository in ${this.options.absoluteDestinationPath}`,
           };
         }
-        const writeSettingsResult = await Project.writeNewProjectSettings(
+        const writeSettingsResult = await writeNewProjectSettings(
           this.options.absoluteDestinationPath,
           newProjectSettings,
         );
@@ -556,10 +558,6 @@ export class TemplateGeneratorService {
         return { error: "Root template name mismatch in project settings." };
       }
 
-      if (projectSettings.projectName !== path.basename(this.options.absoluteDestinationPath)) {
-        return { error: "Project name mismatch in project settings." };
-      }
-
       if (projectSettings.instantiatedTemplates.length === 0) {
         return { error: "No instantiated templates found in project settings." };
       }
@@ -580,7 +578,7 @@ export class TemplateGeneratorService {
         );
 
         // Use an empty string or the parent instance id if applicable.
-        const res = await subGenerator.instantiateTemplate(instantiated.templateSettings, instantiated.templateName, instantiated.parentId || "", false, instantiated.id);
+        const res = await subGenerator.instantiateTemplateInProject(instantiated.templateSettings, instantiated.templateName, instantiated.parentId || "", false, instantiated.id);
         if ("error" in res) {
           console.error(`Error instantiating template ${instantiated.templateName}: ${res.error}`);
         }

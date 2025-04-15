@@ -1,6 +1,16 @@
 import { TemplateConfig } from "@timonteutelink/template-types-lib";
 import z from "zod";
 
+export interface InstantiateProjectResult {
+  newProject: ProjectDTO;
+  diff: ParsedFile[];
+}
+
+export interface NewTemplateDiffResult {
+  diffHash: string;
+  parsedDiff: ParsedFile[];
+}
+
 export type Result<T> = { data: T } | { error: string };
 
 export interface TemplateDTO {

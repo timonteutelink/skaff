@@ -1,13 +1,13 @@
 "use client";
-import { commitChanges } from "@/app/actions/git";
-import { createNewProject, instantiateTemplate } from "@/app/actions/instantiate";
-import { reloadProjects, retrieveProject } from "@/app/actions/project";
+import { commitChanges, deleteProject } from "@/app/actions/git";
+import { applyTemplateDiffToProject, createNewProject, prepareTemplateInstantiationDiff, resolveConflictsAndDiff, restoreAllChangesToCleanProject } from "@/app/actions/instantiate";
+import { retrieveProject } from "@/app/actions/project";
 import { retrieveTemplate } from "@/app/actions/template";
 import CommitButton from "@/components/general/git/commit-dialog";
 import { DiffVisualizerPage } from "@/components/general/git/diff-visualizer-page";
 import { TemplateSettingsForm } from "@/components/general/template-settings/template-settings-form";
 import { Button } from "@/components/ui/button";
-import { ParsedFile, ProjectDTO, TemplateDTO } from "@repo/ts/utils/types";
+import { NewTemplateDiffResult, ParsedFile, ProjectDTO, TemplateDTO } from "@repo/ts/utils/types";
 import { findTemplate } from "@repo/ts/utils/utils";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -42,7 +42,8 @@ const ProjectTemplateTreePage: React.FC = () => {
   ]);
   const [project, setProject] = useState<ProjectDTO>();
   const [rootTemplate, setRootTemplate] = useState<TemplateDTO>();
-  const [diff, setDiff] = useState<ParsedFile[] | null>(null);
+  const [diffToApply, setDiffToApply] = useState<NewTemplateDiffResult | null>(null);
+  const [appliedDiff, setAppliedDiff] = useState<ParsedFile[] | null>(null);
 
   useEffect(() => {
     if (!projectNameParam) {
@@ -90,6 +91,7 @@ const ProjectTemplateTreePage: React.FC = () => {
     templateNameParam,
     parentTemplateInstanceIdParam,
     selectedDirectoryIdParam,
+    creatingNewProject,
   ]);
 
   const subTemplate = useMemo(() => {
@@ -114,7 +116,7 @@ const ProjectTemplateTreePage: React.FC = () => {
         return;
       }
 
-      setDiff(newProjectResult.data.diff);
+      setAppliedDiff(newProjectResult.data.diff);
     } else if (parentTemplateInstanceIdParam) {
       if (!project) {
         console.error("Project not found.");
@@ -131,20 +133,18 @@ const ProjectTemplateTreePage: React.FC = () => {
         return;
       }
 
-      const result = await instantiateTemplate(
+      const result = await prepareTemplateInstantiationDiff(
         rootTemplate.config.templateConfig.name,
         subTemplate.config.templateConfig.name,
         parentTemplateInstanceIdParam!,
         projectNameParam,
         data
-      ); //TODO: first show the generic diff from clean projects. Then the actually applying diff
+      );
 
       if ("error" in result) {
         console.error("Error instantiating template:", result.error);
         return;
       }
-      await reloadProjects();
-      router.push(`/projects/project/?projectName=${projectNameParam}`);
     } else {
       console.error("No parent template instance ID or selected directory ID provided.");
       return;
@@ -154,14 +154,13 @@ const ProjectTemplateTreePage: React.FC = () => {
     rootTemplate,
     subTemplate,
     parentTemplateInstanceIdParam,
-    router,
     selectedDirectoryIdParam,
     templateNameParam,
     project,
     rootTemplateNameParam,
   ]);
 
-  const handleConfirmChanges = useCallback(async (commitMessage: string) => {
+  const handleConfirmAppliedDiff = useCallback(async (commitMessage: string) => {
     if (!projectNameParam || !commitMessage) {
       console.error("Project name or commit message not found.");
       return;
@@ -171,21 +170,84 @@ const ProjectTemplateTreePage: React.FC = () => {
       return;
     }
 
-    if (creatingNewProject) {
-      const result = await commitChanges(projectNameParam, commitMessage);
-      if ("error" in result) {
-        console.error("Error committing changes:", result.error);
-        return;
-      }
-      router.push(`/projects/project/?projectName=${projectNameParam}`);
-    } else {
-      if (!project) {
-        console.error("Project not found.");
-        return;
-      }
-      //TODO: more complicated maybe another step.
+    const result = await commitChanges(projectNameParam, commitMessage);
+    if ("error" in result) {
+      console.error("Error committing changes:", result.error);
+      return;
     }
-  }, [diff, project, creatingNewProject, router]);
+    router.push(`/projects/project/?projectName=${projectNameParam}`);
+  }, [router, projectNameParam]);
+
+  const handleSubmitDiffToApply = useCallback(async () => {
+    if (!projectNameParam) {
+      console.error("Project name not found.");
+      return;
+    }
+    if (!diffToApply) {
+      console.error("Diff to apply is null.");
+      return;
+    }
+    if (creatingNewProject) {
+      console.error("When creating new project the diffToApply should not be shown.");
+      return;
+    }
+
+    const result = await applyTemplateDiffToProject(projectNameParam, diffToApply.diffHash);
+    if ("error" in result) {
+      console.error("Error committing changes:", result.error);
+      return;
+    }
+
+    let diff: ParsedFile[];
+    if ('resolveBeforeContinuing' in result) {
+      const userConfirmed = confirm(
+        "There are conflicts in the diff. Please resolve them and press 'OK' to continue.",
+      );
+      if (!userConfirmed) {
+        return;
+      }
+
+      const resolveResult = await resolveConflictsAndDiff(projectNameParam);
+
+      if ("error" in resolveResult) {
+        console.error("Error resolving conflicts:", resolveResult.error);
+        return;
+      }
+
+      diff = resolveResult.data;
+    } else {
+      diff = result.data as ParsedFile[];
+    }
+
+    setAppliedDiff(diff);
+  }, [projectNameParam, diffToApply, creatingNewProject]);
+
+  const handleBackFromAppliedDiff = useCallback(async () => {
+    if (!projectNameParam) {
+      console.error("Project name not found.");
+      return;
+    }
+
+    if (creatingNewProject) {
+      // when going back just delete project that was created. Then recreate again when going to diff. For projects this is an easy workflow for templates will be another step after viewing the diff. and no changes will be applied to project when showing first diff so when going back from first diff no deletion is necessary.
+      const result = await deleteProject(projectNameParam);
+      if ("error" in result) {
+        console.error("Error deleting project:", result.error);
+        return;
+      }
+    } else {
+      const restoreResult = await restoreAllChangesToCleanProject(projectNameParam);
+      if ("error" in restoreResult) {
+        console.error("Error restoring changes:", restoreResult.error);
+        return;
+      }
+    }
+    setAppliedDiff(null);
+  }, [projectNameParam, creatingNewProject]);
+
+  const handleBackFromDiffToApply = useCallback(() => {
+    setDiffToApply(null);
+  }, []);
 
   if (!projectNameParam || !rootTemplateNameParam || !templateNameParam) {
     return (
@@ -216,25 +278,48 @@ const ProjectTemplateTreePage: React.FC = () => {
     );
   }
 
-  if (diff) {
+  if (appliedDiff) {
     return (
       <div className="container py-10 mx-auto">
-        <h1 className="text-2xl font-bold mb-4">Diff</h1>
-        <DiffVisualizerPage parsedDiff={diff} />
+        <h1 className="text-2xl font-bold mb-4">Diff to apply</h1>
+        <DiffVisualizerPage parsedDiff={appliedDiff} />
         <div className="flex justify-between mt-4">
           <Button
             variant="outline"
-            onClick={() => setDiff(null)}
+            onClick={handleBackFromAppliedDiff}
           >
             Back
           </Button>
           <CommitButton
-            onCommit={handleConfirmChanges}
+            onCommit={handleConfirmAppliedDiff}
             onCancel={() => { }}
           />
         </div>
       </div>
     )
+  }
+
+  if (diffToApply) {
+    return (
+      <div className="container py-10 mx-auto">
+        <h1 className="text-2xl font-bold mb-4">Diff to apply</h1>
+        <DiffVisualizerPage parsedDiff={diffToApply.parsedDiff} />
+        <div className="flex justify-between mt-4">
+          <Button
+            variant="outline"
+            onClick={handleBackFromDiffToApply}
+          >
+            Back
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleSubmitDiffToApply}
+          >
+            Apply Diff
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (

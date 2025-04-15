@@ -2,6 +2,7 @@ import { exec, execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { GENERATE_DIFF_SCRIPT_PATH } from "../utils/env";
 import { DiffHunk, GitStatus, ParsedFile } from "../utils/types";
+import * as fs from "node:fs/promises";
 
 const asyncExecFile = promisify(execFile);
 const asyncExec = promisify(exec);
@@ -102,7 +103,7 @@ export async function deleteRepo(
   repoPath: string,
 ): Promise<boolean> {
   try {
-    await asyncExec(`rm -rf ${repoPath}`);
+    await fs.rm(repoPath, { recursive: true });
     return true;
   } catch (error) {
     console.error("Error deleting git repository:", error);
@@ -130,6 +131,52 @@ export async function isGitRepoClean(hostRepoPath: string): Promise<boolean> {
     return status.length === 0;
   } catch (error) {
     console.error("Error checking git status:", error);
+    return false;
+  }
+}
+
+export async function applyDiffToGitRepo(
+  repoPath: string,
+  diffPath: string,
+): Promise<boolean> {
+  try {
+    await asyncExec(`cd ${repoPath} && git apply ${diffPath}`);
+    return true;
+  } catch (error) {
+    console.error("Error applying diff to git repository:", error);
+    return false;
+  }
+}
+
+export async function restoreAllChanges(
+  repoPath: string,
+): Promise<boolean> {
+  try {
+    await asyncExec(`cd ${repoPath} && git restore --staged . && git restore .`);
+    return true;
+  } catch (error) {
+    console.error("Error restoring changes:", error);
+    return false;
+  }
+}
+
+// Only if there is a merge conflict that the user needs to resolve then return true.
+export async function isConflictAfterApply(
+  repoPath: string
+): Promise<boolean> {
+  try {
+    const { stdout } = await asyncExec(`cd ${repoPath} && git status --porcelain`);
+    const lines = stdout.trim().split("\n");
+
+    for (const line of lines) {
+      if (line.startsWith("UU")) {
+        return true;
+      }
+    }
+
+    return false;
+  } catch (error) {
+    console.error("Error checking for merge conflicts:", error);
     return false;
   }
 }
