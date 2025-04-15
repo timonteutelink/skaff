@@ -1,6 +1,6 @@
 "use client";
-import { commitChanges, deleteProject } from "@/app/actions/git";
-import { applyTemplateDiffToProject, createNewProject, prepareTemplateInstantiationDiff, resolveConflictsAndDiff, restoreAllChangesToCleanProject } from "@/app/actions/instantiate";
+import { commitChanges } from "@/app/actions/git";
+import { applyTemplateDiffToProject, cancelProjectCreation, createNewProject, prepareTemplateInstantiationDiff, resolveConflictsAndDiff, restoreAllChangesToCleanProject } from "@/app/actions/instantiate";
 import { retrieveProject } from "@/app/actions/project";
 import { retrieveTemplate } from "@/app/actions/template";
 import CommitButton from "@/components/general/git/commit-dialog";
@@ -230,7 +230,7 @@ const ProjectTemplateTreePage: React.FC = () => {
 
     if (creatingNewProject) {
       // when going back just delete project that was created. Then recreate again when going to diff. For projects this is an easy workflow for templates will be another step after viewing the diff. and no changes will be applied to project when showing first diff so when going back from first diff no deletion is necessary.
-      const result = await deleteProject(projectNameParam);
+      const result = await cancelProjectCreation(projectNameParam);
       if ("error" in result) {
         console.error("Error deleting project:", result.error);
         return;
@@ -242,6 +242,7 @@ const ProjectTemplateTreePage: React.FC = () => {
         return;
       }
     }
+
     setAppliedDiff(null);
   }, [projectNameParam, creatingNewProject]);
 

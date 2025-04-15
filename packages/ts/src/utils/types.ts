@@ -1,7 +1,7 @@
 import { TemplateConfig } from "@timonteutelink/template-types-lib";
 import z from "zod";
 
-export interface InstantiateProjectResult {
+export interface ProjectCreationResult {
   newProject: ProjectDTO;
   diff: ParsedFile[];
 }

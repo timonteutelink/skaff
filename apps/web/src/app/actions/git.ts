@@ -8,7 +8,7 @@ export async function commitChanges(
   projectName: string,
   commitMessage: string,
 ): Promise<Result<void>> {
-  PROJECT_REGISTRY.reloadProjects()
+  await PROJECT_REGISTRY.reloadProjects()
   const project = await PROJECT_REGISTRY.findProject(projectName)
 
   if (!project) {
@@ -28,7 +28,7 @@ export async function commitChanges(
 }
 
 export async function switchProjectBranch(projectName: string, branch: string): Promise<Result<void>> {
-  PROJECT_REGISTRY.reloadProjects()
+  await PROJECT_REGISTRY.reloadProjects()
   const project = await PROJECT_REGISTRY.findProject(projectName)
 
   if (!project) {
@@ -83,20 +83,8 @@ export async function addAllAndRetrieveCurrentDiff(
     return { error: "No changes detected" };
   }
 
+  await PROJECT_REGISTRY.reloadProjects();
+
   return { data: parsedDiff };
 }
 
-// This code is still heavily vulnerable since for example the list of projects in this case is controllable by user they can probably delete anything on system. So only use locally and with templates that are trusted.
-export async function deleteProject(
-  projectName: string,
-): Promise<Result<void>> {
-  const project = await PROJECT_REGISTRY.findProject(projectName);
-
-  if (!project) {
-    console.error("Project not found");
-    return { error: "Project not found" };
-  }
-  deleteRepo(project.absoluteRootDir);
-
-  return { data: undefined };
-}

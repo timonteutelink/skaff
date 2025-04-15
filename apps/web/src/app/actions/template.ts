@@ -3,13 +3,13 @@ import { ROOT_TEMPLATE_REGISTRY } from "@repo/ts/services/root-template-registry
 import { TemplateDTO } from "@repo/ts/utils/types";
 
 export async function retrieveTemplates(): Promise<TemplateDTO[]> {
-  await ROOT_TEMPLATE_REGISTRY.getTemplates();
+  const templates = await ROOT_TEMPLATE_REGISTRY.getTemplates();
 
-  const templates = ROOT_TEMPLATE_REGISTRY.templates.map((template) =>
+  const templateDtos = templates.map((template) =>
     template.mapToDTO(),
   );
 
-  return templates;
+  return templateDtos;
 }
 
 export async function retrieveTemplate(

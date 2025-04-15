@@ -1,6 +1,6 @@
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import path from "node:path";
-import { InstantiateProjectResult, NewTemplateDiffResult, ParsedFile, ProjectDTO, ProjectSettings, Result } from "../utils/types";
+import { NewTemplateDiffResult, ParsedFile, ProjectCreationResult, ProjectSettings, Result } from "../utils/types";
 import { addAllAndDiff, applyDiffToGitRepo, diffDirectories, isConflictAfterApply, parseGitDiff } from "./git-service";
 import { PROJECT_REGISTRY } from "./project-registry-service";
 import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
@@ -147,7 +147,7 @@ export async function applyDiffToProject(projectName: string, diffHash: string):
   return { data: parseGitDiff(addAllResult) };
 }
 
-export async function instantiateProject(rootTemplateName: string, parentDirPath: string, projectName: string, userTemplateSettings: UserTemplateSettings): Promise<Result<InstantiateProjectResult>> {
+export async function instantiateProject(rootTemplateName: string, parentDirPath: string, projectName: string, userTemplateSettings: UserTemplateSettings): Promise<Result<ProjectCreationResult>> {
   const template = await ROOT_TEMPLATE_REGISTRY.findTemplate(rootTemplateName);
 
   if ("error" in template) {

@@ -3,13 +3,8 @@ import { deleteRepo, restoreAllChanges } from "@repo/ts/services/git-service";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import { applyDiffToProject, generateNewTemplateDiff, generateProjectFromTemplateSettings, instantiateProject, resolveConflictsAndRetrieveAppliedDiff } from "@repo/ts/services/project-service";
 import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
-import { NewTemplateDiffResult, ParsedFile, ProjectDTO, Result } from "@repo/ts/utils/types";
+import { NewTemplateDiffResult, ParsedFile, ProjectCreationResult, Result } from "@repo/ts/utils/types";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
-
-export interface ProjectCreationResult {
-  newProject: ProjectDTO;
-  diff: ParsedFile[];
-}
 
 export async function createNewProject(
   projectName: string,
@@ -22,7 +17,15 @@ export async function createNewProject(
     return { error: "Invalid project directory path ID" };
   }
 
-  return await instantiateProject(templateName, parentDirPath, projectName, userTemplateSettings);
+  const result = await instantiateProject(templateName, parentDirPath, projectName, userTemplateSettings);
+
+  if ("error" in result) {
+    return { error: result.error };
+  }
+
+  await PROJECT_REGISTRY.reloadProjects();
+
+  return { data: result.data };
 }
 
 export async function prepareTemplateInstantiationDiff(
@@ -32,19 +35,33 @@ export async function prepareTemplateInstantiationDiff(
   destinationProjectName: string,
   userTemplateSettings: UserTemplateSettings,
 ): Promise<Result<NewTemplateDiffResult>> {
-  return await generateNewTemplateDiff(
+  const result = await generateNewTemplateDiff(
     rootTemplateName,
     templateName,
     parentInstanceId,
     destinationProjectName,
     userTemplateSettings,
   )
+
+  if ("error" in result) {
+    return { error: result.error };
+  }
+
+  await PROJECT_REGISTRY.reloadProjects();
+  return { data: result.data };
 }
 
 export async function resolveConflictsAndDiff(
   projectName: string,
 ): Promise<Result<ParsedFile[]>> {
-  return await resolveConflictsAndRetrieveAppliedDiff(projectName);
+  const result = await resolveConflictsAndRetrieveAppliedDiff(projectName);
+
+  if ("error" in result) {
+    return { error: result.error };
+  }
+
+  await PROJECT_REGISTRY.reloadProjects();
+  return { data: result.data };
 }
 
 export async function restoreAllChangesToCleanProject(
@@ -62,6 +79,8 @@ export async function restoreAllChangesToCleanProject(
     return { error: "Failed to restore changes" };
   }
 
+  await PROJECT_REGISTRY.reloadProjects();
+
   return { data: undefined };
 }
 
@@ -69,31 +88,33 @@ export async function applyTemplateDiffToProject(
   projectName: string,
   diffHash: string,
 ): Promise<Result<ParsedFile[] | { resolveBeforeContinuing: boolean }>> {
-  return await applyDiffToProject(projectName, diffHash);
+  const result = await applyDiffToProject(projectName, diffHash);
+
+  if ("error" in result) {
+    return { error: result.error };
+  }
+
+  await PROJECT_REGISTRY.reloadProjects();
+
+  return { data: result.data };
 }
 
 export async function cancelProjectCreation(
-  absoluteProjectPath: string,
+  projectName: string,
 ): Promise<Result<void>> {
-  let pathExists = false;
-  for (const searchPath of PROJECT_SEARCH_PATHS) {
-    if (absoluteProjectPath.startsWith(searchPath.path)) {
-      pathExists = true;
-      break;
-    }
+  const project = await PROJECT_REGISTRY.findProject(projectName);
+
+  if (!project) {
+    return { error: "Project not found" };
   }
 
-  if (!pathExists) {
-    return { error: "Invalid project path" };
-  }
-
-  const deleteResult = await deleteRepo(absoluteProjectPath);
+  const deleteResult = await deleteRepo(project.absoluteRootDir);
 
   if (!deleteResult) {
     return { error: "Failed to delete project" };
   }
 
-  PROJECT_REGISTRY.reloadProjects();
+  await PROJECT_REGISTRY.reloadProjects();
 
   return { data: undefined };
 }
@@ -118,6 +139,8 @@ export async function generateNewProjectFromExisting(currentProjectName: string,
   if ("error" in result) {
     return { error: result.error };
   }
+
+  await PROJECT_REGISTRY.reloadProjects();
 
   return { data: result.data };
 }
