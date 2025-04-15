@@ -35,6 +35,8 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
 
   const tempCleanProjectOldSettingsPath = await pathInCache(tempOldProjectName);
   const tempCleanProjectNewSettingsPath = await pathInCache(tempNewProjectName);
+  console.log("tempCleanProjectOldSettingsPath", tempCleanProjectOldSettingsPath);
+  console.log("tempCleanProjectNewSettingsPath", tempCleanProjectNewSettingsPath);
   try {
     const cleanProjectFromCurrentProjectSettingsResult = await generateProjectFromTemplateSettings(
       destinationProject.instantiatedProjectSettings,
@@ -71,6 +73,8 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
 
     const cleanProjectFromCurrentProjectSettingsPath = cleanProjectFromCurrentProjectSettingsResult.data;
     const cleanProjectFromNewSettingsPath = cleanProjectFromNewSettingsResult.data;
+
+    console.log('verynice', cleanProjectFromCurrentProjectSettingsPath, cleanProjectFromNewSettingsPath);
 
     const diff = await diffDirectories(cleanProjectFromCurrentProjectSettingsPath, cleanProjectFromNewSettingsPath);
 

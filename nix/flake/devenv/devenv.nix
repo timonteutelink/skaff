@@ -20,7 +20,7 @@ localFlake:
           PROJECT_SEARCH_PATHS = "~/projects/btc/:~/projects/timon/gen-projects/";
 
           # ESBUILD_BINARY_PATH="/home/tteutelink/projects/timon/code-templator/node_modules/.bin/esbuild";
-          PROJECT_DIFF_SCRIPT_PATH="~/projects/timon/code-templator/scripts/generate-diff-patch.sh";
+          GENERATE_DIFF_SCRIPT_PATH ="~/projects/timon/code-templator/scripts/generate-diff-patch.sh";
         };
 
         packages = with pkgs; [
