@@ -25,6 +25,7 @@ export async function saveToCache(
 ): Promise<string> {
   const cacheFilePath = await pathInCache(`${cacheKey}-${hash}.${extension}`);
   await fs.writeFile(cacheFilePath, value, "utf-8");
+  console.log("Cache file created:", cacheFilePath);
   return cacheFilePath;
 }
 

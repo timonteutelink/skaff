@@ -1,6 +1,6 @@
 "use server";
 
-import { addAllAndDiff, commitAll, deleteRepo, parseGitDiff, switchBranch } from "@repo/ts/services/git-service";
+import { addAllAndDiff, commitAll, parseGitDiff, switchBranch } from "@repo/ts/services/git-service";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import { ParsedFile, Result } from "@repo/ts/utils/types";
 

@@ -56,10 +56,11 @@ export class TemplateGeneratorService {
   }
 
   private updateParsedUserSettingsWithParentSettings(userSettings: UserTemplateSettings): Result<void> {
-    if (!this.currentlyGeneratingTemplate || !this.currentlyGeneratingTemplateParentInstanceId) {
+    if (!this.currentlyGeneratingTemplate) {
       return { error: "No template is currently being generated." };
     }
-    const result = getParsedUserSettingsWithParentSettings(userSettings, this.currentlyGeneratingTemplate, this.currentlyGeneratingTemplateParentInstanceId, path.basename(this.options.absoluteDestinationPath), this.destinationProject?.instantiatedProjectSettings);
+    const result = getParsedUserSettingsWithParentSettings(userSettings, this.currentlyGeneratingTemplate, path.basename(this.options.absoluteDestinationPath), this.currentlyGeneratingTemplateParentInstanceId, this.destinationProject?.instantiatedProjectSettings);
+
     if ("error" in result) {
       console.error(`Failed to parse user settings: ${result.error}`);
       return { error: `Failed to parse user settings: ${result.error}` };
@@ -213,10 +214,10 @@ export class TemplateGeneratorService {
     userSettings: UserTemplateSettings,
     template: Template,
     parentInstanceId?: string,
-  ) {
+  ): Result<void> {
     this.currentlyGeneratingTemplate = template;
     this.currentlyGeneratingTemplateParentInstanceId = parentInstanceId;
-    this.updateParsedUserSettingsWithParentSettings(userSettings);
+    return this.updateParsedUserSettingsWithParentSettings(userSettings);
   }
 
   private static async autoInstantiateSubTemplates(
@@ -291,7 +292,12 @@ export class TemplateGeneratorService {
       ? this.destinationProject!.instantiatedProjectSettings.projectName
       : path.basename(this.options.absoluteDestinationPath);
 
-    this.setTemplateGenerationValues(userSettings, template, parentInstanceId!);
+    const result = this.setTemplateGenerationValues(userSettings, template, parentInstanceId!);
+
+    if ("error" in result) {
+      console.error(`Failed to set template generation values: ${result.error}`);
+      return { error: `Failed to set template generation values: ${result.error}` };
+    }
 
     if (!this.currentlyGeneratingTemplateFullSettings) {
       console.error("Failed to parse user settings.");
@@ -436,7 +442,12 @@ export class TemplateGeneratorService {
       ],
     };
 
-    this.setTemplateGenerationValues(userSettings, this.rootTemplate);
+    const result = this.setTemplateGenerationValues(userSettings, this.rootTemplate);
+
+    if ('error' in result) {
+      console.error(`Failed to set template generation values: ${result.error}`);
+      return { error: `Failed to set template generation values: ${result.error}` };
+    }
 
     if (!this.currentlyGeneratingTemplateFullSettings) {
       console.error("Failed to parse user settings.");
@@ -542,7 +553,12 @@ export class TemplateGeneratorService {
         return { error: "No instantiated templates found in project settings." };
       }
 
-      await fs.mkdir(this.options.absoluteDestinationPath, { recursive: true });
+      const mainGenerator = new TemplateGeneratorService(this.options, this.rootTemplate);
+      const projectGenerationResult = await mainGenerator.instantiateNewProject(projectSettings.instantiatedTemplates[0]!.templateSettings, projectSettings.instantiatedTemplates[0]!.id);
+
+      if ("error" in projectGenerationResult) {
+        return { error: `Failed to instantiate project: ${projectGenerationResult.error}` };
+      }
 
       for (const instantiated of projectSettings.instantiatedTemplates) {
         const subTemplate = this.rootTemplate.findSubTemplate(instantiated.templateName);
@@ -551,13 +567,11 @@ export class TemplateGeneratorService {
           continue;
         }
 
-        // no project tracking in standalone mode
         const subGenerator = new TemplateGeneratorService(
           this.options,
           subTemplate,
         );
 
-        // Use an empty string or the parent instance id if applicable.
         const res = await subGenerator.instantiateTemplateInProject(instantiated.templateSettings, instantiated.templateName, instantiated.parentId || "", false, instantiated.id);
         if ("error" in res) {
           console.error(`Error instantiating template ${instantiated.templateName}: ${res.error}`);

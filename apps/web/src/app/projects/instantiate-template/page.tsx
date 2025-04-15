@@ -145,6 +145,8 @@ const ProjectTemplateTreePage: React.FC = () => {
         console.error("Error instantiating template:", result.error);
         return;
       }
+
+      setDiffToApply(result.data);
     } else {
       console.error("No parent template instance ID or selected directory ID provided.");
       return;

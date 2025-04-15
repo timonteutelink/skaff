@@ -14,7 +14,7 @@ import { TemplateGeneratorService } from "./template-generator-service";
 import { Project } from "../models/project-models";
 
 
-export function getParsedUserSettingsWithParentSettings(userSettings: UserTemplateSettings, currentlyGeneratingTemplate: Template, currentlyGeneratingTemplateParentInstanceId: string, projectName: string, destinationProjectSettings?: ProjectSettings): Result<TemplateSettingsType<AnyZodObject>> {
+export function getParsedUserSettingsWithParentSettings(userSettings: UserTemplateSettings, currentlyGeneratingTemplate: Template, projectName: string, currentlyGeneratingTemplateParentInstanceId?: string, destinationProjectSettings?: ProjectSettings): Result<TemplateSettingsType<AnyZodObject>> {
   const parsedUserSettings = currentlyGeneratingTemplate.config.templateSettingsSchema.safeParse(userSettings);
   if (!parsedUserSettings?.success) {
     console.error(
@@ -165,7 +165,8 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
 
     const diffHash = createHash("sha256").update(diff).digest("hex");
 
-    await saveToCache('new-template-diff', diffHash, '.patch', diff); // just save here temporarely so hash can be key for retrieving and applying diff later.
+    // When the project settings contains the hash of the entire template we can hash the entire project settings and combine the old and new project settings hashes to create a unique key for retrieving the diff without having to generate all files again.
+    await saveToCache('new-template-diff', diffHash, 'patch', diff);
 
     const parsedDiff = parseGitDiff(diff);
 
@@ -179,7 +180,10 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
     console.error(e);
     return { error: "Failed to create clean project from current project settings" };
   } finally {
-    await fs.rm(cacheDir, { recursive: true });
+    const oldProjectPath = path.join(cacheDir, tempOldProjectName);
+    const newProjectPath = path.join(cacheDir, tempNewProjectName);
+    await fs.rm(oldProjectPath, { recursive: true });
+    await fs.rm(newProjectPath, { recursive: true });
   }
 }
 
@@ -205,7 +209,7 @@ export async function applyDiffToProject(projectName: string, diffHash: string):
     return { error: "Project not found" };
   }
 
-  const diff = await retrieveFromCache('new-template-diff', diffHash, '.patch');
+  const diff = await retrieveFromCache('new-template-diff', diffHash, 'patch');
 
   if (!diff) {
     return { error: "Diff not found" };
