@@ -1,5 +1,5 @@
 import path from "node:path";
-import { ProjectSettings, ProjectSettingsSchema, Result } from "../utils/types";
+import { InstantiatedTemplate, ProjectSettings, ProjectSettingsSchema, Result } from "../utils/types";
 import * as fs from "node:fs/promises";
 import { Template } from "../models/template-models";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
@@ -43,42 +43,34 @@ export async function writeNewProjectSettings(
   return { data: undefined };
 }
 
-export async function addTemplateToSettings(
+export async function writeNewTemplateToSettings(
   absoluteProjectPath: string,
-  parentInstanceId: string,
-  template: Template,
-  templateSettings: UserTemplateSettings,
-  autoInstantiated?: boolean,
-  uuid?: string,
-): Promise<Result<string>> {
+  instantiatedTemplate: InstantiatedTemplate,
+): Promise<Result<void>> {
   const projectSettingsPath = path.join(
     absoluteProjectPath,
     "templateSettings.json",
   );
-  const projectSettingsResult =
-    await loadProjectSettings(projectSettingsPath);
+  const projectSettingsResult = await loadProjectSettings(projectSettingsPath);
+
   if ("error" in projectSettingsResult) {
     return { error: projectSettingsResult.error };
   }
+
   const projectSettings = projectSettingsResult.data.settings;
-  const newTemplateInstanceId = uuid || crypto.randomUUID();
-  projectSettings.instantiatedTemplates.push({
-    id: newTemplateInstanceId,
-    parentId: parentInstanceId,
-    templateName: template.config.templateConfig.name,
-    templateSettings,
-    automaticallyInstantiatedByParent: autoInstantiated,
-  });
+  projectSettings.instantiatedTemplates.push(instantiatedTemplate);
+
   const result = await writeNewProjectSettings(
     absoluteProjectPath,
     projectSettings,
     true,
   );
+
   if ("error" in result) {
     return { error: result.error };
   }
 
-  return { data: newTemplateInstanceId };
+  return { data: undefined };
 }
 
 interface LoadedProjectSettingsResult {

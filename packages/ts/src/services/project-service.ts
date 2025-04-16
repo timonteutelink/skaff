@@ -14,7 +14,7 @@ import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
 import { TemplateGeneratorService } from "./template-generator-service";
 
 
-export function getParsedUserSettingsWithParentSettings(userSettings: UserTemplateSettings, currentlyGeneratingTemplate: Template, projectName: string, currentlyGeneratingTemplateParentInstanceId?: string, destinationProjectSettings?: ProjectSettings): Result<TemplateSettingsType<AnyZodObject>> {
+export function getParsedUserSettingsWithParentSettings(userSettings: UserTemplateSettings, currentlyGeneratingTemplate: Template, destinationProjectSettings: ProjectSettings, currentlyGeneratingTemplateParentInstanceId?: string): Result<TemplateSettingsType<AnyZodObject>> {
   const parsedUserSettings = currentlyGeneratingTemplate.config.templateSettingsSchema.safeParse(userSettings);
   if (!parsedUserSettings?.success) {
     console.error(
@@ -24,30 +24,22 @@ export function getParsedUserSettingsWithParentSettings(userSettings: UserTempla
       error: `Failed to parse user settings: ${parsedUserSettings?.error}`,
     }
   }
-  let newUserSettings: TemplateSettingsType<z.AnyZodObject> = parsedUserSettings.data as TemplateSettingsType<z.AnyZodObject>;
-  if (destinationProjectSettings) {
+  let newUserSettings: TemplateSettingsType<z.AnyZodObject> = {
+    ...parsedUserSettings.data,
+    project_name: destinationProjectSettings.projectName,
+  } as TemplateSettingsType<z.AnyZodObject>;
+
+  if (
+    currentlyGeneratingTemplate?.parentTemplate &&
+    currentlyGeneratingTemplateParentInstanceId
+  ) {
     newUserSettings = {
       ...newUserSettings,
-      project_name:
-        destinationProjectSettings.projectName,
-    };
-    if (
-      currentlyGeneratingTemplate?.parentTemplate &&
-      currentlyGeneratingTemplateParentInstanceId
-    ) {
-      newUserSettings = {
-        ...newUserSettings,
-        ...Project.getInstantiatedSettings(
-          currentlyGeneratingTemplate.parentTemplate,
-          currentlyGeneratingTemplateParentInstanceId,
-          destinationProjectSettings,
-        ),
-      };
-    }
-  } else {
-    newUserSettings = {
-      ...newUserSettings,
-      project_name: projectName,
+      ...Project.getInstantiatedSettings(
+        currentlyGeneratingTemplate.parentTemplate,
+        currentlyGeneratingTemplateParentInstanceId,
+        destinationProjectSettings,
+      ),
     };
   }
   return { data: newUserSettings };
@@ -59,7 +51,7 @@ async function addAutoInstantiatedTemplatesToProjectSettings(
   parentInstanceId: string,
   parentTemplateSettings: UserTemplateSettings,
 ): Promise<Result<ProjectSettings>> {
-  const newFullTemplateSettings = getParsedUserSettingsWithParentSettings(parentTemplateSettings, currentTemplateToAddChildren, parentInstanceId, projectSettings.projectName, projectSettings);
+  const newFullTemplateSettings = getParsedUserSettingsWithParentSettings(parentTemplateSettings, currentTemplateToAddChildren, projectSettings, parentInstanceId);
   if ('error' in newFullTemplateSettings) {
     return { error: newFullTemplateSettings.error };
   }
@@ -147,7 +139,7 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
     );
 
     const templateInstanceId = crypto.randomUUID();
-    const newProjectSettings: ProjectSettings = {//TODO add autoInstantiated templates when autogenerating.
+    const newProjectSettings: ProjectSettings = {
       ...destinationProject.instantiatedProjectSettings,
       instantiatedTemplates: [
         ...destinationProject.instantiatedProjectSettings.instantiatedTemplates,
@@ -305,13 +297,13 @@ export async function generateProjectFromTemplateSettings(projectSettings: Proje
 
   const newProjectGenerator = new TemplateGeneratorService(
     {
-      mode: 'standalone', absoluteDestinationPath: newProjectPath,
+      dontDoGit: true, absoluteDestinationPath: newProjectPath,
     },
     rootTemplate.data,
-    newProjectName,
+    projectSettings,
   );
 
-  const instatiationResult = await newProjectGenerator.instantiateFullProjectFromSettings(projectSettings);
+  const instatiationResult = await newProjectGenerator.instantiateFullProjectFromSettings();
 
   if ("error" in instatiationResult) {
     return { error: instatiationResult.error };

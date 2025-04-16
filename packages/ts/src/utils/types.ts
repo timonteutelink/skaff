@@ -29,7 +29,7 @@ export const InstantiatedTemplateSchema = z.object({
   parentId: z.string().optional(),
 
   templateName: z.string().min(1),
-  templateSettings: z.any(), //UserTemplateSettings
+  templateSettings: z.object({}), //UserTemplateSettings
 
   automaticallyInstantiatedByParent: z.boolean().optional(),
 });
@@ -37,7 +37,7 @@ export const InstantiatedTemplateSchema = z.object({
 export type InstantiatedTemplate = z.infer<typeof InstantiatedTemplateSchema>;
 
 export const ProjectSettingsSchema = z.object({
-  projectName: z.string().min(1), //should match folder name
+  projectName: z.string().min(1), //should match folder name(not forced actually)
   projectAuthor: z.string().min(1),
 
   rootTemplateName: z.string().min(1),

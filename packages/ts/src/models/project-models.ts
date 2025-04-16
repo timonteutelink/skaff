@@ -8,7 +8,7 @@ import {
   Result
 } from "../utils/types";
 import { Template } from "./template-models";
-import { loadProjectSettings } from "../services/project-settings.service";
+import { loadProjectSettings } from "../services/project-settings-service";
 
 // every project name inside a root project should be unique.
 // The root project can be uniquely identified by its name and author.(and version)

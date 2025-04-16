@@ -3,7 +3,7 @@ import {
   AnyOrCallback,
 } from "@timonteutelink/template-types-lib";
 import z from "zod";
-import { TemplateDTO } from "./types";
+import { Result, TemplateDTO } from "./types";
 
 export function anyOrCallbackToAny<
   TSettings extends TemplateSettingsType<z.AnyZodObject>,
@@ -11,10 +11,18 @@ export function anyOrCallbackToAny<
 >(
   anyOrCallback: AnyOrCallback<TSettings, T>,
   parsedUserSettings: TSettings,
-): T {
-  return anyOrCallback instanceof Function
-    ? anyOrCallback(parsedUserSettings)
-    : anyOrCallback;
+): Result<T> {
+  try {
+    return {
+      data: anyOrCallback instanceof Function
+        ? anyOrCallback(parsedUserSettings)
+        : anyOrCallback
+    };
+  } catch (e) {
+    console.error("Error in anyOrCallbackToAny:", e);
+    return { error: "Invalid anyOrCallback" + e };
+  }
+
 }
 
 export function stringOrCallbackToString<
@@ -22,7 +30,7 @@ export function stringOrCallbackToString<
 >(
   strOrCallback: AnyOrCallback<TSettings, string>,
   parsedUserSettings: TSettings,
-): string {
+): Result<string> {
   return anyOrCallbackToAny(strOrCallback, parsedUserSettings);
 }
 

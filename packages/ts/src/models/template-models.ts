@@ -8,7 +8,7 @@ import {
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { CreateProjectResult, Result, TemplateDTO } from "../utils/types";
+import { CreateProjectResult, ProjectSettings, Result, TemplateDTO } from "../utils/types";
 import { Project } from "./project-models";
 import z from "zod";
 
@@ -193,10 +193,9 @@ export class Template {
     parentInstanceId: string,
   ): Promise<Result<string>> {
     const generatorService = new TemplateGeneratorService(
-      { mode: 'traditional', absoluteDestinationPath: destinationProject.absoluteRootDir },
+      { absoluteDestinationPath: destinationProject.absoluteRootDir },
       this,
-      destinationProject.instantiatedProjectSettings.projectName,
-      destinationProject,
+      destinationProject.instantiatedProjectSettings,
     );
     const resultPath = await generatorService.instantiateTemplateInProject(
       userSettings,
@@ -226,10 +225,17 @@ export class Template {
     destinationDir: string,
     projectName: string,
   ): Promise<Result<CreateProjectResult>> {
-    const generatorService = new TemplateGeneratorService(
-      { mode: 'traditional', absoluteDestinationPath: path.join(destinationDir, projectName) },
-      this,
+    const newProjectSettings: ProjectSettings = {
       projectName,
+      projectAuthor: 'abc',
+      rootTemplateName: this.config.templateConfig.name,
+      instantiatedTemplates: [],
+    }
+
+    const generatorService = new TemplateGeneratorService(
+      { absoluteDestinationPath: path.join(destinationDir, projectName) },
+      this,
+      newProjectSettings,
     );
     const result = await generatorService.instantiateNewProject(rootTemplateSettings);
     if ("error" in result) {
