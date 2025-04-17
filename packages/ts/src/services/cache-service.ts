@@ -3,8 +3,15 @@ import path from "node:path";
 import * as fs from "node:fs/promises";
 import { makeDir } from "./file-service";
 import { Result } from "../utils/types";
+import { createHash } from "node:crypto";
 
 export type CacheKey = "template-config" | "new-template-diff";
+
+export function getHash(
+  stringToHash: string
+): string {
+  return createHash("sha256").update(stringToHash).digest("hex");
+}
 
 export async function getCacheDir(): Promise<Result<string>> {
   const cacheDir = path.join(tmpdir(), "code-templator-cache");

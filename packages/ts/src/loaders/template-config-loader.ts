@@ -3,15 +3,14 @@ import {
   templateConfigSchema,
   TemplateSettingsType,
 } from "@timonteutelink/template-types-lib";
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { pathToFileURL } from "node:url";
 import ts from "typescript";
 import z from "zod";
-import { retrieveFromCache, saveToCache } from "../services/cache-service";
+import { getHash, retrieveFromCache, saveToCache } from "../services/cache-service";
 import { getEsbuild } from "../utils/get-esbuild";
-import { getHash } from "../utils/utils";
 
 //TODO renovate, mkDocs, .github/settings.yml
 

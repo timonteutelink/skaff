@@ -2,7 +2,6 @@ import {
   TemplateSettingsType,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
-import { createHash } from "node:crypto";
 import * as fs from "node:fs/promises";
 import { AnyZodObject, z } from "zod";
 import { Project } from "../models/project-models";
@@ -14,8 +13,8 @@ import {
   ProjectSettings,
   Result,
 } from "../utils/types";
-import { getHash, stringOrCallbackToString } from "../utils/utils";
-import { pathInCache, retrieveFromCache, saveToCache } from "./cache-service";
+import { stringOrCallbackToString } from "../utils/utils";
+import { getHash, pathInCache, retrieveFromCache, saveToCache } from "./cache-service";
 import {
   addAllAndDiff,
   applyDiffToGitRepo,
@@ -374,8 +373,6 @@ export async function modifyTemplateSettings(
     ...newProjectSettings.instantiatedTemplates[instantiatedTemplateIndex],
     templateSettings: newTemplateSettings,
   };
-
-  // Instead of adding all children we need first remove and readd them. but since they might have children ids must remain the same.
 
   const modifyChildrenResult = await modifyAutoInstantiatedTemplatesInProjectSettings(
     newProjectSettings,
