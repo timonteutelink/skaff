@@ -1,26 +1,35 @@
 'use server';
 import { ROOT_TEMPLATE_REGISTRY } from "@repo/ts/services/root-template-registry-service";
-import { TemplateDTO } from "@repo/ts/utils/types";
+import { Result, TemplateDTO } from "@repo/ts/utils/types";
 
-export async function retrieveTemplates(): Promise<TemplateDTO[]> {
+export async function retrieveTemplates(): Promise<Result<TemplateDTO[]>> {
   const templates = await ROOT_TEMPLATE_REGISTRY.getTemplates();
 
-  const templateDtos = templates.map((template) =>
+  if ("error" in templates) {
+    console.error("Failed to load templates:", templates.error);
+    return { error: templates.error };
+  }
+
+  const templateDtos = templates.data.map((template) =>
     template.mapToDTO(),
   );
 
-  return templateDtos;
+  return { data: templateDtos };
 }
 
 export async function retrieveTemplate(
   templateName: string,
-): Promise<TemplateDTO | null> {
+): Promise<Result<TemplateDTO | null>> {
   const template = await ROOT_TEMPLATE_REGISTRY.findTemplate(templateName);
 
   if ("error" in template) {
     console.error(template.error);
-    return null;
+    return { error: template.error };
   }
 
-  return template.data.mapToDTO();
+  if (template.data) {
+    return { data: template.data.mapToDTO() };
+  }
+
+  return { data: null };
 }

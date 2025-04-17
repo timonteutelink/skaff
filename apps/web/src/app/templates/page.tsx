@@ -4,6 +4,7 @@ import TablePage, { FieldInfo } from "@/components/general/TablePage";
 import { TemplateDTO } from "@repo/ts/utils/types";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const columnMapping: FieldInfo<TemplateDTO>[] = [
   {
@@ -22,7 +23,12 @@ export default function TemplatesListPage() {
 
   useEffect(() => {
     retrieveTemplates().then((templates) => {
-      setTemplates(templates);
+      if ("error" in templates) {
+        console.error("Error retrieving templates:", templates.error);
+        toast.error("Error retrieving templates: " + templates.error);
+        return;
+      }
+      setTemplates(templates.data);
     });
   }, []);
 

@@ -496,11 +496,6 @@ export class TemplateGeneratorService {
    * @returns The absolute path where templated files are written.
    */
   // TODO: adding ai will require some more state. Probably save to file and stream file content to frontend or something. Since we need to keep the result if connection were to close.
-  // TODO: Okay now big problems. So when dontGenerateTemplateSettings then we do not allow childtemplates. Git is also a loose thing. 
-  // But we should be able to generate projects without retrieving them again from PROJECT_REGISTRY so when we do generate with templateSettings but not in a traditional search location it will still work. Probably we can just pass down a Project instance to the generator like now but then instead of a search we can call something like project.reload()
-  // Pass to the generator the project settings and use that object to store usersettings and get everything from there.
-  //
-  // TODO: add boolean to this function and the one below to use settings from the projectSettings instead of using these passed settings. This way we can generate entire project from templateSettings.
   public async instantiateTemplateInProject(
     newTemplateInstanceId: string
   ): Promise<Result<string>> {
@@ -619,13 +614,24 @@ export class TemplateGeneratorService {
       }
 
       const result = await this.autoInstantiateSubTemplates(
+        this.currentlyGeneratingTemplateFullSettings,
         instantiatedTemplate.id,
       );
+
+      if ("error" in result) {
+        console.error(
+          `Failed to auto-instantiate subtemplates: ${result.error}`,
+        );
+        return {
+          error: `Failed to auto-instantiate subtemplates: ${result.error}`,
+        };
+      }
     } catch (e) {
       console.error(`Failed to instantiate template: ${e}`);
       return { error: `Failed to instantiate template: ${e}` };
     }
-    return { data: this.getAbsoluteTargetPath() };
+
+    return this.getAbsoluteTargetPath();
   }
 
   /**
@@ -674,7 +680,6 @@ export class TemplateGeneratorService {
     }
 
     try {
-      ///////
       await makeDir(this.options.absoluteDestinationPath);
       if (!this.options.dontDoGit) {
         const createRepoResult = await createGitRepo(this.options.absoluteDestinationPath);
@@ -709,16 +714,30 @@ export class TemplateGeneratorService {
         }
       }
 
-      await this.copyDirectory();
-      await this.applySideEffects();
+      const copyResult = await this.copyDirectory();
+      if ("error" in copyResult) {
+        console.error(`Failed to copy directory: ${copyResult.error}`);
+        return { error: `Failed to copy directory: ${copyResult.error}` };
+      }
 
-      await TemplateGeneratorService.autoInstantiateSubTemplates(
-        this.options,
-        this.rootTemplate,
+      const sideEffectResult = await this.applySideEffects();
+      if ("error" in sideEffectResult) {
+        console.error(`Failed to apply side effects: ${sideEffectResult.error}`);
+        return { error: `Failed to apply side effects: ${sideEffectResult.error}` };
+      }
+
+      const result = await this.autoInstantiateSubTemplates(
         this.currentlyGeneratingTemplateFullSettings,
-        this.destinationProjectSettings,
         instantiatedTemplate.id,
       );
+      if ("error" in result) {
+        console.error(
+          `Failed to auto-instantiate subtemplates: ${result.error}`,
+        );
+        return {
+          error: `Failed to auto-instantiate subtemplates: ${result.error}`,
+        };
+      }
     } catch (e) {
       console.error(`Failed to instantiate new project: ${e}`);
       return { error: `Failed to instantiate new project: ${e}` };
@@ -726,19 +745,16 @@ export class TemplateGeneratorService {
 
     if (!this.options.dontDoGit) {
       const diffResult = await addAllAndDiff(this.options.absoluteDestinationPath);
-      if (!diffResult) {
-        console.error(
-          `Failed to generate diff for ${this.options.absoluteDestinationPath}`,
-        );
-        return {
-          error: `Failed to generate diff for ${this.options.absoluteDestinationPath}`,
-        };
+
+      if ('error' in diffResult) {
+        console.error(`Failed to add all and diff: ${diffResult.error}`);
+        return { error: `Failed to add all and diff: ${diffResult.error}` };
       }
 
       return {
         data: {
           resultPath: this.options.absoluteDestinationPath,
-          diff: diffResult,
+          diff: diffResult.data,
         },
       };
     }
@@ -752,23 +768,29 @@ export class TemplateGeneratorService {
   public async instantiateFullProjectFromSettings(
   ): Promise<Result<CreateProjectResult>> {
     if (!this.options.dontDoGit) {
+      console.error(
+        "Git is not supported for this operation. Please use the CLI.",
+      );
       return {
         error: "Git is not supported for this operation. Please use the CLI.",
       }
     }
+
     try {
       if (this.rootTemplate.config.templateConfig.name !== this.destinationProjectSettings.rootTemplateName) {
+        console.error("Root template name mismatch in project settings.");
         return { error: "Root template name mismatch in project settings." };
       }
 
       if (this.destinationProjectSettings.instantiatedTemplates.length === 0) {
+        console.error("No instantiated templates found in project settings.");
         return { error: "No instantiated templates found in project settings." };
       }
 
-      const mainGenerator = new TemplateGeneratorService(this.options, this.rootTemplate, this.destinationProjectSettings);
-      const projectGenerationResult = await mainGenerator.instantiateNewProject(this.destinationProjectSettings.instantiatedTemplates[0]!.templateSettings, this.destinationProjectSettings.instantiatedTemplates[0]!.id);
+      const projectGenerationResult = await this.instantiateNewProject();
 
       if ("error" in projectGenerationResult) {
+        console.error(`Failed to instantiate project: ${projectGenerationResult.error}`);
         return { error: `Failed to instantiate project: ${projectGenerationResult.error}` };
       }
 
@@ -782,19 +804,15 @@ export class TemplateGeneratorService {
           continue;
         }
 
-        const subGenerator = new TemplateGeneratorService(
-          this.options,
-          this.rootTemplate,
-          this.destinationProjectSettings
-        );
-
-        const res = await subGenerator.instantiateTemplateInProject(instantiated.templateSettings, instantiated.templateName, instantiated.parentId, false, instantiated.id);
+        const res = await this.instantiateTemplateInProject(instantiated.id);
         if ("error" in res) {
           console.error(`Error instantiating template ${instantiated.templateName}: ${res.error}`);
+          return { error: `Error instantiating template ${instantiated.templateName}: ${res.error}` };
         }
       }
       return { data: { resultPath: this.options.absoluteDestinationPath, diff: "" } };
     } catch (e) {
+      console.error(`Failed to instantiate full project from settings: ${e}`);
       return { error: `Failed to instantiate full project from settings: ${e}` };
     }
   }

@@ -14,51 +14,79 @@ export class RootTemplateRegistry {
     this.templatePaths = templatePaths;
   }
 
-  private async loadTemplates(): Promise<void> {
+  private async loadTemplates(): Promise<Result<void>> {
     for (const templatePath of this.templatePaths) {
       const rootTemplateDirsPath = path.join(templatePath, "root-templates");
-      const rootTemplateDirs = await fs.readdir(rootTemplateDirsPath);
+      let rootTemplateDirs: string[] = [];
+      try {
+        rootTemplateDirs = await fs.readdir(rootTemplateDirsPath);
+      } catch (e) {
+        console.error(
+          `Failed to read root template directories at ${rootTemplateDirsPath}: ${e}`,
+        );
+        continue;
+      }
       for (const rootTemplateDir of rootTemplateDirs) {
         const rootTemplateDirPath = path.join(
           rootTemplateDirsPath,
           rootTemplateDir,
         );
-        const stat = await fs.stat(rootTemplateDirPath);
-        if (stat.isDirectory()) {
-          try {
-            const template =
-              await Template.createAllTemplates(rootTemplateDirPath);
-            this.templates.push(template);
-          } catch (e) {
+        try {
+          const stat = await fs.stat(rootTemplateDirPath);
+          if (!stat.isDirectory()) {
             console.error(
-              `Failed to load template at ${rootTemplateDirPath}: ${e}`,
+              `Root template directory at ${rootTemplateDirPath} is not a directory`,
             );
             continue;
           }
+        } catch (e) {
+          console.error(
+            `Failed to read root template directory at ${rootTemplateDirPath}: ${e}`,
+          );
+          continue;
         }
+
+        const template = await Template.createAllTemplates(rootTemplateDirPath);
+        if ('error' in template) {
+          console.error(
+            `Failed to create template from directory ${rootTemplateDirPath}: ${template.error}`,
+          );
+          continue;
+        }
+        this.templates.push(template.data);
       }
     }
+
+    return { data: undefined };
   }
 
-  async reloadTemplates(): Promise<void> {
+  async reloadTemplates(): Promise<Result<void>> {
     this.templates = [];
-    await this.loadTemplates();
+    return await this.loadTemplates();
   }
 
-  async getTemplates(): Promise<Template[]> {
+  async getTemplates(): Promise<Result<Template[]>> {
     if (!this.templates.length) {
-      await this.loadTemplates();
+      const result = await this.loadTemplates();
+      if ("error" in result) {
+        console.error(`Failed to load templates: ${result.error}`);
+        return { error: result.error };
+      }
       if (!this.templates.length) {
         console.error("No templates found.");
-        return [];
+        return { error: "No templates found." };
       }
     }
-    return this.templates;
+    return { data: this.templates };
   }
 
-  async findTemplate(templateName: string): Promise<Result<Template>> {
+  async findTemplate(templateName: string): Promise<Result<Template | null>> {
     if (!this.templates.length) {
-      await this.loadTemplates();
+      const result = await this.loadTemplates();
+      if ("error" in result) {
+        console.error(`Failed to load templates: ${result.error}`);
+        return { error: result.error };
+      }
       if (!this.templates.length) {
         console.error("No templates found.");
         return { error: "No templates found." };
@@ -70,7 +98,7 @@ export class RootTemplateRegistry {
         return { data: template };
       }
     }
-    return { error: `Template ${templateName} not found` };
+    return { data: null };
   }
 }
 

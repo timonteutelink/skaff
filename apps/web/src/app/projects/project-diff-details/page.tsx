@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import CommitButton from "@/components/general/git/commit-dialog"
+import { toast } from "sonner"
 
 export default function ProjectDiffDetailsPage() {
   const searchParams = useSearchParams()
@@ -18,6 +19,7 @@ export default function ProjectDiffDetailsPage() {
   useEffect(() => {
     if (!projectNameParam) {
       console.error("No project name provided in search params.")
+      toast.error("No project name provided in search params.")
       router.push("/projects")
       return
     }
@@ -25,11 +27,12 @@ export default function ProjectDiffDetailsPage() {
     addAllAndRetrieveCurrentDiff(projectNameParam).then((data: Result<ParsedFile[] | null>) => {
       if ("error" in data) {
         console.error("Error retrieving project diff:", data.error)
-        router.push("/projects")
+        toast.error("Error retrieving project diff" + data.error)
         return
       }
       if (!data.data) {
         console.error("Project diff not found:", projectNameParam)
+        toast.error("Project diff not found" + projectNameParam)
 
         router.push("/projects")
         return
@@ -47,12 +50,14 @@ export default function ProjectDiffDetailsPage() {
         const result = await commitChanges(projectNameParam, message)
         if ("error" in result) {
           console.error("Error committing changes:", result.error)
+          toast.error("Error committing changes: " + result.error)
           return
         }
 
         router.push(`/projects/project/?projectName=${projectNameParam}`)
       } catch (error) {
         console.error("Error committing changes:", error)
+        toast.error("Error committing changes: " + error)
       } finally {
         setIsLoading(false)
       }

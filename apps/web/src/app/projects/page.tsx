@@ -26,10 +26,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ProjectDTO, TemplateDTO } from "@repo/ts/utils/types";
+import { ProjectDTO, Result, TemplateDTO } from "@repo/ts/utils/types";
 import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 const columnMapping: FieldInfo<ProjectDTO>[] = [
   {
@@ -54,10 +55,20 @@ export default function TemplatesListPage() {
 
   useEffect(() => {
     retrieveProjects().then((projects) => {
-      setProjects(projects);
+      if ("error" in projects) {
+        console.error("Error retrieving projects:", projects.error);
+        toast.error("Error retrieving projects: " + projects.error);
+        return;
+      }
+      setProjects(projects.data || []);
     });
     retrieveTemplates().then((templates) => {
-      setTemplates(templates);
+      if ("error" in templates) {
+        console.error("Error retrieving templates:", templates.error);
+        toast.error("Error retrieving templates: " + templates.error);
+        return;
+      }
+      setTemplates(templates.data || []);
     });
     retrieveProjectSearchPaths().then((paths) => {
       setProjectSearchPaths(paths);

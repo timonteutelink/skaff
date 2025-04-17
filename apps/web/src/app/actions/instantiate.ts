@@ -13,18 +13,24 @@ export async function createNewProject(
   projectDirPathId: string,
   userTemplateSettings: UserTemplateSettings,
 ): Promise<Result<ProjectCreationResult>> {
+  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  if ("error" in reloadResult) {
+    console.error("Failed to reload projects:", reloadResult.error);
+    return { error: reloadResult.error };
+  }
+
   const parentDirPath = PROJECT_SEARCH_PATHS.find((dir) => dir.id === projectDirPathId)?.path;
   if (!parentDirPath) {
+    console.error("Invalid project directory path ID");
     return { error: "Invalid project directory path ID" };
   }
 
   const result = await instantiateProject(templateName, parentDirPath, projectName, userTemplateSettings);
 
   if ("error" in result) {
+    console.error("Failed to instantiate project:", result.error);
     return { error: result.error };
   }
-
-  await PROJECT_REGISTRY.reloadProjects();
 
   return { data: result.data };
 }
@@ -36,6 +42,12 @@ export async function prepareTemplateInstantiationDiff(
   destinationProjectName: string,
   userTemplateSettings: UserTemplateSettings,
 ): Promise<Result<NewTemplateDiffResult>> {
+  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  if ("error" in reloadResult) {
+    console.error("Failed to reload projects:", reloadResult.error);
+    return { error: reloadResult.error };
+  }
+
   const result = await generateNewTemplateDiff(
     rootTemplateName,
     templateName,
@@ -45,42 +57,59 @@ export async function prepareTemplateInstantiationDiff(
   )
 
   if ("error" in result) {
+    console.error("Failed to generate template diff:", result.error);
     return { error: result.error };
   }
 
-  await PROJECT_REGISTRY.reloadProjects();
   return { data: result.data };
 }
 
 export async function resolveConflictsAndDiff(
   projectName: string,
 ): Promise<Result<ParsedFile[]>> {
+  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  if ("error" in reloadResult) {
+    console.error("Failed to reload projects:", reloadResult.error);
+    return { error: reloadResult.error };
+  }
+
   const result = await resolveConflictsAndRetrieveAppliedDiff(projectName);
 
   if ("error" in result) {
+    console.error("Failed to resolve conflicts:", result.error);
     return { error: result.error };
   }
 
-  await PROJECT_REGISTRY.reloadProjects();
   return { data: result.data };
 }
 
 export async function restoreAllChangesToCleanProject(
   projectName: string,
 ): Promise<Result<void>> {
+  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  if ("error" in reloadResult) {
+    console.error("Failed to reload projects:", reloadResult.error);
+    return { error: reloadResult.error };
+  }
+
   const project = await PROJECT_REGISTRY.findProject(projectName);
 
-  if (!project) {
+  if ("error" in project) {
+    console.error("Failed to find project:", project.error);
+    return { error: project.error };
+  }
+
+  if (!project.data) {
+    console.error("Project not found");
     return { error: "Project not found" };
   }
 
-  const restoreResult = await restoreAllChanges(project.absoluteRootDir);
+  const restoreResult = await restoreAllChanges(project.data.absoluteRootDir);
 
-  if (!restoreResult) {
-    return { error: "Failed to restore changes" };
+  if ("error" in restoreResult) {
+    console.error("Failed to restore changes:", restoreResult.error);
+    return { error: restoreResult.error };
   }
-
-  await PROJECT_REGISTRY.reloadProjects();
 
   return { data: undefined };
 }
@@ -89,13 +118,18 @@ export async function applyTemplateDiffToProject(
   projectName: string,
   diffHash: string,
 ): Promise<Result<ParsedFile[] | { resolveBeforeContinuing: boolean }>> {
+  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  if ("error" in reloadResult) {
+    console.error("Failed to reload projects:", reloadResult.error);
+    return { error: reloadResult.error };
+  }
+
   const result = await applyDiffToProject(projectName, diffHash);
 
   if ("error" in result) {
+    console.error("Failed to apply diff:", result.error);
     return { error: result.error };
   }
-
-  await PROJECT_REGISTRY.reloadProjects();
 
   return { data: result.data };
 }
@@ -103,19 +137,30 @@ export async function applyTemplateDiffToProject(
 export async function cancelProjectCreation(
   projectName: string,
 ): Promise<Result<void>> {
+  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  if ("error" in reloadResult) {
+    console.error("Failed to reload projects:", reloadResult.error);
+    return { error: reloadResult.error };
+  }
+
   const project = await PROJECT_REGISTRY.findProject(projectName);
 
-  if (!project) {
+  if ("error" in project) {
+    console.error("Failed to find project:", project.error);
+    return { error: project.error };
+  }
+
+  if (!project.data) {
+    console.error("Project not found");
     return { error: "Project not found" };
   }
 
-  const deleteResult = await deleteRepo(project.absoluteRootDir);
+  const deleteResult = await deleteRepo(project.data.absoluteRootDir);
 
-  if (!deleteResult) {
-    return { error: "Failed to delete project" };
+  if ("error" in deleteResult) {
+    console.error("Failed to delete project:", deleteResult.error);
+    return { error: deleteResult.error };
   }
-
-  await PROJECT_REGISTRY.reloadProjects();
 
   return { data: undefined };
 }
@@ -125,23 +170,36 @@ export async function cancelProjectCreation(
 
 // can be used by user manually.
 export async function generateNewProjectFromExisting(currentProjectName: string, newProjectDestinationDirPathId: string, newProjectName: string): Promise<Result<string>> {
+  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  if ("error" in reloadResult) {
+    console.error("Failed to reload projects:", reloadResult.error);
+    return { error: reloadResult.error };
+  }
+
   const parentDirPath = PROJECT_SEARCH_PATHS.find((dir) => dir.id === newProjectDestinationDirPathId)?.path;
   if (!parentDirPath) {
+    console.error("Invalid project directory path ID");
     return { error: "Invalid project directory path ID" };
   }
 
   const project = await PROJECT_REGISTRY.findProject(currentProjectName);
-  if (!project) {
+
+  if ("error" in project) {
+    console.error("Failed to find project:", project.error);
+    return { error: project.error };
+  }
+
+  if (!project.data) {
+    console.error("Project not found");
     return { error: "Project not found" };
   }
 
-  const result = await generateProjectFromTemplateSettings(project.instantiatedProjectSettings, newProjectName, path.join(parentDirPath, newProjectName));
+  const result = await generateProjectFromTemplateSettings(project.data.instantiatedProjectSettings, newProjectName, path.join(parentDirPath, newProjectName));
 
   if ("error" in result) {
+    console.error("Failed to generate new project:", result.error);
     return { error: result.error };
   }
-
-  await PROJECT_REGISTRY.reloadProjects();
 
   return { data: result.data };
 }

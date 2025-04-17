@@ -38,7 +38,6 @@ export class Project {
     this.gitStatus = gitStatus;
   }
 
-
   /**
    * Aggregates all settings of the provided template and all parent templates inside of this project. If the template or any of the parents are not initialized in this project return an empty object
    * can be called recursively with parent templates to assemble a final object of all templates up to the root template.
@@ -47,7 +46,7 @@ export class Project {
     template: Template,
     instanceId: string,
     instantiatedProjectSettings: ProjectSettings,
-  ): UserTemplateSettings {
+  ): Result<UserTemplateSettings> {
     const instantiatedSettings: UserTemplateSettings = {};
     const projectTemplateSettings =
       instantiatedProjectSettings.instantiatedTemplates.find(
@@ -56,12 +55,22 @@ export class Project {
           t.templateName === template.config.templateConfig.name,
       );
     if (!projectTemplateSettings) {
-      return instantiatedSettings;
-    }
-    instantiatedSettings[template.config.templateConfig.name] =
-      template.config.templateSettingsSchema.parse(
-        projectTemplateSettings.templateSettings,
+      console.error(
+        `Template ${template.config.templateConfig.name} with id ${instanceId} not found in project settings`,
       );
+      return { data: instantiatedSettings };
+    }
+
+    const parsedSchema = template.config.templateSettingsSchema.safeParse(projectTemplateSettings.templateSettings);
+
+    if (!parsedSchema.success) {
+      console.error(
+        `Invalid template settings for template ${template.config.templateConfig.name}: ${parsedSchema.error}`,
+      );
+      return { error: `${parsedSchema.error}` };
+    }
+
+    instantiatedSettings[template.config.templateConfig.name] = parsedSchema.data;
 
     const parentTemplate = template.parentTemplate;
     if (parentTemplate && projectTemplateSettings.parentId) {
@@ -70,22 +79,34 @@ export class Project {
         projectTemplateSettings.parentId,
         instantiatedProjectSettings,
       );
-      Object.assign(instantiatedSettings, parentSettings);
+      if ("error" in parentSettings) {
+        console.error(
+          `Failed to get instantiated settings for parent template ${parentTemplate.config.templateConfig.name}: ${parentSettings.error}`,
+        );
+        return { error: parentSettings.error };
+      }
+      Object.assign(instantiatedSettings, parentSettings.data);
     }
-    return instantiatedSettings;
+    return { data: instantiatedSettings };
   }
 
   static async create(absDir: string): Promise<Result<Project>> {
     const projectSettingsPath = path.join(absDir, "templateSettings.json");
-    const projectSettings =
-      await loadProjectSettings(projectSettingsPath);
+    const projectSettings = await loadProjectSettings(projectSettingsPath);
+
     if ("error" in projectSettings) {
+      console.error(
+        `Failed to load project settings from ${projectSettingsPath}: ${projectSettings.error}`,
+      );
       return { error: projectSettings.error };
     }
 
     const gitStatus = await loadGitStatus(absDir);
 
-    if (!gitStatus) {
+    if ('error' in gitStatus) {
+      console.error(
+        `Failed to load git status for project at ${absDir}: ${gitStatus.error}`,
+      );
       return {
         error: `Failed to load git status for project at ${absDir}`,
       };
@@ -97,7 +118,7 @@ export class Project {
         projectSettingsPath,
         projectSettings.data.settings,
         projectSettings.data.rootTemplate,
-        gitStatus
+        gitStatus.data
       ),
     };
   }

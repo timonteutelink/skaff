@@ -37,19 +37,16 @@ export function stringOrCallbackToString<
 export function findTemplate(
   rootTemplate: TemplateDTO,
   subTemplateName: string,
-): TemplateDTO | null {
+): Result<TemplateDTO | null> {
   if (rootTemplate.config.templateConfig.name === subTemplateName) {
-    return rootTemplate;
+    return { data: rootTemplate };
   }
 
   for (const subTemplates of Object.values(rootTemplate.subTemplates)) {
     for (const subTemplate of subTemplates) {
-      const foundTemplate = findTemplate(subTemplate, subTemplateName);
-      if (foundTemplate) {
-        return foundTemplate;
-      }
+      return findTemplate(subTemplate, subTemplateName);
     }
   }
 
-  return null;
+  return { data: null };
 }

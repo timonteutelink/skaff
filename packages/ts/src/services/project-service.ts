@@ -1,7 +1,6 @@
 import { TemplateSettingsType, UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { createHash } from "node:crypto";
 import * as fs from "node:fs/promises";
-import path from "node:path";
 import { AnyZodObject, z } from "zod";
 import { Project } from "../models/project-models";
 import { Template } from "../models/template-models";
@@ -53,6 +52,7 @@ async function addAutoInstantiatedTemplatesToProjectSettings(
 ): Promise<Result<ProjectSettings>> {
   const newFullTemplateSettings = getParsedUserSettingsWithParentSettings(parentTemplateSettings, currentTemplateToAddChildren, projectSettings, parentInstanceId);
   if ('error' in newFullTemplateSettings) {
+    console.error(`Failed to parse user settings: ${newFullTemplateSettings.error}`);
     return { error: newFullTemplateSettings.error };
   }
 
@@ -72,14 +72,25 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
 ): Promise<Result<ProjectSettings>> {
   for (const autoInstantiatedTemplate of currentTemplateToAddChildren.config.autoInstatiatedSubtemplates || []) {
     const autoInstantiatedTemplateInstanceId = crypto.randomUUID();
-    const newTemplateSettings = autoInstantiatedTemplate.mapSettings(fullParentTemplateSettings);
+    let newTemplateSettings: UserTemplateSettings;
+    try {
+      newTemplateSettings = autoInstantiatedTemplate.mapSettings(fullParentTemplateSettings);
+    } catch (e) {
+      console.error(`Failed to map settings for auto instantiated template: ${e}`);
+      return { error: `Failed to map settings for auto instantiated template: ${e}` };
+    }
     const newFullTemplateSettings = Object.assign({}, fullParentTemplateSettings, newTemplateSettings);
     const subTemplateName = stringOrCallbackToString(autoInstantiatedTemplate.subTemplateName, newFullTemplateSettings);
+
+    if ("error" in subTemplateName) {
+      console.error(`Failed to parse sub template name: ${subTemplateName.error}`);
+      return { error: subTemplateName.error };
+    }
 
     projectSettings.instantiatedTemplates.push({
       id: autoInstantiatedTemplateInstanceId,
       parentId: parentInstanceId,
-      templateName: subTemplateName,
+      templateName: subTemplateName.data,
       templateSettings: newTemplateSettings,
       automaticallyInstantiatedByParent: true,
     });
@@ -87,20 +98,29 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
     const rootTemplate = await ROOT_TEMPLATE_REGISTRY.findTemplate(projectSettings.rootTemplateName);
 
     if ("error" in rootTemplate) {
+      console.error(`Failed to find root template: ${rootTemplate.error}`);
       return { error: rootTemplate.error };
     }
 
-    const subTemplate = rootTemplate.data.findSubTemplate(subTemplateName);
+    if (!rootTemplate.data) {
+      console.error(`Root template not found: ${projectSettings.rootTemplateName}`);
+      return { error: "Root template not found" };
+    }
+
+    const subTemplate = rootTemplate.data.findSubTemplate(subTemplateName.data);
 
     if (!subTemplate) {
+      console.error(`Subtemplate ${autoInstantiatedTemplate.subTemplateName} not found`);
       return { error: `Subtemplate ${autoInstantiatedTemplate.subTemplateName} not found` };
     }
 
     const result = await recursivelyAddAutoInstantiatedTemplatesToProjectSettings(projectSettings, subTemplate, autoInstantiatedTemplateInstanceId, newFullTemplateSettings);
 
     if ("error" in result) {
+      console.error(`Failed to recursively add auto instantiated templates: ${result.error}`);
       return { error: result.error };
     }
+
     projectSettings = result.data;
   }
   return { data: projectSettings };
@@ -111,18 +131,31 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
   const rootTemplate = await ROOT_TEMPLATE_REGISTRY.findTemplate(rootTemplateName);
 
   if ("error" in rootTemplate) {
+    console.error(`Failed to find root template: ${rootTemplate.error}`);
     return { error: rootTemplate.error };
+  }
+
+  if (!rootTemplate.data) {
+    console.error(`Root template not found: ${rootTemplateName}`);
+    return { error: "Root template not found" };
   }
 
   const template = rootTemplate.data.findSubTemplate(templateName);
 
   if (!template) {
+    console.error(`Template ${templateName} not found`);
     return { error: "Template not found" };
   }
 
   const destinationProject = await PROJECT_REGISTRY.findProject(destinationProjectName);
 
-  if (!destinationProject) {
+  if ('error' in destinationProject) {
+    console.error(`Failed to find destination project: ${destinationProject.error}`);
+    return { error: destinationProject.error };
+  }
+
+  if (!destinationProject.data) {
+    console.error(`Destination project ${destinationProjectName} not found`);
     return { error: "Destination project not found" };
   }
 
@@ -131,18 +164,26 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
 
   const tempOldProjectPath = await pathInCache(tempOldProjectName);
   const tempNewProjectPath = await pathInCache(tempNewProjectName);
+  if ('error' in tempOldProjectPath) {
+    console.error(`Failed to create temp old project path: ${tempOldProjectPath.error}`);
+    return { error: tempOldProjectPath.error };
+  }
+  if ('error' in tempNewProjectPath) {
+    console.error(`Failed to create temp new project path: ${tempNewProjectPath.error}`);
+    return { error: tempNewProjectPath.error };
+  }
   try {
     const cleanProjectFromCurrentProjectSettingsResult = await generateProjectFromTemplateSettings(
-      destinationProject.instantiatedProjectSettings,
+      destinationProject.data.instantiatedProjectSettings,
       destinationProjectName,
-      tempOldProjectPath,
+      tempOldProjectPath.data,
     );
 
     const templateInstanceId = crypto.randomUUID();
     const newProjectSettings: ProjectSettings = {
-      ...destinationProject.instantiatedProjectSettings,
+      ...destinationProject.data.instantiatedProjectSettings,
       instantiatedTemplates: [
-        ...destinationProject.instantiatedProjectSettings.instantiatedTemplates,
+        ...destinationProject.data.instantiatedProjectSettings.instantiatedTemplates,
         {
           id: templateInstanceId,
           parentId: parentInstanceId,
@@ -152,19 +193,26 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
       ],
     };
 
-    await addAutoInstantiatedTemplatesToProjectSettings(newProjectSettings, template, templateInstanceId, userTemplateSettings);
+    const addResult = await addAutoInstantiatedTemplatesToProjectSettings(newProjectSettings, template, templateInstanceId, userTemplateSettings);
+
+    if ("error" in addResult) {
+      console.error(`Failed to add auto instantiated templates: ${addResult.error}`);
+      return { error: addResult.error };
+    }
 
     const cleanProjectFromNewSettingsResult = await generateProjectFromTemplateSettings(
       newProjectSettings,
       destinationProjectName,
-      tempNewProjectPath,
+      tempNewProjectPath.data,
     );
 
     if ("error" in cleanProjectFromCurrentProjectSettingsResult) {
+      console.error(`Failed to create clean project from current project settings: ${cleanProjectFromCurrentProjectSettingsResult.error}`);
       return { error: cleanProjectFromCurrentProjectSettingsResult.error };
     }
 
     if ("error" in cleanProjectFromNewSettingsResult) {
+      console.error(`Failed to create clean project from new settings: ${cleanProjectFromNewSettingsResult.error}`);
       return { error: cleanProjectFromNewSettingsResult.error };
     }
 
@@ -173,16 +221,22 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
 
     const diff = await diffDirectories(cleanProjectFromCurrentProjectSettingsPath, cleanProjectFromNewSettingsPath);
 
-    if (!diff) {
-      return { error: "Failed to generate diff" };
+    if ('error' in diff) {
+      console.error(`Failed to diff directories: ${diff.error}`);
+      return { error: diff.error };
     }
 
-    const diffHash = createHash("sha256").update(diff).digest("hex");
+    const diffHash = createHash("sha256").update(diff.data).digest("hex");
 
     // When the project settings contains the hash of the entire template we can hash the entire project settings and combine the old and new project settings hashes to create a unique key for retrieving the diff without having to generate all files again.
-    await saveToCache('new-template-diff', diffHash, 'patch', diff);
+    const saveResult = await saveToCache('new-template-diff', diffHash, 'patch', diff.data);
 
-    const parsedDiff = parseGitDiff(diff);
+    if ('error' in saveResult) {
+      console.error(`Failed to save diff to cache: ${saveResult.error}`);
+      return { error: saveResult.error };
+    }
+
+    const parsedDiff = parseGitDiff(diff.data);
 
     return {
       data: {
@@ -194,64 +248,96 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
     console.error(e);
     return { error: "Failed to create clean project from current project settings" };
   } finally {
-    await fs.rm(tempOldProjectPath, { recursive: true });
-    await fs.rm(tempNewProjectPath, { recursive: true });
+    await fs.rm(tempOldProjectPath.data, { recursive: true });
+    await fs.rm(tempNewProjectPath.data, { recursive: true });
   }
 }
 
 export async function resolveConflictsAndRetrieveAppliedDiff(projectName: string): Promise<Result<ParsedFile[]>> {
   const project = await PROJECT_REGISTRY.findProject(projectName);
-  if (!project) {
+  if ('error' in project) {
+    console.error(`Failed to find project: ${project.error}`);
+    return { error: project.error };
+  }
+
+  if (!project.data) {
+    console.error(`Project ${projectName} not found`);
     return { error: "Project not found" };
   }
 
-  const addAllResult = await addAllAndDiff(project.absoluteRootDir);
+  const addAllResult = await addAllAndDiff(project.data.absoluteRootDir);
 
-  if (!addAllResult) {
-    return { error: "Failed to add all and generate diff" };
+  if ('error' in addAllResult) {
+    console.error(`Failed to add all and generate diff: ${addAllResult.error}`);
+    return { error: addAllResult.error };
   }
 
-  return { data: parseGitDiff(addAllResult) };
+  return { data: parseGitDiff(addAllResult.data) };
 }
 
 export async function applyDiffToProject(projectName: string, diffHash: string): Promise<Result<ParsedFile[] | { resolveBeforeContinuing: true }>> {
   const project = await PROJECT_REGISTRY.findProject(projectName);
 
-  if (!project) {
+  if ('error' in project) {
+    console.error(`Failed to find project: ${project.error}`);
+    return { error: project.error };
+  }
+
+  if (!project.data) {
+    console.error(`Project ${projectName} not found`);
     return { error: "Project not found" };
   }
 
   const diff = await retrieveFromCache('new-template-diff', diffHash, 'patch');
 
-  if (!diff) {
+  if ('error' in diff) {
+    console.error(`Failed to retrieve diff from cache: ${diff.error}`);
+    return { error: diff.error };
+  }
+
+  if (!diff.data) {
+    console.error(`Diff not found in cache`);
     return { error: "Diff not found" };
   }
 
-  const applyResult = await applyDiffToGitRepo(project.absoluteRootDir, diff.path);
+  const applyResult = await applyDiffToGitRepo(project.data.absoluteRootDir, diff.data.path);
 
   if (!applyResult) {
+    console.error(`Failed to apply diff to project`);
     return { error: "Failed to apply diff" };
   }
 
   // check if there are any merge conflicts and notify user. Then user will press button("Conflicts Resolved") to add all after he has manually resolved the conflicts. Otherwise here we automatically add all and diff.
-  if (await isConflictAfterApply(project.absoluteRootDir)) {
+  const isConflict = await isConflictAfterApply(project.data.absoluteRootDir);
+  if ('error' in isConflict) {
+    console.error(`Failed to check for conflicts: ${isConflict.error}`);
+    return { error: isConflict.error };
+  }
+  if (isConflict.data) {
     return { data: { resolveBeforeContinuing: true } };
   }
 
-  const addAllResult = await addAllAndDiff(project.absoluteRootDir);
+  const addAllResult = await addAllAndDiff(project.data.absoluteRootDir);
 
-  if (!addAllResult) {
-    return { error: "Failed to add all and generate diff" };
+  if ('error' in addAllResult) {
+    console.error(`Failed to add all and generate diff: ${addAllResult.error}`);
+    return { error: addAllResult.error };
   }
 
-  return { data: parseGitDiff(addAllResult) };
+  return { data: parseGitDiff(addAllResult.data) };
 }
 
 export async function instantiateProject(rootTemplateName: string, parentDirPath: string, projectName: string, userTemplateSettings: UserTemplateSettings): Promise<Result<ProjectCreationResult>> {
   const template = await ROOT_TEMPLATE_REGISTRY.findTemplate(rootTemplateName);
 
   if ("error" in template) {
+    console.error(`Failed to find root template: ${template.error}`);
     return { error: template.error };
+  }
+
+  if (!template.data) {
+    console.error(`Root template not found: ${rootTemplateName}`);
+    return { error: "Root template not found" };
   }
 
   const instatiationResult = await template.data.instantiateNewProject(
@@ -261,28 +347,47 @@ export async function instantiateProject(rootTemplateName: string, parentDirPath
   );
 
   if ("error" in instatiationResult) {
+    console.error(`Failed to instantiate project: ${instatiationResult.error}`);
     return { error: "Failed to create project, " + instatiationResult.error };
   }
 
-  await PROJECT_REGISTRY.reloadProjects();
+  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+
+  if ("error" in reloadResult) {
+    console.error(`Failed to reload projects: ${reloadResult.error}`);
+    return { error: reloadResult.error };
+  }
 
   const project = await PROJECT_REGISTRY.findProject(projectName);
 
-  if (!project) {
+  if ('error' in project) {
+    console.error(`Failed to find project: ${project.error}`);
+    return { error: project.error };
+  }
+
+  if (!project.data) {
+    console.error(`Project ${projectName} not found after creation`);
     return { error: "Failed to create project, project not found after creation" };
   }
 
   const processedDiff = parseGitDiff(instatiationResult.data.diff);
 
-  return { data: { newProject: project.mapToDTO(), diff: processedDiff } };
+  return { data: { newProject: project.data.mapToDTO(), diff: processedDiff } };
 }
 
 export async function generateProjectFromExistingProject(existingProjectName: string, newProjectName: string, destinationDirPath: string): Promise<Result<string>> {
   const project = await PROJECT_REGISTRY.findProject(existingProjectName);
-  if (!project) {
+
+  if ('error' in project) {
+    console.error(`Failed to find project: ${project.error}`);
+    return { error: project.error };
+  }
+
+  if (!project.data) {
+    console.error(`Project ${existingProjectName} not found`);
     return { error: "Project not found" };
   }
-  const templateSettings = project.instantiatedProjectSettings;
+  const templateSettings = project.data.instantiatedProjectSettings;
 
   return await generateProjectFromTemplateSettings(templateSettings, newProjectName, destinationDirPath);
 }
@@ -292,7 +397,13 @@ export async function generateProjectFromTemplateSettings(projectSettings: Proje
   const rootTemplate = await ROOT_TEMPLATE_REGISTRY.findTemplate(projectSettings.rootTemplateName);
 
   if ("error" in rootTemplate) {
+    console.error(`Failed to find root template: ${rootTemplate.error}`);
     return { error: rootTemplate.error };
+  }
+
+  if (!rootTemplate.data) {
+    console.error(`Root template not found: ${projectSettings.rootTemplateName}`);
+    return { error: "Root template not found" };
   }
 
   const newProjectGenerator = new TemplateGeneratorService(
@@ -306,6 +417,7 @@ export async function generateProjectFromTemplateSettings(projectSettings: Proje
   const instatiationResult = await newProjectGenerator.instantiateFullProjectFromSettings();
 
   if ("error" in instatiationResult) {
+    console.error(`Failed to instantiate project: ${instatiationResult.error}`);
     return { error: instatiationResult.error };
   }
 

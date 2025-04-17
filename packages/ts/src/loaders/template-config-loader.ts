@@ -215,9 +215,13 @@ export async function loadAllTemplateConfigs(
 
   const cachedBundle = await retrieveFromCache('template-config', hash, "mjs");
 
-  if (cachedBundle) {
-    console.log(`Using cached bundle at ${cachedBundle.path}`);
-    return importTemplateConfigModule(cachedBundle.path);
+  if ("error" in cachedBundle) {
+    console.error(
+      `Failed to retrieve cached bundle for template configs: ${cachedBundle.error}`,
+    );
+  } else if (cachedBundle.data) {
+    console.log(`Using cached bundle at ${cachedBundle.data.path}`);
+    return importTemplateConfigModule(cachedBundle.data.path);
   }
 
   let importsCode = "";
@@ -279,9 +283,17 @@ export async function loadAllTemplateConfigs(
   const resultPath = await saveToCache('template-config', hash, "mjs", bundledCode);
   console.log(`Created bundled template configs at ${resultPath}`);
 
-  if ('stop' in esbuild) {
-    await esbuild.stop();
+  if ("error" in resultPath) {
+    throw new Error(`Failed to save bundled template configs: ${resultPath.error}`);
   }
 
-  return importTemplateConfigModule(resultPath);
+  if ('stop' in esbuild) {
+    try {
+      await esbuild.stop();
+    } catch {
+
+    }
+  }
+
+  return importTemplateConfigModule(resultPath.data);
 }

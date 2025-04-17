@@ -9,8 +9,9 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
 // import { getProjectGitStatus, switchProjectBranch } from "@/app/actions/git"
 import type { ProjectTreeNode } from "@/components/general/projects/types"
-import type { InstantiatedTemplate, ProjectDTO, TemplateDTO } from "@repo/ts/utils/types"
+import type { InstantiatedTemplate, ProjectDTO, Result, TemplateDTO } from "@repo/ts/utils/types"
 import { switchProjectBranch } from "@/app/actions/git"
+import { toast } from "sonner"
 
 /* =============================================================================
    Helper: collectTemplates()
@@ -176,30 +177,43 @@ export default function ProjectTemplateTreePage() {
   useEffect(() => {
     if (!projectNameParam) {
       console.error("No project name provided in search params.")
+      toast.error("No project name provided in search params.")
       router.push("/projects")
       return
     }
 
     // Fetch project data
-    retrieveProject(projectNameParam).then((data: ProjectDTO | null) => {
-      if (!data) {
+    retrieveProject(projectNameParam).then((data: Result<ProjectDTO | null>) => {
+      if ('error' in data) {
+        console.error("Failed to retrieve project:", data.error)
+        toast.error("Failed to retrieve project.")
+        return
+      }
+      if (!data.data) {
         console.error("Project not found:", projectNameParam)
+        toast.error("Project not found.")
         router.push("/projects")
         return
       }
-      setProject(data)
+      setProject(data.data)
     })
   }, [projectNameParam, router])
 
   // Fetch the root template definition.
   useEffect(() => {
     if (project) {
-      retrieveTemplate(project.rootTemplateName).then((data: TemplateDTO | null) => {
-        if (!data) {
-          console.error("Template not found:", project.rootTemplateName)
+      retrieveTemplate(project.rootTemplateName).then((data: Result<TemplateDTO | null>) => {
+        if ('error' in data) {
+          console.error("Failed to retrieve template:", data.error)
+          toast.error("Failed to retrieve template.")
           return
         }
-        setRootTemplate(data)
+        if (!data.data) {
+          console.error("Template not found:", project.rootTemplateName)
+          toast.error("Template not found.")
+          return
+        }
+        setRootTemplate(data.data)
       })
     }
   }, [project])
@@ -226,11 +240,22 @@ export default function ProjectTemplateTreePage() {
 
       const result = await switchProjectBranch(projectNameParam, branch)
       if ('error' in result) {
-        const updatedProject = await retrieveProject(projectNameParam)
-        if (updatedProject) {
-          setProject(updatedProject)
-        }
+        console.error("Failed to switch branch:", result.error)
+        toast.error("Failed to switch branch.")
+        return
       }
+      const updatedProject = await retrieveProject(projectNameParam)
+      if ('error' in updatedProject) {
+        console.error("Failed to retrieve project:", updatedProject.error)
+        toast.error("Failed to retrieve project.")
+        return
+      }
+      if (!updatedProject.data) {
+        console.error("Project not found:", projectNameParam)
+        toast.error("Project not found.")
+        return
+      }
+      setProject(updatedProject.data)
     },
     [projectNameParam],
   )

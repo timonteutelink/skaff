@@ -1,10 +1,11 @@
 "use client";
 
-import type { TemplateDTO } from "@repo/ts/utils/types";
+import type { Result, TemplateDTO } from "@repo/ts/utils/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { retrieveTemplate } from "@/app/actions/template";
 import { Tree } from "@/components/general/Tree";
+import { toast } from "sonner";
 
 /* =============================================================================
    Template Tree and Helper Functions
@@ -126,17 +127,24 @@ const TemplateArboristTreePage: React.FC = () => {
   useEffect(() => {
     if (!templateName) {
       console.error("No template name provided in search params.");
+      toast.error("No template name provided in search params.");
       router.push("/templates");
       return;
     }
 
-    retrieveTemplate(templateName).then((data: TemplateDTO | null) => {
-      if (!data) {
+    retrieveTemplate(templateName).then((data: Result<TemplateDTO | null>) => {
+      if ("error" in data) {
+        console.error("Error retrieving template:", data.error);
+        toast.error("Error retrieving template: " + data.error);
+        return;
+      }
+      if (!data.data) {
         console.error("Template not found:", templateName);
+        toast.error("Template not found: " + templateName);
         router.push("/templates");
         return;
       }
-      setTemplate(data);
+      setTemplate(data.data);
     });
   }, [templateName, router]);
 

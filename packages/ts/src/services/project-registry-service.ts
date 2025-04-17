@@ -2,6 +2,7 @@ import * as fs from "node:fs/promises";
 import { PROJECT_SEARCH_PATHS } from "../utils/env";
 import { Project } from "../models/project-models";
 import path from "node:path";
+import { Result } from "../utils/types";
 
 export class ProjectRegistry {
   private searchPaths: string[] = [];
@@ -11,66 +12,88 @@ export class ProjectRegistry {
     this.searchPaths = searchPaths.map((searchPath) => searchPath.path);
   }
 
-  private async loadProjects(): Promise<void> {
+  private async loadProjects(): Promise<Result<void>> {
     for (const searchPath of this.searchPaths) {
-      const dirs = await fs.readdir(searchPath);
+      let dirs: string[] = [];
+      try {
+        dirs = await fs.readdir(searchPath);
+      } catch (e) {
+        console.error(
+          `Failed to read project directories at ${searchPath}: ${e}`,
+        );
+        continue;
+      }
       for (const dir of dirs) {
         const absDir = path.join(searchPath, dir);
-        const stat = await fs.stat(absDir);
         const projectSettingsPath = path.join(absDir, "templateSettings.json");
-        const projectSettingsStat = await fs
-          .stat(projectSettingsPath)
-          .catch(() => null);
 
-        if (
-          stat.isDirectory() &&
-          projectSettingsStat &&
-          projectSettingsStat.isFile()
-        ) {
-          const project = await Project.create(absDir);
-          if ("error" in project) {
-            console.error(
-              `Failed to load project at ${absDir}: ${project.error}`,
-            );
-            continue;
+        try {
+          const stat = await fs.stat(absDir)
+          const projectSettingsStat = await fs.stat(projectSettingsPath)
+
+          if (
+            stat.isDirectory() &&
+            projectSettingsStat.isFile()
+          ) {
+            const project = await Project.create(absDir);
+            if ("error" in project) {
+              console.error(
+                `Failed to load project at ${absDir}: ${project.error}`,
+              );
+              continue;
+            }
+            this.projects.push(project.data);
           }
-          this.projects.push(project.data);
+        } catch (e) {
+          console.error(
+            `Failed to read project directory at ${absDir}: ${e}`,
+          );
+          continue;
         }
       }
     }
+    return { data: undefined };
   }
 
-  async reloadProjects(): Promise<void> {
+  async reloadProjects(): Promise<Result<void>> {
     this.projects = [];
-    await this.loadProjects();
+    return await this.loadProjects();
   }
 
-  async getProjects(): Promise<Project[]> {
+  async getProjects(): Promise<Result<Project[]>> {
     if (!this.projects.length) {
-      await this.loadProjects();
+      const result = await this.loadProjects();
+      if ("error" in result) {
+        console.error(`Failed to load projects: ${result.error}`);
+        return { error: result.error };
+      }
       if (!this.projects.length) {
         console.error("No projects found.");
-        return [];
+        return { data: [] };
       }
     }
-    return this.projects;
+    return { data: this.projects };
   }
 
-  async findProject(projectName: string): Promise<Project | null> {
+  async findProject(projectName: string): Promise<Result<Project | null>> {
     if (!this.projects.length) {
-      await this.loadProjects();
+      const result = await this.loadProjects();
+      if ("error" in result) {
+        console.error(`Failed to load projects: ${result.error}`);
+        return { error: result.error };
+      }
       if (!this.projects.length) {
         console.error("No projects found.");
-        return null;
+        return { data: null };
       }
     }
 
     for (const project of this.projects) {
       if (project.instantiatedProjectSettings.projectName === projectName) {
-        return project;
+        return { data: project };
       }
     }
-    return null;
+    return { data: null };
   }
 }
 

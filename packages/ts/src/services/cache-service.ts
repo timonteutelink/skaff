@@ -2,20 +2,26 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import * as fs from "node:fs/promises";
 import { makeDir } from "./file-service";
+import { Result } from "../utils/types";
 
 export type CacheKey = 'template-config' | 'new-template-diff';
 
-export async function getCacheDir(): Promise<string> {
+export async function getCacheDir(): Promise<Result<string>> {
   const cacheDir = path.join(tmpdir(), "code-templator-cache");
   await makeDir(cacheDir);
-  return cacheDir;
+  return { data: cacheDir };
 }
 
-export async function pathInCache(fileOrDirName: string): Promise<string> {
+export async function pathInCache(fileOrDirName: string): Promise<Result<string>> {
   const cacheDir = await getCacheDir();
-  const cacheFilePath = path.join(cacheDir, fileOrDirName);
+  if ("error" in cacheDir) {
+    console.error("Failed to get cache directory:", cacheDir.error);
+    return { error: `Failed to get cache directory: ${cacheDir.error}` };
+  }
 
-  return cacheFilePath;
+  const cacheFilePath = path.join(cacheDir.data, fileOrDirName);
+
+  return { data: cacheFilePath };
 }
 
 export async function saveToCache(
@@ -23,10 +29,22 @@ export async function saveToCache(
   hash: string,
   extension: string,
   value: string,
-): Promise<string> {
+): Promise<Result<string>> {
   const cacheFilePath = await pathInCache(`${cacheKey}-${hash}.${extension}`);
-  await fs.writeFile(cacheFilePath, value, "utf-8");
-  console.log("Cache file created:", cacheFilePath);
+
+  if ("error" in cacheFilePath) {
+    console.error("Failed to get cache file path:", cacheFilePath.error);
+    throw new Error(`Failed to get cache file path: ${cacheFilePath.error}`);
+  }
+
+  try {
+    await fs.writeFile(cacheFilePath.data, value, "utf-8");
+    console.log("Cache file created:", cacheFilePath);
+  } catch (error) {
+    console.error("Failed to write cache file:", error);
+    throw new Error(`Failed to write cache file: ${error}`);
+  }
+
   return cacheFilePath;
 }
 
@@ -34,14 +52,24 @@ export async function retrieveFromCache(
   cacheKey: CacheKey,
   hash: string,
   extension: string,
-): Promise<{ data: string; path: string } | null> {
+): Promise<Result<{ data: string; path: string } | null>> {
   const cacheFilePath = await pathInCache(`${cacheKey}-${hash}.${extension}`);
 
-  const stats = await fs.stat(cacheFilePath).catch(() => null);
-
-  if (stats && stats.isFile()) {
-    return { data: await fs.readFile(cacheFilePath, "utf-8"), path: cacheFilePath };
+  if ("error" in cacheFilePath) {
+    console.error("Failed to get cache file path:", cacheFilePath.error);
+    return { error: `Failed to get cache file path: ${cacheFilePath.error}` };
   }
 
-  return null;
+  try {
+    const stats = await fs.stat(cacheFilePath.data).catch(() => null);
+
+    if (stats && stats.isFile()) {
+      return { data: { data: await fs.readFile(cacheFilePath.data, "utf-8"), path: cacheFilePath.data } };
+    }
+
+    return { data: null };
+  } catch (error) {
+    console.error("Failed to read cache file:", error);
+    return { error: `Failed to read cache file: ${error}` };
+  }
 }

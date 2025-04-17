@@ -1,6 +1,6 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { loadAllTemplateConfigs } from "../loaders/template-config-loader";
+import { loadAllTemplateConfigs, TemplateConfigWithFileInfo } from "../loaders/template-config-loader";
 import { TemplateGeneratorService } from "../services/template-generator-service";
 import {
   TemplateConfigModule,
@@ -72,10 +72,18 @@ export class Template {
    */
   public static async createAllTemplates(
     rootTemplateDir: string,
-  ): Promise<Template> {
+  ): Promise<Result<Template>> {
     const absoluteRootDir = path.resolve(rootTemplateDir);
     const absoluteBaseDir = path.dirname(absoluteRootDir);
-    const configs = await loadAllTemplateConfigs(absoluteRootDir);
+    let configs: Record<string, TemplateConfigWithFileInfo>;
+    try {
+      configs = await loadAllTemplateConfigs(absoluteRootDir);
+    } catch (error) {
+      console.error(
+        `Failed to load template configurations from ${absoluteRootDir}: ${error}`,
+      );
+      return { error: `Failed to load template configurations: ${error}` };
+    }
     const templatesMap: Record<string, Template> = {};
 
     // Create Template instances only for directories with an adjacent "templates" folder.
@@ -138,8 +146,9 @@ export class Template {
           potentialParent.absoluteDir,
           candidate.absoluteDir,
         );
-        if (!relative || relative.startsWith("..") || path.isAbsolute(relative))
+        if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
           continue;
+        }
         const segments = relative.split(path.sep).filter(Boolean);
         if (segments[0] === "templates") continue;
         if (potentialParent.absoluteDir.length > longestMatchLength) {
@@ -168,17 +177,17 @@ export class Template {
       (template) => !template.parentTemplate,
     );
     if (rootTemplates.length === 0) {
-      throw new Error("No root templates found");
+      console.error(`No root templates found.`);
+      return { error: "No root templates found" };
     }
 
     if (rootTemplates.length > 1) {
-      console.log(rootTemplates);
-      throw new Error(
-        "Multiple root templates found. Make sure the directory structure is correct.",
-      );
+      console.error(rootTemplates);
+      console.error(`Multiple root templates found. Make sure the directory structure is correct.`);
+      return { error: "Multiple root templates found. Make sure the directory structure is correct." };
     }
 
-    return rootTemplates[0]!;
+    return { data: rootTemplates[0]! };
   }
 
   /**
@@ -197,13 +206,25 @@ export class Template {
       this,
       destinationProject.instantiatedProjectSettings,
     );
-    const resultPath = await generatorService.instantiateTemplateInProject(
+
+    const addTemplateResult = generatorService.addNewTemplate(
       userSettings,
       this.config.templateConfig.name,
       parentInstanceId,
     );
+
+    if ("error" in addTemplateResult) {
+      console.error(`Failed to add template to project: ${addTemplateResult.error}`);
+      return addTemplateResult;
+    }
+
+    const resultPath = await generatorService.instantiateTemplateInProject(
+      addTemplateResult.data,
+    );
+
     if ("error" in resultPath) {
       console.error(`Failed to instantiate template: ${resultPath.error}`);
+      return resultPath;
     } else {
       console.log(`Template instantiated at: ${resultPath.data}`);
     }
@@ -237,7 +258,12 @@ export class Template {
       this,
       newProjectSettings,
     );
-    const result = await generatorService.instantiateNewProject(rootTemplateSettings);
+    const addProjectResult = generatorService.addNewProject(rootTemplateSettings);
+    if ("error" in addProjectResult) {
+      console.error(`Failed to add project: ${addProjectResult.error}`);
+      return addProjectResult;
+    }
+    const result = await generatorService.instantiateNewProject();
     if ("error" in result) {
       console.error(`Failed to instantiate new project: ${result.error}`);
     } else {
