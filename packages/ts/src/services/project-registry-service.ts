@@ -43,7 +43,8 @@ export class ProjectRegistry {
             this.projects.push(project.data);
           }
         } catch (e) {
-          console.error(`Failed to read project directory at ${absDir}: ${e}`);
+          // Change logs here to do normal logging of ignores and debug logs with errors included.
+          console.error(`Ignoring ${absDir}`);
           continue;
         }
       }

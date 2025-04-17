@@ -929,8 +929,7 @@ export class TemplateGeneratorService {
         };
       }
 
-      for (const instantiated of this.destinationProjectSettings
-        .instantiatedTemplates) {
+      for (const instantiated of this.destinationProjectSettings.instantiatedTemplates) {
         if (
           instantiated.id ===
           this.destinationProjectSettings.instantiatedTemplates[0]!.id

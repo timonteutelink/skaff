@@ -19,7 +19,6 @@ import {
 } from "../utils/types";
 import { Project } from "./project-models";
 import z from "zod";
-import { hashFullDir } from "../services/file-service";
 import { getCommitHash, isGitRepoClean } from "../services/git-service";
 
 export class Template {
