@@ -31,6 +31,27 @@ export async function switchBranch(
   }
 }
 
+// TODO: use to see if a project needs to be updated. Will generate a diff from old template to new project. This does require the old template somehow. So maybe we need versioning instead of hash so we can also retrieve old template and new template and we can generate the diff to update. Probably we can make a precommit tool to check which templatedirs have changes and update all those version numbers and version numbers of the parent. Probably when updating we should update entire tree at once. Think about what to allow the user to update. Make sure to enforce 1 commit 1 versionchange. So do not allow unclean git templatesdir. Then instead of saving hash to template we save commitHash. 
+//
+// TODO so also possible to just force clean git and store commithash of template. Then can easily update all templates at once(not seperately) by just instantiating the project from this commit hash template and the new one and applying the diff. So we do not version any template but we store commit hash of entire template dir so if updated user can run update.
+// Then when creating the diff if empty we just cancel and autoupdate. the template. But updating requires again the instantiation workflow for if options were added in new template.
+// So updating will just be the edit workflow only when generating the baseproject for diff will not only use old settings but also old template.
+//
+// Git hash is stored per template but retrieved for the entire template dir. This way in future a project can combine templates from different repos.
+export async function getCommitHash(
+  repoPath: string,
+): Promise<Result<string>> {
+  try {
+    const { stdout } = await asyncExec(
+      `cd ${repoPath} && git rev-parse HEAD`,
+    );
+    return { data: stdout.trim() };
+  } catch (error) {
+    console.error("Error getting commit hash:", error);
+    return { error: `Error getting commit hash: ${error}` };
+  }
+}
+
 export async function listBranches(
   repoPath: string,
 ): Promise<Result<string[]>> {

@@ -20,6 +20,7 @@ import {
 import { Project } from "./project-models";
 import z from "zod";
 import { hashFullDir } from "../services/file-service";
+import { getCommitHash, isGitRepoClean } from "../services/git-service";
 
 export class Template {
   // The loaded configuration module.
@@ -32,7 +33,7 @@ export class Template {
   // A reference to the parent template, if this is a subtemplate.
   public parentTemplate?: Template;
 
-  public fullTemplatesDirHash: string;
+  public commitHash: string;
 
   // The directory containing the root template
   public absoluteBaseDir: string; // The absolute path of the parent directory of the root template. All uri will be based from here.
@@ -56,7 +57,7 @@ export class Template {
     baseDir: string,
     absDir: string,
     templatesDir: string,
-    templatesDirFullHash: string,
+    commitHash: string,
     refDir?: string,
   ) {
     this.absoluteBaseDir = baseDir;
@@ -71,7 +72,7 @@ export class Template {
 
     this.config = config;
 
-    this.fullTemplatesDirHash = templatesDirFullHash;
+    this.commitHash = commitHash;
   }
 
   /**
@@ -92,6 +93,22 @@ export class Template {
   ): Promise<Result<Template>> {
     const absoluteRootDir = path.resolve(rootTemplateDir);
     const absoluteBaseDir = path.dirname(absoluteRootDir);
+    const isRepoClean = await isGitRepoClean(absoluteBaseDir)
+    if ('error' in isRepoClean) {
+      console.error(`Error getting git status for project at ${absoluteBaseDir}`)
+      console.error(isRepoClean.error)
+      return { error: `Error getting git status for project at ${absoluteBaseDir}: ${isRepoClean.error}` }
+    }
+    if (!isRepoClean.data) {
+      console.error("Template dir is not clean");
+      return { error: "Template dir is not clean" }
+    }
+    const commitHash = await getCommitHash(absoluteRootDir);
+    if ("error" in commitHash) {
+      console.error(`Error getting commit hash for project at ${absoluteRootDir}`);
+      return { error: `Error getting commit hash for project at ${absoluteRootDir}: ${commitHash.error}` };
+    }
+
     let configs: Record<string, TemplateConfigWithFileInfo>;
     try {
       configs = await loadAllTemplateConfigs(absoluteRootDir);
@@ -116,20 +133,12 @@ export class Template {
         continue;
       }
 
-      const fullTemplatesDirHash = await hashFullDir(templatesDir);
-
-      if ('error' in fullTemplatesDirHash) {
-        console.error("Failed creating the hash")
-        console.error(fullTemplatesDirHash.error)
-        return { error: `Failed creating the hash: ${fullTemplatesDirHash.error}` }
-      }
-
       const template = new Template(
         info.templateConfig,
         absoluteBaseDir,
         templateDir,
         templatesDir,
-        fullTemplatesDirHash.data,
+        commitHash.data,
         info.refDir,
       );
       templatesMap[templateDir] = template;

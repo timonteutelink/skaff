@@ -488,7 +488,7 @@ export class TemplateGeneratorService {
       id: newProjectId,
       parentId: undefined,
       templateName: this.rootTemplate.config.templateConfig.name,
-      templateHash: this.rootTemplate.fullTemplatesDirHash,
+      templateCommitHash: this.rootTemplate.commitHash,
       templateSettings: parsedUserSettings.data,
     });
 
@@ -551,7 +551,7 @@ export class TemplateGeneratorService {
       id: newProjectId,
       parentId: parentInstanceId,
       templateName,
-      templateHash: template.fullTemplatesDirHash,
+      templateCommitHash: template.commitHash,
       templateSettings: parsedUserSettings.data,
       automaticallyInstantiatedByParent: autoInstantiated,
     });

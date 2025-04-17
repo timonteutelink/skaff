@@ -187,6 +187,43 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
   return { data: projectSettings };
 }
 
+// this function is used to edit an already instantiated template. Will create a diff with current template. Where base project is a clean slate of current project(use createProjectFromExisting in this file). The Changed project will be a clean project with the new settings. This can later be extended to allow the base project to use an old version of a template so we can update the template. The diff between these projects can be cached with as key the hash of old project settings and hash of new settings. Since templatecommithash is in settings the hash of the projectSettings will always uniquely identify exactly the same project. So for the same projectSettings this will ALWAYS generate the same project.
+export async function modifyTemplateSettings(
+  newTemplateSettings: UserTemplateSettings,
+  projectName: string,
+  instantiatedTemplateId: string,
+): Promise<Result<NewTemplateDiffResult>> {
+  const project = await PROJECT_REGISTRY.findProject(projectName);
+
+  if ("error" in project) {
+    console.error(`Failed to find project: ${project.error}`);
+    return { error: project.error };
+  }
+
+  if (!project.data) {
+    console.error(`Project ${projectName} not found`);
+    return { error: "Project not found" };
+  }
+
+  const instantiatedTemplate = project.data.settings.instantiatedTemplates.find(
+    (template) => template.id === instantiatedTemplateId,
+  );
+
+  if (!instantiatedTemplate) {
+    console.error(`Instantiated template ${instantiatedTemplateId} not found`);
+    return { error: "Instantiated template not found" };
+  }
+
+  //TODO
+
+  if ("error" in diff) {
+    console.error(`Failed to diff project from template: ${diff.error}`);
+    return { error: diff.error };
+  }
+
+  return { data: diff.data };
+}
+
 // First step for template instantiation. Takes all params and returns a diff of the changes that would be made to the project if the template was instantiated. This diff doesnt show changes on the real project but from a clean project.
 export async function generateNewTemplateDiff(
   rootTemplateName: string,
@@ -265,7 +302,7 @@ export async function generateNewTemplateDiff(
           id: templateInstanceId,
           parentId: parentInstanceId,
           templateName: template.config.templateConfig.name,
-          templateHash: template.fullTemplatesDirHash,
+          templateCommitHash: template.commitHash,
           templateSettings: userTemplateSettings,
         },
       ],

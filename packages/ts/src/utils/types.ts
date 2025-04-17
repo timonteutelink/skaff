@@ -31,7 +31,7 @@ export const InstantiatedTemplateSchema = z.object({
 
   templateName: z.string().min(1),
   templateSettings: z.object({}).passthrough(), //UserTemplateSettings
-  templateHash: z.string().min(64),
+  templateCommitHash: z.string().min(64),
 
   automaticallyInstantiatedByParent: z.boolean().optional(),
 });
