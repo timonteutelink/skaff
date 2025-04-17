@@ -18,7 +18,7 @@ export async function switchBranch(
       console.error("Cannot switch branches with uncommitted changes.");
       return {
         error: "Cannot switch branches with uncommitted changes.",
-      }
+      };
     }
 
     await asyncExec(`cd ${repoPath} && git checkout ${branchName}`);
@@ -31,14 +31,17 @@ export async function switchBranch(
   }
 }
 
-export async function listBranches(repoPath: string): Promise<Result<string[]>> {
+export async function listBranches(
+  repoPath: string,
+): Promise<Result<string[]>> {
   try {
     const { stdout } = await asyncExec(`cd ${repoPath} && git branch --list`);
     return {
-      data: stdout.trim()
+      data: stdout
+        .trim()
         .split("\n")
         .map((branch) => branch.trim())
-        .filter((branch) => branch.length > 0)
+        .filter((branch) => branch.length > 0),
     };
   } catch (error) {
     console.error("Error listing branches:", error);
@@ -46,9 +49,13 @@ export async function listBranches(repoPath: string): Promise<Result<string[]>> 
   }
 }
 
-export async function getCurrentBranch(repoPath: string): Promise<Result<string>> {
+export async function getCurrentBranch(
+  repoPath: string,
+): Promise<Result<string>> {
   try {
-    const { stdout } = await asyncExec(`cd ${repoPath} && git rev-parse --abbrev-ref HEAD`);
+    const { stdout } = await asyncExec(
+      `cd ${repoPath} && git rev-parse --abbrev-ref HEAD`,
+    );
     return { data: stdout.trim() };
   } catch (error) {
     console.error("Error getting current branch:", error);
@@ -56,7 +63,9 @@ export async function getCurrentBranch(repoPath: string): Promise<Result<string>
   }
 }
 
-export async function loadGitStatus(repoPath: string): Promise<Result<GitStatus>> {
+export async function loadGitStatus(
+  repoPath: string,
+): Promise<Result<GitStatus>> {
   const [branches, isClean, currentBranch] = await Promise.all([
     listBranches(repoPath),
     isGitRepoClean(repoPath),
@@ -73,17 +82,23 @@ export async function loadGitStatus(repoPath: string): Promise<Result<GitStatus>
     return { error: "No branches found or error listing branches." };
   }
 
-  if ('error' in isClean) {
+  if ("error" in isClean) {
     console.error("Error checking git status:", isClean.error);
     return { error: `Error checking git status: ${isClean.error}` };
   }
 
-  if ('error' in currentBranch) {
+  if ("error" in currentBranch) {
     console.error("Error getting current branch:", currentBranch.error);
     return { error: `Error getting current branch: ${currentBranch.error}` };
   }
 
-  return { data: { branches: branches.data, isClean: isClean.data, currentBranch: currentBranch.data } };
+  return {
+    data: {
+      branches: branches.data,
+      isClean: isClean.data,
+      currentBranch: currentBranch.data,
+    },
+  };
 }
 
 export async function commitAll(
@@ -100,9 +115,7 @@ export async function commitAll(
   }
 }
 
-export async function addAllAndDiff(
-  repoPath: string,
-): Promise<Result<string>> {
+export async function addAllAndDiff(repoPath: string): Promise<Result<string>> {
   try {
     await asyncExec(`cd ${repoPath} && git add .`);
     const { stdout } = await asyncExec(
@@ -115,9 +128,7 @@ export async function addAllAndDiff(
   }
 }
 
-export async function deleteRepo(
-  repoPath: string,
-): Promise<Result<void>> {
+export async function deleteRepo(repoPath: string): Promise<Result<void>> {
   try {
     await fs.rm(repoPath, { recursive: true });
     return { data: undefined };
@@ -127,11 +138,11 @@ export async function deleteRepo(
   }
 }
 
-export async function createGitRepo(
-  repoPath: string,
-): Promise<Result<void>> {
+export async function createGitRepo(repoPath: string): Promise<Result<void>> {
   try {
-    await asyncExec(`cd ${repoPath} && git init && git config commit.gpgsign false`);
+    await asyncExec(
+      `cd ${repoPath} && git init && git config commit.gpgsign false`,
+    );
     return { data: undefined };
   } catch (error) {
     console.error("Error creating git repository:", error);
@@ -139,7 +150,9 @@ export async function createGitRepo(
   }
 }
 
-export async function isGitRepoClean(hostRepoPath: string): Promise<Result<boolean>> {
+export async function isGitRepoClean(
+  hostRepoPath: string,
+): Promise<Result<boolean>> {
   try {
     const status = (
       await asyncExec(`cd ${hostRepoPath} && git status --porcelain`)
@@ -165,9 +178,7 @@ export async function applyDiffToGitRepo(
 }
 
 // TODO: should add a question to the user if they want to reset all changes before they can go back from the applied diff to diff to apply. otherwise user might remove changes by accident
-export async function resetAllChanges(
-  repoPath: string,
-): Promise<Result<void>> {
+export async function resetAllChanges(repoPath: string): Promise<Result<void>> {
   try {
     await asyncExec(`cd ${repoPath} && git reset --hard`);
     return { data: undefined };
@@ -179,10 +190,12 @@ export async function resetAllChanges(
 
 // Only if there is a merge conflict that the user needs to resolve then return true.
 export async function isConflictAfterApply(
-  repoPath: string
+  repoPath: string,
 ): Promise<Result<boolean>> {
   try {
-    const { stdout } = await asyncExec(`cd ${repoPath} && git status --porcelain`);
+    const { stdout } = await asyncExec(
+      `cd ${repoPath} && git status --porcelain`,
+    );
     const lines = stdout.trim().split("\n");
 
     for (const line of lines) {
@@ -200,7 +213,7 @@ export async function isConflictAfterApply(
 
 export async function diffDirectories(
   absoluteBaseProjectPath: string,
-  absoluteNewProjectPath: string
+  absoluteNewProjectPath: string,
 ): Promise<Result<string>> {
   try {
     const { stdout } = await asyncExecFile(GENERATE_DIFF_SCRIPT_PATH, [
@@ -216,11 +229,11 @@ export async function diffDirectories(
 }
 
 export function parseGitDiff(diffText: string): ParsedFile[] {
-  const files: ParsedFile[] = []
-  const lines = diffText.split("\n")
+  const files: ParsedFile[] = [];
+  const lines = diffText.split("\n");
 
-  let currentFile: ParsedFile | null = null
-  let currentHunk: DiffHunk | null = null
+  let currentFile: ParsedFile | null = null;
+  let currentHunk: DiffHunk | null = null;
 
   for (let i = 0; i < lines.length - 1; i++) {
     const line = lines[i]!;
@@ -228,44 +241,44 @@ export function parseGitDiff(diffText: string): ParsedFile[] {
     // File header
     if (line.startsWith("diff --git")) {
       if (currentFile && currentHunk) {
-        currentFile.hunks.push(currentHunk)
-        currentHunk = null
+        currentFile.hunks.push(currentHunk);
+        currentHunk = null;
       }
 
       if (currentFile) {
-        files.push(currentFile)
+        files.push(currentFile);
       }
 
       // Extract file path
-      const match = line.match(/diff --git a\/(.*) b\/(.*)/)
+      const match = line.match(/diff --git a\/(.*) b\/(.*)/);
       if (match) {
-        const filePath = match[1]!
+        const filePath = match[1]!;
         currentFile = {
           path: filePath,
           status: "modified", // Default status, will be updated later
           hunks: [],
-        }
+        };
       }
     }
 
     // File status
     else if (line.startsWith("new file")) {
       if (currentFile) {
-        currentFile.status = "added"
+        currentFile.status = "added";
       }
     } else if (line.startsWith("deleted file")) {
       if (currentFile) {
-        currentFile.status = "deleted"
+        currentFile.status = "deleted";
       }
     }
 
     // Hunk header
     else if (line.startsWith("@@")) {
       if (currentFile && currentHunk) {
-        currentFile.hunks.push(currentHunk)
+        currentFile.hunks.push(currentHunk);
       }
 
-      const match = line.match(/@@ -(\d+),(\d+) \+(\d+),(\d+) @@/)
+      const match = line.match(/@@ -(\d+),(\d+) \+(\d+),(\d+) @@/);
       if (match) {
         currentHunk = {
           oldStart: Number.parseInt(match[1]!),
@@ -273,24 +286,27 @@ export function parseGitDiff(diffText: string): ParsedFile[] {
           newStart: Number.parseInt(match[3]!),
           newLines: Number.parseInt(match[4]!),
           lines: [],
-        }
+        };
       }
     }
 
     // Diff content
-    else if (currentHunk && (line.startsWith("+") || line.startsWith("-") || line.startsWith(" "))) {
-      currentHunk.lines.push(line)
+    else if (
+      currentHunk &&
+      (line.startsWith("+") || line.startsWith("-") || line.startsWith(" "))
+    ) {
+      currentHunk.lines.push(line);
     }
   }
 
   // Add the last hunk and file
   if (currentFile && currentHunk) {
-    currentFile.hunks.push(currentHunk)
+    currentFile.hunks.push(currentHunk);
   }
 
   if (currentFile) {
-    files.push(currentFile)
+    files.push(currentFile);
   }
 
-  return files
+  return files;
 }

@@ -1,9 +1,11 @@
-'use server';
+"use server";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
 import { ProjectDTO, Result } from "@repo/ts/utils/types";
 
-export async function retrieveProjectSearchPaths(): Promise<{ id: string; path: string }[]> {
+export async function retrieveProjectSearchPaths(): Promise<
+  { id: string; path: string }[]
+> {
   return PROJECT_SEARCH_PATHS;
 }
 
@@ -19,9 +21,7 @@ export async function retrieveProjects(): Promise<Result<ProjectDTO[]>> {
     return { error: projects.error };
   }
 
-  const projectDtos = projects.data.map((project) =>
-    project.mapToDTO(),
-  );
+  const projectDtos = projects.data.map((project) => project.mapToDTO());
 
   return { data: projectDtos };
 }

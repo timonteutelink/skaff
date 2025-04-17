@@ -29,13 +29,10 @@ export class ProjectRegistry {
         const projectSettingsPath = path.join(absDir, "templateSettings.json");
 
         try {
-          const stat = await fs.stat(absDir)
-          const projectSettingsStat = await fs.stat(projectSettingsPath)
+          const stat = await fs.stat(absDir);
+          const projectSettingsStat = await fs.stat(projectSettingsPath);
 
-          if (
-            stat.isDirectory() &&
-            projectSettingsStat.isFile()
-          ) {
+          if (stat.isDirectory() && projectSettingsStat.isFile()) {
             const project = await Project.create(absDir);
             if ("error" in project) {
               console.error(
@@ -46,9 +43,7 @@ export class ProjectRegistry {
             this.projects.push(project.data);
           }
         } catch (e) {
-          console.error(
-            `Failed to read project directory at ${absDir}: ${e}`,
-          );
+          console.error(`Failed to read project directory at ${absDir}: ${e}`);
           continue;
         }
       }

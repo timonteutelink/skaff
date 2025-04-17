@@ -1,17 +1,28 @@
-"use client"
-import { useRouter } from "next/navigation"
-import { GitBranchIcon, GitCommitIcon, CheckCircleIcon, AlertCircleIcon, FileDiffIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { ProjectDTO } from "@repo/ts/utils/types"
+"use client";
+import { useRouter } from "next/navigation";
+import {
+  GitBranchIcon,
+  GitCommitIcon,
+  CheckCircleIcon,
+  AlertCircleIcon,
+  FileDiffIcon,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ProjectDTO } from "@repo/ts/utils/types";
 
 interface ProjectHeaderProps {
-  project: ProjectDTO
-  onBranchChange: (branch: string) => void
+  project: ProjectDTO;
+  onBranchChange: (branch: string) => void;
 }
 
 export function ProjectHeader({ project, onBranchChange }: ProjectHeaderProps) {
-  const router = useRouter()
+  const router = useRouter();
 
   return (
     <header className="p-4 border-b border-gray-300 flex items-center justify-between">
@@ -46,7 +57,9 @@ export function ProjectHeader({ project, onBranchChange }: ProjectHeaderProps) {
               <DropdownMenuItem
                 key={branch}
                 onClick={() => onBranchChange(branch)}
-                className={branch === project.gitStatus.currentBranch ? "bg-muted" : ""}
+                className={
+                  branch === project.gitStatus.currentBranch ? "bg-muted" : ""
+                }
               >
                 {branch}
               </DropdownMenuItem>
@@ -54,16 +67,29 @@ export function ProjectHeader({ project, onBranchChange }: ProjectHeaderProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button variant="outline" onClick={() => router.push(`/projects/project-staged-changes?projectName=${project.name}`)}>
+        <Button
+          variant="outline"
+          onClick={() =>
+            router.push(
+              `/projects/project-staged-changes?projectName=${project.name}`,
+            )
+          }
+        >
           <GitCommitIcon className="w-4 h-4 mr-2" />
           Details
         </Button>
-        <Button variant="outline" onClick={() => router.push(`/projects/project-template-diff?projectName=${project.name}`)}>
+        <Button
+          variant="outline"
+          onClick={() =>
+            router.push(
+              `/projects/project-template-diff?projectName=${project.name}`,
+            )
+          }
+        >
           <FileDiffIcon className="w-4 h-4 mr-2" />
           Diff Template
         </Button>
       </div>
     </header>
-  )
+  );
 }
-

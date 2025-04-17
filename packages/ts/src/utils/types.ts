@@ -49,9 +49,9 @@ export const ProjectSettingsSchema = z.object({
 export type ProjectSettings = z.infer<typeof ProjectSettingsSchema>;
 
 export interface GitStatus {
-  isClean: boolean
-  currentBranch: string
-  branches: string[]
+  isClean: boolean;
+  currentBranch: string;
+  branches: string[];
 }
 
 export interface ProjectDTO {
@@ -70,15 +70,15 @@ export interface CreateProjectResult {
 }
 
 export interface ParsedFile {
-  path: string
-  status: "added" | "modified" | "deleted"
-  hunks: DiffHunk[]
+  path: string;
+  status: "added" | "modified" | "deleted";
+  hunks: DiffHunk[];
 }
 
 export interface DiffHunk {
-  oldStart: number
-  oldLines: number
-  newStart: number
-  newLines: number
-  lines: string[]
+  oldStart: number;
+  oldLines: number;
+  newStart: number;
+  newLines: number;
+  lines: string[];
 }

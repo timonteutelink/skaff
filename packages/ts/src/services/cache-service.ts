@@ -4,7 +4,7 @@ import * as fs from "node:fs/promises";
 import { makeDir } from "./file-service";
 import { Result } from "../utils/types";
 
-export type CacheKey = 'template-config' | 'new-template-diff';
+export type CacheKey = "template-config" | "new-template-diff";
 
 export async function getCacheDir(): Promise<Result<string>> {
   const cacheDir = path.join(tmpdir(), "code-templator-cache");
@@ -12,7 +12,9 @@ export async function getCacheDir(): Promise<Result<string>> {
   return { data: cacheDir };
 }
 
-export async function pathInCache(fileOrDirName: string): Promise<Result<string>> {
+export async function pathInCache(
+  fileOrDirName: string,
+): Promise<Result<string>> {
   const cacheDir = await getCacheDir();
   if ("error" in cacheDir) {
     console.error("Failed to get cache directory:", cacheDir.error);
@@ -64,7 +66,12 @@ export async function retrieveFromCache(
     const stats = await fs.stat(cacheFilePath.data).catch(() => null);
 
     if (stats && stats.isFile()) {
-      return { data: { data: await fs.readFile(cacheFilePath.data, "utf-8"), path: cacheFilePath.data } };
+      return {
+        data: {
+          data: await fs.readFile(cacheFilePath.data, "utf-8"),
+          path: cacheFilePath.data,
+        },
+      };
     }
 
     return { data: null };

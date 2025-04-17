@@ -1,4 +1,4 @@
-'use server';
+"use server";
 import { ROOT_TEMPLATE_REGISTRY } from "@repo/ts/services/root-template-registry-service";
 import { Result, TemplateDTO } from "@repo/ts/utils/types";
 
@@ -10,9 +10,7 @@ export async function retrieveTemplates(): Promise<Result<TemplateDTO[]>> {
     return { error: templates.error };
   }
 
-  const templateDtos = templates.data.map((template) =>
-    template.mapToDTO(),
-  );
+  const templateDtos = templates.data.map((template) => template.mapToDTO());
 
   return { data: templateDtos };
 }

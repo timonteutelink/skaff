@@ -47,7 +47,9 @@ export default function TemplatesListPage() {
   const router = useRouter();
   const [projects, setProjects] = useState<ProjectDTO[]>([]);
   const [templates, setTemplates] = useState<TemplateDTO[]>([]);
-  const [projectSearchPaths, setProjectSearchPaths] = useState<{ id: string; path: string }[]>([]);
+  const [projectSearchPaths, setProjectSearchPaths] = useState<
+    { id: string; path: string }[]
+  >([]);
   const [open, setOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [projectName, setProjectName] = useState("");

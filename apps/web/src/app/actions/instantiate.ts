@@ -1,9 +1,20 @@
-'use server';
+"use server";
 import { deleteRepo, resetAllChanges } from "@repo/ts/services/git-service";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
-import { applyDiffToProject, generateNewTemplateDiff, generateProjectFromTemplateSettings, instantiateProject, resolveConflictsAndRetrieveAppliedDiff } from "@repo/ts/services/project-service";
+import {
+  applyDiffToProject,
+  generateNewTemplateDiff,
+  generateProjectFromTemplateSettings,
+  instantiateProject,
+  resolveConflictsAndRetrieveAppliedDiff,
+} from "@repo/ts/services/project-service";
 import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
-import { NewTemplateDiffResult, ParsedFile, ProjectCreationResult, Result } from "@repo/ts/utils/types";
+import {
+  NewTemplateDiffResult,
+  ParsedFile,
+  ProjectCreationResult,
+  Result,
+} from "@repo/ts/utils/types";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import path from "node:path";
 
@@ -19,13 +30,20 @@ export async function createNewProject(
     return { error: reloadResult.error };
   }
 
-  const parentDirPath = PROJECT_SEARCH_PATHS.find((dir) => dir.id === projectDirPathId)?.path;
+  const parentDirPath = PROJECT_SEARCH_PATHS.find(
+    (dir) => dir.id === projectDirPathId,
+  )?.path;
   if (!parentDirPath) {
     console.error("Invalid project directory path ID");
     return { error: "Invalid project directory path ID" };
   }
 
-  const result = await instantiateProject(templateName, parentDirPath, projectName, userTemplateSettings);
+  const result = await instantiateProject(
+    templateName,
+    parentDirPath,
+    projectName,
+    userTemplateSettings,
+  );
 
   if ("error" in result) {
     console.error("Failed to instantiate project:", result.error);
@@ -54,7 +72,7 @@ export async function prepareTemplateInstantiationDiff(
     parentInstanceId,
     destinationProjectName,
     userTemplateSettings,
-  )
+  );
 
   if ("error" in result) {
     console.error("Failed to generate template diff:", result.error);
@@ -169,14 +187,20 @@ export async function cancelProjectCreation(
 // instantiate template in existing project has 3 actions. Generate diff, apply diff to project, and commit all changes after user accepted/fixed prs.
 
 // can be used by user manually.
-export async function generateNewProjectFromExisting(currentProjectName: string, newProjectDestinationDirPathId: string, newProjectName: string): Promise<Result<string>> {
+export async function generateNewProjectFromExisting(
+  currentProjectName: string,
+  newProjectDestinationDirPathId: string,
+  newProjectName: string,
+): Promise<Result<string>> {
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in reloadResult) {
     console.error("Failed to reload projects:", reloadResult.error);
     return { error: reloadResult.error };
   }
 
-  const parentDirPath = PROJECT_SEARCH_PATHS.find((dir) => dir.id === newProjectDestinationDirPathId)?.path;
+  const parentDirPath = PROJECT_SEARCH_PATHS.find(
+    (dir) => dir.id === newProjectDestinationDirPathId,
+  )?.path;
   if (!parentDirPath) {
     console.error("Invalid project directory path ID");
     return { error: "Invalid project directory path ID" };
@@ -196,7 +220,10 @@ export async function generateNewProjectFromExisting(currentProjectName: string,
 
   project.data.instantiatedProjectSettings.projectName = newProjectName;
 
-  const result = await generateProjectFromTemplateSettings(project.data.instantiatedProjectSettings, path.join(parentDirPath, newProjectName));
+  const result = await generateProjectFromTemplateSettings(
+    project.data.instantiatedProjectSettings,
+    path.join(parentDirPath, newProjectName),
+  );
 
   if ("error" in result) {
     console.error("Failed to generate new project:", result.error);

@@ -14,15 +14,15 @@ export function anyOrCallbackToAny<
 ): Result<T> {
   try {
     return {
-      data: anyOrCallback instanceof Function
-        ? anyOrCallback(parsedUserSettings)
-        : anyOrCallback
+      data:
+        anyOrCallback instanceof Function
+          ? anyOrCallback(parsedUserSettings)
+          : anyOrCallback,
     };
   } catch (e) {
     console.error("Error in anyOrCallbackToAny:", e);
     return { error: "Invalid anyOrCallback" + e };
   }
-
 }
 
 export function stringOrCallbackToString<

@@ -1,6 +1,9 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { loadAllTemplateConfigs, TemplateConfigWithFileInfo } from "../loaders/template-config-loader";
+import {
+  loadAllTemplateConfigs,
+  TemplateConfigWithFileInfo,
+} from "../loaders/template-config-loader";
 import { TemplateGeneratorService } from "../services/template-generator-service";
 import {
   TemplateConfigModule,
@@ -8,7 +11,12 @@ import {
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { CreateProjectResult, ProjectSettings, Result, TemplateDTO } from "../utils/types";
+import {
+  CreateProjectResult,
+  ProjectSettings,
+  Result,
+  TemplateDTO,
+} from "../utils/types";
 import { Project } from "./project-models";
 import z from "zod";
 
@@ -146,7 +154,11 @@ export class Template {
           potentialParent.absoluteDir,
           candidate.absoluteDir,
         );
-        if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
+        if (
+          !relative ||
+          relative.startsWith("..") ||
+          path.isAbsolute(relative)
+        ) {
           continue;
         }
         const segments = relative.split(path.sep).filter(Boolean);
@@ -183,8 +195,13 @@ export class Template {
 
     if (rootTemplates.length > 1) {
       console.error(rootTemplates);
-      console.error(`Multiple root templates found. Make sure the directory structure is correct.`);
-      return { error: "Multiple root templates found. Make sure the directory structure is correct." };
+      console.error(
+        `Multiple root templates found. Make sure the directory structure is correct.`,
+      );
+      return {
+        error:
+          "Multiple root templates found. Make sure the directory structure is correct.",
+      };
     }
 
     return { data: rootTemplates[0]! };
@@ -214,7 +231,9 @@ export class Template {
     );
 
     if ("error" in addTemplateResult) {
-      console.error(`Failed to add template to project: ${addTemplateResult.error}`);
+      console.error(
+        `Failed to add template to project: ${addTemplateResult.error}`,
+      );
       return addTemplateResult;
     }
 
@@ -248,17 +267,18 @@ export class Template {
   ): Promise<Result<CreateProjectResult>> {
     const newProjectSettings: ProjectSettings = {
       projectName,
-      projectAuthor: 'abc',
+      projectAuthor: "abc",
       rootTemplateName: this.config.templateConfig.name,
       instantiatedTemplates: [],
-    }
+    };
 
     const generatorService = new TemplateGeneratorService(
       { absoluteDestinationPath: path.join(destinationDir, projectName) },
       this,
       newProjectSettings,
     );
-    const addProjectResult = generatorService.addNewProject(rootTemplateSettings);
+    const addProjectResult =
+      generatorService.addNewProject(rootTemplateSettings);
     if ("error" in addProjectResult) {
       console.error(`Failed to add project: ${addProjectResult.error}`);
       return addProjectResult;

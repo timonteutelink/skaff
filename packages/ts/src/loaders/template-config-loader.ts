@@ -86,7 +86,9 @@ async function typeCheckFile(filePath: string): Promise<void> {
  * For templateRef.json, it reads the JSON (expecting a single key with a relative path)
  * and includes the templateConfig.ts file from that referenced folder.
  */
-async function findTemplateConfigFiles(dir: string): Promise<TemplateConfigFileInfo[]> {
+async function findTemplateConfigFiles(
+  dir: string,
+): Promise<TemplateConfigFileInfo[]> {
   let results: TemplateConfigFileInfo[] = [];
 
   const candidate = path.join(dir, "templateConfig.ts");
@@ -111,7 +113,9 @@ async function findTemplateConfigFiles(dir: string): Promise<TemplateConfigFileI
               resolvedRefDir,
               "templateConfig.ts",
             );
-            const resolvedRefPathStat = await fs.stat(resolvedRefPath).catch(() => null);
+            const resolvedRefPathStat = await fs
+              .stat(resolvedRefPath)
+              .catch(() => null);
             if (resolvedRefPathStat && resolvedRefPathStat.isFile()) {
               results.push({ configPath: resolvedRefPath, refDir: fullPath });
               results = results.concat(
@@ -213,7 +217,7 @@ export async function loadAllTemplateConfigs(
   }
   const hash = createHash("sha256").update(combinedContent).digest("hex");
 
-  const cachedBundle = await retrieveFromCache('template-config', hash, "mjs");
+  const cachedBundle = await retrieveFromCache("template-config", hash, "mjs");
 
   if ("error" in cachedBundle) {
     console.error(
@@ -280,19 +284,24 @@ export async function loadAllTemplateConfigs(
     throw new Error(`Failed to bundle template configs from ${rootDir}`);
   }
 
-  const resultPath = await saveToCache('template-config', hash, "mjs", bundledCode);
+  const resultPath = await saveToCache(
+    "template-config",
+    hash,
+    "mjs",
+    bundledCode,
+  );
   console.log(`Created bundled template configs at ${resultPath}`);
 
   if ("error" in resultPath) {
-    throw new Error(`Failed to save bundled template configs: ${resultPath.error}`);
+    throw new Error(
+      `Failed to save bundled template configs: ${resultPath.error}`,
+    );
   }
 
-  if ('stop' in esbuild) {
+  if ("stop" in esbuild) {
     try {
       await esbuild.stop();
-    } catch {
-
-    }
+    } catch {}
   }
 
   return importTemplateConfigModule(resultPath.data);

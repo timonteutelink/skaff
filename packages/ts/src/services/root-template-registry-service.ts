@@ -48,7 +48,7 @@ export class RootTemplateRegistry {
         }
 
         const template = await Template.createAllTemplates(rootTemplateDirPath);
-        if ('error' in template) {
+        if ("error" in template) {
           console.error(
             `Failed to create template from directory ${rootTemplateDirPath}: ${template.error}`,
           );

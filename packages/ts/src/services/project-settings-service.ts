@@ -1,7 +1,12 @@
 import * as fs from "node:fs/promises";
 import path from "node:path";
 import { Template } from "../models/template-models";
-import { InstantiatedTemplate, ProjectSettings, ProjectSettingsSchema, Result } from "../utils/types";
+import {
+  InstantiatedTemplate,
+  ProjectSettings,
+  ProjectSettingsSchema,
+  Result,
+} from "../utils/types";
 import { makeDir } from "./file-service";
 import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
 
@@ -16,7 +21,7 @@ export async function writeNewProjectSettings(
   }
   const newProjectSettings: ProjectSettings = {
     ...projectSettings,
-    instantiatedTemplates: [projectSettings.instantiatedTemplates[0]!]
+    instantiatedTemplates: [projectSettings.instantiatedTemplates[0]!],
   };
 
   return writeProjectSettings(
@@ -38,7 +43,9 @@ async function writeProjectSettings(
   if (!overwrite) {
     try {
       await fs.access(projectSettingsPath);
-      console.error(`Project settings file already exists at ${projectSettingsPath}`);
+      console.error(
+        `Project settings file already exists at ${projectSettingsPath}`,
+      );
       return {
         error: `Project settings file already exists at ${projectSettingsPath}`,
       };
@@ -48,18 +55,10 @@ async function writeProjectSettings(
   }
 
   await makeDir(absoluteProjectPath);
-  const serializedProjectSettings = JSON.stringify(
-    projectSettings,
-    null,
-    2,
-  );
+  const serializedProjectSettings = JSON.stringify(projectSettings, null, 2);
 
   try {
-    await fs.writeFile(
-      projectSettingsPath,
-      serializedProjectSettings,
-      "utf-8",
-    );
+    await fs.writeFile(projectSettingsPath, serializedProjectSettings, "utf-8");
   } catch (error) {
     console.error(`Failed to write templateSettings.json: ${error}`);
     return { error: `Failed to write templateSettings.json: ${error}` };
@@ -78,7 +77,9 @@ export async function writeNewTemplateToSettings(
   const projectSettingsResult = await loadProjectSettings(projectSettingsPath);
 
   if ("error" in projectSettingsResult) {
-    console.error(`Failed to load project settings: ${projectSettingsResult.error}`);
+    console.error(
+      `Failed to load project settings: ${projectSettingsResult.error}`,
+    );
     return { error: projectSettingsResult.error };
   }
 
@@ -92,7 +93,9 @@ export async function writeNewTemplateToSettings(
   );
 
   if ("error" in result) {
-    console.error(`Failed to write new template to project settings: ${result.error}`);
+    console.error(
+      `Failed to write new template to project settings: ${result.error}`,
+    );
     return { error: result.error };
   }
 
@@ -111,7 +114,10 @@ export async function loadProjectSettings(
   try {
     const projectSettings = await fs.readFile(projectSettingsPath, "utf-8");
     parsedProjectSettings = JSON.parse(projectSettings);
-    console.log("Parsed project settings:", JSON.stringify(parsedProjectSettings, null, 2));
+    console.log(
+      "Parsed project settings:",
+      JSON.stringify(parsedProjectSettings, null, 2),
+    );
   } catch (error) {
     console.error(`Failed to read templateSettings.json: ${error}`);
     return {
@@ -142,7 +148,9 @@ export async function loadProjectSettings(
   }
 
   if (!rootTemplate.data) {
-    console.error(`Root template ${finalProjectSettings.data.rootTemplateName} not found`);
+    console.error(
+      `Root template ${finalProjectSettings.data.rootTemplateName} not found`,
+    );
     return {
       error: `Root template ${finalProjectSettings.data.rootTemplateName} not found`,
     };

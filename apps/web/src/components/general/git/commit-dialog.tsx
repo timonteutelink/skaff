@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useCallback, useState } from "react"
-import { Button } from "@/components/ui/button"
+import { useCallback, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,33 +10,36 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { GitCommit } from "lucide-react"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { GitCommit } from "lucide-react";
 
 interface CommitButtonProps {
-  onCommit: (message: string) => Promise<void>
-  onCancel: () => void
+  onCommit: (message: string) => Promise<void>;
+  onCancel: () => void;
 }
 
 // This component will be used in the project diff details page to allow the user to commit current changes.
 // Also will be used at the end of the instatiation workflow on the diff page.
-export default function CommitButton({ onCommit, onCancel }: CommitButtonProps) {
-  const [open, setOpen] = useState(false)
-  const [commitMessage, setCommitMessage] = useState("")
+export default function CommitButton({
+  onCommit,
+  onCancel,
+}: CommitButtonProps) {
+  const [open, setOpen] = useState(false);
+  const [commitMessage, setCommitMessage] = useState("");
 
   const handleCommit = useCallback(async () => {
-    await onCommit(commitMessage)
-    setCommitMessage("")
-    setOpen(false)
-  }, [commitMessage, onCommit])
+    await onCommit(commitMessage);
+    setCommitMessage("");
+    setOpen(false);
+  }, [commitMessage, onCommit]);
 
   const handleCancel = useCallback(() => {
-    onCancel()
-    setCommitMessage("")
-    setOpen(false)
-  }, [onCancel])
+    onCancel();
+    setCommitMessage("");
+    setOpen(false);
+  }, [onCancel]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -49,7 +52,9 @@ export default function CommitButton({ onCommit, onCancel }: CommitButtonProps) 
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create Commit</DialogTitle>
-          <DialogDescription>Enter a message describing the changes you've made.</DialogDescription>
+          <DialogDescription>
+            Enter a message describing the changes you've made.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
@@ -76,6 +81,5 @@ export default function CommitButton({ onCommit, onCancel }: CommitButtonProps) 
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

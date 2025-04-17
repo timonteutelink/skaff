@@ -1,12 +1,7 @@
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import path from "node:path";
 import { loadGitStatus } from "../services/git-service";
-import {
-  GitStatus,
-  ProjectDTO,
-  ProjectSettings,
-  Result
-} from "../utils/types";
+import { GitStatus, ProjectDTO, ProjectSettings, Result } from "../utils/types";
 import { Template } from "./template-models";
 import { loadProjectSettings } from "../services/project-settings-service";
 
@@ -61,7 +56,9 @@ export class Project {
       return { data: instantiatedSettings };
     }
 
-    const parsedSchema = template.config.templateSettingsSchema.safeParse(projectTemplateSettings.templateSettings);
+    const parsedSchema = template.config.templateSettingsSchema.safeParse(
+      projectTemplateSettings.templateSettings,
+    );
 
     if (!parsedSchema.success) {
       console.error(
@@ -70,7 +67,8 @@ export class Project {
       return { error: `${parsedSchema.error}` };
     }
 
-    instantiatedSettings[template.config.templateConfig.name] = parsedSchema.data;
+    instantiatedSettings[template.config.templateConfig.name] =
+      parsedSchema.data;
 
     const parentTemplate = template.parentTemplate;
     if (parentTemplate && projectTemplateSettings.parentId) {
@@ -103,7 +101,7 @@ export class Project {
 
     const gitStatus = await loadGitStatus(absDir);
 
-    if ('error' in gitStatus) {
+    if ("error" in gitStatus) {
       console.error(
         `Failed to load git status for project at ${absDir}: ${gitStatus.error}`,
       );
@@ -118,7 +116,7 @@ export class Project {
         projectSettingsPath,
         projectSettings.data.settings,
         projectSettings.data.rootTemplate,
-        gitStatus.data
+        gitStatus.data,
       ),
     };
   }
@@ -133,4 +131,3 @@ export class Project {
     };
   }
 }
-

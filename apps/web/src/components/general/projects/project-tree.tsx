@@ -1,17 +1,21 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useCallback } from "react"
-import { Tree } from "@/components/general/Tree"
-import type { ProjectTreeNode } from "./types"
+import type React from "react";
+import { useCallback } from "react";
+import { Tree } from "@/components/general/Tree";
+import type { ProjectTreeNode } from "./types";
 
 interface ProjectTreeProps {
-  projectTree: ProjectTreeNode[]
-  selectedNode: ProjectTreeNode | null
-  onSelectNode: (node: ProjectTreeNode) => void
+  projectTree: ProjectTreeNode[];
+  selectedNode: ProjectTreeNode | null;
+  onSelectNode: (node: ProjectTreeNode) => void;
 }
 
-export function ProjectTree({ projectTree, selectedNode, onSelectNode }: ProjectTreeProps) {
+export function ProjectTree({
+  projectTree,
+  selectedNode,
+  onSelectNode,
+}: ProjectTreeProps) {
   /* Custom tree label renderer */
   const renderNodeLabel = useCallback(
     (
@@ -27,15 +31,16 @@ export function ProjectTree({ projectTree, selectedNode, onSelectNode }: Project
         return (
           <div
             style={style}
-            className={`flex items-center p-2 cursor-pointer hover:bg-blue-100 select-none ${isSelected ? "bg-blue-200" : ""
-              }`}
+            className={`flex items-center p-2 cursor-pointer hover:bg-blue-100 select-none ${
+              isSelected ? "bg-blue-200" : ""
+            }`}
             onClick={onClick}
           >
             {hasChildren && (
               <button
                 onClick={(e) => {
-                  e.stopPropagation()
-                  toggle()
+                  e.stopPropagation();
+                  toggle();
                 }}
                 className="mr-2 focus:outline-none"
               >
@@ -44,7 +49,7 @@ export function ProjectTree({ projectTree, selectedNode, onSelectNode }: Project
             )}
             <span className="flex-1">{node.name}</span>
           </div>
-        )
+        );
       } else if (node.type === "subCategory") {
         return (
           <div
@@ -55,8 +60,8 @@ export function ProjectTree({ projectTree, selectedNode, onSelectNode }: Project
             {hasChildren && (
               <button
                 onClick={(e) => {
-                  e.stopPropagation()
-                  toggle()
+                  e.stopPropagation();
+                  toggle();
                 }}
                 className="mr-2 focus:outline-none"
               >
@@ -65,7 +70,7 @@ export function ProjectTree({ projectTree, selectedNode, onSelectNode }: Project
             )}
             <span className="flex-1">{node.name}</span>
           </div>
-        )
+        );
       } else if (node.type === "childTemplate") {
         return (
           <div
@@ -76,35 +81,37 @@ export function ProjectTree({ projectTree, selectedNode, onSelectNode }: Project
             {hasChildren && (
               <button
                 onClick={(e) => {
-                  e.stopPropagation()
-                  toggle()
+                  e.stopPropagation();
+                  toggle();
                 }}
                 className="mr-2 focus:outline-none"
               >
                 {isOpen ? "▼" : "▶"}
               </button>
             )}
-            <span className="flex-1">{node.templateDefinition.config.templateConfig.name}</span>
+            <span className="flex-1">
+              {node.templateDefinition.config.templateConfig.name}
+            </span>
           </div>
-        )
+        );
       } else if (node.type === "createInstance") {
         return (
           <div
             style={style}
             className="flex items-center p-2 pl-10 cursor-pointer hover:bg-blue-100 select-none text-green-600"
             onClick={(e) => {
-              e.stopPropagation()
-              onSelectNode(node)
+              e.stopPropagation();
+              onSelectNode(node);
             }}
           >
             <span className="flex-1">+ Create new instance</span>
           </div>
-        )
+        );
       }
-      return null
+      return null;
     },
     [onSelectNode],
-  )
+  );
 
   return (
     <Tree<ProjectTreeNode>
@@ -116,6 +123,5 @@ export function ProjectTree({ projectTree, selectedNode, onSelectNode }: Project
       rowHeight={40}
       width="100%"
     />
-  )
+  );
 }
-
