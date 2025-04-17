@@ -236,7 +236,7 @@ export function parseGitDiff(diffText: string): ParsedFile[] {
   let currentHunk: DiffHunk | null = null;
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+    const line = lines[i]!;
 
     // Start of a new file diff
     if (line.startsWith("diff --git")) {
@@ -255,7 +255,7 @@ export function parseGitDiff(diffText: string): ParsedFile[] {
       const match = line.match(/diff --git a\/(.+?) b\/(.+)/);
       if (match) {
         currentFile = {
-          path: match[1],
+          path: match[1]!,
           status: "modified", // default, may change
           hunks: [],
         };
@@ -279,9 +279,9 @@ export function parseGitDiff(diffText: string): ParsedFile[] {
       const match = line.match(/@@ -(\d+),?(\d*) \+(\d+),?(\d*) @@/);
       if (match) {
         currentHunk = {
-          oldStart: parseInt(match[1], 10),
+          oldStart: parseInt(match[1]!, 10),
           oldLines: parseInt(match[2] || "1", 10),
-          newStart: parseInt(match[3], 10),
+          newStart: parseInt(match[3]!, 10),
           newLines: parseInt(match[4] || "1", 10),
           lines: [],
         };

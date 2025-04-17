@@ -7,7 +7,6 @@ import { ProjectHeader } from "@/components/general/projects/project-header";
 import { ProjectTree } from "@/components/general/projects/project-tree";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-// import { getProjectGitStatus, switchProjectBranch } from "@/app/actions/git"
 import type { ProjectTreeNode } from "@/components/general/projects/types";
 import type {
   InstantiatedTemplate,

@@ -19,6 +19,7 @@ import {
 } from "../utils/types";
 import { Project } from "./project-models";
 import z from "zod";
+import { hashFullDir } from "../services/file-service";
 
 export class Template {
   // The loaded configuration module.
@@ -30,6 +31,8 @@ export class Template {
   public subTemplates: Record<string, Template[]> = {};
   // A reference to the parent template, if this is a subtemplate.
   public parentTemplate?: Template;
+
+  public fullTemplatesDirHash: string;
 
   // The directory containing the root template
   public absoluteBaseDir: string; // The absolute path of the parent directory of the root template. All uri will be based from here.
@@ -53,16 +56,22 @@ export class Template {
     baseDir: string,
     absDir: string,
     templatesDir: string,
+    templatesDirFullHash: string,
     refDir?: string,
   ) {
     this.absoluteBaseDir = baseDir;
+
     this.absoluteDir = absDir;
     this.relativeDir = path.relative(baseDir, absDir);
+
     this.absoluteTemplatesDir = templatesDir;
     this.relativeTemplatesDir = path.relative(baseDir, templatesDir);
+
     this.relativeRefDir = refDir;
 
     this.config = config;
+
+    this.fullTemplatesDirHash = templatesDirFullHash;
   }
 
   /**
@@ -106,11 +115,21 @@ export class Template {
       } catch {
         continue;
       }
+
+      const fullTemplatesDirHash = await hashFullDir(templatesDir);
+
+      if ('error' in fullTemplatesDirHash) {
+        console.error("Failed creating the hash")
+        console.error(fullTemplatesDirHash.error)
+        return { error: `Failed creating the hash: ${fullTemplatesDirHash.error}` }
+      }
+
       const template = new Template(
         info.templateConfig,
         absoluteBaseDir,
         templateDir,
         templatesDir,
+        fullTemplatesDirHash.data,
         info.refDir,
       );
       templatesMap[templateDir] = template;

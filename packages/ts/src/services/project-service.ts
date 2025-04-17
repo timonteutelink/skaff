@@ -14,7 +14,7 @@ import {
   ProjectSettings,
   Result,
 } from "../utils/types";
-import { stringOrCallbackToString } from "../utils/utils";
+import { getHash, stringOrCallbackToString } from "../utils/utils";
 import { pathInCache, retrieveFromCache, saveToCache } from "./cache-service";
 import {
   addAllAndDiff,
@@ -265,6 +265,7 @@ export async function generateNewTemplateDiff(
           id: templateInstanceId,
           parentId: parentInstanceId,
           templateName: template.config.templateConfig.name,
+          templateHash: template.fullTemplatesDirHash,
           templateSettings: userTemplateSettings,
         },
       ],
@@ -319,7 +320,7 @@ export async function generateNewTemplateDiff(
       return { error: diff.error };
     }
 
-    const diffHash = createHash("sha256").update(diff.data).digest("hex");
+    const diffHash = getHash(diff.data)
 
     // When the project settings contains the hash of the entire template we can hash the entire project settings and combine the old and new project settings hashes to create a unique key for retrieving the diff without having to generate all files again.
     const saveResult = await saveToCache(

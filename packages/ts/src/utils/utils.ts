@@ -4,6 +4,7 @@ import {
 } from "@timonteutelink/template-types-lib";
 import z from "zod";
 import { Result, TemplateDTO } from "./types";
+import { createHash } from "node:crypto";
 
 export function anyOrCallbackToAny<
   TSettings extends TemplateSettingsType<z.AnyZodObject>,
@@ -49,4 +50,10 @@ export function findTemplate(
   }
 
   return { data: null };
+}
+
+export function getHash(
+  stringToHash: string
+): string {
+  return createHash("sha256").update(stringToHash).digest("hex");
 }

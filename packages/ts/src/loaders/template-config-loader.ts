@@ -11,6 +11,7 @@ import ts from "typescript";
 import z from "zod";
 import { retrieveFromCache, saveToCache } from "../services/cache-service";
 import { getEsbuild } from "../utils/get-esbuild";
+import { getHash } from "../utils/utils";
 
 //TODO renovate, mkDocs, .github/settings.yml
 
@@ -215,7 +216,7 @@ export async function loadAllTemplateConfigs(
   for (const fileInfo of sortedFiles) {
     combinedContent += await fs.readFile(fileInfo.configPath, "utf-8");
   }
-  const hash = createHash("sha256").update(combinedContent).digest("hex");
+  const hash = getHash(combinedContent)
 
   const cachedBundle = await retrieveFromCache("template-config", hash, "mjs");
 
@@ -301,7 +302,7 @@ export async function loadAllTemplateConfigs(
   if ("stop" in esbuild) {
     try {
       await esbuild.stop();
-    } catch {}
+    } catch { }
   }
 
   return importTemplateConfigModule(resultPath.data);

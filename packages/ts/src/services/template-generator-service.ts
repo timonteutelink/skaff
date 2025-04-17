@@ -330,14 +330,12 @@ export class TemplateGeneratorService {
     if (this.options.dontAutoInstantiate) {
       return { data: undefined };
     }
-    console.log("RANONCE", fullParentSettings, parentTemplateInstanceId);
     if (!this.currentlyGeneratingTemplate) {
       console.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
     }
     for (const templateToAutoInstantiate of this.currentlyGeneratingTemplate
       .config.autoInstatiatedSubtemplates || []) {
-      console.log(templateToAutoInstantiate)
       let newTemplateSettings: UserTemplateSettings;
       try {
         newTemplateSettings =
@@ -490,6 +488,7 @@ export class TemplateGeneratorService {
       id: newProjectId,
       parentId: undefined,
       templateName: this.rootTemplate.config.templateConfig.name,
+      templateHash: this.rootTemplate.fullTemplatesDirHash,
       templateSettings: parsedUserSettings.data,
     });
 
@@ -552,6 +551,7 @@ export class TemplateGeneratorService {
       id: newProjectId,
       parentId: parentInstanceId,
       templateName,
+      templateHash: template.fullTemplatesDirHash,
       templateSettings: parsedUserSettings.data,
       automaticallyInstantiatedByParent: autoInstantiated,
     });
