@@ -555,8 +555,8 @@ export async function generateNewTemplateDiff(
         id: templateInstanceId,
         parentId: parentInstanceId,
         templateName: template.config.templateConfig.name,
-        templateCommitHash: template.commitHash,
         templateSettings: userTemplateSettings,
+        templateCommitHash: template.commitHash,
       },
     ],
   };
