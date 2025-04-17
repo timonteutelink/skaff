@@ -51,6 +51,7 @@ export type ProjectSettings = z.infer<typeof ProjectSettingsSchema>;
 
 export interface GitStatus {
   isClean: boolean;
+  currentCommitHash: string;
   currentBranch: string;
   branches: string[];
 }
@@ -63,6 +64,8 @@ export interface ProjectDTO {
   gitStatus: GitStatus;
 
   settings: ProjectSettings;
+
+  outdatedTemplate: boolean
 }
 
 export interface CreateProjectResult {

@@ -26,6 +26,7 @@ import { PROJECT_REGISTRY } from "./project-registry-service";
 import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
 import { TemplateGeneratorService } from "./template-generator-service";
 
+// TODO: do some refactoring so most functions in this file take a full Project not projectname
 export function getParsedUserSettingsWithParentSettings(
   userSettings: UserTemplateSettings,
   currentlyGeneratingTemplate: Template,
@@ -407,6 +408,20 @@ async function diffNewTempProjects(
     return { error: "Project not found" };
   }
 
+  const oldProjectSettingsHash = getHash(JSON.stringify(oldProjectSettings));
+  const newProjectSettingsHash = getHash(JSON.stringify(newProjectSettings));
+  const diffCacheKey = `${oldProjectSettingsHash}-${newProjectSettingsHash}`;
+  const existingSavedDiff = await retrieveFromCache("new-template-diff", diffCacheKey, "patch");
+
+  if ("error" in existingSavedDiff) {
+    console.error(`Failed to retrieve diff from cache: ${existingSavedDiff.error}`);
+    return { error: existingSavedDiff.error };
+  }
+
+  if (existingSavedDiff.data) {
+    return { data: { diffHash: diffCacheKey, parsedDiff: parseGitDiff(existingSavedDiff.data.data) } };
+  }
+
   const tempOldProjectName = `${projectName}-${crypto.randomUUID()}`;
   const tempNewProjectName = `${projectName}-${crypto.randomUUID()}`;
 
@@ -467,12 +482,10 @@ async function diffNewTempProjects(
       return { error: diff.error };
     }
 
-    const diffHash = getHash(diff.data)
-
-    // When the project settings contains the hash of the entire template we can hash the entire project settings and combine the old and new project settings hashes to create a unique key for retrieving the diff without having to generate all files again. Add logic to retrieve old projects now then change the diff everywhere to cache results since now projectsettings instantiation is 100% predictable
+    // TODO: When the project settings contains the hash of the entire template we can hash the entire project settings and combine the old and new project settings hashes to create a unique key for retrieving the diff without having to generate all files again. Add logic to retrieve old projects now then change the diff everywhere to cache results since now projectsettings instantiation is 100% predictable
     const saveResult = await saveToCache(
       "new-template-diff",
-      diffHash,
+      diffCacheKey,
       "patch",
       diff.data,
     );
@@ -486,7 +499,7 @@ async function diffNewTempProjects(
 
     return {
       data: {
-        diffHash,
+        diffHash: diffCacheKey,
         parsedDiff,
       },
     };
@@ -643,7 +656,7 @@ export async function applyDiffToProject(
     return { error: "Failed to apply diff" };
   }
 
-  // check if there are any merge conflicts and notify user. Then user will press button("Conflicts Resolved") to add all after he has manually resolved the conflicts. Otherwise here we automatically add all and diff.
+  // TODO: check if there are any merge conflicts and notify user. Then user will press button("Conflicts Resolved") to add all after he has manually resolved the conflicts. Otherwise here we automatically add all and diff.
   const isConflict = await isConflictAfterApply(project.data.absoluteRootDir);
   if ("error" in isConflict) {
     console.error(`Failed to check for conflicts: ${isConflict.error}`);
@@ -715,7 +728,14 @@ export async function instantiateProject(
 
   const processedDiff = parseGitDiff(instatiationResult.data.diff);
 
-  return { data: { newProject: project.data.mapToDTO(), diff: processedDiff } };
+  const projectDTO = project.data.mapToDTO();
+
+  if ('error' in projectDTO) {
+    console.error(`Failed to map project to DTO: ${projectDTO.error}`);
+    return { error: projectDTO.error };
+  }
+
+  return { data: { newProject: projectDTO.data, diff: processedDiff } };
 }
 
 export async function generateProjectFromExistingProject(
@@ -741,7 +761,7 @@ export async function generateProjectFromExistingProject(
   );
 }
 
-// Will be used manually by user and when generating diff for adding template to project
+// TODO: make sure every time a template is retrieved it retrieves the newest one or it retrieves the one with the right commitHash.
 export async function generateProjectFromTemplateSettings(
   projectSettings: ProjectSettings,
   newProjectPath: string,
@@ -783,7 +803,6 @@ export async function generateProjectFromTemplateSettings(
   return { data: newProjectPath };
 }
 
-// Show the difference between the current project and the instantiated version. Only show.
 export async function diffProjectFromTemplate(
   projectName: string,
 ): Promise<Result<ParsedFile[]>> {
@@ -797,6 +816,24 @@ export async function diffProjectFromTemplate(
   if (!project.data) {
     console.error(`Project ${projectName} not found`);
     return { error: "Project not found" };
+  }
+
+  if (!project.data.gitStatus.isClean) {
+    console.error("Cannot diff project with uncommitted changes");
+    return { error: "Cannot diff project with uncommitted changes" };
+  }
+
+  const projectCommitHash = project.data.gitStatus.currentCommitHash;
+
+  const existingSavedDiff = await retrieveFromCache("project-from-template-diff", projectCommitHash, "patch");
+
+  if ("error" in existingSavedDiff) {
+    console.error(`Failed to existingSavedDiff directories: ${existingSavedDiff.error}`);
+    return { error: existingSavedDiff.error };
+  }
+
+  if (existingSavedDiff.data) {
+    return { data: parseGitDiff(existingSavedDiff.data.data) };
   }
 
   const tempNewProjectName = `${projectName}-${crypto.randomUUID()}`;
@@ -829,6 +866,13 @@ export async function diffProjectFromTemplate(
     if ("error" in diff) {
       console.error(`Failed to diff directories: ${diff.error}`);
       return { error: diff.error };
+    }
+
+    const saveCacheResult = await saveToCache("project-from-template-diff", projectCommitHash, "patch", diff.data);
+
+    if ("error" in saveCacheResult) {
+      console.error(`Failed to save diff to cache: ${saveCacheResult.error}`);
+      return { error: saveCacheResult.error };
     }
 
     return { data: parseGitDiff(diff.data) };

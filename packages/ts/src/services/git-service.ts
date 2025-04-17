@@ -21,7 +21,7 @@ export async function switchBranch(
       };
     }
 
-    await asyncExec(`cd ${repoPath} && git checkout ${branchName}`);
+    await asyncExec(`cd ${repoPath} && git checkout ${branchName.replace("*", "").trim()}`);
     return { data: undefined };
   } catch (error) {
     console.error("Error switching branches:", error);
@@ -87,10 +87,11 @@ export async function getCurrentBranch(
 export async function loadGitStatus(
   repoPath: string,
 ): Promise<Result<GitStatus>> {
-  const [branches, isClean, currentBranch] = await Promise.all([
+  const [branches, isClean, currentBranch, commitHash] = await Promise.all([
     listBranches(repoPath),
     isGitRepoClean(repoPath),
     getCurrentBranch(repoPath),
+    getCommitHash(repoPath),
   ]);
 
   if ("error" in branches) {
@@ -113,11 +114,17 @@ export async function loadGitStatus(
     return { error: `Error getting current branch: ${currentBranch.error}` };
   }
 
+  if ("error" in commitHash) {
+    console.error("Error getting commit hash:", commitHash.error);
+    return { error: `Error getting commit hash: ${commitHash.error}` };
+  }
+
   return {
     data: {
       branches: branches.data,
       isClean: isClean.data,
       currentBranch: currentBranch.data,
+      currentCommitHash: commitHash.data,
     },
   };
 }

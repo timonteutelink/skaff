@@ -1,5 +1,6 @@
 "use server";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
+import { diffProjectFromTemplate } from "@repo/ts/services/project-service";
 import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
 import { ProjectDTO, Result } from "@repo/ts/utils/types";
 
@@ -21,7 +22,18 @@ export async function retrieveProjects(): Promise<Result<ProjectDTO[]>> {
     return { error: projects.error };
   }
 
-  const projectDtos = projects.data.map((project) => project.mapToDTO());
+  const projectDtos: ProjectDTO[] = [];
+
+  for (const project of projects.data) {
+    const projectDto = project.mapToDTO();
+
+    if ("error" in projectDto) {
+      console.error("Failed to map project to DTO:", projectDto.error);
+      return { error: projectDto.error };
+    }
+
+    projectDtos.push(projectDto.data);
+  }
 
   return { data: projectDtos };
 }
@@ -36,9 +48,18 @@ export async function retrieveProject(
     return { error: project.error };
   }
 
-  if (project.data) {
-    return { data: project.data.mapToDTO() };
+  if (!project.data) {
+    console.error("Project not found");
+    return { data: null };
   }
 
-  return { data: null };
+  const projectDto = project.data.mapToDTO();
+
+  if ("error" in projectDto) {
+    console.error("Failed to map project to DTO:", projectDto.error);
+    return { error: projectDto.error };
+  }
+
+  return { data: projectDto.data };
 }
+

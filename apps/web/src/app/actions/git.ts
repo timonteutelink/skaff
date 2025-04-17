@@ -126,11 +126,6 @@ export async function addAllAndRetrieveCurrentDiff(
 
   const parsedDiff = parseGitDiff(diff.data);
 
-  if (parsedDiff.length === 0) {
-    console.error("No changes detected");
-    return { error: "No changes detected" };
-  }
-
   const newReloadResult = await PROJECT_REGISTRY.reloadProjects();
 
   if ("error" in newReloadResult) {

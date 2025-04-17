@@ -5,7 +5,7 @@ import { makeDir } from "./file-service";
 import { Result } from "../utils/types";
 import { createHash } from "node:crypto";
 
-export type CacheKey = "template-config" | "new-template-diff";
+export type CacheKey = "template-config" | "new-template-diff" | "project-from-template-diff";
 
 export function getHash(
   stringToHash: string
