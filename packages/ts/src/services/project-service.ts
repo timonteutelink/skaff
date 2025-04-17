@@ -537,6 +537,7 @@ export async function generateProjectFromTemplateSettings(
   const newProjectGenerator = new TemplateGeneratorService(
     {
       dontDoGit: true,
+      dontAutoInstantiate: true,
       absoluteDestinationPath: newProjectPath,
     },
     rootTemplate.data,

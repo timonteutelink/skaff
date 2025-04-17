@@ -114,10 +114,6 @@ export async function loadProjectSettings(
   try {
     const projectSettings = await fs.readFile(projectSettingsPath, "utf-8");
     parsedProjectSettings = JSON.parse(projectSettings);
-    console.log(
-      "Parsed project settings:",
-      JSON.stringify(parsedProjectSettings, null, 2),
-    );
   } catch (error) {
     console.error(`Failed to read templateSettings.json: ${error}`);
     return {

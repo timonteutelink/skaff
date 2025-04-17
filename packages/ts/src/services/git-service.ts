@@ -235,72 +235,67 @@ export function parseGitDiff(diffText: string): ParsedFile[] {
   let currentFile: ParsedFile | null = null;
   let currentHunk: DiffHunk | null = null;
 
-  for (let i = 0; i < lines.length - 1; i++) {
-    const line = lines[i]!;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
 
-    // File header
+    // Start of a new file diff
     if (line.startsWith("diff --git")) {
-      if (currentFile && currentHunk) {
+      // Push previous hunk if it exists
+      if (currentHunk && currentFile) {
         currentFile.hunks.push(currentHunk);
         currentHunk = null;
       }
 
+      // Push previous file if it exists
       if (currentFile) {
         files.push(currentFile);
       }
 
       // Extract file path
-      const match = line.match(/diff --git a\/(.*) b\/(.*)/);
+      const match = line.match(/diff --git a\/(.+?) b\/(.+)/);
       if (match) {
-        const filePath = match[1]!;
         currentFile = {
-          path: filePath,
-          status: "modified", // Default status, will be updated later
+          path: match[1],
+          status: "modified", // default, may change
           hunks: [],
         };
       }
     }
 
-    // File status
+    // File status lines
     else if (line.startsWith("new file")) {
-      if (currentFile) {
-        currentFile.status = "added";
-      }
+      if (currentFile) currentFile.status = "added";
     } else if (line.startsWith("deleted file")) {
-      if (currentFile) {
-        currentFile.status = "deleted";
-      }
+      if (currentFile) currentFile.status = "deleted";
     }
 
-    // Hunk header
+    // Start of a hunk
     else if (line.startsWith("@@")) {
-      if (currentFile && currentHunk) {
+      // Push previous hunk
+      if (currentHunk && currentFile) {
         currentFile.hunks.push(currentHunk);
       }
 
-      const match = line.match(/@@ -(\d+),(\d+) \+(\d+),(\d+) @@/);
+      const match = line.match(/@@ -(\d+),?(\d*) \+(\d+),?(\d*) @@/);
       if (match) {
         currentHunk = {
-          oldStart: Number.parseInt(match[1]!),
-          oldLines: Number.parseInt(match[2]!),
-          newStart: Number.parseInt(match[3]!),
-          newLines: Number.parseInt(match[4]!),
+          oldStart: parseInt(match[1], 10),
+          oldLines: parseInt(match[2] || "1", 10),
+          newStart: parseInt(match[3], 10),
+          newLines: parseInt(match[4] || "1", 10),
           lines: [],
         };
       }
     }
 
-    // Diff content
-    else if (
-      currentHunk &&
-      (line.startsWith("+") || line.startsWith("-") || line.startsWith(" "))
-    ) {
+    // Diff lines (+, -, or context)
+    else if (currentHunk && /^[ +-]/.test(line)) {
       currentHunk.lines.push(line);
     }
   }
 
-  // Add the last hunk and file
-  if (currentFile && currentHunk) {
+  // Push any remaining hunk and file
+  if (currentHunk && currentFile) {
     currentFile.hunks.push(currentHunk);
   }
 
@@ -310,3 +305,4 @@ export function parseGitDiff(diffText: string): ParsedFile[] {
 
   return files;
 }
+

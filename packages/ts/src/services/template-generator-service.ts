@@ -32,6 +32,11 @@ export interface GeneratorOptions {
   dontGenerateTemplateSettings?: boolean;
 
   /**
+   * If true do not auto instantiate child templates. Ignores this field.
+   */
+  dontAutoInstantiate?: boolean
+
+  /**
    * The absolute path to the destination directory where the template will be generated.
    * Should be the root project dir or the directory where the individual template should be stored.
    * This should be a valid path on the filesystem.
@@ -322,12 +327,17 @@ export class TemplateGeneratorService {
     fullParentSettings: TemplateSettingsType<z.AnyZodObject>,
     parentTemplateInstanceId: string,
   ): Promise<Result<void>> {
+    if (this.options.dontAutoInstantiate) {
+      return { data: undefined };
+    }
+    console.log("RANONCE", fullParentSettings, parentTemplateInstanceId);
     if (!this.currentlyGeneratingTemplate) {
       console.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
     }
     for (const templateToAutoInstantiate of this.currentlyGeneratingTemplate
       .config.autoInstatiatedSubtemplates || []) {
+      console.log(templateToAutoInstantiate)
       let newTemplateSettings: UserTemplateSettings;
       try {
         newTemplateSettings =
@@ -885,6 +895,11 @@ export class TemplateGeneratorService {
       return {
         error: "Git is not supported for this operation. Please use the CLI.",
       };
+    }
+
+    if (!this.options.dontAutoInstantiate) {
+      console.error("Please make sure child templates are not autoinstantiated before generating a full project from existing settings.")
+      return { error: "Please make sure child templates are not autoinstantiated before generating a full project from existing settings." }
     }
 
     try {
