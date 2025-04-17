@@ -10,14 +10,15 @@ import { Badge } from "@/components/ui/badge"
 import { ParsedFile } from "@repo/ts/utils/types"
 
 interface FileTreeProps {
+  projectName: string
   files: ParsedFile[]
   selectedFile: string | null
   onSelectFile: (path: string) => void
 }
 
-export function FileTree({ files, selectedFile, onSelectFile }: FileTreeProps) {
+export function FileTree({ projectName, files, selectedFile, onSelectFile }: FileTreeProps) {
   // Group files by directory
-  const fileTree = useMemo(() => buildFileTree(files), [files])
+  const fileTree = useMemo(() => buildFileTree(projectName, files), [files])
 
   return (
     <Card className="h-full">
@@ -140,9 +141,9 @@ function StatusBadge({ status }: { status: "added" | "modified" | "deleted" }) {
 }
 
 // Helper function to build a file tree from a flat list of files
-function buildFileTree(files: ParsedFile[]): TreeNode {
+function buildFileTree(projectName: string, files: ParsedFile[]): TreeNode {
   const root: TreeNode = {
-    name: "root",
+    name: projectName,
     path: "",
     type: "directory",
     children: [],

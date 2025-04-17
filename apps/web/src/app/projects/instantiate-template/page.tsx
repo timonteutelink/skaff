@@ -339,7 +339,7 @@ const ProjectTemplateTreePage: React.FC = () => {
     return (
       <div className="container py-10 mx-auto">
         <h1 className="text-2xl font-bold mb-4">Diff to apply</h1>
-        <DiffVisualizerPage parsedDiff={appliedDiff} />
+        <DiffVisualizerPage projectName={projectNameParam} parsedDiff={appliedDiff} />
         <div className="flex justify-between mt-4">
           <Button
             variant="outline"
@@ -360,7 +360,7 @@ const ProjectTemplateTreePage: React.FC = () => {
     return (
       <div className="container py-10 mx-auto">
         <h1 className="text-2xl font-bold mb-4">Diff to apply</h1>
-        <DiffVisualizerPage parsedDiff={diffToApply.parsedDiff} />
+        <DiffVisualizerPage projectName={projectNameParam} parsedDiff={diffToApply.parsedDiff} />
         <div className="flex justify-between mt-4">
           <Button
             variant="outline"

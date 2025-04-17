@@ -164,11 +164,12 @@ export async function applyDiffToGitRepo(
   }
 }
 
-export async function restoreAllChanges(
+// TODO: should add a question to the user if they want to reset all changes before they can go back from the applied diff to diff to apply. otherwise user might remove changes by accident
+export async function resetAllChanges(
   repoPath: string,
 ): Promise<Result<void>> {
   try {
-    await asyncExec(`cd ${repoPath} && git restore --staged . && git restore .`);
+    await asyncExec(`cd ${repoPath} && git reset --hard`);
     return { data: undefined };
   } catch (error) {
     console.error("Error restoring changes:", error);

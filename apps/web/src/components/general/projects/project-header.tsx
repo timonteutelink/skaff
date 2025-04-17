@@ -1,6 +1,6 @@
 "use client"
 import { useRouter } from "next/navigation"
-import { GitBranchIcon, GitCommitIcon, CheckCircleIcon, AlertCircleIcon } from "lucide-react"
+import { GitBranchIcon, GitCommitIcon, CheckCircleIcon, AlertCircleIcon, FileDiffIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ProjectDTO } from "@repo/ts/utils/types"
@@ -54,9 +54,13 @@ export function ProjectHeader({ project, onBranchChange }: ProjectHeaderProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button variant="outline" onClick={() => router.push(`/projects/project-diff-details?projectName=${project.name}`)}>
+        <Button variant="outline" onClick={() => router.push(`/projects/project-staged-changes?projectName=${project.name}`)}>
           <GitCommitIcon className="w-4 h-4 mr-2" />
           Details
+        </Button>
+        <Button variant="outline" onClick={() => router.push(`/projects/project-template-diff?projectName=${project.name}`)}>
+          <FileDiffIcon className="w-4 h-4 mr-2" />
+          Diff Template
         </Button>
       </div>
     </header>

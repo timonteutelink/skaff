@@ -15,6 +15,7 @@ export class RootTemplateRegistry {
   }
 
   private async loadTemplates(): Promise<Result<void>> {
+    this.templates = [];
     for (const templatePath of this.templatePaths) {
       const rootTemplateDirsPath = path.join(templatePath, "root-templates");
       let rootTemplateDirs: string[] = [];

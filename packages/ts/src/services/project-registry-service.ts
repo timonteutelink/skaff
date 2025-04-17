@@ -13,6 +13,7 @@ export class ProjectRegistry {
   }
 
   private async loadProjects(): Promise<Result<void>> {
+    this.projects = [];
     for (const searchPath of this.searchPaths) {
       let dirs: string[] = [];
       try {

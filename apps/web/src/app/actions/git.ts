@@ -2,6 +2,7 @@
 
 import { addAllAndDiff, commitAll, parseGitDiff, switchBranch } from "@repo/ts/services/git-service";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
+import { diffProjectFromTemplate } from "@repo/ts/services/project-service";
 import { ParsedFile, Result } from "@repo/ts/utils/types";
 
 export async function commitChanges(
@@ -129,3 +130,8 @@ export async function addAllAndRetrieveCurrentDiff(
   return { data: parsedDiff };
 }
 
+export async function diffProjectFromItsTemplate(
+  projectName: string,
+): Promise<Result<ParsedFile[]>> {
+  return diffProjectFromTemplate(projectName)
+}

@@ -368,6 +368,9 @@ export class TemplateGeneratorService {
       );
 
       if ("error" in addTemplateResult) {
+        this.currentlyGeneratingTemplate = savedCurrentlyGeneratingTemplate;
+        this.currentlyGeneratingTemplateFullSettings = savedCurrentlyGeneratingTemplateFullSettings;
+        this.currentlyGeneratingTemplateParentInstanceId = savedCurrentlyGeneratingTemplateParentInstanceId;
         console.error(
           `Failed to add template to project settings: ${addTemplateResult.error}`,
         );
@@ -379,6 +382,9 @@ export class TemplateGeneratorService {
       const instantiateTemplateResult = await this.instantiateTemplateInProject(addTemplateResult.data);
 
       if ("error" in instantiateTemplateResult) {
+        this.currentlyGeneratingTemplate = savedCurrentlyGeneratingTemplate;
+        this.currentlyGeneratingTemplateFullSettings = savedCurrentlyGeneratingTemplateFullSettings;
+        this.currentlyGeneratingTemplateParentInstanceId = savedCurrentlyGeneratingTemplateParentInstanceId;
         console.error(
           `Failed to instantiate template: ${instantiateTemplateResult.error}`,
         );
@@ -387,16 +393,15 @@ export class TemplateGeneratorService {
         };
       }
 
-      this.currentlyGeneratingTemplate = savedCurrentlyGeneratingTemplate;
-      this.currentlyGeneratingTemplateFullSettings = savedCurrentlyGeneratingTemplateFullSettings;
-      this.currentlyGeneratingTemplateParentInstanceId = savedCurrentlyGeneratingTemplateParentInstanceId;
-
       const autoInstatiationResult = await this.autoInstantiateSubTemplates(
         newFullTemplateSettings,
         parentTemplateInstanceId,
       );
 
       if ("error" in autoInstatiationResult) {
+        this.currentlyGeneratingTemplate = savedCurrentlyGeneratingTemplate;
+        this.currentlyGeneratingTemplateFullSettings = savedCurrentlyGeneratingTemplateFullSettings;
+        this.currentlyGeneratingTemplateParentInstanceId = savedCurrentlyGeneratingTemplateParentInstanceId;
         console.error(
           `Failed to auto-instantiate subtemplates: ${autoInstatiationResult.error}`,
         );
@@ -404,6 +409,11 @@ export class TemplateGeneratorService {
           error: `Failed to auto-instantiate subtemplates: ${autoInstatiationResult.error}`,
         };
       }
+
+      this.currentlyGeneratingTemplate = savedCurrentlyGeneratingTemplate;
+      this.currentlyGeneratingTemplateFullSettings = savedCurrentlyGeneratingTemplateFullSettings;
+      this.currentlyGeneratingTemplateParentInstanceId = savedCurrentlyGeneratingTemplateParentInstanceId;
+
     }
 
     return { data: undefined };
@@ -696,6 +706,7 @@ export class TemplateGeneratorService {
         const writeSettingsResult = await writeNewProjectSettings(
           this.options.absoluteDestinationPath,
           this.destinationProjectSettings,
+          false
         );
         if ("error" in writeSettingsResult) {
           console.error(

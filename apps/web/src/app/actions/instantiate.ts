@@ -1,5 +1,5 @@
 'use server';
-import { deleteRepo, restoreAllChanges } from "@repo/ts/services/git-service";
+import { deleteRepo, resetAllChanges } from "@repo/ts/services/git-service";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import { applyDiffToProject, generateNewTemplateDiff, generateProjectFromTemplateSettings, instantiateProject, resolveConflictsAndRetrieveAppliedDiff } from "@repo/ts/services/project-service";
 import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
@@ -104,7 +104,7 @@ export async function restoreAllChangesToCleanProject(
     return { error: "Project not found" };
   }
 
-  const restoreResult = await restoreAllChanges(project.data.absoluteRootDir);
+  const restoreResult = await resetAllChanges(project.data.absoluteRootDir);
 
   if ("error" in restoreResult) {
     console.error("Failed to restore changes:", restoreResult.error);
@@ -194,7 +194,9 @@ export async function generateNewProjectFromExisting(currentProjectName: string,
     return { error: "Project not found" };
   }
 
-  const result = await generateProjectFromTemplateSettings(project.data.instantiatedProjectSettings, newProjectName, path.join(parentDirPath, newProjectName));
+  project.data.instantiatedProjectSettings.projectName = newProjectName;
+
+  const result = await generateProjectFromTemplateSettings(project.data.instantiatedProjectSettings, path.join(parentDirPath, newProjectName));
 
   if ("error" in result) {
     console.error("Failed to generate new project:", result.error);

@@ -10,6 +10,27 @@ export async function writeNewProjectSettings(
   projectSettings: ProjectSettings,
   overwrite?: boolean,
 ): Promise<Result<void>> {
+  if (!projectSettings.instantiatedTemplates[0]) {
+    console.error("No instantiated templates found in project settings");
+    return { error: "No instantiated templates found in project settings" };
+  }
+  const newProjectSettings: ProjectSettings = {
+    ...projectSettings,
+    instantiatedTemplates: [projectSettings.instantiatedTemplates[0]!]
+  };
+
+  return writeProjectSettings(
+    absoluteProjectPath,
+    newProjectSettings,
+    overwrite,
+  );
+}
+
+async function writeProjectSettings(
+  absoluteProjectPath: string,
+  projectSettings: ProjectSettings,
+  overwrite?: boolean,
+): Promise<Result<void>> {
   const projectSettingsPath = path.join(
     absoluteProjectPath,
     "templateSettings.json",
@@ -64,7 +85,7 @@ export async function writeNewTemplateToSettings(
   const projectSettings = projectSettingsResult.data.settings;
   projectSettings.instantiatedTemplates.push(instantiatedTemplate);
 
-  const result = await writeNewProjectSettings(
+  const result = await writeProjectSettings(
     absoluteProjectPath,
     projectSettings,
     true,
@@ -90,6 +111,7 @@ export async function loadProjectSettings(
   try {
     const projectSettings = await fs.readFile(projectSettingsPath, "utf-8");
     parsedProjectSettings = JSON.parse(projectSettings);
+    console.log("Parsed project settings:", JSON.stringify(parsedProjectSettings, null, 2));
   } catch (error) {
     console.error(`Failed to read templateSettings.json: ${error}`);
     return {

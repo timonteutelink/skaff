@@ -175,7 +175,6 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
   try {
     const cleanProjectFromCurrentProjectSettingsResult = await generateProjectFromTemplateSettings(
       destinationProject.data.instantiatedProjectSettings,
-      destinationProjectName,
       tempOldProjectPath.data,
     );
 
@@ -202,7 +201,6 @@ export async function generateNewTemplateDiff(rootTemplateName: string, template
 
     const cleanProjectFromNewSettingsResult = await generateProjectFromTemplateSettings(
       newProjectSettings,
-      destinationProjectName,
       tempNewProjectPath.data,
     );
 
@@ -375,7 +373,7 @@ export async function instantiateProject(rootTemplateName: string, parentDirPath
   return { data: { newProject: project.data.mapToDTO(), diff: processedDiff } };
 }
 
-export async function generateProjectFromExistingProject(existingProjectName: string, newProjectName: string, destinationDirPath: string): Promise<Result<string>> {
+export async function generateProjectFromExistingProject(existingProjectName: string, newProjectPath: string): Promise<Result<string>> {
   const project = await PROJECT_REGISTRY.findProject(existingProjectName);
 
   if ('error' in project) {
@@ -389,11 +387,11 @@ export async function generateProjectFromExistingProject(existingProjectName: st
   }
   const templateSettings = project.data.instantiatedProjectSettings;
 
-  return await generateProjectFromTemplateSettings(templateSettings, newProjectName, destinationDirPath);
+  return await generateProjectFromTemplateSettings(templateSettings, newProjectPath);
 }
 
 // Will be used manually by user and when generating diff for adding template to project
-export async function generateProjectFromTemplateSettings(projectSettings: ProjectSettings, newProjectName: string, newProjectPath: string): Promise<Result<string>> {
+export async function generateProjectFromTemplateSettings(projectSettings: ProjectSettings, newProjectPath: string): Promise<Result<string>> {
   const rootTemplate = await ROOT_TEMPLATE_REGISTRY.findTemplate(projectSettings.rootTemplateName);
 
   if ("error" in rootTemplate) {
@@ -422,4 +420,47 @@ export async function generateProjectFromTemplateSettings(projectSettings: Proje
   }
 
   return { data: newProjectPath };
+}
+
+// Show the difference between the current project and the instantiated version. Only show.
+export async function diffProjectFromTemplate(
+  projectName: string,
+): Promise<Result<ParsedFile[]>> {
+  const project = await PROJECT_REGISTRY.findProject(projectName);
+
+  if ('error' in project) {
+    console.error(`Failed to find project: ${project.error}`);
+    return { error: project.error };
+  }
+
+  if (!project.data) {
+    console.error(`Project ${projectName} not found`);
+    return { error: "Project not found" };
+  }
+
+  const tempNewProjectName = `${projectName}-${crypto.randomUUID()}`;
+  const tempNewProjectPath = await pathInCache(tempNewProjectName);
+  if ('error' in tempNewProjectPath) {
+    console.error(`Failed to create temp new project path: ${tempNewProjectPath.error}`);
+    return { error: tempNewProjectPath.error };
+  }
+
+  try {
+    const newProjectFromExistingProjectResult = await generateProjectFromExistingProject(projectName, tempNewProjectPath.data);
+    if ('error' in newProjectFromExistingProjectResult) {
+      console.error(`Failed to create new project from existing project: ${newProjectFromExistingProjectResult.error}`);
+      return { error: newProjectFromExistingProjectResult.error };
+    }
+
+    const diff = await diffDirectories(tempNewProjectPath.data, project.data.absoluteRootDir);
+
+    if ('error' in diff) {
+      console.error(`Failed to diff directories: ${diff.error}`);
+      return { error: diff.error };
+    }
+
+    return { data: parseGitDiff(diff.data) };
+  } finally {
+    await fs.rm(tempNewProjectPath.data, { recursive: true });
+  }
 }

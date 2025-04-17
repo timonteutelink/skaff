@@ -1,10 +1,11 @@
-import { generateProjectFromTemplateSettings } from "@repo/ts/models/project-models";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import { ROOT_TEMPLATE_REGISTRY } from "@repo/ts/services/root-template-registry-service";
 import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { Command } from "commander";
 import { input, select } from '@inquirer/prompts';
+import { generateProjectFromExistingProject, generateProjectFromTemplateSettings } from "@repo/ts/services/project-service";
+import path from "node:path";
 
 const program = new Command();
 
@@ -17,8 +18,12 @@ program
   .command("list-templates")
   .description("List all templates")
   .action(async () => {
-    await ROOT_TEMPLATE_REGISTRY.getTemplates();
-    const templates = ROOT_TEMPLATE_REGISTRY.templates.map((t) => t.mapToDTO());
+    const templateResults = await ROOT_TEMPLATE_REGISTRY.getTemplates();
+    if ("error" in templateResults) {
+      console.error("Error:", templateResults.error);
+      process.exit(1);
+    }
+    const templates = templateResults.data.map((t) => t.mapToDTO());
     console.log(JSON.stringify(templates, null, 2));
   });
 
@@ -31,6 +36,10 @@ program
       console.error("Error:", result.error);
       process.exit(1);
     }
+    if (!result.data) {
+      console.error("Template not found");
+      process.exit(1);
+    }
     console.log(JSON.stringify(result.data.mapToDTO(), null, 2));
   });
 
@@ -38,8 +47,12 @@ program
   .command("list-projects")
   .description("List all projects")
   .action(async () => {
-    await PROJECT_REGISTRY.getProjects();
-    const projects = PROJECT_REGISTRY.projects.map((p) => p.mapToDTO());
+    const projectResults = await PROJECT_REGISTRY.getProjects();
+    if ("error" in projectResults) {
+      console.error("Error:", projectResults.error);
+      process.exit(1);
+    }
+    const projects = projectResults.data.map((p) => p.mapToDTO());
     console.log(JSON.stringify(projects, null, 2));
   });
 
@@ -48,18 +61,26 @@ program
   .description("Get a project by name")
   .action(async (projectName: string) => {
     const project = await PROJECT_REGISTRY.findProject(projectName);
-    if (!project) {
+    if ("error" in project) {
+      console.error("Error:", project.error);
+      process.exit(1);
+    }
+    if (!project.data) {
       console.error("Project not found");
       process.exit(1);
     }
-    console.log(JSON.stringify(project.mapToDTO(), null, 2));
+    console.log(JSON.stringify(project.data.mapToDTO(), null, 2));
   });
 
 program
   .command("precompile-templates")
   .description("Precompile all templates")
   .action(async () => {
-    await ROOT_TEMPLATE_REGISTRY.reloadTemplates();
+    const result = await ROOT_TEMPLATE_REGISTRY.reloadTemplates();
+    if ("error" in result) {
+      console.error("Error:", result.error);
+      process.exit(1);
+    }
     console.log("Templates precompiled successfully");
   });
 
@@ -87,6 +108,10 @@ program
       console.error(template.error);
       process.exit(1);
     }
+    if (!template.data) {
+      console.error("Template not found");
+      process.exit(1);
+    }
 
     const result = await template.data.instantiateNewProject(
       userTemplateSettings,
@@ -98,15 +123,23 @@ program
       process.exit(1);
     }
 
-    await PROJECT_REGISTRY.reloadProjects();
+    const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+    if ("error" in reloadResult) {
+      console.error("Failed to reload projects", reloadResult.error);
+      process.exit(1);
+    }
     const newProject = await PROJECT_REGISTRY.findProject(projectName);
 
-    if (!newProject) {
+    if ("error" in newProject) {
+      console.error("Failed to find new project", newProject.error);
+      process.exit(1);
+    }
+    if (!newProject.data) {
       console.error("Project creation failed");
       process.exit(1);
     }
 
-    console.log("Project created:", newProject.mapToDTO());
+    console.log("Project created:", newProject.data.mapToDTO());
   });
 
 program
@@ -130,6 +163,10 @@ program
       console.error(rootTemplate.error);
       process.exit(1);
     }
+    if (!rootTemplate.data) {
+      console.error("Root template not found");
+      process.exit(1);
+    }
 
     const subTemplate = rootTemplate.data.findSubTemplate(templateName);
     if (!subTemplate) {
@@ -140,14 +177,18 @@ program
     const project = await PROJECT_REGISTRY.findProject(
       destinationProjectName,
     );
-    if (!project) {
+    if ("error" in project) {
+      console.error(project.error);
+      process.exit(1);
+    }
+    if (!project.data) {
       console.error("Destination project not found");
       process.exit(1);
     }
 
     const result = await subTemplate.templateInExistingProject(
       userTemplateSettings,
-      project,
+      project.data,
       parentInstanceId,
     );
     if ("error" in result) {
@@ -161,11 +202,16 @@ program
 program.command("instantiate-full-project-from-existing").action(async () => {
   const existingProjects = await PROJECT_REGISTRY.getProjects();
 
+  if ('error' in existingProjects) {
+    console.error(existingProjects.error);
+    process.exit(1);
+  }
+
   const existingProjectName = await select<string>({ choices: existingProjects.map((p) => p.instantiatedProjectSettings.projectName), message: "Existing project name:" });
   const newProjectName = await input({ message: "New project name:" });
   const destinationDirPath = await select<string>({ choices: PROJECT_SEARCH_PATHS.map((p) => p.path), message: "Destination directory path:" });
 
-  const instantiateResult = await generateProjectFromTemplateSettings(existingProjectName, newProjectName, destinationDirPath);
+  const instantiateResult = await generateProjectFromExistingProject(existingProjectName, path.join(destinationDirPath, newProjectName));
 
   if ("error" in instantiateResult) {
     console.error(instantiateResult.error);

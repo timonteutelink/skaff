@@ -24,12 +24,13 @@ export interface TemplateDTO {
   refDir?: string;
 }
 
+// TODO: add the hash of the entire template when generated. This way if template changes we can ask the user if they want to bring the template up to date. Per template not per root template. Think about automatically updating also all children or choosing to update entire project at once.
 export const InstantiatedTemplateSchema = z.object({
   id: z.string().min(1),
   parentId: z.string().optional(),
 
   templateName: z.string().min(1),
-  templateSettings: z.object({}), //UserTemplateSettings
+  templateSettings: z.object({}).passthrough(), //UserTemplateSettings
 
   automaticallyInstantiatedByParent: z.boolean().optional(),
 });

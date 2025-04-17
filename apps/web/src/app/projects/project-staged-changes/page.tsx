@@ -9,7 +9,7 @@ import { ArrowLeft } from "lucide-react"
 import CommitButton from "@/components/general/git/commit-dialog"
 import { toast } from "sonner"
 
-export default function ProjectDiffDetailsPage() {
+export default function ProjectStagedChangesPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const projectNameParam = useMemo(() => searchParams.get("projectName"), [searchParams])
@@ -99,7 +99,7 @@ export default function ProjectDiffDetailsPage() {
       </div>
 
       <div className="flex-1 p-4">
-        <DiffVisualizerPage parsedDiff={projectDiff} />
+        <DiffVisualizerPage projectName={projectNameParam} parsedDiff={projectDiff} />
       </div>
     </div>
   )
