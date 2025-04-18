@@ -121,7 +121,8 @@ export class Project {
   }
 
   isTemplateOutdated(): Result<boolean> {
-    for (const instantiatedTemplate of this.instantiatedProjectSettings.instantiatedTemplates) {
+    for (const instantiatedTemplate of this.instantiatedProjectSettings
+      .instantiatedTemplates) {
       const template = this.rootTemplate.findSubTemplate(
         instantiatedTemplate.templateName,
       );
@@ -140,7 +141,7 @@ export class Project {
 
   public mapToDTO(): Result<ProjectDTO> {
     const templateOutdated = this.isTemplateOutdated();
-    if ('error' in templateOutdated) {
+    if ("error" in templateOutdated) {
       console.error(
         `Failed to check if template is outdated: ${templateOutdated.error}`,
       );
@@ -155,7 +156,7 @@ export class Project {
         settings: this.instantiatedProjectSettings,
         gitStatus: this.gitStatus,
         outdatedTemplate: templateOutdated.data,
-      }
+      },
     };
   }
 }

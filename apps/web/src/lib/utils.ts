@@ -7,9 +7,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function toastNullError<T>(
-  result: Result<T>,
-): T | null {
+export function toastNullError<T>(result: Result<T>): T | null {
   if ("error" in result) {
     console.error(result.error);
     toast.error(result.error);

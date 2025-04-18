@@ -8,7 +8,10 @@ import { glob } from "glob";
 import Handlebars from "handlebars";
 import * as path from "node:path";
 import { Template } from "../models/template-models";
-import { anyOrCallbackToAny, stringOrCallbackToString } from "../utils/shared-utils";
+import {
+  anyOrCallbackToAny,
+  stringOrCallbackToString,
+} from "../utils/shared-utils";
 import { CreateProjectResult, ProjectSettings, Result } from "../utils/types";
 import z from "zod";
 import { addAllAndDiff, commitAll, createGitRepo } from "./git-service";
@@ -34,7 +37,7 @@ export interface GeneratorOptions {
   /**
    * If true do not auto instantiate child templates. Ignores this field.
    */
-  dontAutoInstantiate?: boolean
+  dontAutoInstantiate?: boolean;
 
   /**
    * The absolute path to the destination directory where the template will be generated.
@@ -204,10 +207,12 @@ export class TemplateGeneratorService {
       //debug logging for testing
       if (destPath.endsWith("devenv.nix")) {
         console.log(srcPath, destPath);
-        console.log(dest)
+        console.log(dest);
         console.log(redirects.data);
         console.log(this.currentlyGeneratingTemplateFullSettings);
-        console.log(this.currentlyGeneratingTemplate.config.templateConfig.name);
+        console.log(
+          this.currentlyGeneratingTemplate.config.templateConfig.name,
+        );
         console.log(this.currentlyGeneratingTemplateParentInstanceId);
         console.log(this.destinationProjectSettings);
         console.log(this.rootTemplate.config.templateConfig.name);
@@ -405,7 +410,7 @@ export class TemplateGeneratorService {
         newTemplateSettings,
         nameOfTemplateToAutoInstantiate.data,
         parentTemplateInstanceId,
-        true
+        true,
       );
 
       if ("error" in addTemplateResult) {
@@ -911,8 +916,13 @@ export class TemplateGeneratorService {
     }
 
     if (!this.options.dontAutoInstantiate) {
-      console.error("Please make sure child templates are not autoinstantiated before generating a full project from existing settings.")
-      return { error: "Please make sure child templates are not autoinstantiated before generating a full project from existing settings." }
+      console.error(
+        "Please make sure child templates are not autoinstantiated before generating a full project from existing settings.",
+      );
+      return {
+        error:
+          "Please make sure child templates are not autoinstantiated before generating a full project from existing settings.",
+      };
     }
 
     try {
@@ -942,7 +952,8 @@ export class TemplateGeneratorService {
         };
       }
 
-      for (const instantiated of this.destinationProjectSettings.instantiatedTemplates) {
+      for (const instantiated of this.destinationProjectSettings
+        .instantiatedTemplates) {
         if (
           instantiated.id ===
           this.destinationProjectSettings.instantiatedTemplates[0]!.id

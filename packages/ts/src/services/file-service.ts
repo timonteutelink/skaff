@@ -10,4 +10,3 @@ export async function makeDir(path: string): Promise<Result<void>> {
   }
   return { data: undefined };
 }
-

@@ -9,11 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ParsedFile, ProjectDTO, Result } from "@repo/ts/utils/types";
-import {
-  FileDiffIcon,
-  GitBranchIcon,
-  GitCommitIcon
-} from "lucide-react";
+import { FileDiffIcon, GitBranchIcon, GitCommitIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -47,9 +43,7 @@ export function ProjectHeader({ project, onBranchChange }: ProjectHeaderProps) {
 
         <div className="ml-4 flex items-center gap-8 text-sm">
           {project.gitStatus.isClean ? (
-            <Badge className="bg-green-100 text-green-800">
-              Git Clean
-            </Badge>
+            <Badge className="bg-green-100 text-green-800">Git Clean</Badge>
           ) : (
             <Badge className="bg-red-100 text-red-800">
               Uncommitted Changes
@@ -81,7 +75,11 @@ export function ProjectHeader({ project, onBranchChange }: ProjectHeaderProps) {
       <div className="flex items-center gap-4">
         <DropdownMenu>
           <DropdownMenuTrigger disabled={!project.gitStatus.isClean} asChild>
-            <Button disabled={!project.gitStatus.isClean} variant="outline" className={`flex items-center gap-2 ${project.gitStatus.isClean ? '' : 'bg-muted cursor-not-allowed'}`}>
+            <Button
+              disabled={!project.gitStatus.isClean}
+              variant="outline"
+              className={`flex items-center gap-2 ${project.gitStatus.isClean ? "" : "bg-muted cursor-not-allowed"}`}
+            >
               <GitBranchIcon className="w-4 h-4" />
               {project.gitStatus.currentBranch}
             </Button>
@@ -89,11 +87,17 @@ export function ProjectHeader({ project, onBranchChange }: ProjectHeaderProps) {
           <DropdownMenuContent>
             {project.gitStatus.branches.map((branch) => (
               <DropdownMenuItem
-                disabled={branch === project.gitStatus.currentBranch || !project.gitStatus.isClean}
+                disabled={
+                  branch === project.gitStatus.currentBranch ||
+                  !project.gitStatus.isClean
+                }
                 key={branch}
                 onClick={() => onBranchChange(branch)}
                 className={
-                  branch === project.gitStatus.currentBranch || !project.gitStatus.isClean ? 'bg-muted' : ''
+                  branch === project.gitStatus.currentBranch ||
+                  !project.gitStatus.isClean
+                    ? "bg-muted"
+                    : ""
                 }
               >
                 {branch}
@@ -108,7 +112,7 @@ export function ProjectHeader({ project, onBranchChange }: ProjectHeaderProps) {
           disabled={project.gitStatus.isClean}
           onClick={() =>
             router.push(
-              `/projects/project-staged-changes?projectName=${project.name}`
+              `/projects/project-staged-changes?projectName=${project.name}`,
             )
           }
         >
@@ -122,7 +126,7 @@ export function ProjectHeader({ project, onBranchChange }: ProjectHeaderProps) {
           disabled={isDiffClean}
           onClick={() =>
             router.push(
-              `/projects/project-template-diff?projectName=${project.name}`
+              `/projects/project-template-diff?projectName=${project.name}`,
             )
           }
         >
@@ -131,9 +135,7 @@ export function ProjectHeader({ project, onBranchChange }: ProjectHeaderProps) {
         </Button>
 
         {/* Add new button to bring templates up to date. Add currentTemplateId to instantiation url and voila */}
-
       </div>
     </header>
   );
 }
-

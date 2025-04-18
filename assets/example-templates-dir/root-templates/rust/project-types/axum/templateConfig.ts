@@ -29,7 +29,7 @@ const templateConfigModule: TemplateConfigModule<
   targetPath: "src",
   templateSettingsSchema,
   sideEffects: [],
-  templatesThatDisableThis: ["rust_cli"]
+  templatesThatDisableThis: ["rust_cli"],
 };
 
 export default templateConfigModule;

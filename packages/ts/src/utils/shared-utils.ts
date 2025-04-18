@@ -51,9 +51,7 @@ export function findTemplate(
   return { data: null };
 }
 
-export function nullError<T>(
-  result: Result<T>,
-): T | null {
+export function nullError<T>(result: Result<T>): T | null {
   if ("error" in result) {
     console.error(result.error);
     return null;
@@ -75,4 +73,3 @@ export function deepSortObject<T>(obj: T): T {
   }
   return obj;
 }
-

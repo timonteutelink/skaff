@@ -29,7 +29,10 @@ export function FileTree({
   selectedFile,
   onSelectFile,
 }: FileTreeProps) {
-  const fileTree = useMemo(() => buildFileTree(projectName, files), [files, projectName]);
+  const fileTree = useMemo(
+    () => buildFileTree(projectName, files),
+    [files, projectName],
+  );
 
   return (
     <Card className="h-full">

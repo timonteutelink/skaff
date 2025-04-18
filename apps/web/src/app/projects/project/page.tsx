@@ -315,7 +315,11 @@ export default function ProjectTemplateTreePage() {
 
         {/* Right: Details panel */}
         <div className="w-2/3 overflow-auto p-6">
-          <ProjectDetailsPanel selectedNode={selectedNode} project={project} rootTemplate={rootTemplate} />
+          <ProjectDetailsPanel
+            selectedNode={selectedNode}
+            project={project}
+            rootTemplate={rootTemplate}
+          />
         </div>
       </div>
     </div>

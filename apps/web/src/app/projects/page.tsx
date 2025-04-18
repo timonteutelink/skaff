@@ -1,8 +1,11 @@
-"use client"
-import { retrieveProjects, retrieveProjectSearchPaths } from "@/app/actions/project"
-import { retrieveTemplates } from "@/app/actions/template"
-import TablePage, { type FieldInfo } from "@/components/general/TablePage"
-import { Button } from "@/components/ui/button"
+"use client";
+import {
+  retrieveProjects,
+  retrieveProjectSearchPaths,
+} from "@/app/actions/project";
+import { retrieveTemplates } from "@/app/actions/template";
+import TablePage, { type FieldInfo } from "@/components/general/TablePage";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,9 +14,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -22,15 +32,19 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { projectNameRegex, type ProjectDTO, type TemplateDTO } from "@repo/ts/utils/types"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { PlusCircle } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { useForm } from "react-hook-form"
-import { toast } from "sonner"
-import * as z from "zod"
+} from "@/components/ui/select";
+import {
+  projectNameRegex,
+  type ProjectDTO,
+  type TemplateDTO,
+} from "@repo/ts/utils/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { PlusCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import * as z from "zod";
 
 const columnMapping: FieldInfo<ProjectDTO>[] = [
   {
@@ -41,22 +55,30 @@ const columnMapping: FieldInfo<ProjectDTO>[] = [
     name: "Root Template",
     data: (project: ProjectDTO) => project.rootTemplateName,
   },
-]
+];
 
 const formSchema = z.object({
-  projectName: z.string().min(1, "Project name is required").regex(projectNameRegex, "Project name can only contain letters, numbers, dashes and underscores."),
+  projectName: z
+    .string()
+    .min(1, "Project name is required")
+    .regex(
+      projectNameRegex,
+      "Project name can only contain letters, numbers, dashes and underscores.",
+    ),
   template: z.string().min(1, "Template is required"),
   directory: z.string().min(1, "Project directory is required"),
-})
+});
 
-type FormValues = z.infer<typeof formSchema>
+type FormValues = z.infer<typeof formSchema>;
 
 export default function TemplatesListPage() {
-  const router = useRouter()
-  const [projects, setProjects] = useState<ProjectDTO[]>([])
-  const [templates, setTemplates] = useState<TemplateDTO[]>([])
-  const [projectSearchPaths, setProjectSearchPaths] = useState<{ id: string; path: string }[]>([])
-  const [open, setOpen] = useState(false)
+  const router = useRouter();
+  const [projects, setProjects] = useState<ProjectDTO[]>([]);
+  const [templates, setTemplates] = useState<TemplateDTO[]>([]);
+  const [projectSearchPaths, setProjectSearchPaths] = useState<
+    { id: string; path: string }[]
+  >([]);
+  const [open, setOpen] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -65,37 +87,40 @@ export default function TemplatesListPage() {
       template: "",
       directory: "",
     },
-  })
+  });
 
   useEffect(() => {
     retrieveProjects().then((projects) => {
       if ("error" in projects) {
-        console.error("Error retrieving projects:", projects.error)
-        toast.error("Error retrieving projects: " + projects.error)
-        return
+        console.error("Error retrieving projects:", projects.error);
+        toast.error("Error retrieving projects: " + projects.error);
+        return;
       }
-      setProjects(projects.data || [])
-    })
+      setProjects(projects.data || []);
+    });
     retrieveTemplates().then((templates) => {
       if ("error" in templates) {
-        console.error("Error retrieving templates:", templates.error)
-        toast.error("Error retrieving templates: " + templates.error)
-        return
+        console.error("Error retrieving templates:", templates.error);
+        toast.error("Error retrieving templates: " + templates.error);
+        return;
       }
-      setTemplates(templates.data || [])
-    })
+      setTemplates(templates.data || []);
+    });
     retrieveProjectSearchPaths().then((paths) => {
-      setProjectSearchPaths(paths)
-    })
-  }, [])
+      setProjectSearchPaths(paths);
+    });
+  }, []);
 
-  const onSubmit = useCallback((values: FormValues) => {
-    router.push(
-      `/projects/instantiate-template/?projectName=${values.projectName}&rootTemplate=${values.template}&template=${values.template}&selectedProjectDirectoryId=${values.directory}`,
-    )
-    setOpen(false)
-    form.reset()
-  }, [form, router])
+  const onSubmit = useCallback(
+    (values: FormValues) => {
+      router.push(
+        `/projects/instantiate-template/?projectName=${values.projectName}&rootTemplate=${values.template}&template=${values.template}&selectedProjectDirectoryId=${values.directory}`,
+      );
+      setOpen(false);
+      form.reset();
+    },
+    [form, router],
+  );
 
   const createProjectDialog = useMemo(
     () => (
@@ -109,11 +134,16 @@ export default function TemplatesListPage() {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Create New Project</DialogTitle>
-            <DialogDescription>Choose a template to start your new project.</DialogDescription>
+            <DialogDescription>
+              Choose a template to start your new project.
+            </DialogDescription>
           </DialogHeader>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-4 py-4"
+            >
               <FormField
                 control={form.control}
                 name="projectName"
@@ -134,7 +164,10 @@ export default function TemplatesListPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Template</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a template" />
@@ -165,7 +198,10 @@ export default function TemplatesListPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Project Directory</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a directory" />
@@ -196,7 +232,7 @@ export default function TemplatesListPage() {
       </Dialog>
     ),
     [open, templates, projectSearchPaths, form, onSubmit],
-  )
+  );
 
   return (
     <TablePage<ProjectDTO>
@@ -206,9 +242,8 @@ export default function TemplatesListPage() {
       caption="A list of your projects."
       buttons={createProjectDialog}
       onClick={(item) => {
-        router.push(`/projects/project?projectName=${item.name}`)
+        router.push(`/projects/project?projectName=${item.name}`);
       }}
     />
-  )
+  );
 }
-

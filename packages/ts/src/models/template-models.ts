@@ -93,20 +93,28 @@ export class Template {
   ): Promise<Result<Template>> {
     const absoluteRootDir = path.resolve(rootTemplateDir);
     const absoluteBaseDir = path.dirname(absoluteRootDir);
-    const isRepoClean = await isGitRepoClean(absoluteBaseDir)
-    if ('error' in isRepoClean) {
-      console.error(`Error getting git status for project at ${absoluteBaseDir}`)
-      console.error(isRepoClean.error)
-      return { error: `Error getting git status for project at ${absoluteBaseDir}: ${isRepoClean.error}` }
+    const isRepoClean = await isGitRepoClean(absoluteBaseDir);
+    if ("error" in isRepoClean) {
+      console.error(
+        `Error getting git status for project at ${absoluteBaseDir}`,
+      );
+      console.error(isRepoClean.error);
+      return {
+        error: `Error getting git status for project at ${absoluteBaseDir}: ${isRepoClean.error}`,
+      };
     }
     if (!isRepoClean.data) {
       console.error("Template dir is not clean");
-      return { error: "Template dir is not clean" }
+      return { error: "Template dir is not clean" };
     }
     const commitHash = await getCommitHash(absoluteRootDir);
     if ("error" in commitHash) {
-      console.error(`Error getting commit hash for project at ${absoluteRootDir}`);
-      return { error: `Error getting commit hash for project at ${absoluteRootDir}: ${commitHash.error}` };
+      console.error(
+        `Error getting commit hash for project at ${absoluteRootDir}`,
+      );
+      return {
+        error: `Error getting commit hash for project at ${absoluteRootDir}: ${commitHash.error}`,
+      };
     }
 
     let configs: Record<string, TemplateConfigWithFileInfo>;

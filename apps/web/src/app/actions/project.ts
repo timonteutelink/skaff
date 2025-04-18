@@ -62,4 +62,3 @@ export async function retrieveProject(
 
   return { data: projectDto.data };
 }
-

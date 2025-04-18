@@ -42,7 +42,13 @@ export type InstantiatedTemplate = z.infer<typeof InstantiatedTemplateSchema>;
 export const projectNameRegex = /^[a-zA-Z0-9-_]+$/;
 
 export const ProjectSettingsSchema = z.object({
-  projectName: z.string().min(1).regex(projectNameRegex, "Project name can only contain letters, numbers, dashes and underscores."),
+  projectName: z
+    .string()
+    .min(1)
+    .regex(
+      projectNameRegex,
+      "Project name can only contain letters, numbers, dashes and underscores.",
+    ),
   projectAuthor: z.string().min(1),
 
   rootTemplateName: z.string().min(1),
@@ -68,7 +74,7 @@ export interface ProjectDTO {
 
   settings: ProjectSettings;
 
-  outdatedTemplate: boolean
+  outdatedTemplate: boolean;
 }
 
 export interface CreateProjectResult {

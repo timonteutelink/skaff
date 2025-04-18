@@ -8,7 +8,11 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { CopyIcon } from "lucide-react";
 
 /* =============================================================================
@@ -27,7 +31,12 @@ const buildTemplateNode = (template: TemplateDTO): TemplateTreeNode => {
     template.subTemplates,
   ).map(([category, templates]) => {
     const childNodes = templates.map(buildTemplateNode);
-    return { id: `${template.dir}-${category}`, name: category, type: "category", children: childNodes };
+    return {
+      id: `${template.dir}-${category}`,
+      name: category,
+      type: "category",
+      children: childNodes,
+    };
   });
 
   return {
@@ -82,7 +91,9 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ node }) => {
                 onClick={() => handleCopy(node.data!.dir, "dir")}
               />
             )}
-            {copiedField === "dir" && <span className="text-xs text-green-500">Copied</span>}
+            {copiedField === "dir" && (
+              <span className="text-xs text-green-500">Copied</span>
+            )}
           </dd>
         </div>
 
@@ -94,10 +105,14 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ node }) => {
             {node.data?.templatesDir && (
               <CopyIcon
                 className="w-4 h-4 cursor-pointer"
-                onClick={() => handleCopy(node.data!.templatesDir, "templatesDir")}
+                onClick={() =>
+                  handleCopy(node.data!.templatesDir, "templatesDir")
+                }
               />
             )}
-            {copiedField === "templatesDir" && <span className="text-xs text-green-500">Copied</span>}
+            {copiedField === "templatesDir" && (
+              <span className="text-xs text-green-500">Copied</span>
+            )}
           </dd>
         </div>
 
@@ -111,7 +126,9 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ node }) => {
                 className="w-4 h-4 cursor-pointer"
                 onClick={() => handleCopy(node.data!.refDir!, "refDir")}
               />
-              {copiedField === "refDir" && <span className="text-xs text-green-500">Copied</span>}
+              {copiedField === "refDir" && (
+                <span className="text-xs text-green-500">Copied</span>
+              )}
             </dd>
           </div>
         )}
@@ -142,10 +159,14 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ node }) => {
             {node.data?.currentCommitHash && (
               <CopyIcon
                 className="w-4 h-4 cursor-pointer"
-                onClick={() => handleCopy(node.data!.currentCommitHash, "currentCommitHash")}
+                onClick={() =>
+                  handleCopy(node.data!.currentCommitHash, "currentCommitHash")
+                }
               />
             )}
-            {copiedField === "currentCommitHash" && <span className="text-xs text-green-500">Copied</span>}
+            {copiedField === "currentCommitHash" && (
+              <span className="text-xs text-green-500">Copied</span>
+            )}
           </dd>
         </div>
       </dl>
@@ -153,7 +174,9 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ node }) => {
       {/* Collapsible Settings Schema */}
       {node.data && (
         <Collapsible>
-          <CollapsibleTrigger className="font-medium">Settings Schema</CollapsibleTrigger>
+          <CollapsibleTrigger className="font-medium">
+            Settings Schema
+          </CollapsibleTrigger>
           <CollapsibleContent>
             <pre className="bg-gray-50 p-4 rounded text-sm overflow-auto">
               {JSON.stringify(node.data.config.templateSettingsSchema, null, 2)}
@@ -181,9 +204,14 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ node }) => {
 const TemplateArboristTreePage: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const templateName = useMemo(() => searchParams.get("templateName"), [searchParams]);
+  const templateName = useMemo(
+    () => searchParams.get("templateName"),
+    [searchParams],
+  );
   const [template, setTemplate] = useState<TemplateDTO>();
-  const [selectedNode, setSelectedNode] = useState<TemplateTreeNode | null>(null);
+  const [selectedNode, setSelectedNode] = useState<TemplateTreeNode | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!templateName) {
@@ -209,8 +237,14 @@ const TemplateArboristTreePage: React.FC = () => {
     });
   }, [templateName, router]);
 
-  const treeNodes = useMemo(() => (template ? [buildTemplateNode(template)] : []), [template]);
-  const handleSelect = useCallback((node: TemplateTreeNode) => setSelectedNode(node), []);
+  const treeNodes = useMemo(
+    () => (template ? [buildTemplateNode(template)] : []),
+    [template],
+  );
+  const handleSelect = useCallback(
+    (node: TemplateTreeNode) => setSelectedNode(node),
+    [],
+  );
 
   if (!template) {
     return (
@@ -241,9 +275,13 @@ const TemplateArboristTreePage: React.FC = () => {
 
       {/* Right side: Details panel */}
       <div className="w-2/3 overflow-auto p-6">
-        {selectedNode ? <DetailsPanel node={selectedNode} /> : (
+        {selectedNode ? (
+          <DetailsPanel node={selectedNode} />
+        ) : (
           <div className="p-6">
-            <h2 className="text-2xl font-bold">Select a template from the tree</h2>
+            <h2 className="text-2xl font-bold">
+              Select a template from the tree
+            </h2>
           </div>
         )}
       </div>
@@ -252,4 +290,3 @@ const TemplateArboristTreePage: React.FC = () => {
 };
 
 export default TemplateArboristTreePage;
-

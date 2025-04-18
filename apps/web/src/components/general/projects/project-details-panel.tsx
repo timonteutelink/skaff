@@ -14,22 +14,26 @@ interface ProjectDetailsPanelProps {
   rootTemplate: TemplateDTO;
 }
 
-export function ProjectDetailsPanel({ selectedNode, project, rootTemplate }: ProjectDetailsPanelProps) {
+export function ProjectDetailsPanel({
+  selectedNode,
+  project,
+  rootTemplate,
+}: ProjectDetailsPanelProps) {
   const router = useRouter();
   const selectedNodeTemplate = useMemo(
     () =>
       selectedNode?.type === "instantiated"
         ? toastNullError(findTemplate(rootTemplate, selectedNode.name))
         : null,
-    [selectedNode, rootTemplate]
+    [selectedNode, rootTemplate],
   );
 
   const selectedInstantiatedTemplate = useMemo(
     () =>
       project.settings.instantiatedTemplates.find(
-        (inst) => inst.id === selectedNode?.id
+        (inst) => inst.id === selectedNode?.id,
       ),
-    [project, selectedNode]
+    [project, selectedNode],
   );
 
   if (!selectedNode) {
@@ -41,7 +45,8 @@ export function ProjectDetailsPanel({ selectedNode, project, rootTemplate }: Pro
   }
 
   if (selectedNode.type === "instantiated" && selectedInstantiatedTemplate) {
-    const { id, templateName, parentId, templateSettings, templateCommitHash } = selectedInstantiatedTemplate;
+    const { id, templateName, parentId, templateSettings, templateCommitHash } =
+      selectedInstantiatedTemplate;
 
     return (
       <div className="space-y-6">
@@ -56,24 +61,24 @@ export function ProjectDetailsPanel({ selectedNode, project, rootTemplate }: Pro
                 Up-to-date
               </Badge>
             ) : (
-              <Badge className="ml-4 bg-red-100 text-red-800">
-                Outdated
-              </Badge>
+              <Badge className="ml-4 bg-red-100 text-red-800">Outdated</Badge>
             )}
           </div>
-          {!selectedInstantiatedTemplate.automaticallyInstantiatedByParent ? <Button
-            disabled={!project?.name}
-            onClick={() => {
-              router.push(
-                `/projects/instantiate-template/?projectName=${project.name}` +
-                `&rootTemplate=${project.rootTemplateName}` +
-                `&template=${selectedNodeTemplate?.config.templateConfig.name}` +
-                `&existingTemplateInstanceId=${id}`
-              );
-            }}
-          >
-            Edit
-          </Button> : null}
+          {!selectedInstantiatedTemplate.automaticallyInstantiatedByParent ? (
+            <Button
+              disabled={!project?.name}
+              onClick={() => {
+                router.push(
+                  `/projects/instantiate-template/?projectName=${project.name}` +
+                    `&rootTemplate=${project.rootTemplateName}` +
+                    `&template=${selectedNodeTemplate?.config.templateConfig.name}` +
+                    `&existingTemplateInstanceId=${id}`,
+                );
+              }}
+            >
+              Edit
+            </Button>
+          ) : null}
         </div>
 
         {/* Details grid */}
@@ -83,22 +88,32 @@ export function ProjectDetailsPanel({ selectedNode, project, rootTemplate }: Pro
             <h3 className="text-lg font-semibold mb-2">General</h3>
             <dl className="space-y-2">
               <div>
-                <dt className="text-sm font-medium text-gray-700">Instance ID</dt>
+                <dt className="text-sm font-medium text-gray-700">
+                  Instance ID
+                </dt>
                 <dd className="text-sm text-gray-600 truncate">{id}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-gray-700">Template Name</dt>
+                <dt className="text-sm font-medium text-gray-700">
+                  Template Name
+                </dt>
                 <dd className="text-sm text-gray-600">{templateName}</dd>
               </div>
               {parentId && (
                 <div>
-                  <dt className="text-sm font-medium text-gray-700">Parent Instance ID</dt>
+                  <dt className="text-sm font-medium text-gray-700">
+                    Parent Instance ID
+                  </dt>
                   <dd className="text-sm text-gray-600 truncate">{parentId}</dd>
                 </div>
               )}
               <div>
-                <dt className="text-sm font-medium text-gray-700">Commit Hash</dt>
-                <dd className="text-sm text-gray-600 truncate">{templateCommitHash}</dd>
+                <dt className="text-sm font-medium text-gray-700">
+                  Commit Hash
+                </dt>
+                <dd className="text-sm text-gray-600 truncate">
+                  {templateCommitHash}
+                </dd>
               </div>
             </dl>
           </div>
@@ -110,10 +125,10 @@ export function ProjectDetailsPanel({ selectedNode, project, rootTemplate }: Pro
               <dl className="space-y-2">
                 {Object.entries(templateSettings).map(([key, value]) => (
                   <div key={key}>
-                    <dt className="text-sm font-medium text-gray-700 capitalize">{key}</dt>
-                    <dd className="text-sm text-gray-600">
-                      {String(value)}
-                    </dd>
+                    <dt className="text-sm font-medium text-gray-700 capitalize">
+                      {key}
+                    </dt>
+                    <dd className="text-sm text-gray-600">{String(value)}</dd>
                   </div>
                 ))}
               </dl>
@@ -161,7 +176,8 @@ export function ProjectDetailsPanel({ selectedNode, project, rootTemplate }: Pro
     return (
       <div>
         <h2 className="text-2xl font-bold mb-4">
-          Child Template: {selectedNode.templateDefinition.config.templateConfig.name}
+          Child Template:{" "}
+          {selectedNode.templateDefinition.config.templateConfig.name}
         </h2>
         <pre className="bg-gray-100 p-4 rounded text-sm">
           {JSON.stringify(selectedNode.templateDefinition, null, 2)}
@@ -176,20 +192,21 @@ export function ProjectDetailsPanel({ selectedNode, project, rootTemplate }: Pro
       <div>
         <h2 className="text-2xl font-bold mb-4">Create New Instance</h2>
         <p className="mb-4 text-sm">
-          This will create a new <span className="font-medium">
+          This will create a new{" "}
+          <span className="font-medium">
             {candidate.config.templateConfig.name}
-          </span> instance under the parent with ID <span className="font-medium">
-            {selectedNode.parentId}
-          </span>.
+          </span>{" "}
+          instance under the parent with ID{" "}
+          <span className="font-medium">{selectedNode.parentId}</span>.
         </p>
         <Button
           disabled={!project || !project.name}
           onClick={() => {
             router.push(
               `/projects/instantiate-template/?projectName=${project.name}` +
-              `&rootTemplate=${project.rootTemplateName}` +
-              `&template=${candidate.config.templateConfig.name}` +
-              `&parentTemplateInstanceId=${selectedNode.parentId}`
+                `&rootTemplate=${project.rootTemplateName}` +
+                `&template=${candidate.config.templateConfig.name}` +
+                `&parentTemplateInstanceId=${selectedNode.parentId}`,
             );
           }}
         >
@@ -201,4 +218,3 @@ export function ProjectDetailsPanel({ selectedNode, project, rootTemplate }: Pro
 
   return null;
 }
-

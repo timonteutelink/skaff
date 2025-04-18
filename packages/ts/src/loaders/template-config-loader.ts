@@ -9,7 +9,11 @@ import * as path from "node:path";
 import { pathToFileURL } from "node:url";
 import ts from "typescript";
 import z from "zod";
-import { getHash, retrieveFromCache, saveToCache } from "../services/cache-service";
+import {
+  getHash,
+  retrieveFromCache,
+  saveToCache,
+} from "../services/cache-service";
 import { getEsbuild } from "../utils/get-esbuild";
 
 //TODO renovate, mkDocs, .github/settings.yml
@@ -215,7 +219,7 @@ export async function loadAllTemplateConfigs(
   for (const fileInfo of sortedFiles) {
     combinedContent += await fs.readFile(fileInfo.configPath, "utf-8");
   }
-  const hash = getHash(combinedContent)
+  const hash = getHash(combinedContent);
 
   const cachedBundle = await retrieveFromCache("template-config", hash, "mjs");
 
@@ -301,7 +305,7 @@ export async function loadAllTemplateConfigs(
   if ("stop" in esbuild) {
     try {
       await esbuild.stop();
-    } catch { }
+    } catch {}
   }
 
   return importTemplateConfigModule(resultPath.data);

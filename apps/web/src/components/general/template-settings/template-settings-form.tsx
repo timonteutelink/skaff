@@ -32,7 +32,8 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [zodSchema, setZodSchema] = useState<z.ZodType<any>>(z.object({}));
-  const [formDefaults, setFormDefaults] = useState<Record<string, any>>(formDefaultValues);
+  const [formDefaults, setFormDefaults] =
+    useState<Record<string, any>>(formDefaultValues);
   const [requiredFields, setRequiredFields] = useState<
     Record<string, string[]>
   >({});

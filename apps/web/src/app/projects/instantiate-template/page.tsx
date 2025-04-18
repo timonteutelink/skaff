@@ -77,7 +77,10 @@ const TemplateInstantiationPage: React.FC = () => {
       router.push("/projects");
       return;
     }
-    if (selectedDirectoryIdParam && rootTemplateNameParam !== templateNameParam) {
+    if (
+      selectedDirectoryIdParam &&
+      rootTemplateNameParam !== templateNameParam
+    ) {
       console.error(
         "Make sure the root template name is the same as the template name.",
       );
@@ -87,7 +90,11 @@ const TemplateInstantiationPage: React.FC = () => {
       router.push("/projects");
       return;
     }
-    if (selectedDirectoryIdParam && parentTemplateInstanceIdParam || existingTemplateInstanceIdParam && selectedDirectoryIdParam || parentTemplateInstanceIdParam && existingTemplateInstanceIdParam) {
+    if (
+      (selectedDirectoryIdParam && parentTemplateInstanceIdParam) ||
+      (existingTemplateInstanceIdParam && selectedDirectoryIdParam) ||
+      (parentTemplateInstanceIdParam && existingTemplateInstanceIdParam)
+    ) {
       console.error(
         "Cannot only provide one of selectedDirectoryId and parentTemplateInstanceId or existingTemplateInstanceId.",
       );
@@ -406,21 +413,25 @@ const TemplateInstantiationPage: React.FC = () => {
   }, []);
 
   const templateSettingsDefaultValues: Record<string, any> = useMemo(() => {
-    if (!subTemplate || !project || !existingTemplateInstanceIdParam || 'error' in subTemplate || !subTemplate.data) {
+    if (
+      !subTemplate ||
+      !project ||
+      !existingTemplateInstanceIdParam ||
+      "error" in subTemplate ||
+      !subTemplate.data
+    ) {
       return {};
     }
 
-    const instantiatedSettings = project.settings.instantiatedTemplates.find((t) =>
-      t.id === existingTemplateInstanceIdParam &&
-      t.templateName === subTemplate.data?.config.templateConfig.name,
-    )?.templateSettings || {};
+    const instantiatedSettings =
+      project.settings.instantiatedTemplates.find(
+        (t) =>
+          t.id === existingTemplateInstanceIdParam &&
+          t.templateName === subTemplate.data?.config.templateConfig.name,
+      )?.templateSettings || {};
 
     return instantiatedSettings;
-  }, [
-    subTemplate,
-    project,
-    existingTemplateInstanceIdParam,
-  ]);
+  }, [subTemplate, project, existingTemplateInstanceIdParam]);
 
   if (!projectNameParam || !rootTemplateNameParam || !templateNameParam) {
     return (
@@ -471,7 +482,7 @@ const TemplateInstantiationPage: React.FC = () => {
           </Button>
           <CommitButton
             onCommit={handleConfirmAppliedDiff}
-            onCancel={() => { }}
+            onCancel={() => {}}
           />
         </div>
       </div>

@@ -6,7 +6,9 @@ async function initEsbuild() {
   let mod;
   if (typeof (globalThis as any).Deno !== "undefined") {
     // @ts-expect-error Cannot import module
-    mod = await import(/* webpackIgnore: true */ "https://deno.land/x/esbuild@v0.25.2/mod.js");
+    mod = await import(
+      /* webpackIgnore: true */ "https://deno.land/x/esbuild@v0.25.2/mod.js"
+    );
   } else {
     mod = require("esbuild");
   }
