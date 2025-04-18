@@ -47,7 +47,7 @@ export async function saveToCache(
   }
 
   try {
-    await fs.writeFile(cacheFilePath.data, value, "utf-8");
+    await fs.writeFile(cacheFilePath.data, value.trim() + "\n", "utf-8");
     console.log("Cache file created:", cacheFilePath);
   } catch (error) {
     console.error("Failed to write cache file:", error);

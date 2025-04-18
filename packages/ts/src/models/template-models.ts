@@ -20,6 +20,7 @@ import {
 import { Project } from "./project-models";
 import z from "zod";
 import { getCommitHash, isGitRepoClean } from "../services/git-service";
+import { stringOrCallbackToString } from "../utils/shared-utils";
 
 export class Template {
   // The loaded configuration module.
@@ -324,6 +325,7 @@ export class Template {
     for (const [key, value] of Object.entries(this.subTemplates)) {
       subTemplates[key] = value.map((template) => template.mapToDTO());
     }
+
     return {
       dir: this.relativeDir,
       config: {

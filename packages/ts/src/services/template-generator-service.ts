@@ -201,6 +201,19 @@ export class TemplateGeneratorService {
         }
       }
 
+      //debug logging for testing
+      if (destPath.endsWith("devenv.nix")) {
+        console.log(srcPath, destPath);
+        console.log(dest)
+        console.log(redirects.data);
+        console.log(this.currentlyGeneratingTemplateFullSettings);
+        console.log(this.currentlyGeneratingTemplate.config.templateConfig.name);
+        console.log(this.currentlyGeneratingTemplateParentInstanceId);
+        console.log(this.destinationProjectSettings);
+        console.log(this.rootTemplate.config.templateConfig.name);
+        console.log(this.rootTemplate.commitHash);
+      }
+
       try {
         const stats = await fs.stat(srcPath);
         if (stats.isDirectory()) continue;

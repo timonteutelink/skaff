@@ -22,6 +22,7 @@ export interface TemplateDTO {
   templatesDir: string;
   subTemplates: Record<string, TemplateDTO[]>;
   currentCommitHash: string;
+  // templatesThatDisableThis: string[];//TODO probably make seperate endpoint to retrieve this instead of adding here because can depend on settings and function needs to run on server. Then update frontend to respect this and multiInstance.
   refDir?: string;
 }
 

@@ -10,11 +10,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ParsedFile, ProjectDTO, Result } from "@repo/ts/utils/types";
 import {
-  AlertCircleIcon,
-  CheckCircleIcon,
   FileDiffIcon,
   GitBranchIcon,
-  GitCommitIcon,
+  GitCommitIcon
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";

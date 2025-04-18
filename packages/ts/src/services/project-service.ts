@@ -54,13 +54,22 @@ export function getParsedUserSettingsWithParentSettings(
     currentlyGeneratingTemplate?.parentTemplate &&
     currentlyGeneratingTemplateParentInstanceId
   ) {
+    const newInstantiatedSettings = Project.getInstantiatedSettings(
+      currentlyGeneratingTemplate.parentTemplate,
+      currentlyGeneratingTemplateParentInstanceId,
+      destinationProjectSettings,
+    );
+
+    if ("error" in newInstantiatedSettings) {
+      console.error(
+        `Failed to get instantiated settings: ${newInstantiatedSettings.error}`,
+      );
+      return { error: newInstantiatedSettings.error };
+    }
+
     newUserSettings = {
       ...newUserSettings,
-      ...Project.getInstantiatedSettings(
-        currentlyGeneratingTemplate.parentTemplate,
-        currentlyGeneratingTemplateParentInstanceId,
-        destinationProjectSettings,
-      ),
+      ...newInstantiatedSettings.data
     };
   }
   return { data: newUserSettings };

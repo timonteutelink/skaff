@@ -42,7 +42,7 @@ export class Project {
     instanceId: string,
     instantiatedProjectSettings: ProjectSettings,
   ): Result<UserTemplateSettings> {
-    const instantiatedSettings: UserTemplateSettings = {};
+    let instantiatedSettings: UserTemplateSettings = {};
     const projectTemplateSettings =
       instantiatedProjectSettings.instantiatedTemplates.find(
         (t) =>
@@ -67,8 +67,7 @@ export class Project {
       return { error: `${parsedSchema.error}` };
     }
 
-    instantiatedSettings[template.config.templateConfig.name] =
-      parsedSchema.data;
+    instantiatedSettings = parsedSchema.data;
 
     const parentTemplate = template.parentTemplate;
     if (parentTemplate && projectTemplateSettings.parentId) {
