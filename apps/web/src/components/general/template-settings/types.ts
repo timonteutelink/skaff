@@ -6,6 +6,7 @@ export interface TemplateSettingsFormProps {
   projectName: string;
   selectedTemplate: string;
   selectedTemplateSettingsSchema: any;
+  formDefaultValues: Record<string, any>;
   action: (userSettings: any) => Promise<void>;
   cancel?: () => void;
 }

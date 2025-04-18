@@ -37,7 +37,7 @@ export function FileTree({
         <CardTitle className="text-sm font-medium">Changed Files</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <ScrollArea className="h-[calc(100vh-250px)]">
+        <ScrollArea className="h-[calc(100vh-300px)]">
           <div className="p-2">
             <TreeNode
               node={fileTree}

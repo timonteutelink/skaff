@@ -26,12 +26,13 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
   projectName,
   selectedTemplate,
   selectedTemplateSettingsSchema,
+  formDefaultValues,
   action,
   cancel,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [zodSchema, setZodSchema] = useState<z.ZodType<any>>(z.object({}));
-  const [formDefaults, setFormDefaults] = useState<Record<string, any>>({});
+  const [formDefaults, setFormDefaults] = useState<Record<string, any>>(formDefaultValues);
   const [requiredFields, setRequiredFields] = useState<
     Record<string, string[]>
   >({});
@@ -57,6 +58,11 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
 
   // Reset form when schema changes
   useEffect(() => {
+    if (formDefaults !== formDefaultValues) {
+      setFormDefaults(formDefaultValues);
+      form.reset(formDefaultValues);
+      return;
+    }
     form.reset(formDefaults);
   }, [formDefaults, form]);
 

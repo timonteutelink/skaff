@@ -487,7 +487,6 @@ export class TemplateGeneratorService {
 
     this.destinationProjectSettings.instantiatedTemplates.push({
       id: newProjectId,
-      parentId: undefined,
       templateCommitHash: this.rootTemplate.commitHash,
       templateName: this.rootTemplate.config.templateConfig.name,
       templateSettings: parsedUserSettings.data,

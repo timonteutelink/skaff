@@ -60,3 +60,19 @@ export function nullError<T>(
   }
   return result.data;
 }
+
+export function deepSortObject<T>(obj: T): T {
+  if (Array.isArray(obj)) {
+    return obj.map(deepSortObject) as any;
+  }
+  if (obj !== null && typeof obj === "object") {
+    const sortedKeys = Object.keys(obj).sort();
+    const result: Record<string, any> = {};
+    for (const key of sortedKeys) {
+      result[key] = deepSortObject((obj as any)[key]);
+    }
+    return result as T;
+  }
+  return obj;
+}
+

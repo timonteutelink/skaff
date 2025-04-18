@@ -27,6 +27,7 @@ import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { sub } from "date-fns";
 
 // TODO: add lot more checks on backend. For example cannot edit autoinstantiated template.
 const TemplateInstantiationPage: React.FC = () => {
@@ -256,19 +257,6 @@ const TemplateInstantiationPage: React.FC = () => {
           return;
         }
 
-        if (
-          subTemplate.data.config.templateConfig.name ===
-          rootTemplate.config.templateConfig.name
-        ) {
-          console.error(
-            "Root template cannot be instantiated as a sub-template.",
-          );
-          toast.error(
-            "Root template cannot be instantiated as a sub-template.",
-          );
-          return;
-        }
-
         const result = await prepareTemplateModificationDiff(
           data,
           projectNameParam,
@@ -417,6 +405,23 @@ const TemplateInstantiationPage: React.FC = () => {
     setDiffToApply(null);
   }, []);
 
+  const templateSettingsDefaultValues: Record<string, any> = useMemo(() => {
+    if (!subTemplate || !project || !existingTemplateInstanceIdParam || 'error' in subTemplate || !subTemplate.data) {
+      return {};
+    }
+
+    const instantiatedSettings = project.settings.instantiatedTemplates.find((t) =>
+      t.id === existingTemplateInstanceIdParam &&
+      t.templateName === subTemplate.data?.config.templateConfig.name,
+    )?.templateSettings || {};
+
+    return instantiatedSettings;
+  }, [
+    subTemplate,
+    project,
+    existingTemplateInstanceIdParam,
+  ]);
+
   if (!projectNameParam || !rootTemplateNameParam || !templateNameParam) {
     return (
       <div className="container mx-auto py-10">
@@ -454,7 +459,7 @@ const TemplateInstantiationPage: React.FC = () => {
 
   if (appliedDiff) {
     return (
-      <div className="container py-10 mx-auto">
+      <div className="container py-4 mx-auto">
         <h1 className="text-2xl font-bold mb-4">Diff to apply</h1>
         <DiffVisualizerPage
           projectName={projectNameParam}
@@ -475,7 +480,7 @@ const TemplateInstantiationPage: React.FC = () => {
 
   if (diffToApply) {
     return (
-      <div className="container py-10 mx-auto">
+      <div className="container py-4 mx-auto">
         <h1 className="text-2xl font-bold mb-4">Diff to apply</h1>
         <DiffVisualizerPage
           projectName={projectNameParam}
@@ -500,6 +505,7 @@ const TemplateInstantiationPage: React.FC = () => {
       selectedTemplateSettingsSchema={
         subTemplate.data.config.templateSettingsSchema
       }
+      formDefaultValues={templateSettingsDefaultValues}
       action={handleSubmitSettings}
       cancel={() => {
         //TODO would delete project here if it was created. Should but now i realise editing a newly created project by going back from the diff is currently not possible. Maybe now going back from the diff should delete the project and then when settings are changed we can just recreate the project.

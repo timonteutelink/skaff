@@ -9,6 +9,7 @@ import {
 } from "../utils/types";
 import { makeDir } from "./file-service";
 import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
+import { deepSortObject } from "../utils/shared-utils";
 
 export async function writeNewProjectSettings(
   absoluteProjectPath: string,
@@ -55,7 +56,10 @@ async function writeProjectSettings(
   }
 
   await makeDir(absoluteProjectPath);
-  const serializedProjectSettings = JSON.stringify(projectSettings, null, 2);
+
+  const canonical = deepSortObject(projectSettings);
+
+  const serializedProjectSettings = JSON.stringify(canonical, null, 2);
 
   try {
     await fs.writeFile(projectSettingsPath, serializedProjectSettings, "utf-8");
