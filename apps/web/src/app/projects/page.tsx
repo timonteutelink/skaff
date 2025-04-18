@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ProjectDTO, Result, TemplateDTO } from "@repo/ts/utils/types";
+import { ProjectDTO, TemplateDTO } from "@repo/ts/utils/types";
 import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";

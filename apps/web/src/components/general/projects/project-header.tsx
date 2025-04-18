@@ -112,6 +112,9 @@ export function ProjectHeader({ project, onBranchChange }: ProjectHeaderProps) {
           <FileDiffIcon className="w-4 h-4 mr-2" />
           Diff Template
         </Button>
+
+        {/* Add new button to bring templates up to date. Add currentTemplateId to instantiation url and voila */}
+
       </div>
     </header>
   );
