@@ -5,6 +5,7 @@ import {
   cancelProjectCreation,
   createNewProject,
   prepareTemplateInstantiationDiff,
+  prepareTemplateModificationDiff,
   resolveConflictsAndDiff,
   restoreAllChangesToCleanProject,
 } from "@/app/actions/instantiate";
@@ -21,13 +22,14 @@ import {
   Result,
   TemplateDTO,
 } from "@repo/ts/utils/types";
-import { findTemplate } from "@repo/ts/utils/utils";
+import { findTemplate } from "@repo/ts/utils/shared-utils";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-const ProjectTemplateTreePage: React.FC = () => {
+// TODO: add lot more checks on backend. For example cannot edit autoinstantiated template.
+const TemplateInstantiationPage: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const projectNameParam = useMemo(
@@ -50,9 +52,9 @@ const ProjectTemplateTreePage: React.FC = () => {
     () => searchParams.get("selectedProjectDirectoryId"),
     [searchParams],
   );
-  const creatingNewProject = useMemo(
-    () => selectedDirectoryIdParam && !parentTemplateInstanceIdParam,
-    [selectedDirectoryIdParam, parentTemplateInstanceIdParam],
+  const existingTemplateInstanceIdParam = useMemo(
+    () => searchParams.get("existingTemplateInstanceId"),
+    [searchParams],
   );
   const [project, setProject] = useState<ProjectDTO>();
   const [rootTemplate, setRootTemplate] = useState<TemplateDTO>();
@@ -74,12 +76,22 @@ const ProjectTemplateTreePage: React.FC = () => {
       router.push("/projects");
       return;
     }
-    if (creatingNewProject && rootTemplateNameParam !== templateNameParam) {
+    if (selectedDirectoryIdParam && rootTemplateNameParam !== templateNameParam) {
       console.error(
-        "No parent template instance ID provided in search params. Provide it or make sure the root template name is the same as the template name.",
+        "Make sure the root template name is the same as the template name.",
       );
       toast.error(
-        "No parent template instance ID provided in search params. Provide it or make sure the root template name is the same as the template name.",
+        "Make sure the root template name is the same as the template name.",
+      );
+      router.push("/projects");
+      return;
+    }
+    if (selectedDirectoryIdParam && parentTemplateInstanceIdParam || existingTemplateInstanceIdParam && selectedDirectoryIdParam || parentTemplateInstanceIdParam && existingTemplateInstanceIdParam) {
+      console.error(
+        "Cannot only provide one of selectedDirectoryId and parentTemplateInstanceId or existingTemplateInstanceId.",
+      );
+      toast.error(
+        "Cannot only provide one of selectedDirectoryId and parentTemplateInstanceId or existingTemplateInstanceId.",
       );
       router.push("/projects");
       return;
@@ -92,7 +104,7 @@ const ProjectTemplateTreePage: React.FC = () => {
           return;
         }
         if (!data.data) {
-          if (!creatingNewProject) {
+          if (!selectedDirectoryIdParam) {
             console.error("Project not found:", projectNameParam);
             toast.error("Project not found: " + projectNameParam);
             router.push("/projects");
@@ -126,7 +138,7 @@ const ProjectTemplateTreePage: React.FC = () => {
     templateNameParam,
     parentTemplateInstanceIdParam,
     selectedDirectoryIdParam,
-    creatingNewProject,
+    existingTemplateInstanceIdParam,
   ]);
 
   const subTemplate = useMemo(() => {
@@ -219,6 +231,57 @@ const ProjectTemplateTreePage: React.FC = () => {
         }
 
         setDiffToApply(result.data);
+      } else if (existingTemplateInstanceIdParam) {
+        if (!project) {
+          console.error("Project not found.");
+          toast.error("Project not found.");
+          return;
+        }
+
+        if (project.settings.projectName !== projectNameParam) {
+          console.error("Project name does not match.");
+          toast.error("Project name does not match.");
+          return;
+        }
+
+        if ("error" in subTemplate) {
+          console.error("Error finding sub-template:", subTemplate.error);
+          toast.error("Error finding sub-template: " + subTemplate.error);
+          return;
+        }
+
+        if (!subTemplate.data) {
+          console.error("Sub-template not found.");
+          toast.error("Sub-template not found.");
+          return;
+        }
+
+        if (
+          subTemplate.data.config.templateConfig.name ===
+          rootTemplate.config.templateConfig.name
+        ) {
+          console.error(
+            "Root template cannot be instantiated as a sub-template.",
+          );
+          toast.error(
+            "Root template cannot be instantiated as a sub-template.",
+          );
+          return;
+        }
+
+        const result = await prepareTemplateModificationDiff(
+          data,
+          projectNameParam,
+          existingTemplateInstanceIdParam,
+        );
+
+        if ("error" in result) {
+          console.error("Error instantiating template:", result.error);
+          toast.error("Error instantiating template: " + result.error);
+          return;
+        }
+
+        setDiffToApply(result.data);
       } else {
         console.error(
           "No parent template instance ID or selected directory ID provided.",
@@ -238,6 +301,7 @@ const ProjectTemplateTreePage: React.FC = () => {
       templateNameParam,
       project,
       rootTemplateNameParam,
+      existingTemplateInstanceIdParam,
     ],
   );
 
@@ -276,7 +340,7 @@ const ProjectTemplateTreePage: React.FC = () => {
       toast.error("Diff to apply is null.");
       return;
     }
-    if (creatingNewProject) {
+    if (selectedDirectoryIdParam) {
       console.error(
         "When creating new project the diffToApply should not be shown.",
       );
@@ -319,7 +383,7 @@ const ProjectTemplateTreePage: React.FC = () => {
     }
 
     setAppliedDiff(diff);
-  }, [projectNameParam, diffToApply, creatingNewProject]);
+  }, [projectNameParam, diffToApply, selectedDirectoryIdParam]);
 
   const handleBackFromAppliedDiff = useCallback(async () => {
     if (!projectNameParam) {
@@ -328,7 +392,7 @@ const ProjectTemplateTreePage: React.FC = () => {
       return;
     }
 
-    if (creatingNewProject) {
+    if (selectedDirectoryIdParam) {
       // when going back just delete project that was created. Then recreate again when going to diff. For projects this is an easy workflow for templates will be another step after viewing the diff. and no changes will be applied to project when showing first diff so when going back from first diff no deletion is necessary.
       const result = await cancelProjectCreation(projectNameParam);
       if ("error" in result) {
@@ -347,7 +411,7 @@ const ProjectTemplateTreePage: React.FC = () => {
     }
 
     setAppliedDiff(null);
-  }, [projectNameParam, creatingNewProject]);
+  }, [projectNameParam, selectedDirectoryIdParam]);
 
   const handleBackFromDiffToApply = useCallback(() => {
     setDiffToApply(null);
@@ -402,7 +466,7 @@ const ProjectTemplateTreePage: React.FC = () => {
           </Button>
           <CommitButton
             onCommit={handleConfirmAppliedDiff}
-            onCancel={() => {}}
+            onCancel={() => { }}
           />
         </div>
       </div>
@@ -445,4 +509,4 @@ const ProjectTemplateTreePage: React.FC = () => {
   );
 };
 
-export default ProjectTemplateTreePage;
+export default TemplateInstantiationPage;

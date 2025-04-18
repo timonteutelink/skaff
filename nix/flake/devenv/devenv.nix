@@ -58,7 +58,8 @@ localFlake:
 
         scripts =
           {
-            dev.exec = ''
+            clean-cache.exec = ''
+              rm /tmp/code-templator-cache/*
             '';
           };
       };

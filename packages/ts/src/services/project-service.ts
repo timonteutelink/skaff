@@ -13,7 +13,7 @@ import {
   ProjectSettings,
   Result,
 } from "../utils/types";
-import { stringOrCallbackToString } from "../utils/utils";
+import { stringOrCallbackToString } from "../utils/shared-utils";
 import { getHash, pathInCache, retrieveFromCache, saveToCache } from "./cache-service";
 import {
   addAllAndDiff,
@@ -167,8 +167,8 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
 
     projectSettings.instantiatedTemplates[existingTemplateIndex] = {
       ...projectSettings.instantiatedTemplates[existingTemplateIndex],
-      templateSettings: newTemplateSettings,
       templateName: subTemplateName.data,
+      templateSettings: newTemplateSettings,
     };
 
     const result =
@@ -260,10 +260,10 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
     projectSettings.instantiatedTemplates.push({
       id: autoInstantiatedTemplateInstanceId,
       parentId: parentInstanceId,
+      templateCommitHash: currentTemplateToAddChildren.commitHash,
+      automaticallyInstantiatedByParent: true,
       templateName: subTemplateName.data,
       templateSettings: newTemplateSettings,
-      automaticallyInstantiatedByParent: true,
-      templateCommitHash: currentTemplateToAddChildren.commitHash,
     });
 
     const rootTemplate = await ROOT_TEMPLATE_REGISTRY.findTemplate(
@@ -314,7 +314,7 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
 }
 
 // this function is used to edit an already instantiated template. Will create a diff with current template. Where base project is a clean slate of current project(use createProjectFromExisting in this file). The Changed project will be a clean project with the new settings. This can later be extended to allow the base project to use an old version of a template so we can update the template. The diff between these projects can be cached with as key the hash of old project settings and hash of new settings. Since templatecommithash is in settings the hash of the projectSettings will always uniquely identify exactly the same project. So for the same projectSettings this will ALWAYS generate the same project.
-export async function modifyTemplateSettings(
+export async function generateModifyTemplateDiff(
   newTemplateSettings: UserTemplateSettings,
   projectName: string,
   instantiatedTemplateId: string,
@@ -567,9 +567,9 @@ export async function generateNewTemplateDiff(
       {
         id: templateInstanceId,
         parentId: parentInstanceId,
+        templateCommitHash: template.commitHash,
         templateName: template.config.templateConfig.name,
         templateSettings: userTemplateSettings,
-        templateCommitHash: template.commitHash,
       },
     ],
   };

@@ -51,3 +51,12 @@ export function findTemplate(
   return { data: null };
 }
 
+export function nullError<T>(
+  result: Result<T>,
+): T | null {
+  if ("error" in result) {
+    console.error(result.error);
+    return null;
+  }
+  return result.data;
+}

@@ -3,6 +3,7 @@ import { deleteRepo, resetAllChanges } from "@repo/ts/services/git-service";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import {
   applyDiffToProject,
+  generateModifyTemplateDiff,
   generateNewTemplateDiff,
   generateProjectFromTemplateSettings,
   instantiateProject,
@@ -47,6 +48,31 @@ export async function createNewProject(
 
   if ("error" in result) {
     console.error("Failed to instantiate project:", result.error);
+    return { error: result.error };
+  }
+
+  return { data: result.data };
+}
+
+export async function prepareTemplateModificationDiff(
+  userTemplateSettings: UserTemplateSettings,
+  destinationProjectName: string,
+  templateInstanceId: string,
+): Promise<Result<NewTemplateDiffResult>> {
+  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  if ("error" in reloadResult) {
+    console.error("Failed to reload projects:", reloadResult.error);
+    return { error: reloadResult.error };
+  }
+
+  const result = await generateModifyTemplateDiff(
+    userTemplateSettings,
+    destinationProjectName,
+    templateInstanceId,
+  );
+
+  if ("error" in result) {
+    console.error("Failed to generate template diff:", result.error);
     return { error: result.error };
   }
 

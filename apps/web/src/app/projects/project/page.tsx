@@ -287,7 +287,7 @@ export default function ProjectTemplateTreePage() {
     [projectNameParam],
   );
 
-  if (!project) {
+  if (!project || !rootTemplate) {
     return (
       <div className="flex items-center justify-center h-screen">
         <p>Loading project...</p>
@@ -315,7 +315,7 @@ export default function ProjectTemplateTreePage() {
 
         {/* Right: Details panel */}
         <div className="w-2/3 overflow-auto p-6">
-          <ProjectDetailsPanel selectedNode={selectedNode} project={project} />
+          <ProjectDetailsPanel selectedNode={selectedNode} project={project} rootTemplate={rootTemplate} />
         </div>
       </div>
     </div>

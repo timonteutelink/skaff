@@ -335,6 +335,7 @@ export class Template {
       templatesDir: this.relativeTemplatesDir,
       subTemplates,
       refDir: this.relativeRefDir,
+      currentCommitHash: this.commitHash,
     };
   }
 

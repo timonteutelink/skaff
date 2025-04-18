@@ -30,7 +30,7 @@ export function DiffVisualizer({ file }: DiffVisualizerProps) {
         </Tabs>
       </CardHeader>
       <CardContent className="p-0">
-        <ScrollArea className="h-[calc(100vh-450px)]">
+        <ScrollArea className="h-[calc(100vh-250px)]">
           {viewMode === "split" ? (
             <SplitDiffView file={file} />
           ) : (

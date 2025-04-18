@@ -21,10 +21,10 @@ export interface TemplateDTO {
   };
   templatesDir: string;
   subTemplates: Record<string, TemplateDTO[]>;
+  currentCommitHash: string;
   refDir?: string;
 }
 
-// TODO: add the hash of the entire template when generated. This way if template changes we can ask the user if they want to bring the template up to date. Per template not per root template. Think about automatically updating also all children or choosing to update entire project at once.
 export const InstantiatedTemplateSchema = z.object({
   id: z.string().min(1),
   parentId: z.string().optional(),
@@ -38,8 +38,10 @@ export const InstantiatedTemplateSchema = z.object({
 
 export type InstantiatedTemplate = z.infer<typeof InstantiatedTemplateSchema>;
 
+export const projectNameRegex = /^[a-zA-Z0-9-_]+$/;
+
 export const ProjectSettingsSchema = z.object({
-  projectName: z.string().min(1), //should match folder name(not forced actually)
+  projectName: z.string().min(1).regex(projectNameRegex, "Project name can only contain letters, numbers, dashes and underscores."),
   projectAuthor: z.string().min(1),
 
   rootTemplateName: z.string().min(1),

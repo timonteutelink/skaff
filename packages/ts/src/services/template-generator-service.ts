@@ -8,7 +8,7 @@ import { glob } from "glob";
 import Handlebars from "handlebars";
 import * as path from "node:path";
 import { Template } from "../models/template-models";
-import { anyOrCallbackToAny, stringOrCallbackToString } from "../utils/utils";
+import { anyOrCallbackToAny, stringOrCallbackToString } from "../utils/shared-utils";
 import { CreateProjectResult, ProjectSettings, Result } from "../utils/types";
 import z from "zod";
 import { addAllAndDiff, commitAll, createGitRepo } from "./git-service";
@@ -392,6 +392,7 @@ export class TemplateGeneratorService {
         newTemplateSettings,
         nameOfTemplateToAutoInstantiate.data,
         parentTemplateInstanceId,
+        true
       );
 
       if ("error" in addTemplateResult) {
@@ -487,9 +488,9 @@ export class TemplateGeneratorService {
     this.destinationProjectSettings.instantiatedTemplates.push({
       id: newProjectId,
       parentId: undefined,
+      templateCommitHash: this.rootTemplate.commitHash,
       templateName: this.rootTemplate.config.templateConfig.name,
       templateSettings: parsedUserSettings.data,
-      templateCommitHash: this.rootTemplate.commitHash,
     });
 
     return { data: newProjectId };
@@ -550,10 +551,10 @@ export class TemplateGeneratorService {
     this.destinationProjectSettings.instantiatedTemplates.push({
       id: newProjectId,
       parentId: parentInstanceId,
+      templateCommitHash: template.commitHash,
+      automaticallyInstantiatedByParent: autoInstantiated,
       templateName,
       templateSettings: parsedUserSettings.data,
-      automaticallyInstantiatedByParent: autoInstantiated,
-      templateCommitHash: template.commitHash,
     });
 
     return { data: newProjectId };
