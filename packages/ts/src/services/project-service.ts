@@ -120,13 +120,17 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
       projectSettings.instantiatedTemplates.findIndex(
         (template) =>
           template.templateName === autoInstantiatedTemplate.subTemplateName &&
-          template.id === parentInstanceId,
+          template.parentId === parentInstanceId &&
+          template.automaticallyInstantiatedByParent,
       );
+
     if (existingTemplateIndex === -1) {
       console.error(
         `Auto instantiated template ${autoInstantiatedTemplate.subTemplateName} not found`,
       );
-      continue;
+      return {
+        error: `Auto instantiated template ${autoInstantiatedTemplate.subTemplateName} not found`,
+      }
     }
 
     const existingTemplate =
@@ -156,9 +160,6 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
       autoInstantiatedTemplate.subTemplateName,
       newFullTemplateSettings,
     );
-    console.log(newFullTemplateSettings);
-    console.log(newTemplateSettings);
-    console.log(subTemplateName);
 
     if ("error" in subTemplateName) {
       console.error(
@@ -523,7 +524,6 @@ async function diffNewTempProjects(
       return { error: diff.error };
     }
 
-    // TODO: When the project settings contains the hash of the entire template we can hash the entire project settings and combine the old and new project settings hashes to create a unique key for retrieving the diff without having to generate all files again. Add logic to retrieve old projects now then change the diff everywhere to cache results since now projectsettings instantiation is 100% predictable
     const saveResult = await saveToCache(
       "new-template-diff",
       diffCacheKey,

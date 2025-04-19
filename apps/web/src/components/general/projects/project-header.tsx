@@ -27,7 +27,7 @@ export function ProjectHeader({ project, onBranchChange }: ProjectHeaderProps) {
     diffProjectFromItsTemplate(project.name).then(
       (data: Result<ParsedFile[]>) => {
         if ("error" in data) {
-          console.log("Error retrieving project diff:", data.error);
+          console.error("Error retrieving project diff:", data.error);
           setIsDiffClean(true);
           return;
         }
