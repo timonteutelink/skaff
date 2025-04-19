@@ -95,7 +95,7 @@ export function ProjectHeader({ project, onBranchChange }: ProjectHeaderProps) {
                 onClick={() => onBranchChange(branch)}
                 className={
                   branch === project.gitStatus.currentBranch ||
-                  !project.gitStatus.isClean
+                    !project.gitStatus.isClean
                     ? "bg-muted"
                     : ""
                 }
@@ -134,7 +134,7 @@ export function ProjectHeader({ project, onBranchChange }: ProjectHeaderProps) {
           Diff Template
         </Button>
 
-        {/* Add new button to bring templates up to date. Add currentTemplateId to instantiation url and voila */}
+        {/* Add new button to bring templates up to date. Just add a boolean to url saying updateFullProject=true */}
       </div>
     </header>
   );
