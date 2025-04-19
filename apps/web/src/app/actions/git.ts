@@ -17,7 +17,7 @@ export async function commitChanges(
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in reloadResult) {
     console.error("Failed to reload projects:", reloadResult.error);
-    return { error: "Failed to reload projects" };
+    return { error: reloadResult.error };
   }
 
   const project = await PROJECT_REGISTRY.findProject(projectName);
@@ -57,10 +57,10 @@ export async function switchProjectBranch(
   projectName: string,
   branch: string,
 ): Promise<Result<void>> {
-  const reloadProjectResult = await PROJECT_REGISTRY.reloadProjects();
-  if ("error" in reloadProjectResult) {
-    console.error("Failed to reload projects:", reloadProjectResult.error);
-    return { error: "Failed to reload projects" };
+  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  if ("error" in reloadResult) {
+    console.error("Failed to reload projects:", reloadResult.error);
+    return { error: reloadResult.error };
   }
   const project = await PROJECT_REGISTRY.findProject(projectName);
 
@@ -105,6 +105,12 @@ export async function switchProjectBranch(
 export async function addAllAndRetrieveCurrentDiff(
   projectName: string,
 ): Promise<Result<ParsedFile[]>> {
+  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  if ("error" in reloadResult) {
+    console.error("Failed to reload projects:", reloadResult.error);
+    return { error: reloadResult.error };
+  }
+
   const project = await PROJECT_REGISTRY.findProject(projectName);
 
   if ("error" in project) {
@@ -139,5 +145,10 @@ export async function addAllAndRetrieveCurrentDiff(
 export async function diffProjectFromItsTemplate(
   projectName: string,
 ): Promise<Result<ParsedFile[]>> {
+  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  if ("error" in reloadResult) {
+    console.error("Failed to reload projects:", reloadResult.error);
+    return { error: reloadResult.error };
+  }
   return diffProjectFromTemplate(projectName);
 }

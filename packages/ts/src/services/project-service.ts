@@ -156,6 +156,9 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
       autoInstantiatedTemplate.subTemplateName,
       newFullTemplateSettings,
     );
+    console.log(newFullTemplateSettings);
+    console.log(newTemplateSettings);
+    console.log(subTemplateName);
 
     if ("error" in subTemplateName) {
       console.error(
@@ -362,7 +365,7 @@ export async function generateModifyTemplateDiff(
 
   const instantiatedTemplate =
     project.data.instantiatedProjectSettings.instantiatedTemplates[
-      instantiatedTemplateIndex
+    instantiatedTemplateIndex
     ]!;
 
   const template = await ROOT_TEMPLATE_REGISTRY.findTemplate(

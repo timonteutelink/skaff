@@ -9,11 +9,12 @@ export async function retrieveProjectSearchPaths(): Promise<
   return PROJECT_SEARCH_PATHS;
 }
 
-export async function reloadProjects(): Promise<Result<void>> {
-  return await PROJECT_REGISTRY.reloadProjects();
-}
-
 export async function retrieveProjects(): Promise<Result<ProjectDTO[]>> {
+  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  if ("error" in reloadResult) {
+    console.error("Failed to reload projects:", reloadResult.error);
+    return { error: reloadResult.error };
+  }
   const projects = await PROJECT_REGISTRY.getProjects();
 
   if ("error" in projects) {
@@ -40,6 +41,11 @@ export async function retrieveProjects(): Promise<Result<ProjectDTO[]>> {
 export async function retrieveProject(
   projectName: string,
 ): Promise<Result<ProjectDTO | null>> {
+  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  if ("error" in reloadResult) {
+    console.error("Failed to reload projects:", reloadResult.error);
+    return { error: reloadResult.error };
+  }
   const project = await PROJECT_REGISTRY.findProject(projectName);
 
   if ("error" in project) {
