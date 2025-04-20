@@ -68,9 +68,21 @@ export async function prepareTemplateModificationDiff(
     return { error: reloadResult.error };
   }
 
+  const project = await PROJECT_REGISTRY.findProject(destinationProjectName);
+
+  if ("error" in project) {
+    console.error(`Failed to find project: ${project.error}`);
+    return { error: project.error };
+  }
+
+  if (!project.data) {
+    console.error(`Project ${destinationProjectName} not found`);
+    return { error: "Project not found" };
+  }
+
   const result = await generateModifyTemplateDiff(
     userTemplateSettings,
-    destinationProjectName,
+    project.data,
     templateInstanceId,
   );
 
@@ -95,11 +107,27 @@ export async function prepareTemplateInstantiationDiff(
     return { error: reloadResult.error };
   }
 
+  const destinationProject = await PROJECT_REGISTRY.findProject(
+    destinationProjectName,
+  );
+
+  if ("error" in destinationProject) {
+    console.error(
+      `Failed to find destination project: ${destinationProject.error}`,
+    );
+    return { error: destinationProject.error };
+  }
+
+  if (!destinationProject.data) {
+    console.error(`Destination project ${destinationProjectName} not found`);
+    return { error: "Destination project not found" };
+  }
+
   const result = await generateNewTemplateDiff(
     rootTemplateName,
     templateName,
     parentInstanceId,
-    destinationProjectName,
+    destinationProject.data,
     userTemplateSettings,
   );
 

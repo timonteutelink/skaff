@@ -339,23 +339,11 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
 // this function is used to edit an already instantiated template. Will create a diff with current template. Where base project is a clean slate of current project(use createProjectFromExisting in this file). The Changed project will be a clean project with the new settings. This can later be extended to allow the base project to use an old version of a template so we can update the template. The diff between these projects can be cached with as key the hash of old project settings and hash of new settings. Since templatecommithash is in settings the hash of the projectSettings will always uniquely identify exactly the same project. So for the same projectSettings this will ALWAYS generate the same project.
 export async function generateModifyTemplateDiff(
   newTemplateSettings: UserTemplateSettings,
-  projectName: string,
+  project: Project,
   instantiatedTemplateId: string,
 ): Promise<Result<NewTemplateDiffResult>> {
-  const project = await PROJECT_REGISTRY.findProject(projectName);
-
-  if ("error" in project) {
-    console.error(`Failed to find project: ${project.error}`);
-    return { error: project.error };
-  }
-
-  if (!project.data) {
-    console.error(`Project ${projectName} not found`);
-    return { error: "Project not found" };
-  }
-
   const instantiatedTemplateIndex =
-    project.data.instantiatedProjectSettings.instantiatedTemplates.findIndex(
+    project.instantiatedProjectSettings.instantiatedTemplates.findIndex(
       (template) => template.id === instantiatedTemplateId,
     );
 
@@ -365,7 +353,7 @@ export async function generateModifyTemplateDiff(
   }
 
   const instantiatedTemplate =
-    project.data.instantiatedProjectSettings.instantiatedTemplates[
+    project.instantiatedProjectSettings.instantiatedTemplates[
     instantiatedTemplateIndex
     ]!;
 
@@ -384,9 +372,9 @@ export async function generateModifyTemplateDiff(
   }
 
   const newProjectSettings: ProjectSettings = {
-    ...project.data.instantiatedProjectSettings,
+    ...project.instantiatedProjectSettings,
     instantiatedTemplates: [
-      ...project.data.instantiatedProjectSettings.instantiatedTemplates,
+      ...project.instantiatedProjectSettings.instantiatedTemplates,
     ],
   };
 
@@ -418,7 +406,7 @@ export async function generateModifyTemplateDiff(
   }
 
   return await diffNewTempProjects(
-    project.data.instantiatedProjectSettings,
+    project.instantiatedProjectSettings,
     modifyChildrenResult.data,
   );
 }
@@ -560,7 +548,7 @@ export async function generateNewTemplateDiff(
   rootTemplateName: string,
   templateName: string,
   parentInstanceId: string,
-  destinationProjectName: string,
+  destinationProject: Project,
   userTemplateSettings: UserTemplateSettings,
 ): Promise<Result<NewTemplateDiffResult>> {
   const rootTemplate =
@@ -583,27 +571,12 @@ export async function generateNewTemplateDiff(
     return { error: "Template not found" };
   }
 
-  const destinationProject = await PROJECT_REGISTRY.findProject(
-    destinationProjectName,
-  );
-
-  if ("error" in destinationProject) {
-    console.error(
-      `Failed to find destination project: ${destinationProject.error}`,
-    );
-    return { error: destinationProject.error };
-  }
-
-  if (!destinationProject.data) {
-    console.error(`Destination project ${destinationProjectName} not found`);
-    return { error: "Destination project not found" };
-  }
 
   const templateInstanceId = crypto.randomUUID();
   const newProjectSettings: ProjectSettings = {
-    ...destinationProject.data.instantiatedProjectSettings,
+    ...destinationProject.instantiatedProjectSettings,
     instantiatedTemplates: [
-      ...destinationProject.data.instantiatedProjectSettings
+      ...destinationProject.instantiatedProjectSettings
         .instantiatedTemplates,
       {
         id: templateInstanceId,
@@ -630,7 +603,7 @@ export async function generateNewTemplateDiff(
   }
 
   return await diffNewTempProjects(
-    destinationProject.data.instantiatedProjectSettings,
+    destinationProject.instantiatedProjectSettings,
     addResult.data,
   );
 }
@@ -720,7 +693,7 @@ export async function applyDiffToProject(
 export async function instantiateProject(
   rootTemplateName: string,
   parentDirPath: string,
-  projectName: string,
+  newProjectName: string,
   userTemplateSettings: UserTemplateSettings,
 ): Promise<Result<ProjectCreationResult>> {
   const template = await ROOT_TEMPLATE_REGISTRY.findTemplate(rootTemplateName);
@@ -738,7 +711,7 @@ export async function instantiateProject(
   const instatiationResult = await template.data.instantiateNewProject(
     userTemplateSettings,
     parentDirPath,
-    projectName,
+    newProjectName,
   );
 
   if ("error" in instatiationResult) {
@@ -753,7 +726,7 @@ export async function instantiateProject(
     return { error: reloadResult.error };
   }
 
-  const project = await PROJECT_REGISTRY.findProject(projectName);
+  const project = await PROJECT_REGISTRY.findProject(newProjectName);
 
   if ("error" in project) {
     console.error(`Failed to find project: ${project.error}`);
@@ -761,7 +734,7 @@ export async function instantiateProject(
   }
 
   if (!project.data) {
-    console.error(`Project ${projectName} not found after creation`);
+    console.error(`Project ${newProjectName} not found after creation`);
     return {
       error: "Failed to create project, project not found after creation",
     };
@@ -780,24 +753,11 @@ export async function instantiateProject(
 }
 
 export async function generateProjectFromExistingProject(
-  existingProjectName: string,
+  existingProject: Project,
   newProjectPath: string,
 ): Promise<Result<string>> {
-  const project = await PROJECT_REGISTRY.findProject(existingProjectName);
-
-  if ("error" in project) {
-    console.error(`Failed to find project: ${project.error}`);
-    return { error: project.error };
-  }
-
-  if (!project.data) {
-    console.error(`Project ${existingProjectName} not found`);
-    return { error: "Project not found" };
-  }
-  const templateSettings = project.data.instantiatedProjectSettings;
-
   return await generateProjectFromTemplateSettings(
-    templateSettings,
+    existingProject.instantiatedProjectSettings,
     newProjectPath,
   );
 }
@@ -845,26 +805,15 @@ export async function generateProjectFromTemplateSettings(
 }
 
 export async function diffProjectFromTemplate(
-  projectName: string,
+  project: Project,
 ): Promise<Result<ParsedFile[]>> {
-  const project = await PROJECT_REGISTRY.findProject(projectName);
 
-  if ("error" in project) {
-    console.error(`Failed to find project: ${project.error}`);
-    return { error: project.error };
-  }
-
-  if (!project.data) {
-    console.error(`Project ${projectName} not found`);
-    return { error: "Project not found" };
-  }
-
-  if (!project.data.gitStatus.isClean) {
+  if (!project.gitStatus.isClean) {
     console.error("Cannot diff project with uncommitted changes");
     return { error: "Cannot diff project with uncommitted changes" };
   }
 
-  const projectCommitHash = project.data.gitStatus.currentCommitHash;
+  const projectCommitHash = project.gitStatus.currentCommitHash;
 
   const existingSavedDiff = await retrieveFromCache(
     "project-from-template-diff",
@@ -883,7 +832,7 @@ export async function diffProjectFromTemplate(
     return { data: parseGitDiff(existingSavedDiff.data.data) };
   }
 
-  const tempNewProjectName = `${projectName}-${crypto.randomUUID()}`;
+  const tempNewProjectName = `${project.instantiatedProjectSettings.projectName}-${crypto.randomUUID()}`;
   const tempNewProjectPath = await pathInCache(tempNewProjectName);
   if ("error" in tempNewProjectPath) {
     console.error(
@@ -895,7 +844,7 @@ export async function diffProjectFromTemplate(
   try {
     const newProjectFromExistingProjectResult =
       await generateProjectFromExistingProject(
-        projectName,
+        project,
         tempNewProjectPath.data,
       );
     if ("error" in newProjectFromExistingProjectResult) {
@@ -907,7 +856,7 @@ export async function diffProjectFromTemplate(
 
     const diff = await diffDirectories(
       tempNewProjectPath.data,
-      project.data.absoluteRootDir,
+      project.absoluteRootDir,
     );
 
     if ("error" in diff) {

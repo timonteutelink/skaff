@@ -4,7 +4,7 @@ import {
   retrieveProjectSearchPaths,
 } from "@/app/actions/project";
 import { retrieveTemplates } from "@/app/actions/template";
-import TablePage, { type FieldInfo } from "@/components/general/TablePage";
+import TablePage, { type FieldInfo } from "@/components/general/table-page";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

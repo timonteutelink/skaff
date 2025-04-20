@@ -88,3 +88,21 @@ export async function retrieveFromCache(
     return { error: `Failed to read cache file: ${error}` };
   }
 }
+
+export async function eraseCache(): Promise<Result<void>> {
+  const cacheDir = await getCacheDir();
+  if ("error" in cacheDir) {
+    console.error("Failed to get cache directory:", cacheDir.error);
+    return { error: `Failed to get cache directory: ${cacheDir.error}` };
+  }
+
+  try {
+    await fs.rm(cacheDir.data, { recursive: true, force: true });
+    console.log("Cache erased");
+  } catch (error) {
+    console.error("Failed to erase cache:", error);
+    return { error: `Failed to erase cache: ${error}` };
+  }
+
+  return { data: undefined };
+}

@@ -150,5 +150,16 @@ export async function diffProjectFromItsTemplate(
     console.error("Failed to reload projects:", reloadResult.error);
     return { error: reloadResult.error };
   }
-  return diffProjectFromTemplate(projectName);
+  const project = await PROJECT_REGISTRY.findProject(projectName);
+
+  if ("error" in project) {
+    console.error(`Failed to find project: ${project.error}`);
+    return { error: project.error };
+  }
+
+  if (!project.data) {
+    console.error(`Project ${projectName} not found`);
+    return { error: "Project not found" };
+  }
+  return diffProjectFromTemplate(project.data);
 }

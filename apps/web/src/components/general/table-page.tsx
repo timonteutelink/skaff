@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useMemo } from "react";
 
-export type ListFieldDataType = string | number | boolean | null | undefined;
+export type ListFieldDataType = string | number | boolean | null | undefined | JSX.Element;
 
 export interface FieldInfo<T extends Record<string, any>> {
   name: string;
