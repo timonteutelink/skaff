@@ -1,16 +1,19 @@
-import * as fs from "node:fs/promises";
-import * as path from "node:path";
-import {
-  loadAllTemplateConfigs,
-  TemplateConfigWithFileInfo,
-} from "../loaders/template-config-loader";
-import { TemplateGeneratorService } from "../services/template-generator-service";
 import {
   TemplateConfigModule,
   TemplateSettingsType,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import z from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import {
+  loadAllTemplateConfigs,
+  TemplateConfigWithFileInfo,
+} from "../loaders/template-config-loader";
+import { getCacheDirPath } from "../services/cache-service";
+import { getCommitHash, isGitRepoClean } from "../services/git-service";
+import { TemplateGeneratorService } from "../services/template-generator-service";
 import {
   CreateProjectResult,
   ProjectSettings,
@@ -18,9 +21,6 @@ import {
   TemplateDTO,
 } from "../utils/types";
 import { Project } from "./project-models";
-import z from "zod";
-import { getCommitHash, isGitRepoClean } from "../services/git-service";
-import { stringOrCallbackToString } from "../utils/shared-utils";
 
 export class Template {
   // The loaded configuration module.
@@ -33,9 +33,9 @@ export class Template {
   // A reference to the parent template, if this is a subtemplate.
   public parentTemplate?: Template;
 
-  public commitHash: string;
 
   // The directory containing the root template
+  // TODO move this one higher to point to the root of the git repo containing everything
   public absoluteBaseDir: string; // The absolute path of the parent directory of the root template. All uri will be based from here.
 
   // The directory containing the "templateConfig.ts" and "templates" directory
@@ -49,6 +49,12 @@ export class Template {
   // If this template was reffed, store the dir containing the templateRef.json.
   public relativeRefDir?: string;
 
+  // The commit hash of the template. Will only be defined for root templates or the root of referenced templates in the future.
+  public commitHash?: string;
+
+  // If this is the template defined by the user or a revisions stored in the cache.
+  public isDefault: boolean = false;
+
   private constructor(
     config: TemplateConfigModule<
       TemplateSettingsType<z.AnyZodObject>,
@@ -57,7 +63,7 @@ export class Template {
     baseDir: string,
     absDir: string,
     templatesDir: string,
-    commitHash: string,
+    commitHash?: string,
     refDir?: string,
   ) {
     this.absoluteBaseDir = baseDir;
@@ -73,6 +79,10 @@ export class Template {
     this.config = config;
 
     this.commitHash = commitHash;
+
+    if (!this.absoluteBaseDir.startsWith(getCacheDirPath())) {
+      this.isDefault = true;
+    }
   }
 
   /**
@@ -141,12 +151,18 @@ export class Template {
         continue;
       }
 
+      let rootCommitHash: string | undefined = "";
+
+      if (templateDir === absoluteRootDir) {
+        rootCommitHash = commitHash.data;
+      }
+
       const template = new Template(
         info.templateConfig,
         absoluteBaseDir,
         templateDir,
         templatesDir,
-        commitHash.data,
+        rootCommitHash,
         info.refDir,
       );
       templatesMap[templateDir] = template;
@@ -346,6 +362,7 @@ export class Template {
       subTemplates,
       refDir: this.relativeRefDir,
       currentCommitHash: this.commitHash,
+      isDefault: this.isDefault,
     };
   }
 

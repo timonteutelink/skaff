@@ -10,24 +10,22 @@ import {
   restoreAllChangesToCleanProject,
 } from "@/app/actions/instantiate";
 import { retrieveProject } from "@/app/actions/project";
-import { retrieveTemplate } from "@/app/actions/template";
+import { retrieveTemplateRevisionForProject } from "@/app/actions/template";
 import CommitButton from "@/components/general/git/commit-dialog";
 import { DiffVisualizerPage } from "@/components/general/git/diff-visualizer-page";
 import { TemplateSettingsForm } from "@/components/general/template-settings/template-settings-form";
 import { Button } from "@/components/ui/button";
+import { findTemplate } from "@repo/ts/utils/shared-utils";
 import {
   NewTemplateDiffResult,
   ParsedFile,
   ProjectDTO,
-  Result,
-  TemplateDTO,
+  TemplateDTO
 } from "@repo/ts/utils/types";
-import { findTemplate } from "@repo/ts/utils/shared-utils";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { sub } from "date-fns";
 
 // TODO: add lot more checks on backend. For example cannot edit autoinstantiated template.
 const TemplateInstantiationPage: React.FC = () => {
@@ -104,41 +102,47 @@ const TemplateInstantiationPage: React.FC = () => {
       router.push("/projects");
       return;
     }
-    retrieveProject(projectNameParam).then(
-      (data: Result<ProjectDTO | null>) => {
-        if ("error" in data) {
-          console.error("Error retrieving project:", data.error);
-          toast.error("Error retrieving project: " + data.error);
-          return;
-        }
-        if (!data.data) {
-          if (!selectedDirectoryIdParam) {
-            console.error("Project not found:", projectNameParam);
-            toast.error("Project not found: " + projectNameParam);
-            router.push("/projects");
-          }
-          return;
-        }
-        setProject(data.data);
-      },
-    );
-    retrieveTemplate(rootTemplateNameParam).then(
-      (data: Result<TemplateDTO | null>) => {
-        if ("error" in data) {
-          console.error("Error retrieving template:", data.error);
-          toast.error("Error retrieving template: " + data.error);
-          return;
-        }
+    const retrieveStuff = async () => {
+      const [projectResult, revision] = await Promise.all([retrieveProject(projectNameParam), retrieveTemplateRevisionForProject(projectNameParam)]);
 
-        if (!data.data) {
-          console.error("Template not found:", rootTemplateNameParam);
-          toast.error("Template not found: " + rootTemplateNameParam);
+      if ("error" in projectResult) {
+        console.error("Error retrieving project:", projectResult.error);
+        toast.error("Error retrieving project: " + projectResult.error);
+        return;
+      }
+      if (!projectResult.data) {
+        if (!selectedDirectoryIdParam) {
+          console.error("Project not found:", projectNameParam);
+          toast.error("Project not found: " + projectNameParam);
           router.push("/projects");
-          return;
         }
-        setRootTemplate(data.data);
-      },
-    );
+        return;
+      }
+      if (projectResult.data.settings.instantiatedTemplates.length === 0) {
+        console.error("No instantiated templates found in project.");
+        toast.error("No instantiated templates found in project.");
+        router.push("/projects");
+        return;
+      }
+
+      setProject(projectResult.data);
+
+      if ("error" in revision) {
+        console.error("Error retrieving template:", revision.error);
+        toast.error("Error retrieving template: " + revision.error);
+        return;
+      }
+
+      if (!revision.data) {
+        console.error("Template not found:", rootTemplateNameParam);
+        toast.error("Template not found: " + rootTemplateNameParam);
+        router.push("/projects");
+        return;
+      }
+
+      setRootTemplate(revision.data);
+    };
+    retrieveStuff();
   }, [
     projectNameParam,
     router,
@@ -482,7 +486,7 @@ const TemplateInstantiationPage: React.FC = () => {
           </Button>
           <CommitButton
             onCommit={handleConfirmAppliedDiff}
-            onCancel={() => {}}
+            onCancel={() => { }}
           />
         </div>
       </div>

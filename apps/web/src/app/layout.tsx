@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { MainSidebar } from "@/components/general/MainSidebar";
+import { MainSidebar } from "@/components/general/main-sidebar";
 import { Suspense } from "react";
 import { Toaster } from "@/components/ui/sonner";
 

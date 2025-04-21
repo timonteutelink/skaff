@@ -14,8 +14,12 @@ export function getHash(stringToHash: string): string {
   return createHash("sha256").update(stringToHash).digest("hex");
 }
 
+export function getCacheDirPath(): string {
+  return path.join(tmpdir(), "code-templator-cache")
+}
+
 export async function getCacheDir(): Promise<Result<string>> {
-  const cacheDir = path.join(tmpdir(), "code-templator-cache");
+  const cacheDir = getCacheDirPath();
   await makeDir(cacheDir);
   return { data: cacheDir };
 }

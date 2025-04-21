@@ -1,9 +1,11 @@
 import { exec, execFile } from "node:child_process";
+import * as fs from "node:fs/promises";
+import path from "node:path";
 import { promisify } from "node:util";
+import { Template } from "../models/template-models";
 import { GENERATE_DIFF_SCRIPT_PATH } from "../utils/env";
 import { DiffHunk, GitStatus, ParsedFile, Result } from "../utils/types";
-import * as fs from "node:fs/promises";
-import { Template } from "../models/template-models";
+import { pathInCache } from "./cache-service";
 
 const asyncExecFile = promisify(execFile);
 const asyncExec = promisify(exec);
@@ -34,12 +36,47 @@ export async function switchBranch(
   }
 }
 
-// Will save the template revision in the cache for later usage. If already in cache return that templates path.
-// Will copy entire git project to destination but only return path to the specific template in base/root-templates/...
-export async function saveRevisionInCache(defaultTemplate: Template, revisionHash: string): Promise<Result<string>> {
+/**
+ * Clone a specific commit of a repo into the cache.
+ *
+ * @param template - a Template whose `.absoluteBaseDir` points somewhere inside the repo
+ * @param revisionHash - the commit hash to checkout
+ * @returns the full path to the cached repo at that revision.
+ */
+export async function cloneRevisionToCache(
+  template: Template,
+  revisionHash: string,
+): Promise<Result<string>> {
+  const repoDir = path.dirname(template.absoluteBaseDir); //TODO absoluteBaseDir should point to root of git dir now is root-templates.
+  const repoName = path.basename(repoDir);
 
+  const destDirName = `${repoName}-${revisionHash}`;
+  const destPath = await pathInCache(destDirName);
 
+  if ("error" in destPath) {
+    console.error("Error getting cache path:", destPath.error);
+    return { error: `Error getting cache path: ${destPath.error}` };
+  }
+
+  try {
+    const stat = await fs.stat(destPath.data);
+    if (stat.isDirectory()) {
+      return { data: destPath.data };
+    }
+  } catch {
+  }
+
+  try {
+    await asyncExec(`git clone ${repoDir} ${destPath.data}`);
+    await asyncExec(`cd ${destPath.data} && git checkout ${revisionHash}`);
+
+    return { data: destPath.data };
+  } catch (e) {
+    console.error('Error cloning revision to cache:', e);
+    return { error: `Error cloning revision to cache: ${e}` };
+  }
 }
+
 
 // TODO: use to see if a project needs to be updated. Will generate a diff from old template to new project. This does require the old template somehow. So maybe we need versioning instead of hash so we can also retrieve old template and new template and we can generate the diff to update. Probably we can make a precommit tool to check which templatedirs have changes and update all those version numbers and version numbers of the parent. Probably when updating we should update entire tree at once. Think about what to allow the user to update. Make sure to enforce 1 commit 1 versionchange. So do not allow unclean git templatesdir. Then instead of saving hash to template we save commitHash.
 //

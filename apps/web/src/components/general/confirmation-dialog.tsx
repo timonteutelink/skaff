@@ -39,7 +39,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({ buttonTe
     }
     console.log("Action completed successfully")
     setOpen(false)
-  }, [])
+  }, [onConfirm])
 
   const handleCancel = useCallback(async () => {
     if (!onCancel) {
@@ -54,7 +54,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({ buttonTe
     }
     console.log("Cancel action completed successfully")
     setOpen(false)
-  }, [])
+  }, [onCancel])
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

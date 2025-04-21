@@ -1,13 +1,10 @@
 "use server";
 import { deleteRepo, resetAllChanges } from "@repo/ts/services/git-service";
+import { applyDiffToProject, generateModifyTemplateDiff, generateNewTemplateDiff, resolveConflictsAndRetrieveAppliedDiff } from "@repo/ts/services/project-diff-service";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import {
-  applyDiffToProject,
-  generateModifyTemplateDiff,
-  generateNewTemplateDiff,
   generateProjectFromTemplateSettings,
   instantiateProject,
-  resolveConflictsAndRetrieveAppliedDiff,
 } from "@repo/ts/services/project-service";
 import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
 import {

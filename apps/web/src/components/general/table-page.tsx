@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { PlusCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -9,8 +8,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { useMemo } from "react";
+import { PlusCircle } from "lucide-react";
+import Link from "next/link";
+import { JSX } from "react";
 
 export type ListFieldDataType = string | number | boolean | null | undefined | JSX.Element;
 
@@ -41,11 +41,6 @@ export default function TablePage<T extends Record<string, any>>({
   onClick,
   buttons,
 }: TablePageProps<T>) {
-  const columnKeys = useMemo(
-    () => columnMapping.map((field) => field.name),
-    [columnMapping],
-  );
-
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
@@ -85,7 +80,7 @@ export default function TablePage<T extends Record<string, any>>({
               {columnMapping.map((field) => (
                 <TableCell
                   key={`${index}-${field.name}`}
-                  className={field.name === columnKeys[0] ? "font-medium" : ""}
+                  className={field.name === columnMapping[0]?.name ? "font-medium" : ""}
                 >
                   {field.data(item)}
                 </TableCell>

@@ -3,7 +3,7 @@ import { Template } from "../models/template-models";
 import { TEMPLATE_DIR_PATHS } from "../utils/env";
 import { Result } from "../utils/types";
 import path from "node:path";
-import { saveRevisionInCache } from "./git-service";
+import { cloneRevisionToCache } from "./git-service";
 
 // now only stores the root templates at: <templateDirPath>/root-templates/*
 // later also store reference to files and generic templates to allow direct instantiation without saving state of subtemplates
@@ -103,7 +103,7 @@ export class RootTemplateRegistry {
     }
 
     for (const template of this.templates) {
-      if (template.config.templateConfig.name === templateName) {
+      if (template.config.templateConfig.name === templateName && template.isDefault) {
         return { data: template };
       }
     }
@@ -131,22 +131,32 @@ export class RootTemplateRegistry {
   }
 
   async loadRevision(templateName: string, revisionHash: string): Promise<Result<Template | null>> {
-    const result = await this.findDefaultTemplate(templateName);
+    const result = await this.findAllTemplateRevisions(templateName);
     if ("error" in result) {
       console.error(`Failed to find template: ${result.error}`);
       return { error: result.error };
     }
-    const defaultTemplate = result.data;
+    const revisions = result.data;
+    if (!revisions || revisions.length === 0) {
+      return { data: null };
+    }
+
+    let defaultTemplate: Template | undefined;
+    for (const revision of revisions) {
+      if (revision.commitHash === revisionHash) {
+        return { data: revision };
+      }
+      if (revision.isDefault) {
+        defaultTemplate = revision;
+      }
+    }
+
     if (!defaultTemplate) {
-      console.error(`Template ${templateName} not found`);
-      return { error: `Template ${templateName} not found` };
+      console.error(`No default template found for ${templateName}`);
+      return { data: null };
     }
 
-    if (defaultTemplate.commitHash === revisionHash) {
-      return { data: defaultTemplate };
-    }
-
-    const saveRevisionInCacheResult = await saveRevisionInCache(defaultTemplate, revisionHash);
+    const saveRevisionInCacheResult = await cloneRevisionToCache(defaultTemplate, revisionHash);
 
     if ("error" in saveRevisionInCacheResult) {
       console.error(`Failed to save revision in cache: ${saveRevisionInCacheResult.error}`);

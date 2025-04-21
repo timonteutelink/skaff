@@ -6,6 +6,10 @@ export interface ProjectCreationResult {
   diff: ParsedFile[];
 }
 
+export interface DefaultTemplateResult {
+  template: TemplateDTO;
+  revisions: string[]
+}
 export interface NewTemplateDiffResult {
   diffHash: string;
   parsedDiff: ParsedFile[];
@@ -21,8 +25,9 @@ export interface TemplateDTO {
   };
   templatesDir: string;
   subTemplates: Record<string, TemplateDTO[]>;
-  currentCommitHash: string;
-  // templatesThatDisableThis: string[];//TODO probably make seperate endpoint to retrieve this instead of adding here because can depend on settings and function needs to run on server. Then update frontend to respect this and multiInstance.
+  currentCommitHash?: string; //always defined on root templates.
+  isDefault: boolean;
+  // templatesThatDisableThis: string[];//TODO probably make seperate endpoint to retrieve this instead of adding here because can depend on settings and function needs to run on server. Then update frontend to respect this and multiInstance. Nah for now just remove the stringorcallback.
   refDir?: string;
 }
 
@@ -32,7 +37,7 @@ export const InstantiatedTemplateSchema = z.object({
 
   templateName: z.string().min(1),
   templateSettings: z.object({}).passthrough(), //UserTemplateSettings
-  templateCommitHash: z.string().min(16),
+  templateCommitHash: z.string().min(16).optional(), //TODO make sure this is a valid hash
 
   automaticallyInstantiatedByParent: z.boolean().optional(),
 });

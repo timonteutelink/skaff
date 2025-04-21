@@ -1,42 +1,33 @@
 "use client";
-import { eraseCache, reloadTemplates, retrieveTemplates } from "@/app/actions/template";
+import { eraseCache, reloadTemplates, retrieveDefaultTemplates } from "@/app/actions/template";
 import { ConfirmationDialog } from "@/components/general/confirmation-dialog";
 import TablePage, { FieldInfo } from "@/components/general/table-page";
-import { Badge } from "@/components/ui/badge";
-import { TemplateDTO } from "@repo/ts/utils/types";
+import { DefaultTemplateResult } from "@repo/ts/utils/types";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-const columnMapping: FieldInfo<TemplateDTO>[] = [
+const columnMapping: FieldInfo<DefaultTemplateResult>[] = [
   {
     name: "Name",
-    data: (item: TemplateDTO) => item.config.templateConfig.name,
+    data: (item) => item.template.config.templateConfig.name,
   },
   {
     name: "Directory",
-    data: (item: TemplateDTO) => item.dir,
+    data: (item) => item.template.dir,
   },
   {
-    name: "Commit Hash",
-    data: (item: TemplateDTO) => (
-      <Badge
-        variant="outline"
-        className="text-xs text-muted-foreground"
-        title={item.currentCommitHash}
-      >
-        {item.currentCommitHash.slice(0, 7)}
-      </Badge>
-    ),
+    name: "Revisions",
+    data: (item) => item.revisions.length,
   }
 ];
 
 export default function TemplatesListPage() {
   const router = useRouter();
-  const [templates, setTemplates] = useState<TemplateDTO[]>([]);
+  const [templates, setTemplates] = useState<DefaultTemplateResult[]>([]);
 
   useEffect(() => {
-    retrieveTemplates().then((templates) => {
+    retrieveDefaultTemplates().then((templates) => {
       if ("error" in templates) {
         console.error("Error retrieving templates:", templates.error);
         toast.error("Error retrieving templates: " + templates.error);
@@ -85,10 +76,10 @@ export default function TemplatesListPage() {
       dialogDescription="Are you sure you want to clear the cache? This action cannot be undone."
       onConfirm={handleClearCache}
     />
-  </>), []);
+  </>), [handleReload, handleClearCache]);
 
   return (
-    <TablePage<TemplateDTO>
+    <TablePage<DefaultTemplateResult>
       buttons={templateButtons}
       title="Detected Templates"
       data={templates}
@@ -96,7 +87,7 @@ export default function TemplatesListPage() {
       caption="A list of your templates."
       onClick={(item) => {
         router.push(
-          `/templates/template?templateName=${item.config.templateConfig.name}`,
+          `/templates/template?templateName=${item.template.config.templateConfig.name}`,
         );
       }}
     />

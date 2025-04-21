@@ -137,8 +137,21 @@ export async function loadProjectSettings(
     };
   }
 
-  const rootTemplate = await ROOT_TEMPLATE_REGISTRY.findTemplate(
+  // TODO here we would also load other reference template repos. For now all templates of a root template need to be in same repo.
+  const instantiatedRootTemplateCommitHash = finalProjectSettings.data.instantiatedTemplates[0]?.templateCommitHash
+
+  if (!instantiatedRootTemplateCommitHash) {
+    console.error(
+      `No instantiated root template commit hash found in project settings`,
+    );
+    return {
+      error: `No instantiated root template commit hash found in project settings`,
+    };
+  }
+
+  const rootTemplate = await ROOT_TEMPLATE_REGISTRY.loadRevision(
     finalProjectSettings.data.rootTemplateName,
+    instantiatedRootTemplateCommitHash,
   );
   if ("error" in rootTemplate) {
     console.error(

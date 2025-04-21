@@ -7,7 +7,7 @@ import {
   switchBranch,
 } from "@repo/ts/services/git-service";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
-import { diffProjectFromTemplate } from "@repo/ts/services/project-service";
+import { diffProjectFromTemplate } from "@repo/ts/services/project-diff-service";
 import { ParsedFile, Result } from "@repo/ts/utils/types";
 
 export async function commitChanges(

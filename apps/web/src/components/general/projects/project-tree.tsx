@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useCallback } from "react";
-import { Tree } from "@/components/general/Tree";
+import { Tree } from "@/components/general/tree";
 import type { ProjectTreeNode } from "./types";
 
 interface ProjectTreeProps {
@@ -31,9 +31,8 @@ export function ProjectTree({
         return (
           <div
             style={style}
-            className={`flex items-center p-2 cursor-pointer hover:bg-blue-100 select-none ${
-              isSelected ? "bg-blue-200" : ""
-            }`}
+            className={`flex items-center p-2 cursor-pointer hover:bg-blue-100 select-none ${isSelected ? "bg-blue-200" : ""
+              }`}
             onClick={onClick}
           >
             {hasChildren && (

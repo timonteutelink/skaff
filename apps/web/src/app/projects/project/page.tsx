@@ -1,20 +1,19 @@
 "use client";
 
+import { switchProjectBranch } from "@/app/actions/git";
 import { retrieveProject } from "@/app/actions/project";
-import { retrieveTemplate } from "@/app/actions/template";
+import { retrieveTemplateRevisionForProject } from "@/app/actions/template";
 import { ProjectDetailsPanel } from "@/components/general/projects/project-details-panel";
 import { ProjectHeader } from "@/components/general/projects/project-header";
 import { ProjectTree } from "@/components/general/projects/project-tree";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ProjectTreeNode } from "@/components/general/projects/types";
 import type {
   InstantiatedTemplate,
   ProjectDTO,
-  Result,
-  TemplateDTO,
+  TemplateDTO
 } from "@repo/ts/utils/types";
-import { switchProjectBranch } from "@/app/actions/git";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 /* =============================================================================
@@ -202,47 +201,47 @@ export default function ProjectTemplateTreePage() {
       return;
     }
 
-    // Fetch project data
-    retrieveProject(projectNameParam).then(
-      (data: Result<ProjectDTO | null>) => {
-        if ("error" in data) {
-          console.error("Failed to retrieve project:", data.error);
-          toast.error("Failed to retrieve project.");
-          return;
-        }
-        if (!data.data) {
-          console.error("Project not found:", projectNameParam);
-          toast.error("Project not found.");
-          router.push("/projects");
-          return;
-        }
-        setProject(data.data);
-      },
-    );
+    const retrieveStuff = async () => {
+      const [projectResult, revision] = await Promise.all([retrieveProject(projectNameParam), retrieveTemplateRevisionForProject(projectNameParam)]);
+
+      if ("error" in projectResult) {
+        console.error("Error retrieving project:", projectResult.error);
+        toast.error("Error retrieving project: " + projectResult.error);
+        return;
+      }
+      if (!projectResult.data) {
+        console.error("Project not found:", projectNameParam);
+        toast.error("Project not found: " + projectNameParam);
+        router.push("/projects");
+        return;
+      }
+      if (projectResult.data.settings.instantiatedTemplates.length === 0) {
+        console.error("No instantiated templates found in project.");
+        toast.error("No instantiated templates found in project.");
+        router.push("/projects");
+        return;
+      }
+
+      setProject(projectResult.data);
+
+      if ("error" in revision) {
+        console.error("Error retrieving template:", revision.error);
+        toast.error("Error retrieving template: " + revision.error);
+        return;
+      }
+
+      if (!revision.data) {
+        console.error("Template not found for project:", projectNameParam);
+        toast.error("Template not found for project: " + projectNameParam);
+        router.push("/projects");
+        return;
+      }
+
+      setRootTemplate(revision.data);
+    };
+    retrieveStuff();
   }, [projectNameParam, router]);
 
-  // Fetch the root template definition.
-  useEffect(() => {
-    if (project) {
-      retrieveTemplate(project.rootTemplateName).then(
-        (data: Result<TemplateDTO | null>) => {
-          if ("error" in data) {
-            console.error("Failed to retrieve template:", data.error);
-            toast.error("Failed to retrieve template.");
-            return;
-          }
-          if (!data.data) {
-            console.error("Template not found:", project.rootTemplateName);
-            toast.error("Template not found.");
-            return;
-          }
-          setRootTemplate(data.data);
-        },
-      );
-    }
-  }, [project]);
-
-  // Build the tree once both project and root template are available.
   useEffect(() => {
     if (project && rootTemplate) {
       const templateMap = collectTemplates(rootTemplate);
@@ -255,12 +254,10 @@ export default function ProjectTemplateTreePage() {
     }
   }, [project, rootTemplate]);
 
-  // When a node is selected in the tree.
   const handleSelectNode = useCallback((node: ProjectTreeNode) => {
     setSelectedNode(node);
   }, []);
 
-  // Handle branch change
   const handleBranchChange = useCallback(
     async (branch: string) => {
       if (!projectNameParam) return;
