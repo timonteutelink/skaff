@@ -72,8 +72,6 @@ export function ProjectDetailsPanel({
               onClick={() => {
                 router.push(
                   `/projects/instantiate-template/?projectName=${project.name}` +
-                  `&rootTemplate=${project.rootTemplateName}` +
-                  `&template=${selectedNodeTemplate?.config.templateConfig.name}` +
                   `&existingTemplateInstanceId=${id}`,
                 );
               }}
@@ -206,7 +204,6 @@ export function ProjectDetailsPanel({
           onClick={() => {
             router.push(
               `/projects/instantiate-template/?projectName=${project.name}` +
-              `&rootTemplate=${project.rootTemplateName}` +
               `&template=${candidate.config.templateConfig.name}` +
               `&parentTemplateInstanceId=${selectedNode.parentId}`,
             );

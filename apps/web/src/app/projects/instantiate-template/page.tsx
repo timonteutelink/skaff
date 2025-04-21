@@ -38,10 +38,6 @@ const TemplateInstantiationPage: React.FC = () => {
     () => searchParams.get("projectName"),
     [searchParams],
   );
-  const rootTemplateNameParam = useMemo(
-    () => searchParams.get("rootTemplate"),
-    [searchParams],
-  );
   const templateNameParam = useMemo(
     () => searchParams.get("template"),
     [searchParams],
@@ -76,22 +72,9 @@ const TemplateInstantiationPage: React.FC = () => {
       router.push("/projects");
       return;
     }
-    if (!rootTemplateNameParam) {
-      console.error("No root template name provided in search params.");
-      toast.error("No root template name provided in search params.");
-      router.push("/projects");
-      return;
-    }
-    if (
-      selectedDirectoryIdParam &&
-      rootTemplateNameParam !== templateNameParam
-    ) {
-      console.error(
-        "Make sure the root template name is the same as the template name.",
-      );
-      toast.error(
-        "Make sure the root template name is the same as the template name.",
-      );
+    if (!newRevisionHashParam && !existingTemplateInstanceIdParam && !templateNameParam) {
+      console.error("No template name provided in search params.");
+      toast.error("No template name provided in search params.");
       router.push("/projects");
       return;
     }
@@ -117,7 +100,7 @@ const TemplateInstantiationPage: React.FC = () => {
       return;
     }
     const retrieveStuff = async () => {
-      const [projectResult, revision] = await Promise.all([retrieveProject(projectNameParam), selectedDirectoryIdParam ? retrieveDefaultTemplate(rootTemplateNameParam) : retrieveTemplateRevisionForProject(projectNameParam)]);
+      const [projectResult, revision] = await Promise.all([retrieveProject(projectNameParam), selectedDirectoryIdParam ? retrieveDefaultTemplate(templateNameParam!) : retrieveTemplateRevisionForProject(projectNameParam)]);
 
       if ("error" in revision) {
         console.error("Error retrieving template:", revision.error);
@@ -126,8 +109,8 @@ const TemplateInstantiationPage: React.FC = () => {
       }
 
       if (!revision.data) {
-        console.error("Template not found:", rootTemplateNameParam);
-        toast.error("Template not found: " + rootTemplateNameParam);
+        console.error("Template not found for project:", projectNameParam);
+        toast.error("Template not found for project: " + projectNameParam);
         router.push("/projects");
         return;
       }
@@ -185,7 +168,6 @@ const TemplateInstantiationPage: React.FC = () => {
   }, [
     projectNameParam,
     router,
-    rootTemplateNameParam,
     templateNameParam,
     parentTemplateInstanceIdParam,
     selectedDirectoryIdParam,
@@ -205,7 +187,6 @@ const TemplateInstantiationPage: React.FC = () => {
       if (
         !projectNameParam ||
         !templateNameParam ||
-        !rootTemplateNameParam ||
         !rootTemplate ||
         !subTemplate
       ) {
@@ -339,7 +320,6 @@ const TemplateInstantiationPage: React.FC = () => {
       selectedDirectoryIdParam,
       templateNameParam,
       project,
-      rootTemplateNameParam,
       existingTemplateInstanceIdParam,
     ],
   );
@@ -477,7 +457,7 @@ const TemplateInstantiationPage: React.FC = () => {
     return instantiatedSettings;
   }, [subTemplate, project, existingTemplateInstanceIdParam]);
 
-  if (!projectNameParam || !rootTemplateNameParam || !templateNameParam) {
+  if (!projectNameParam || !templateNameParam) {
     return (
       <div className="container mx-auto py-10">
         <h1 className="text-2xl font-bold">

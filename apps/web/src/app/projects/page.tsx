@@ -3,7 +3,7 @@ import {
   retrieveProjects,
   retrieveProjectSearchPaths,
 } from "@/app/actions/project";
-import { retrieveTemplates } from "@/app/actions/template";
+import { retrieveDefaultTemplates } from "@/app/actions/template";
 import TablePage, { type FieldInfo } from "@/components/general/table-page";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,12 +33,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   projectNameRegex,
   type ProjectDTO,
   type TemplateDTO,
 } from "@repo/ts/utils/types";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -98,13 +98,13 @@ export default function TemplatesListPage() {
       }
       setProjects(projects.data || []);
     });
-    retrieveTemplates().then((templates) => {
+    retrieveDefaultTemplates().then((templates) => {
       if ("error" in templates) {
         console.error("Error retrieving templates:", templates.error);
         toast.error("Error retrieving templates: " + templates.error);
         return;
       }
-      setTemplates(templates.data || []);
+      setTemplates(templates.data.map(t => t.template) || []);
     });
     retrieveProjectSearchPaths().then((paths) => {
       setProjectSearchPaths(paths);
@@ -114,7 +114,7 @@ export default function TemplatesListPage() {
   const onSubmit = useCallback(
     (values: FormValues) => {
       router.push(
-        `/projects/instantiate-template/?projectName=${values.projectName}&rootTemplate=${values.template}&template=${values.template}&selectedProjectDirectoryId=${values.directory}`,
+        `/projects/instantiate-template/?projectName=${values.projectName}&template=${values.template}&selectedProjectDirectoryId=${values.directory}`,
       );
       setOpen(false);
       form.reset();

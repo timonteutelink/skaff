@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ParsedFile, ProjectDTO, Result } from "@repo/ts/utils/types";
+import { ParsedFile, ProjectDTO, Result, TemplateDTO } from "@repo/ts/utils/types";
 import { FileDiffIcon, GitBranchIcon, GitCommitIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -16,9 +16,10 @@ import { useEffect, useState } from "react";
 interface ProjectHeaderProps {
   project: ProjectDTO;
   onBranchChange: (branch: string) => void;
+  defaultTemplate: TemplateDTO;
 }
 
-export function ProjectHeader({ project, onBranchChange }: ProjectHeaderProps) {
+export function ProjectHeader({ project, defaultTemplate, onBranchChange }: ProjectHeaderProps) {
   const router = useRouter();
 
   const [isDiffClean, setIsDiffClean] = useState<boolean>(true);
@@ -134,7 +135,19 @@ export function ProjectHeader({ project, onBranchChange }: ProjectHeaderProps) {
           Diff Template
         </Button>
 
-        {/* Add new button to bring templates up to date. Just add a boolean to url saying updateFullProject=true */}
+        {/* Add new button to bring templates up to date. Just add a boolean to url saying newRe */}
+        <Button
+          variant="outline"
+          disabled={!project.outdatedTemplate}
+          onClick={() =>
+            router.push(
+              `/projects/instantiate-template/?projectName=${project.settings.projectName}&newRevisionHash=${defaultTemplate.currentCommitHash}`
+            )
+          }
+        >
+          <FileDiffIcon className="w-4 h-4 mr-2" />
+          Update Template
+        </Button>
       </div>
     </header>
   );
