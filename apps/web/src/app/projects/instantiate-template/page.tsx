@@ -457,12 +457,11 @@ const TemplateInstantiationPage: React.FC = () => {
     return instantiatedSettings;
   }, [subTemplate, project, existingTemplateInstanceIdParam]);
 
-  if (!projectNameParam || !templateNameParam) {
+  if (!projectNameParam) {
     return (
       <div className="container mx-auto py-10">
         <h1 className="text-2xl font-bold">
-          Project name, root template name or template name not provided in
-          search params.
+          Project name not provided in search params.
         </h1>
       </div>
     );
@@ -470,24 +469,11 @@ const TemplateInstantiationPage: React.FC = () => {
 
   if (
     !rootTemplate ||
-    (!project && !selectedDirectoryIdParam && parentTemplateInstanceIdParam)
+    (!project && (parentTemplateInstanceIdParam || existingTemplateInstanceIdParam || newRevisionHashParam))
   ) {
     return (
       <div className="container mx-auto py-10">
         <h1 className="text-2xl font-bold">Loading...</h1>
-      </div>
-    );
-  }
-
-  if (!subTemplate || "error" in subTemplate || !subTemplate.data) {
-    return (
-      <div className="container mx-auto py-10">
-        <h1 className="text-2xl font-bold">
-          SubTemplate not found in template
-        </h1>
-        {subTemplate && "error" in subTemplate && (
-          <p className="text-red-500">Error: {subTemplate.error}</p>
-        )}
       </div>
     );
   }
@@ -522,13 +508,36 @@ const TemplateInstantiationPage: React.FC = () => {
           parsedDiff={diffToApply.parsedDiff}
         />
         <div className="flex justify-between mt-4">
-          <Button variant="outline" onClick={handleBackFromDiffToApply}>
+          {!newRevisionHashParam ? <Button variant="outline" onClick={handleBackFromDiffToApply}>
             Back
-          </Button>
+          </Button> : null}
           <Button variant="outline" onClick={handleSubmitDiffToApply}>
             Apply Diff
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  if (!subTemplate || "error" in subTemplate || !subTemplate.data) {
+    return (
+      <div className="container mx-auto py-10">
+        <h1 className="text-2xl font-bold">
+          SubTemplate not found in template
+        </h1>
+        {subTemplate && "error" in subTemplate && (
+          <p className="text-red-500">Error: {subTemplate.error}</p>
+        )}
+      </div>
+    );
+  }
+
+  if (!templateNameParam) {
+    return (
+      <div className="container mx-auto py-10">
+        <h1 className="text-2xl font-bold">
+          Template name not provided in search params.
+        </h1>
       </div>
     );
   }

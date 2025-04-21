@@ -27,7 +27,7 @@ git config commit.gpgsign false # TEMPORARELY BECAUSE NEED TO GENERATE NEW GPG K
 git add .
 git commit -m "Base version" -q
 
-rsync -a --delete --exclude='.git' "$CHANGED_PROJECT"/. .
+rsync -a --delete --checksum --exclude='.git' "$CHANGED_PROJECT"/. .
 
 git add .
 git diff --staged --no-color --no-ext-diff
