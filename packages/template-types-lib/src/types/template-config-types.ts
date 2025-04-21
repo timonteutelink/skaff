@@ -45,7 +45,7 @@ export type TemplateConfig = z.infer<typeof templateConfigSchema>;
  */
 export type SideEffectFunction<
   TFullSettingsType extends
-    TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
+  TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
 > = (
   templateSettings: TFullSettingsType,
   oldFileContents?: string,
@@ -53,7 +53,7 @@ export type SideEffectFunction<
 
 export type SideEffect<
   TFullSettingsType extends
-    TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
+  TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
 > = {
   apply: SideEffectFunction<TFullSettingsType>;
   /**
@@ -61,18 +61,15 @@ export type SideEffect<
    * relative to project root
    * @example "./README.md"
    */
-  filePath: StringOrCallback<TFullSettingsType>;
+  filePath: string;
 };
 
 /**
  * Redirect of one of the subtemplates files or directories to another location based from project root.
  */
-export type RedirectFile<
-  TFullSettingsType extends
-    TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
-> = {
-  from: StringOrCallback<TFullSettingsType>;
-  to: StringOrCallback<TFullSettingsType>;
+export type RedirectFile = {
+  from: string;
+  to: string;
 };
 
 /**
@@ -80,20 +77,20 @@ export type RedirectFile<
  */
 export type AutoInstatiatedSubtemplate<
   TFullSettingsType extends
-    TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
+  TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
 > = {
   /**
    * The path to the subtemplate.
    * relative to project root
    * @example "nix-project-flake"
    */
-  subTemplateName: StringOrCallback<TFullSettingsType>;
+  subTemplateName: string;
 
   /**
    * Function to map the user settings to the subtemplate settings.
    * This function is called with the user settings and should return the subtemplate settings.
    */
-  mapSettings: (userSettings: TFullSettingsType) => UserTemplateSettings;
+  mapSettings: AnyOrCallback<TFullSettingsType, UserTemplateSettings>;
 };
 
 export type AiContext = {
@@ -109,7 +106,7 @@ export type LLMTools = {
 //TODO: Ai settings will go in the tool env vars.
 export type AiCallbackFunction<
   TFullSettingsType extends
-    TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
+  TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
 > = (
   llmTools: LLMTools,
   templateSettings: TFullSettingsType,
@@ -117,7 +114,7 @@ export type AiCallbackFunction<
 
 export type AiAutoGenerateSettings<
   TFullSettingsType extends
-    TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
+  TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
 > = {
   expectedKeys: AnyOrCallback<TFullSettingsType, string[]>;
   callback: AiCallbackFunction<TFullSettingsType>;
@@ -125,7 +122,7 @@ export type AiAutoGenerateSettings<
 
 export type AiUserConversationSettings<
   TFullSettingsType extends
-    TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
+  TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
 > = {
   expectedKeys: AnyOrCallback<TFullSettingsType, string[]>;
 
@@ -168,7 +165,7 @@ export interface TemplateConfigModule<
   /**
    * Side effects to be applied when generating the template.
    */
-  sideEffects?: SideEffect<TFullSettingsType>[];
+  sideEffects?: AnyOrCallback<TFullSettingsType, SideEffect<TFullSettingsType>[]>;
 
   /**
    * Templates that when already existing in the project will disable the generation of this template.
@@ -178,12 +175,12 @@ export interface TemplateConfigModule<
   /**
    * Redirects of files or directories to another location based from project root.
    */
-  redirects?: RedirectFile<TFullSettingsType>[];
+  redirects?: AnyOrCallback<TFullSettingsType, RedirectFile[]>;
 
   /**
    * Auto instantiate subtemplates.
    */
-  autoInstatiatedSubtemplates?: AutoInstatiatedSubtemplate<TFullSettingsType>[];
+  autoInstatiatedSubtemplates?: AnyOrCallback<TFullSettingsType, AutoInstatiatedSubtemplate<TFullSettingsType>[]>;
 
   /**
    * Assertions. Function must return true otherwise the template generation will fail.
