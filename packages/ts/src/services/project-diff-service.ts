@@ -3,7 +3,7 @@ import { Template } from "../models/template-models";
 import { NewTemplateDiffResult, ParsedFile, ProjectSettings, Result } from "../utils/types";
 import { generateProjectFromExistingProject, generateProjectFromTemplateSettings, getParsedUserSettingsWithParentSettings } from "./project-service";
 import { AnyZodObject } from "zod";
-import { stringOrCallbackToString } from "../utils/shared-utils";
+import { anyOrCallbackToAny, stringOrCallbackToString } from "../utils/shared-utils";
 import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
 import { Project } from "../models/project-models";
 import { PROJECT_REGISTRY } from "./project-registry-service";
@@ -45,8 +45,16 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
   parentInstanceId: string,
   fullParentTemplateSettings: TemplateSettingsType<AnyZodObject>,
 ): Promise<Result<ProjectSettings>> {
-  for (const autoInstantiatedTemplate of currentTemplateToAddChildren.config
-    .autoInstatiatedSubtemplates || []) {
+  const templatesToAutoInstantiate = anyOrCallbackToAny(currentTemplateToAddChildren.config.autoInstatiatedSubtemplates, fullParentTemplateSettings);
+
+  if ("error" in templatesToAutoInstantiate) {
+    console.error(
+      `Failed to parse auto instantiated templates: ${templatesToAutoInstantiate.error}`,
+    );
+    return { error: templatesToAutoInstantiate.error };
+  }
+
+  for (const autoInstantiatedTemplate of templatesToAutoInstantiate.data || []) {
     const existingTemplateIndex =
       projectSettings.instantiatedTemplates.findIndex(
         (template) =>
@@ -67,24 +75,21 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
     const existingTemplate =
       projectSettings.instantiatedTemplates[existingTemplateIndex]!;
 
-    let newTemplateSettings: UserTemplateSettings;
-    try {
-      newTemplateSettings = autoInstantiatedTemplate.mapSettings(
-        fullParentTemplateSettings,
-      );
-    } catch (e) {
+    const newTemplateSettings = anyOrCallbackToAny(autoInstantiatedTemplate.mapSettings, fullParentTemplateSettings);
+
+    if ("error" in newTemplateSettings) {
       console.error(
-        `Failed to map settings for auto instantiated template: ${e}`,
+        `Failed to map settings for auto instantiated template: ${newTemplateSettings.error}`,
       );
       return {
-        error: `Failed to map settings for auto instantiated template: ${e}`,
+        error: `Failed to map settings for auto instantiated template: ${newTemplateSettings.error}`,
       };
     }
 
     const newFullTemplateSettings = Object.assign(
       {},
       fullParentTemplateSettings,
-      newTemplateSettings,
+      newTemplateSettings.data,
     );
 
     const subTemplateName = stringOrCallbackToString(
@@ -122,7 +127,7 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
     projectSettings.instantiatedTemplates[existingTemplateIndex] = {
       ...projectSettings.instantiatedTemplates[existingTemplateIndex],
       templateName: subTemplateName.data,
-      templateSettings: newTemplateSettings,
+      templateSettings: newTemplateSettings.data,
     };
 
     const result =
@@ -178,26 +183,30 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
   parentInstanceId: string,
   fullParentTemplateSettings: TemplateSettingsType<AnyZodObject>,
 ): Promise<Result<ProjectSettings>> {
-  for (const autoInstantiatedTemplate of currentTemplateToAddChildren.config
-    .autoInstatiatedSubtemplates || []) {
+  const templatesToAutoInstantiate = anyOrCallbackToAny(currentTemplateToAddChildren.config.autoInstatiatedSubtemplates, fullParentTemplateSettings);
+
+  if ("error" in templatesToAutoInstantiate) {
+    console.error(
+      `Failed to parse auto instantiated templates: ${templatesToAutoInstantiate.error}`,
+    );
+    return { error: templatesToAutoInstantiate.error };
+  }
+
+  for (const autoInstantiatedTemplate of templatesToAutoInstantiate.data || []) {
     const autoInstantiatedTemplateInstanceId = crypto.randomUUID();
-    let newTemplateSettings: UserTemplateSettings;
-    try {
-      newTemplateSettings = autoInstantiatedTemplate.mapSettings(
-        fullParentTemplateSettings,
-      );
-    } catch (e) {
+    const newTemplateSettings = anyOrCallbackToAny(autoInstantiatedTemplate.mapSettings, fullParentTemplateSettings);
+    if ("error" in newTemplateSettings) {
       console.error(
-        `Failed to map settings for auto instantiated template: ${e}`,
+        `Failed to map settings for auto instantiated template: ${newTemplateSettings.error}`,
       );
       return {
-        error: `Failed to map settings for auto instantiated template: ${e}`,
+        error: `Failed to map settings for auto instantiated template: ${newTemplateSettings.error}`,
       };
     }
     const newFullTemplateSettings = Object.assign(
       {},
       fullParentTemplateSettings,
-      newTemplateSettings,
+      newTemplateSettings.data,
     );
     const subTemplateName = stringOrCallbackToString(
       autoInstantiatedTemplate.subTemplateName,
@@ -217,7 +226,7 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
       templateCommitHash: currentTemplateToAddChildren.commitHash,
       automaticallyInstantiatedByParent: true,
       templateName: subTemplateName.data,
-      templateSettings: newTemplateSettings,
+      templateSettings: newTemplateSettings.data,
     });
 
     const rootTemplate = await ROOT_TEMPLATE_REGISTRY.loadRevision(

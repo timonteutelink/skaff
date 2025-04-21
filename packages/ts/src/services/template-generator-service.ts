@@ -2,6 +2,7 @@ import {
   UserTemplateSettings,
   SideEffectFunction,
   TemplateSettingsType,
+  RedirectFile,
 } from "@timonteutelink/template-types-lib";
 import fs from "fs-extra";
 import { glob } from "glob";
@@ -128,35 +129,24 @@ export class TemplateGeneratorService {
     };
   }
 
-  private getRedirects(): Result<{ from: string; to: string }[]> {
+  private getRedirects(): Result<RedirectFile[]> {
     if (
       !this.currentlyGeneratingTemplate ||
       !this.currentlyGeneratingTemplateFullSettings
     ) {
       return { error: "No template is currently being generated." };
     }
-    const redirects = this.currentlyGeneratingTemplate.config.redirects;
     const fullSettings = this.currentlyGeneratingTemplateFullSettings;
-    if (!redirects) {
+    const redirects = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.redirects, fullSettings);
+    if ("error" in redirects) {
+      console.error(`Failed to parse redirects: ${redirects.error}`);
+      return { error: `Failed to parse redirects: ${redirects.error}` };
+    }
+    if (!redirects.data) {
       return { data: [] };
     }
 
-    const result = [];
-
-    for (const redirect of redirects) {
-      const from = stringOrCallbackToString(redirect.from, fullSettings);
-      const to = stringOrCallbackToString(redirect.to, fullSettings);
-
-      if ("error" in from) {
-        return { error: `Failed to parse redirect from: ${from.error}` };
-      }
-      if ("error" in to) {
-        return { error: `Failed to parse redirect to: ${to.error}` };
-      }
-
-      result.push({ from: from.data, to: to.data });
-    }
-    return { data: result };
+    return { data: redirects.data };
   }
 
   /**
@@ -240,22 +230,16 @@ export class TemplateGeneratorService {
       return { error: "No template is currently being generated." };
     }
 
-    const sideEffects = this.currentlyGeneratingTemplate.config.sideEffects;
     const fullSettings = this.currentlyGeneratingTemplateFullSettings;
+    const sideEffects = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.sideEffects, fullSettings);
+    if ("error" in sideEffects) {
+      console.error(`Failed to parse side effects: ${sideEffects.error}`);
+      return { error: `Failed to parse side effects: ${sideEffects.error}` };
+    }
 
-    for (const sideEffect of sideEffects || []) {
-      const filePath = stringOrCallbackToString(
-        sideEffect.filePath,
-        fullSettings,
-      );
-      if ("error" in filePath) {
-        console.error(`Failed to parse file path: ${filePath.error}`);
-        return {
-          error: `Failed to parse file path: ${filePath.error}`,
-        };
-      }
+    for (const sideEffect of sideEffects.data || []) {
       const applyResult = await this.applySideEffect(
-        filePath.data,
+        sideEffect.filePath,
         sideEffect.apply,
       );
 
@@ -338,16 +322,27 @@ export class TemplateGeneratorService {
       console.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
     }
-    for (const templateToAutoInstantiate of this.currentlyGeneratingTemplate
-      .config.autoInstatiatedSubtemplates || []) {
-      let newTemplateSettings: UserTemplateSettings;
-      try {
-        newTemplateSettings =
-          templateToAutoInstantiate.mapSettings(fullParentSettings);
-      } catch (e) {
-        console.error(`Failed to parse template settings: ${e}`);
+
+    const templatesToAutoInstantiate = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.autoInstatiatedSubtemplates, fullParentSettings);
+
+    if ("error" in templatesToAutoInstantiate) {
+      console.error(
+        `Failed to parse auto instantiated subtemplates: ${templatesToAutoInstantiate.error}`,
+      );
+      return {
+        error: `Failed to parse auto instantiated subtemplates: ${templatesToAutoInstantiate.error}`,
+      };
+    }
+
+    for (const templateToAutoInstantiate of templatesToAutoInstantiate.data || []) {
+      const newTemplateSettings = anyOrCallbackToAny(templateToAutoInstantiate.mapSettings, fullParentSettings);
+
+      if ("error" in newTemplateSettings) {
+        console.error(
+          `Failed to parse template settings: ${newTemplateSettings.error}`,
+        );
         return {
-          error: `Failed to parse template settings: ${e}`,
+          error: `Failed to parse template settings: ${newTemplateSettings.error}`,
         };
       }
 

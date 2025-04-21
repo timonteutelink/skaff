@@ -46,9 +46,9 @@ const templateConfigModule: TemplateConfigModule<
   templateConfig,
   targetPath: ".",
   templateSettingsSchema,
-  sideEffects: [
+  sideEffects: (banana) => [
     {
-      filePath: (banana) => "./README.md",
+      filePath: "./README.md",
       apply: sideEffectFunction,
     },
   ],
