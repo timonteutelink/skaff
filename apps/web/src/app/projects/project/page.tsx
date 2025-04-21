@@ -2,7 +2,7 @@
 
 import { switchProjectBranch } from "@/app/actions/git";
 import { retrieveProject } from "@/app/actions/project";
-import { retrieveTemplateRevisionForProject } from "@/app/actions/template";
+import { retrieveDefaultTemplate, retrieveTemplateRevisionForProject } from "@/app/actions/template";
 import { ProjectDetailsPanel } from "@/components/general/projects/project-details-panel";
 import { ProjectHeader } from "@/components/general/projects/project-header";
 import { ProjectTree } from "@/components/general/projects/project-tree";
@@ -186,7 +186,8 @@ export default function ProjectTemplateTreePage() {
     [searchParams],
   );
   const [project, setProject] = useState<ProjectDTO>();
-  const [rootTemplate, setRootTemplate] = useState<TemplateDTO>();
+  const [rootTemplate, setRootTemplate] = useState<TemplateDTO>();// Specific revision for this project.
+  const [defaultTemplate, setDefaultTemplate] = useState<TemplateDTO>();// Default revision
   const [projectTree, setProjectTree] = useState<ProjectTreeNode[]>([]);
   const [selectedNode, setSelectedNode] = useState<ProjectTreeNode | null>(
     null,
@@ -243,6 +244,24 @@ export default function ProjectTemplateTreePage() {
   }, [projectNameParam, router]);
 
   useEffect(() => {
+    if (rootTemplate) {
+      retrieveDefaultTemplate(rootTemplate.config.templateConfig.name).then((defaultTemplate) => {
+        if ("error" in defaultTemplate) {
+          console.error("Error retrieving default template:", defaultTemplate.error);
+          toast.error("Error retrieving default template: " + defaultTemplate.error);
+          return;
+        }
+        if (!defaultTemplate.data) {
+          console.error("No default template found.");
+          toast.error("No default template found.");
+          return;
+        }
+        setDefaultTemplate(defaultTemplate.data.template);
+      });
+    }
+  }, [rootTemplate]);
+
+  useEffect(() => {
     if (project && rootTemplate) {
       const templateMap = collectTemplates(rootTemplate);
       console.log("Template map:", templateMap);
@@ -284,7 +303,7 @@ export default function ProjectTemplateTreePage() {
     [projectNameParam],
   );
 
-  if (!project || !rootTemplate) {
+  if (!project || !rootTemplate || !defaultTemplate) {
     return (
       <div className="flex items-center justify-center h-screen">
         <p>Loading project...</p>
@@ -316,6 +335,7 @@ export default function ProjectTemplateTreePage() {
             selectedNode={selectedNode}
             project={project}
             rootTemplate={rootTemplate}
+            defaultTemplate={defaultTemplate}
           />
         </div>
       </div>

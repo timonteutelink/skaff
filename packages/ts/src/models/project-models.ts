@@ -121,34 +121,7 @@ export class Project {
     };
   }
 
-  isTemplateOutdated(): Result<boolean> {
-    for (const instantiatedTemplate of this.instantiatedProjectSettings
-      .instantiatedTemplates) {
-      const template = this.rootTemplate.findSubTemplate(
-        instantiatedTemplate.templateName,
-      );
-      if (!template) {
-        console.error(
-          `Template ${instantiatedTemplate.templateName} not found in project settings`,
-        );
-        return { error: "Template not found" };
-      }
-      if (template.commitHash !== instantiatedTemplate.templateCommitHash) {
-        return { data: true };
-      }
-    }
-    return { data: false };
-  }
-
   public mapToDTO(): Result<ProjectDTO> {
-    const templateOutdated = this.isTemplateOutdated();
-    if ("error" in templateOutdated) {
-      console.error(
-        `Failed to check if template is outdated: ${templateOutdated.error}`,
-      );
-      return { error: templateOutdated.error };
-    }
-
     return {
       data: {
         name: this.instantiatedProjectSettings.projectName,
@@ -156,7 +129,7 @@ export class Project {
         rootTemplateName: this.instantiatedProjectSettings.rootTemplateName,
         settings: this.instantiatedProjectSettings,
         gitStatus: this.gitStatus,
-        outdatedTemplate: templateOutdated.data,
+        outdatedTemplate: !this.rootTemplate.isDefault
       },
     };
   }

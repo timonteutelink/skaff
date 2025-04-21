@@ -12,12 +12,14 @@ interface ProjectDetailsPanelProps {
   selectedNode: ProjectTreeNode | null;
   project: ProjectDTO;
   rootTemplate: TemplateDTO;
+  defaultTemplate: TemplateDTO;
 }
 
 export function ProjectDetailsPanel({
   selectedNode,
   project,
   rootTemplate,
+  defaultTemplate,
 }: ProjectDetailsPanelProps) {
   const router = useRouter();
   const selectedNodeTemplate = useMemo(
@@ -56,13 +58,13 @@ export function ProjectDetailsPanel({
             <h2 className="text-2xl font-bold">
               {selectedNodeTemplate?.config.templateConfig.name} Instance
             </h2>
-            {selectedNodeTemplate?.currentCommitHash === templateCommitHash ? (
+            {templateCommitHash ? (defaultTemplate.currentCommitHash === templateCommitHash ? (
               <Badge className="ml-4 bg-green-100 text-green-800">
                 Up-to-date
               </Badge>
             ) : (
               <Badge className="ml-4 bg-red-100 text-red-800">Outdated</Badge>
-            )}
+            )) : null}
           </div>
           {!selectedInstantiatedTemplate.automaticallyInstantiatedByParent ? (
             <Button
@@ -70,9 +72,9 @@ export function ProjectDetailsPanel({
               onClick={() => {
                 router.push(
                   `/projects/instantiate-template/?projectName=${project.name}` +
-                    `&rootTemplate=${project.rootTemplateName}` +
-                    `&template=${selectedNodeTemplate?.config.templateConfig.name}` +
-                    `&existingTemplateInstanceId=${id}`,
+                  `&rootTemplate=${project.rootTemplateName}` +
+                  `&template=${selectedNodeTemplate?.config.templateConfig.name}` +
+                  `&existingTemplateInstanceId=${id}`,
                 );
               }}
             >
@@ -204,9 +206,9 @@ export function ProjectDetailsPanel({
           onClick={() => {
             router.push(
               `/projects/instantiate-template/?projectName=${project.name}` +
-                `&rootTemplate=${project.rootTemplateName}` +
-                `&template=${candidate.config.templateConfig.name}` +
-                `&parentTemplateInstanceId=${selectedNode.parentId}`,
+              `&rootTemplate=${project.rootTemplateName}` +
+              `&template=${candidate.config.templateConfig.name}` +
+              `&parentTemplateInstanceId=${selectedNode.parentId}`,
             );
           }}
         >

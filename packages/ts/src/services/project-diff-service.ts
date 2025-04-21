@@ -703,3 +703,54 @@ export async function diffProjectFromTemplate(
     await fs.rm(tempNewProjectPath.data, { recursive: true });
   }
 }
+
+export async function generateUpdateTemplateDiff(
+  project: Project,
+  newTemplateRevisionHash: string,
+): Promise<Result<NewTemplateDiffResult>> {
+  const rootInstantiatedTemplate = project.instantiatedProjectSettings.instantiatedTemplates[0];
+
+  if (!rootInstantiatedTemplate) {
+    console.error(`No instantiated root template found`);
+    return { error: "No instantiated root template found" };
+  }
+
+  const template = await ROOT_TEMPLATE_REGISTRY.loadRevision(
+    rootInstantiatedTemplate.templateName,
+    newTemplateRevisionHash,
+  );
+
+  if ("error" in template) {
+    console.error(`Failed to find template: ${template.error}`);
+    return { error: template.error };
+  }
+
+  if (!template.data) {
+    console.error(`Template ${rootInstantiatedTemplate.templateName} not found`);
+    return { error: "Template not found" };
+  }
+
+  const newProjectSettings: ProjectSettings = {
+    ...project.instantiatedProjectSettings,
+    instantiatedTemplates: [
+      ...project.instantiatedProjectSettings.instantiatedTemplates,
+    ],
+  };
+
+  if (!newProjectSettings.instantiatedTemplates[0]) {
+    console.error(
+      `Instantiated template ${rootInstantiatedTemplate.templateName} not found in project settings`,
+    );
+    return { error: "Instantiated template not found in project settings" };
+  }
+
+  newProjectSettings.instantiatedTemplates[0] = {
+    ...newProjectSettings.instantiatedTemplates[0],
+    templateCommitHash: newTemplateRevisionHash,
+  };
+
+  return await diffNewTempProjects(
+    project.instantiatedProjectSettings,
+    newProjectSettings,
+  );
+}

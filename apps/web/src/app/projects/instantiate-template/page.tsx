@@ -8,9 +8,10 @@ import {
   prepareTemplateModificationDiff,
   resolveConflictsAndDiff,
   restoreAllChangesToCleanProject,
+  retrieveDiffUpdateProjectNewTemplateRevision,
 } from "@/app/actions/instantiate";
 import { retrieveProject } from "@/app/actions/project";
-import { retrieveTemplateRevisionForProject } from "@/app/actions/template";
+import { retrieveDefaultTemplate, retrieveTemplateRevisionForProject } from "@/app/actions/template";
 import CommitButton from "@/components/general/git/commit-dialog";
 import { DiffVisualizerPage } from "@/components/general/git/diff-visualizer-page";
 import { TemplateSettingsForm } from "@/components/general/template-settings/template-settings-form";
@@ -26,6 +27,8 @@ import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+
+// TODO: when updating to a new template version we should reiterate all settings of all templates for possible changes. Or we fully automate go directly to diff but require the template to setup sensible defaults for possible new options.
 
 // TODO: add lot more checks on backend. For example cannot edit autoinstantiated template.
 const TemplateInstantiationPage: React.FC = () => {
@@ -53,6 +56,10 @@ const TemplateInstantiationPage: React.FC = () => {
   );
   const existingTemplateInstanceIdParam = useMemo(
     () => searchParams.get("existingTemplateInstanceId"),
+    [searchParams],
+  );
+  const newRevisionHashParam = useMemo(
+    () => searchParams.get("newRevisionHash"),
     [searchParams],
   );
   const [project, setProject] = useState<ProjectDTO>();
@@ -90,20 +97,53 @@ const TemplateInstantiationPage: React.FC = () => {
     }
     if (
       (selectedDirectoryIdParam && parentTemplateInstanceIdParam) ||
-      (existingTemplateInstanceIdParam && selectedDirectoryIdParam) ||
-      (parentTemplateInstanceIdParam && existingTemplateInstanceIdParam)
+      (selectedDirectoryIdParam && existingTemplateInstanceIdParam) ||
+      (selectedDirectoryIdParam && newRevisionHashParam) ||
+      (parentTemplateInstanceIdParam && existingTemplateInstanceIdParam) ||
+      (parentTemplateInstanceIdParam && newRevisionHashParam) ||
+      (existingTemplateInstanceIdParam && newRevisionHashParam) ||
+      (!selectedDirectoryIdParam &&
+        !parentTemplateInstanceIdParam &&
+        !existingTemplateInstanceIdParam &&
+        !newRevisionHashParam)
     ) {
       console.error(
-        "Cannot only provide one of selectedDirectoryId and parentTemplateInstanceId or existingTemplateInstanceId.",
+        "Cannot only provide one of selectedDirectoryId or parentTemplateInstanceId or existingTemplateInstanceId or newRevisionHash.",
       );
       toast.error(
-        "Cannot only provide one of selectedDirectoryId and parentTemplateInstanceId or existingTemplateInstanceId.",
+        "Cannot only provide one of selectedDirectoryId or parentTemplateInstanceId or existingTemplateInstanceId or newRevisionHash.",
       );
       router.push("/projects");
       return;
     }
     const retrieveStuff = async () => {
-      const [projectResult, revision] = await Promise.all([retrieveProject(projectNameParam), retrieveTemplateRevisionForProject(projectNameParam)]);
+      const [projectResult, revision] = await Promise.all([retrieveProject(projectNameParam), selectedDirectoryIdParam ? retrieveDefaultTemplate(rootTemplateNameParam) : retrieveTemplateRevisionForProject(projectNameParam)]);
+
+      if ("error" in revision) {
+        console.error("Error retrieving template:", revision.error);
+        toast.error("Error retrieving template: " + revision.error);
+        return;
+      }
+
+      if (!revision.data) {
+        console.error("Template not found:", rootTemplateNameParam);
+        toast.error("Template not found: " + rootTemplateNameParam);
+        router.push("/projects");
+        return;
+      }
+
+      if ("template" in revision.data) {
+        const template = revision.data.template;
+        if (!template) {
+          console.error("Template not found in revision data.");
+          toast.error("Template not found in revision data.");
+          return;
+        }
+        setRootTemplate(template);
+        return;
+      }
+
+      setRootTemplate(revision.data);
 
       if ("error" in projectResult) {
         console.error("Error retrieving project:", projectResult.error);
@@ -127,20 +167,19 @@ const TemplateInstantiationPage: React.FC = () => {
 
       setProject(projectResult.data);
 
-      if ("error" in revision) {
-        console.error("Error retrieving template:", revision.error);
-        toast.error("Error retrieving template: " + revision.error);
+      if (!newRevisionHashParam) {
         return;
       }
-
-      if (!revision.data) {
-        console.error("Template not found:", rootTemplateNameParam);
-        toast.error("Template not found: " + rootTemplateNameParam);
-        router.push("/projects");
+      const newRevisionResult = await retrieveDiffUpdateProjectNewTemplateRevision(
+        projectNameParam,
+        newRevisionHashParam,
+      );
+      if ("error" in newRevisionResult) {
+        console.error("Error retrieving template:", newRevisionResult.error);
+        toast.error("Error retrieving template: " + newRevisionResult.error);
         return;
       }
-
-      setRootTemplate(revision.data);
+      setDiffToApply(newRevisionResult.data);
     };
     retrieveStuff();
   }, [
@@ -151,6 +190,7 @@ const TemplateInstantiationPage: React.FC = () => {
     parentTemplateInstanceIdParam,
     selectedDirectoryIdParam,
     existingTemplateInstanceIdParam,
+    newRevisionHashParam,
   ]);
 
   const subTemplate = useMemo(() => {

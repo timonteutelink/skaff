@@ -163,7 +163,9 @@ export class RootTemplateRegistry {
       return { error: saveRevisionInCacheResult.error };
     }
 
-    const newTemplate = await Template.createAllTemplates(saveRevisionInCacheResult.data);
+    const newTemplatePath = path.join(saveRevisionInCacheResult.data, "root-templates", path.basename(defaultTemplate.absoluteDir));
+
+    const newTemplate = await Template.createAllTemplates(newTemplatePath);
 
     if ("error" in newTemplate) {
       console.error(`Failed to create template from revision: ${newTemplate.error}`);

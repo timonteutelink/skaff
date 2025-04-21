@@ -1,6 +1,6 @@
 "use server";
 import { deleteRepo, resetAllChanges } from "@repo/ts/services/git-service";
-import { applyDiffToProject, generateModifyTemplateDiff, generateNewTemplateDiff, resolveConflictsAndRetrieveAppliedDiff } from "@repo/ts/services/project-diff-service";
+import { applyDiffToProject, generateModifyTemplateDiff, generateNewTemplateDiff, generateUpdateTemplateDiff, resolveConflictsAndRetrieveAppliedDiff } from "@repo/ts/services/project-diff-service";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import {
   generateProjectFromTemplateSettings,
@@ -285,4 +285,40 @@ export async function generateNewProjectFromExisting(
   }
 
   return { data: result.data };
+}
+
+export async function retrieveDiffUpdateProjectNewTemplateRevision(
+  projectName: string,
+  newTemplateRevisionCommitHash: string,
+): Promise<Result<NewTemplateDiffResult>> {
+  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  if ("error" in reloadResult) {
+    console.error("Failed to reload projects:", reloadResult.error);
+    return { error: reloadResult.error };
+  }
+
+  const project = await PROJECT_REGISTRY.findProject(projectName);
+
+  if ("error" in project) {
+    console.error("Failed to find project:", project.error);
+    return { error: project.error };
+  }
+
+  if (!project.data) {
+    console.error("Project not found");
+    return { error: "Project not found" };
+  }
+
+  const result = await generateUpdateTemplateDiff(
+    project.data,
+    newTemplateRevisionCommitHash,
+  );
+
+  if ("error" in result) {
+    console.error("Failed to generate template diff:", result.error);
+    return { error: result.error };
+  }
+
+  return { data: result.data };
+
 }

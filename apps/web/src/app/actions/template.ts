@@ -162,8 +162,7 @@ export async function retrieveTemplateRevisionForProject(
     return { error: project.error };
   }
   if (!project.data) {
-    console.error(`Project ${projectName} not found`);
-    return { error: `Project ${projectName} not found` };
+    return { data: null };
   }
 
   const rootTemplateName = project.data.instantiatedProjectSettings.rootTemplateName;
