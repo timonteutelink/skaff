@@ -507,13 +507,13 @@ const TemplateInstantiationPage: React.FC = () => {
           projectName={projectNameParam}
           parsedDiff={diffToApply.parsedDiff}
         />
-        <div className="flex justify-between mt-4">
-          {!newRevisionHashParam ? <Button variant="outline" onClick={handleBackFromDiffToApply}>
-            Back
-          </Button> : null}
+        <div className="flex flex-row-reverse justify-between mt-4">
           <Button variant="outline" onClick={handleSubmitDiffToApply}>
             Apply Diff
           </Button>
+          {!newRevisionHashParam ? <Button variant="outline" onClick={handleBackFromDiffToApply}>
+            Back
+          </Button> : null}
         </div>
       </div>
     );
