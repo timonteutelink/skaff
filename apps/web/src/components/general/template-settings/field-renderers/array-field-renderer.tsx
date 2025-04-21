@@ -1,22 +1,11 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useFieldArray } from "react-hook-form";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { useState } from "react"
+import { useFieldArray } from "react-hook-form"
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
   PlusCircle,
   Trash2,
@@ -27,49 +16,12 @@ import {
   ArrowDown,
   ArrowUp,
   InfoIcon,
-} from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { renderInputByType } from "../input-renderers";
-import type { ArrayFieldRendererProps } from "../types";
-import { ObjectFieldRenderer } from "./object-field-renderer";
-
-// Function to create a default item for the array
-const createDefaultItem = (itemSchema: any): any => {
-  if (itemSchema.type === "object" && itemSchema.properties) {
-    const newItem: any = {};
-    for (const key in itemSchema.properties) {
-      if (itemSchema.properties.hasOwnProperty(key)) {
-        const property = itemSchema.properties[key];
-        if (property.type === "string") {
-          newItem[key] = "";
-        } else if (property.type === "number") {
-          newItem[key] = 0;
-        } else if (property.type === "boolean") {
-          newItem[key] = false;
-        } else if (property.type === "array") {
-          newItem[key] = [];
-        } else if (property.type === "object") {
-          newItem[key] = createDefaultItem(property); // Recursive call for nested objects
-        } else {
-          newItem[key] = null; // Default value for other types
-        }
-      }
-    }
-    return newItem;
-  } else if (itemSchema.type === "string") {
-    return "";
-  } else if (itemSchema.type === "number") {
-    return 0;
-  } else if (itemSchema.type === "boolean") {
-    return false;
-  }
-  return null;
-};
+} from "lucide-react"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Badge } from "@/components/ui/badge"
+import { renderInputByType } from "../input-renderers"
+import type { ArrayFieldRendererProps } from "../types"
+import { ObjectFieldRenderer } from "./object-field-renderer"
 
 export function ArrayFieldRenderer({
   form,
@@ -77,35 +29,34 @@ export function ArrayFieldRenderer({
   property,
   isRequired,
   isReadOnly,
+  createDefaultItem,
   requiredFields,
   renderFormField,
 }: ArrayFieldRendererProps) {
   const fieldArray = useFieldArray({
     control: form.control,
     name: fieldPath,
-  });
+  })
 
-  const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>(
-    {},
-  );
+  const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>({})
 
   const toggleItemExpansion = (index: number) => {
     setExpandedItems((prev) => ({
       ...prev,
       [index]: !prev[index],
-    }));
-  };
+    }))
+  }
 
   const moveItem = (index: number, direction: "up" | "down") => {
-    const newIndex = direction === "up" ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= fieldArray.fields.length) return;
-    fieldArray.swap(index, newIndex);
-  };
+    const newIndex = direction === "up" ? index - 1 : index + 1
+    if (newIndex < 0 || newIndex >= fieldArray.fields.length) return
+    fieldArray.swap(index, newIndex)
+  }
 
   const duplicateItem = (index: number) => {
-    const itemToDuplicate = form.getValues(`${fieldPath}.${index}`);
-    fieldArray.insert(index + 1, JSON.parse(JSON.stringify(itemToDuplicate)));
-  };
+    const itemToDuplicate = form.getValues(`${fieldPath}.${index}`)
+    fieldArray.insert(index + 1, JSON.parse(JSON.stringify(itemToDuplicate)))
+  }
 
   return (
     <FormField
@@ -114,14 +65,12 @@ export function ArrayFieldRenderer({
       name={fieldPath}
       render={({ field }) => {
         return (
-          <FormItem className="col-span-full">
-            <div className="flex items-center justify-between mb-2">
+          <FormItem className="col-span-full space-y-3">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <FormLabel className="capitalize text-base font-medium">
+                <FormLabel className="text-base font-medium">
                   {property.title || fieldPath.split(".").pop()}
-                  {isRequired && (
-                    <span className="text-destructive ml-1">*</span>
-                  )}
+                  {isRequired && <span className="text-destructive ml-1">*</span>}
                 </FormLabel>
 
                 {property.description && (
@@ -130,11 +79,23 @@ export function ArrayFieldRenderer({
                       <TooltipTrigger asChild>
                         <InfoIcon className="h-4 w-4 text-muted-foreground" />
                       </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs">{property.description}</p>
+                      <TooltipContent className="max-w-xs">
+                        <p>{property.description}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
+                )}
+
+                {property.minItems !== undefined && (
+                  <Badge variant="outline" className="text-xs">
+                    Min: {property.minItems}
+                  </Badge>
+                )}
+
+                {property.maxItems !== undefined && (
+                  <Badge variant="outline" className="text-xs">
+                    Max: {property.maxItems}
+                  </Badge>
                 )}
               </div>
 
@@ -145,14 +106,15 @@ export function ArrayFieldRenderer({
                   size="sm"
                   onClick={() => {
                     // Create a new item with default values based on the item schema
-                    const newItem = createDefaultItem(property.items);
-                    fieldArray.append(newItem);
+                    const newItem = createDefaultItem ? createDefaultItem(property.items) : {}
+                    fieldArray.append(newItem)
                     // Auto-expand the newly added item
                     setExpandedItems((prev) => ({
                       ...prev,
                       [fieldArray.fields.length]: true,
-                    }));
+                    }))
                   }}
+                  disabled={property.maxItems !== undefined && fieldArray.fields.length >= property.maxItems}
                 >
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Add Item
@@ -163,19 +125,16 @@ export function ArrayFieldRenderer({
             <FormMessage />
 
             {fieldArray.fields.length === 0 ? (
-              <div className="text-sm text-muted-foreground py-6 text-center border rounded-md">
+              <div className="text-sm text-muted-foreground py-6 text-center border rounded-md bg-muted/20">
                 No items added yet. Click "Add Item" to add your first item.
               </div>
             ) : (
-              <div className="space-y-4 mt-2">
+              <div className="space-y-3">
                 {fieldArray.fields.map((item, index) => {
-                  const isExpanded = expandedItems[index] !== false; // Default to expanded if not set
+                  const isExpanded = expandedItems[index] !== false // Default to expanded if not set
 
                   // For array of objects
-                  if (
-                    property.items.type === "object" &&
-                    property.items.properties
-                  ) {
+                  if (property.items.type === "object" && property.items.properties) {
                     return (
                       <ArrayObjectItem
                         key={item.id}
@@ -193,7 +152,7 @@ export function ArrayFieldRenderer({
                         requiredFields={requiredFields}
                         renderFormField={renderFormField}
                       />
-                    );
+                    )
                   }
 
                   // For array of primitives
@@ -208,15 +167,15 @@ export function ArrayFieldRenderer({
                       moveItem={moveItem}
                       fieldArray={fieldArray}
                     />
-                  );
+                  )
                 })}
               </div>
             )}
           </FormItem>
-        );
+        )
       }}
     />
-  );
+  )
 }
 
 function ArrayObjectItem({
@@ -234,27 +193,22 @@ function ArrayObjectItem({
   requiredFields,
   renderFormField,
 }: any) {
-  const itemRequiredFields = requiredFields[`${fieldPath}[]`] || [];
+  const itemRequiredFields = requiredFields[`${fieldPath}[]`] || []
 
   return (
-    <Card key={item.id} className="overflow-visible">
-      <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
+    <Card key={item.id} className="overflow-visible border shadow-sm">
+      <CardHeader className="p-3 flex flex-row items-center justify-between bg-muted/20">
         <div className="flex items-center gap-2">
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={() => toggleItemExpansion(index)}
+            className="p-1 h-auto"
           >
-            {isExpanded ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
+            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </Button>
-          <CardTitle className="text-sm font-medium">
-            Item {index + 1}
-          </CardTitle>
+          <CardTitle className="text-sm font-medium">Item {index + 1}</CardTitle>
         </div>
 
         {!isReadOnly && (
@@ -263,6 +217,7 @@ function ArrayObjectItem({
               type="button"
               variant="ghost"
               size="sm"
+              className="p-1 h-auto"
               disabled={index === 0}
               onClick={() => moveItem(index, "up")}
             >
@@ -272,6 +227,7 @@ function ArrayObjectItem({
               type="button"
               variant="ghost"
               size="sm"
+              className="p-1 h-auto"
               disabled={index === fieldArray.fields.length - 1}
               onClick={() => moveItem(index, "down")}
             >
@@ -279,7 +235,7 @@ function ArrayObjectItem({
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="p-1 h-auto">
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -288,10 +244,7 @@ function ArrayObjectItem({
                   <Copy className="h-4 w-4 mr-2" />
                   Duplicate
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => fieldArray.remove(index)}
-                  className="text-destructive"
-                >
+                <DropdownMenuItem onClick={() => fieldArray.remove(index)} className="text-destructive">
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete
                 </DropdownMenuItem>
@@ -302,87 +255,41 @@ function ArrayObjectItem({
       </CardHeader>
 
       {isExpanded && (
-        <CardContent className="p-4 pt-0">
+        <CardContent className="p-4 pt-3">
           <div className="grid gap-4 sm:grid-cols-2">
-            {Object.entries(property.items.properties).map(
-              ([propKey, propValue]: [string, any]) => {
-                const nestedPath = `${fieldPath}.${index}.${propKey}`;
+            {Object.entries(property.items.properties).map(([propKey, propValue]: [string, any]) => {
+              const nestedPath = `${fieldPath}.${index}.${propKey}`
 
-                // Handle nested objects and arrays recursively
-                if (propValue.type === "object" && propValue.properties) {
-                  return (
-                    <ObjectFieldRenderer
-                      key={nestedPath}
-                      fieldPath={nestedPath}
-                      property={propValue}
-                      isRequired={itemRequiredFields.includes(propKey)}
-                      isReadOnly={isReadOnly}
-                      form={form}
-                      requiredFields={requiredFields}
-                      renderFormField={renderFormField}
-                    />
-                  );
-                }
-
-                if (propValue.type === "array") {
-                  return (
-                    <ArrayFieldRenderer
-                      key={nestedPath}
-                      form={form}
-                      fieldPath={nestedPath}
-                      property={propValue}
-                      isRequired={itemRequiredFields.includes(propKey)}
-                      isReadOnly={isReadOnly}
-                      createDefaultItem={createDefaultItem}
-                      requiredFields={requiredFields}
-                      renderFormField={renderFormField}
-                    />
-                  );
-                }
-
+              // Handle nested objects and arrays recursively
+              if (propValue.type === "object" && propValue.properties) {
                 return (
-                  <FormField
+                  <ObjectFieldRenderer
                     key={nestedPath}
-                    control={form.control}
-                    name={nestedPath}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="capitalize">
-                          {propValue.title || propKey}
-                          {itemRequiredFields.includes(propKey) && (
-                            <span className="text-destructive ml-1">*</span>
-                          )}
-                        </FormLabel>
-                        <FormControl>
-                          {renderInputByType({
-                            property: propValue,
-                            field,
-                            isReadOnly,
-                          })}
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    fieldPath={nestedPath}
+                    property={propValue}
+                    isRequired={itemRequiredFields.includes(propKey)}
+                    isReadOnly={isReadOnly}
+                    form={form}
+                    requiredFields={requiredFields}
+                    renderFormField={renderFormField}
                   />
-                );
-              },
-            )}
+                )
+              }
+
+              if (propValue.type === "array") {
+                return renderFormField(propKey, propValue, `${fieldPath}.${index}`, itemRequiredFields)
+              }
+
+              return renderFormField(propKey, propValue, `${fieldPath}.${index}`, itemRequiredFields)
+            })}
           </div>
         </CardContent>
       )}
     </Card>
-  );
+  )
 }
 
-function ArrayPrimitiveItem({
-  index,
-  fieldPath,
-  property,
-  isReadOnly,
-  form,
-  moveItem,
-  fieldArray,
-}: any) {
+function ArrayPrimitiveItem({ index, fieldPath, property, isReadOnly, form, moveItem, fieldArray }: any) {
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1">
@@ -409,6 +316,7 @@ function ArrayPrimitiveItem({
             type="button"
             variant="ghost"
             size="icon"
+            className="h-8 w-8"
             disabled={index === 0}
             onClick={() => moveItem(index, "up")}
           >
@@ -418,6 +326,7 @@ function ArrayPrimitiveItem({
             type="button"
             variant="ghost"
             size="icon"
+            className="h-8 w-8"
             disabled={index === fieldArray.fields.length - 1}
             onClick={() => moveItem(index, "down")}
           >
@@ -427,6 +336,7 @@ function ArrayPrimitiveItem({
             type="button"
             variant="ghost"
             size="icon"
+            className="h-8 w-8"
             onClick={() => fieldArray.remove(index)}
           >
             <Trash2 className="h-4 w-4 text-destructive" />
@@ -434,5 +344,5 @@ function ArrayPrimitiveItem({
         </div>
       )}
     </div>
-  );
+  )
 }
