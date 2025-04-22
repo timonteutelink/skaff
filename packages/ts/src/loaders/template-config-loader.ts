@@ -207,7 +207,6 @@ export async function loadAllTemplateConfigs(
   rootDir: string,
 ): Promise<Record<string, TemplateConfigWithFileInfo>> {
   const configFiles = await findTemplateConfigFiles(rootDir);
-
   if (configFiles.length === 0) {
     throw new Error(`No templateConfig.ts files found under ${rootDir}`);
   }
@@ -305,7 +304,7 @@ export async function loadAllTemplateConfigs(
   if ("stop" in esbuild) {
     try {
       await esbuild.stop();
-    } catch {}
+    } catch { }
   }
 
   return importTemplateConfigModule(resultPath.data);

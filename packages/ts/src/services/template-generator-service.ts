@@ -1,27 +1,41 @@
 import {
-  UserTemplateSettings,
+  RedirectFile,
   SideEffectFunction,
   TemplateSettingsType,
-  RedirectFile,
+  UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import fs from "fs-extra";
 import { glob } from "glob";
-import Handlebars from "handlebars";
+import Handlebars, { HelperOptions } from 'handlebars';
 import * as path from "node:path";
+import z from "zod";
 import { Template } from "../models/template-models";
 import {
   anyOrCallbackToAny,
   stringOrCallbackToString,
 } from "../utils/shared-utils";
 import { CreateProjectResult, ProjectSettings, Result } from "../utils/types";
-import z from "zod";
+import { makeDir } from "./file-service";
 import { addAllAndDiff, commitAll, createGitRepo } from "./git-service";
+import { getParsedUserSettingsWithParentSettings } from "./project-service";
 import {
   writeNewProjectSettings,
   writeNewTemplateToSettings,
 } from "./project-settings-service";
-import { getParsedUserSettingsWithParentSettings } from "./project-service";
-import { makeDir } from "./file-service";
+
+const eqHelper = (a: any, b: any, options?: HelperOptions) => {
+  // block form: options.fn is a function
+  if (options && typeof options.fn === 'function') {
+    return a === b ? options.fn(this) : options.inverse(this);
+  }
+  // inline/subexpression form: just return the boolean
+  return a === b;
+}
+
+Handlebars.registerHelper(
+  'eq',
+  eqHelper
+);
 
 export interface GeneratorOptions {
   /**

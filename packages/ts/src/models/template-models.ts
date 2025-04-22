@@ -169,6 +169,8 @@ export class Template {
     }
 
     const allTemplates = Object.values(templatesMap);
+    console.log(`Found ${allTemplates.length} templates:`);
+    console.log(allTemplates)
 
     // First pass: Handle explicit parent–child links via templateRef.json.
     // For each candidate with a refDir, we resolve it relative to the absoluteRootDir.
