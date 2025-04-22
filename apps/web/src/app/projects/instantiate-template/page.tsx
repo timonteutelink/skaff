@@ -64,6 +64,7 @@ const TemplateInstantiationPage: React.FC = () => {
     null,
   );
   const [appliedDiff, setAppliedDiff] = useState<ParsedFile[] | null>(null);
+  const [storedFormData, setStoredFormData] = useState<UserTemplateSettings | null>(null);
 
   useEffect(() => {
     if (!projectNameParam) {
@@ -195,6 +196,7 @@ const TemplateInstantiationPage: React.FC = () => {
         return;
       }
 
+      setStoredFormData(data);
       if (selectedDirectoryIdParam) {
         const newProjectResult = await createNewProject(
           projectNameParam,
@@ -438,6 +440,13 @@ const TemplateInstantiationPage: React.FC = () => {
 
   const templateSettingsDefaultValues: Record<string, any> = useMemo(() => {
     if (
+      storedFormData &&
+      Object.keys(storedFormData).length > 0
+    ) {
+      return storedFormData;
+    }
+
+    if (
       !subTemplate ||
       !project ||
       !existingTemplateInstanceIdParam ||
@@ -455,7 +464,7 @@ const TemplateInstantiationPage: React.FC = () => {
       )?.templateSettings || {};
 
     return instantiatedSettings;
-  }, [subTemplate, project, existingTemplateInstanceIdParam]);
+  }, [subTemplate, project, existingTemplateInstanceIdParam, storedFormData]);
 
   if (!projectNameParam) {
     return (

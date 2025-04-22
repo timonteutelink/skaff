@@ -14,7 +14,8 @@ import {
 // Allow generating from existing templateSettings.json
 
 const templateSettingsSchema = z.object({
-  author: z.string(),
+  author: z.string().nonempty().min(2).max(100).describe('The author of the template').default('Timon Teutelink'),
+
   license: z.enum(["MIT", "Apache-2.0"]).optional(),
   coolStuff: z.boolean().optional(),
 });
