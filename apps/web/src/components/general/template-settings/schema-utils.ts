@@ -331,6 +331,10 @@ export function buildArraySchema(itemSchema: any, path = ""): SchemaResult {
       required: {},
     }
   }
+  if (itemSchema.anyOf) {
+    // buildSchemaAndDefaults will call buildDiscriminatedUnionSchema under the hood
+    return buildSchemaAndDefaults(itemSchema, path)
+  }
 
   // Handle array of objects
   if (itemSchema.type === "object" && itemSchema.properties) {

@@ -388,7 +388,7 @@ export class TemplateGeneratorService {
         this.currentlyGeneratingTemplateParentInstanceId;
 
       const addTemplateResult = this.addNewTemplate(
-        newTemplateSettings,
+        newTemplateSettings.data,
         nameOfTemplateToAutoInstantiate.data,
         parentTemplateInstanceId,
         true,

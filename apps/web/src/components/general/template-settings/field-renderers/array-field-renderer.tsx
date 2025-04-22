@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge"
 import { renderInputByType } from "../input-renderers"
 import type { ArrayFieldRendererProps } from "../types"
 import { ObjectFieldRenderer } from "./object-field-renderer"
+import { UnionFieldRenderer } from "./union-field-renderer"
 
 export function ArrayFieldRenderer({
   form,
@@ -131,7 +132,22 @@ export function ArrayFieldRenderer({
             ) : (
               <div className="space-y-3">
                 {fieldArray.fields.map((item, index) => {
-                  const isExpanded = expandedItems[index] !== false // Default to expanded if not set
+                  const itemPath = `${fieldPath}.${index}`
+                  if (property.items.anyOf) {
+                    return (
+                      <UnionFieldRenderer
+                        key={item.id}
+                        fieldPath={itemPath}
+                        property={property.items}
+                        isRequired={false}
+                        isReadOnly={isReadOnly}
+                        form={form}
+                        requiredFields={requiredFields}
+                        renderFormField={renderFormField}
+                      />
+                    )
+                  }
+                  const isExpanded = expandedItems[index] !== false
 
                   // For array of objects
                   if (property.items.type === "object" && property.items.properties) {

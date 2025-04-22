@@ -44,7 +44,14 @@ export function findTemplate(
 
   for (const subTemplates of Object.values(rootTemplate.subTemplates)) {
     for (const subTemplate of subTemplates) {
-      return findTemplate(subTemplate, subTemplateName);
+      const result = findTemplate(subTemplate, subTemplateName);
+      if ('error' in result) {
+        console.error(result.error);
+        return result;
+      }
+      if ("data" in result && result.data) {
+        return result;
+      }
     }
   }
 

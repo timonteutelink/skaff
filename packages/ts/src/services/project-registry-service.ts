@@ -5,6 +5,7 @@ import path from "node:path";
 import { Result } from "../utils/types";
 
 export class ProjectRegistry {
+  private loading: boolean = false;
   private searchPaths: string[] = [];
   public projects: Project[] = [];
 
@@ -13,6 +14,10 @@ export class ProjectRegistry {
   }
 
   private async loadProjects(): Promise<Result<void>> {
+    if (this.loading) {
+      return { error: "Projects are already loading" };
+    }
+    this.loading = true;
     this.projects = [];
     for (const searchPath of this.searchPaths) {
       let dirs: string[] = [];
@@ -49,6 +54,7 @@ export class ProjectRegistry {
         }
       }
     }
+    this.loading = false;
     return { data: undefined };
   }
 
