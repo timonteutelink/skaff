@@ -1,4 +1,6 @@
 import {
+  AllowOverwrite,
+  AutoInstantiatedSubtemplate,
   RedirectFile,
   SideEffectFunction,
   TemplateSettingsType,
@@ -184,7 +186,7 @@ export class TemplateGeneratorService {
     return { data: overwrites.data };
   }
 
-  private getTemplatesToAutoInstantiate(): Result<AllowOverwrite[]> {
+  private getTemplatesToAutoInstantiate(): Result<AutoInstantiatedSubtemplate[]> {
     if (
       !this.currentlyGeneratingTemplate ||
       !this.currentlyGeneratingTemplateFullSettings
@@ -192,16 +194,16 @@ export class TemplateGeneratorService {
       return { error: "No template is currently being generated." };
     }
     const fullSettings = this.currentlyGeneratingTemplateFullSettings;
-    const overwrites = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.allowedOverwrites, fullSettings);
-    if ("error" in overwrites) {
-      console.error(`Failed to parse overwrites: ${overwrites.error}`);
-      return { error: `Failed to parse overwrites: ${overwrites.error}` };
+    const templatesToAutoInstantiate = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.autoInstantiatedSubtemplates, fullSettings);
+    if ("error" in templatesToAutoInstantiate) {
+      console.error(`Failed to parse templatesToAutoInstantiate: ${templatesToAutoInstantiate.error}`);
+      return { error: `Failed to parse templatesToAutoInstantiate: ${templatesToAutoInstantiate.error}` };
     }
-    if (!overwrites.data) {
+    if (!templatesToAutoInstantiate.data) {
       return { data: [] };
     }
 
-    return { data: overwrites.data };
+    return { data: templatesToAutoInstantiate.data };
   }
 
   /**
@@ -264,7 +266,7 @@ export class TemplateGeneratorService {
         try {
           const destStats = await fs.stat(destPath);
           if (destStats.isFile()) {
-            const allowedOverwrite = overwrites.data.find((overwrite) => overwrite.srcRegex.match(entry));
+            const allowedOverwrite = overwrites.data.find((overwrite) => overwrite.srcRegex.test(entry));
             if (!allowedOverwrite || allowedOverwrite.mode === 'error') {
               console.error(`File: ${entry} at ${destPath} already exists.`);
               return { error: `File: ${entry} at ${destPath} already exists.` }
@@ -395,6 +397,7 @@ export class TemplateGeneratorService {
   private async autoInstantiateSubTemplates(
     fullParentSettings: TemplateSettingsType<z.AnyZodObject>,
     parentTemplateInstanceId: string,
+    templatesToAutoInstantiate?: AutoInstantiatedSubtemplate[],
   ): Promise<Result<void>> {// TODO also here add 2 types of recursiveness one for children templates that are generated and one for all children also defined. and their children defined. Can be done by passing to this function the list of templates to autoinstantiate. This can then be a list for a child template or one element from children. All them handled the same. But one comes from 'children' and another from the childTemplate 'autoInstantiatedSubTemplates'. both require fullParentSettings to be properly updated.
     if (this.options.dontAutoInstantiate) {
       return { data: undefined };
@@ -404,20 +407,7 @@ export class TemplateGeneratorService {
       return { error: "No template is currently being generated." };
     }
 
-    // TODO: Revise this to be able to be called recursively so add this as a param to function and use getTemplatesToAutoInstantiate. Then call this function on the children list.
-    // maybe later we make sure adding every template to the projectSettings happens in the first step and then the instantiateTemplateInProject and instantiateNewProject functions can call this function which will retrieve everything from projectsettings which were already set before calling instantiateTemplateInProject and instantiateNewProject. So 2 seperate steps. Modify the templateSettings and then generate. HEre also force template to be direct child of currentlyGeneratingTemplate
-    const templatesToAutoInstantiate = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.autoInstantiatedSubtemplates, fullParentSettings);
-
-    if ("error" in templatesToAutoInstantiate) {
-      console.error(
-        `Failed to parse auto instantiated subtemplates: ${templatesToAutoInstantiate.error}`,
-      );
-      return {
-        error: `Failed to parse auto instantiated subtemplates: ${templatesToAutoInstantiate.error}`,
-      };
-    }
-
-    for (const templateToAutoInstantiate of templatesToAutoInstantiate.data || []) {
+    for (const templateToAutoInstantiate of templatesToAutoInstantiate || []) {
       const newTemplateSettings = anyOrCallbackToAny(templateToAutoInstantiate.mapSettings, fullParentSettings);
 
       if ("error" in newTemplateSettings) {
@@ -509,22 +499,63 @@ export class TemplateGeneratorService {
         };
       }
 
-      const autoInstatiationResult = await this.autoInstantiateSubTemplates(
-        newFullTemplateSettings,
-        parentTemplateInstanceId,
-      );
+      const childrenTemplatesToAutoInstantiate = templateToAutoInstantiate.children;
 
-      if ("error" in autoInstatiationResult) {
+      if (childrenTemplatesToAutoInstantiate) {
+        const autoInstantiationResult = await this.autoInstantiateSubTemplates(
+          newFullTemplateSettings,
+          addTemplateResult.data,
+          childrenTemplatesToAutoInstantiate,
+        );
+
+        if ("error" in autoInstantiationResult) {
+          this.currentlyGeneratingTemplate = savedCurrentlyGeneratingTemplate;
+          this.currentlyGeneratingTemplateFullSettings =
+            savedCurrentlyGeneratingTemplateFullSettings;
+          this.currentlyGeneratingTemplateParentInstanceId =
+            savedCurrentlyGeneratingTemplateParentInstanceId;
+          console.error(
+            `Failed to auto-instantiate subtemplates: ${autoInstantiationResult.error}`,
+          );
+          return {
+            error: `Failed to auto-instantiate subtemplates: ${autoInstantiationResult.error}`,
+          };
+        }
+      }
+
+      const templatesToAutoInstantiate = this.getTemplatesToAutoInstantiate();
+
+      if ("error" in templatesToAutoInstantiate) {
         this.currentlyGeneratingTemplate = savedCurrentlyGeneratingTemplate;
         this.currentlyGeneratingTemplateFullSettings =
           savedCurrentlyGeneratingTemplateFullSettings;
         this.currentlyGeneratingTemplateParentInstanceId =
           savedCurrentlyGeneratingTemplateParentInstanceId;
         console.error(
-          `Failed to auto-instantiate subtemplates: ${autoInstatiationResult.error}`,
+          `Failed to parse auto instantiated subtemplates: ${templatesToAutoInstantiate.error}`,
         );
         return {
-          error: `Failed to auto-instantiate subtemplates: ${autoInstatiationResult.error}`,
+          error: `Failed to parse auto instantiated subtemplates: ${templatesToAutoInstantiate.error}`,
+        };
+      }
+
+      const autoInstantiationResult = await this.autoInstantiateSubTemplates(
+        newFullTemplateSettings,
+        parentTemplateInstanceId,
+        templatesToAutoInstantiate.data,
+      );
+
+      if ("error" in autoInstantiationResult) {
+        this.currentlyGeneratingTemplate = savedCurrentlyGeneratingTemplate;
+        this.currentlyGeneratingTemplateFullSettings =
+          savedCurrentlyGeneratingTemplateFullSettings;
+        this.currentlyGeneratingTemplateParentInstanceId =
+          savedCurrentlyGeneratingTemplateParentInstanceId;
+        console.error(
+          `Failed to auto-instantiate subtemplates: ${autoInstantiationResult.error}`,
+        );
+        return {
+          error: `Failed to auto-instantiate subtemplates: ${autoInstantiationResult.error}`,
         };
       }
 
@@ -785,9 +816,21 @@ export class TemplateGeneratorService {
         }
       }
 
+      const templatesToAutoInstantiate = this.getTemplatesToAutoInstantiate();
+
+      if ("error" in templatesToAutoInstantiate) {
+        console.error(
+          `Failed to parse auto instantiated subtemplates: ${templatesToAutoInstantiate.error}`,
+        );
+        return {
+          error: `Failed to parse auto instantiated subtemplates: ${templatesToAutoInstantiate.error}`,
+        };
+      }
+
       const result = await this.autoInstantiateSubTemplates(
         this.currentlyGeneratingTemplateFullSettings,
         instantiatedTemplate.id,
+        templatesToAutoInstantiate.data,
       );
 
       if ("error" in result) {
@@ -926,9 +969,22 @@ export class TemplateGeneratorService {
         };
       }
 
+      // TODO: Revise this to be able to be called recursively so add this as a param to function and use getTemplatesToAutoInstantiate. Then call this function on the children list.
+      // maybe later we make sure adding every template to the projectSettings happens in the first step and then the instantiateTemplateInProject and instantiateNewProject functions can call this function which will retrieve everything from projectsettings which were already set before calling instantiateTemplateInProject and instantiateNewProject. So 2 seperate steps. Modify the templateSettings and then generate. HEre also force template to be direct child of currentlyGeneratingTemplate
+      const templatesToAutoInstantiate = this.getTemplatesToAutoInstantiate();
+
+      if ("error" in templatesToAutoInstantiate) {
+        console.error(
+          `Failed to parse auto instantiated subtemplates: ${templatesToAutoInstantiate.error}`,
+        );
+        return {
+          error: `Failed to parse auto instantiated subtemplates: ${templatesToAutoInstantiate.error}`,
+        };
+      }
       const result = await this.autoInstantiateSubTemplates(
         this.currentlyGeneratingTemplateFullSettings,
         instantiatedTemplate.id,
+        templatesToAutoInstantiate.data,
       );
       if ("error" in result) {
         console.error(

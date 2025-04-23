@@ -220,7 +220,7 @@ export interface TemplateConfigModule<
   /**
    * Auto instantiate subtemplates.
    */
-  autoInstatiatedSubtemplates?: AnyOrCallback<TFullSettingsType, AutoInstantiatedSubtemplate<TFullSettingsType>[]>;
+  autoInstantiatedSubtemplates?: AnyOrCallback<TFullSettingsType, AutoInstantiatedSubtemplate<TFullSettingsType>[]>;
 
   /**
    * Assertions. Function must return true otherwise the template generation will fail.

@@ -6,8 +6,8 @@ import {
   TemplateSettingsType,
 } from "@timonteutelink/template-types-lib";
 // allow redirect of a path of this subtemplate to another location relative to project root
-// Allow templates to automatically instatiate others. This way we can for example extract the .envrc to a seperate template and reference it from every other template.
-// If after templating with handlebars a file contains { "TEMPLATE_FILE_REF": "../" } we can somehow include also that referenced file and template it. Then next to importing individual files from other locations we also allow importing templates with the provided settings. Even though this should use a subtemplate we should have also this way to automate instatiation of templates.
+// Allow templates to automatically instantiate others. This way we can for example extract the .envrc to a seperate template and reference it from every other template.
+// If after templating with handlebars a file contains { "TEMPLATE_FILE_REF": "../" } we can somehow include also that referenced file and template it. Then next to importing individual files from other locations we also allow importing templates with the provided settings. Even though this should use a subtemplate we should have also this way to automate instantiation of templates.
 
 // fix all error handling, proper communication to frontend but also rollbacks when template generation fails. Use git in existing projects to enforce this and in new projects we can delete the project on error.
 

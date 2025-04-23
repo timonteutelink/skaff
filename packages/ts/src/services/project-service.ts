@@ -84,15 +84,15 @@ export async function instantiateProject(
     return { error: "Root template not found" };
   }
 
-  const instatiationResult = await template.data.instantiateNewProject(
+  const instantiationResult = await template.data.instantiateNewProject(
     userTemplateSettings,
     parentDirPath,
     newProjectName,
   );
 
-  if ("error" in instatiationResult) {
-    console.error(`Failed to instantiate project: ${instatiationResult.error}`);
-    return { error: "Failed to create project, " + instatiationResult.error };
+  if ("error" in instantiationResult) {
+    console.error(`Failed to instantiate project: ${instantiationResult.error}`);
+    return { error: "Failed to create project, " + instantiationResult.error };
   }
 
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
@@ -116,7 +116,7 @@ export async function instantiateProject(
     };
   }
 
-  const processedDiff = parseGitDiff(instatiationResult.data.diff);
+  const processedDiff = parseGitDiff(instantiationResult.data.diff);
 
   const projectDTO = project.data.mapToDTO();
 
@@ -177,12 +177,12 @@ export async function generateProjectFromTemplateSettings(
     projectSettings,
   );
 
-  const instatiationResult =
+  const instantiationResult =
     await newProjectGenerator.instantiateFullProjectFromSettings();
 
-  if ("error" in instatiationResult) {
-    console.error(`Failed to instantiate project: ${instatiationResult.error}`);
-    return { error: instatiationResult.error };
+  if ("error" in instantiationResult) {
+    console.error(`Failed to instantiate project: ${instantiationResult.error}`);
+    return { error: instantiationResult.error };
   }
 
   return { data: newProjectPath };

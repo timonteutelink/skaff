@@ -21,7 +21,7 @@ interface CommitButtonProps {
 }
 
 // This component will be used in the project diff details page to allow the user to commit current changes.
-// Also will be used at the end of the instatiation workflow on the diff page.
+// Also will be used at the end of the instantiation workflow on the diff page.
 export default function CommitButton({
   onCommit,
   onCancel,
