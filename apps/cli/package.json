@@ -9,7 +9,7 @@
   "dependencies": {
     "@inquirer/prompts": "^7.4.1",
     "@repo/ts": "workspace:*",
-    "@timonteutelink/template-types-lib": "0.0.24"
+    "@timonteutelink/template-types-lib": "0.0.25"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
