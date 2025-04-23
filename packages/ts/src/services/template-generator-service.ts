@@ -442,12 +442,14 @@ export class TemplateGeneratorService {
         };
       }
 
-      const savedCurrentlyGeneratingTemplate: Template =
-        this.currentlyGeneratingTemplate;
-      const savedCurrentlyGeneratingTemplateFullSettings =
-        this.currentlyGeneratingTemplateFullSettings;
-      const savedCurrentlyGeneratingTemplateParentInstanceId =
-        this.currentlyGeneratingTemplateParentInstanceId;
+      if (!templateToInstantiate.parentTemplate || templateToInstantiate.parentTemplate.config.templateConfig.name !== this.currentlyGeneratingTemplate.config.templateConfig.name) {
+        console.error(
+          `Subtemplate ${templateToAutoInstantiate.subTemplateName} is not a child of template ${this.currentlyGeneratingTemplate.config.templateConfig.name}`,
+        );
+        return {
+          error: `Subtemplate ${templateToAutoInstantiate.subTemplateName} is not a child of template ${this.currentlyGeneratingTemplate.config.templateConfig.name}`,
+        };
+      }
 
       const addTemplateResult = this.addNewTemplate(
         newTemplateSettings.data,
@@ -457,11 +459,6 @@ export class TemplateGeneratorService {
       );
 
       if ("error" in addTemplateResult) {
-        this.currentlyGeneratingTemplate = savedCurrentlyGeneratingTemplate;
-        this.currentlyGeneratingTemplateFullSettings =
-          savedCurrentlyGeneratingTemplateFullSettings;
-        this.currentlyGeneratingTemplateParentInstanceId =
-          savedCurrentlyGeneratingTemplateParentInstanceId;
         console.error(
           `Failed to add template to project settings: ${addTemplateResult.error}`,
         );
@@ -469,6 +466,13 @@ export class TemplateGeneratorService {
           error: `Failed to add template to project settings: ${addTemplateResult.error}`,
         };
       }
+
+      const savedCurrentlyGeneratingTemplate: Template =
+        this.currentlyGeneratingTemplate;
+      const savedCurrentlyGeneratingTemplateFullSettings =
+        this.currentlyGeneratingTemplateFullSettings;
+      const savedCurrentlyGeneratingTemplateParentInstanceId =
+        this.currentlyGeneratingTemplateParentInstanceId;
 
       const instantiateTemplateResult = await this.instantiateTemplateInProject(
         addTemplateResult.data,

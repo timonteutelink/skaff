@@ -121,6 +121,15 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
       };
     }
 
+    if (!subTemplate.parentTemplate || subTemplate.parentTemplate.config.templateConfig.name !== currentTemplateToAddChildren.config.templateConfig.name) {
+      console.error(
+        `Subtemplate ${autoInstantiatedTemplate.subTemplateName} is not a child of template ${currentTemplateToAddChildren.config.templateConfig.name}`,
+      );
+      return {
+        error: `Subtemplate ${autoInstantiatedTemplate.subTemplateName} is not a child of template ${currentTemplateToAddChildren.config.templateConfig.name}`,
+      };
+    }
+
     projectSettings.instantiatedTemplates[existingTemplateIndex] = {
       ...projectSettings.instantiatedTemplates[existingTemplateIndex],
       templateName: subTemplateName,
@@ -279,6 +288,15 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
       );
       return {
         error: `Subtemplate ${autoInstantiatedTemplate.subTemplateName} not found`,
+      };
+    }
+
+    if (!subTemplate.parentTemplate || subTemplate.parentTemplate.config.templateConfig.name !== currentTemplateToAddChildren.config.templateConfig.name) {
+      console.error(
+        `Subtemplate ${autoInstantiatedTemplate.subTemplateName} is not a child of template ${currentTemplateToAddChildren.config.templateConfig.name}`,
+      );
+      return {
+        error: `Subtemplate ${autoInstantiatedTemplate.subTemplateName} is not a child of template ${currentTemplateToAddChildren.config.templateConfig.name}`,
       };
     }
 

@@ -31,6 +31,7 @@ import { toast } from "sonner";
 // TODO: when updating to a new template version we should reiterate all settings of all templates for possible changes. Or we fully automate go directly to diff but require the template to setup sensible defaults for possible new options.
 
 // TODO: add lot more checks on backend. For example cannot edit autoinstantiated template.
+// TODO add another flow for instantiating full project from projectSettings.
 const TemplateInstantiationPage: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
