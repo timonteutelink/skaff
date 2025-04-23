@@ -125,7 +125,7 @@ export type AutoInstantiatedSubtemplate<
   /**
    * Array of children templates to also autoinstiate with this one.
    */
-  children: AutoInstantiatedSubtemplate<TFullSettingsType>[];
+  children?: AutoInstantiatedSubtemplate<TFullSettingsType>[];
 };
 
 export type AiContext = {
