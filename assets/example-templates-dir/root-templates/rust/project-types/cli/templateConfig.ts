@@ -28,8 +28,11 @@ const templateConfigModule: TemplateConfigModule<
   templateConfig,
   targetPath: "src",
   templateSettingsSchema,
-  sideEffects: [],
-  templatesThatDisableThis: ["rust_axum"],
+  templatesThatDisableThis: [
+    {
+      templateName: "rust_axum"
+    }
+  ],
 };
 
 export default templateConfigModule;
