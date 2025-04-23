@@ -515,10 +515,10 @@ export class TemplateGeneratorService {
           this.currentlyGeneratingTemplateParentInstanceId =
             savedCurrentlyGeneratingTemplateParentInstanceId;
           console.error(
-            `Failed to auto-instantiate subtemplates: ${autoInstantiationResult.error}`,
+            `Failed to auto-instantiate children subtemplates: ${autoInstantiationResult.error}`,
           );
           return {
-            error: `Failed to auto-instantiate subtemplates: ${autoInstantiationResult.error}`,
+            error: `Failed to auto-instantiate children subtemplates: ${autoInstantiationResult.error}`,
           };
         }
       }
