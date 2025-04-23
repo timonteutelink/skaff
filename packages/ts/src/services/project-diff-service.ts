@@ -43,7 +43,7 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
   projectSettings: ProjectSettings,
   currentTemplateToAddChildren: Template,
   parentInstanceId: string,
-  fullParentTemplateSettings: TemplateSettingsType<AnyZodObject>,// TODO I think this never needed to be recursive until now. Now i will use the recursiveness of this function to find all children and instantiate them also. Ah yes it is recursive because when instantiating child templates they can also have autoinstantiated templates. So we need to do 2 kinds of recursiveness/loops. 2 params differing. Force autoInstantiatedTemplate to be direct child of template. If nested use 'children' to autoinstantiate parent and child.
+  fullParentTemplateSettings: TemplateSettingsType<AnyZodObject>,// TODO I think this never needed to be recursive until now. Now i will use the recursiveness of this function to find all children and instantiate them also. Ah yes it is recursive because when instantiating child templates they can also have autoinstantiated templates. So we need to do 2 kinds of recursiveness/loops. 2 params differing. Force autoInstantiatedTemplate to be direct child of template. If nested use 'children' to autoinstantiate parent and child. Then also merge this modify function with the add function below
 ): Promise<Result<ProjectSettings>> {
   const templatesToAutoInstantiate = anyOrCallbackToAny(currentTemplateToAddChildren.config.autoInstantiatedSubtemplates, fullParentTemplateSettings);
 

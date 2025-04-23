@@ -395,7 +395,7 @@ export class TemplateGeneratorService {
   private async autoInstantiateSubTemplates(
     fullParentSettings: TemplateSettingsType<z.AnyZodObject>,
     parentTemplateInstanceId: string,
-  ): Promise<Result<void>> {
+  ): Promise<Result<void>> {// TODO also here add 2 types of recursiveness one for children templates that are generated and one for all children also defined. and their children defined. Can be done by passing to this function the list of templates to autoinstantiate. This can then be a list for a child template or one element from children. All them handled the same. But one comes from 'children' and another from the childTemplate 'autoInstantiatedSubTemplates'. both require fullParentSettings to be properly updated.
     if (this.options.dontAutoInstantiate) {
       return { data: undefined };
     }
@@ -405,7 +405,7 @@ export class TemplateGeneratorService {
     }
 
     // TODO: Revise this to be able to be called recursively so add this as a param to function and use getTemplatesToAutoInstantiate. Then call this function on the children list.
-    // maybe later we make sure adding every template to the projectSettings happens in the first step and then the instantiateTemplateInProject and instantiateNewProject functions can call this function which will retrieve everything from projectsettings which were already set before calling instantiateTemplateInProject and instantiateNewProject. So 2 seperate steps. Modify the templateSettings and then generate
+    // maybe later we make sure adding every template to the projectSettings happens in the first step and then the instantiateTemplateInProject and instantiateNewProject functions can call this function which will retrieve everything from projectsettings which were already set before calling instantiateTemplateInProject and instantiateNewProject. So 2 seperate steps. Modify the templateSettings and then generate. HEre also force template to be direct child of currentlyGeneratingTemplate
     const templatesToAutoInstantiate = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.autoInstantiatedSubtemplates, fullParentSettings);
 
     if ("error" in templatesToAutoInstantiate) {

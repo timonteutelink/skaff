@@ -85,6 +85,24 @@ export type AllowOverwrite = {
 }
 
 /**
+ * Template that disables this template if it exists in the project.
+ */
+export type TemplateDisablingThis = {
+  // TODO: Later we should also have a way to disable options on this template if any options on other templates are set.
+  /**
+   * The path to the template.
+   * relative to project root
+   * @example "project_github_folder"
+   */
+  templateName: string;
+
+  /**
+   * Objects that if the template contains all key value pairs as in this object then this template will be disabled.
+   */
+  specificSettings?: UserTemplateSettings[];
+}
+
+/**
  * Auto instantiate subtemplates.
  */
 export type AutoInstantiatedSubtemplate<
@@ -103,7 +121,6 @@ export type AutoInstantiatedSubtemplate<
    * This function is called with the user settings and should return the subtemplate settings.
    */
   mapSettings: AnyOrCallback<TFullSettingsType, UserTemplateSettings>;// TODO if this can be done nicely between a template and its children then we can allow the parent template to define the settings from the child in here. Then the type can also be used to extend the fullparentsettings type for the children down below. And the template dir can become fully typed. But we should first think how other git repos are handled(templates referencing other templates.) Before we allow parents to access types of children and all those references.
-
 
   /**
    * Array of children templates to also autoinstiate with this one.
@@ -188,7 +205,7 @@ export interface TemplateConfigModule<
   /**
    * Templates that when already existing in the project will disable the generation of this template.
    */
-  templatesThatDisableThis?: AnyOrCallback<TFullSettingsType, string[]>;
+  templatesThatDisableThis?: TemplateDisablingThis[];
 
   /**
    * Redirects of files or directories to another location based from project root.
