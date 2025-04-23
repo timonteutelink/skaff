@@ -362,6 +362,7 @@ export class Template {
       subTemplates,
       refDir: this.relativeRefDir,
       currentCommitHash: this.commitHash,
+      templatesThatDisableThis: this.config.templatesThatDisableThis || [],
       isDefault: this.isDefault,
     };
   }
