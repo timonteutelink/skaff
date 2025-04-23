@@ -14,6 +14,7 @@ import z from "zod";
 import { Template } from "../models/template-models";
 import {
   anyOrCallbackToAny,
+  isSubset,
   stringOrCallbackToString,
 } from "../utils/shared-utils";
 import { CreateProjectResult, ProjectSettings, Result } from "../utils/types";
@@ -742,7 +743,7 @@ export class TemplateGeneratorService {
     for (const instantiatedTemplate of this.destinationProjectSettings
       .instantiatedTemplates) {
       if (
-        templatesThatDisableThisTemplate.data?.includes(
+        templatesThatDisableThisTemplate.data?.filter(templateThatDisableThis => !templateThatDisableThis.specificSettings || isSubset(templateThatDisableThis.specificSettings, instantiatedTemplate.templateSettings)).map(templateThatDisableThis => templateThatDisableThis.templateName).includes(
           instantiatedTemplate.templateName,
         )
       ) {

@@ -123,7 +123,7 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
 
     projectSettings.instantiatedTemplates[existingTemplateIndex] = {
       ...projectSettings.instantiatedTemplates[existingTemplateIndex],
-      templateName: subTemplateName.data,
+      templateName: subTemplateName,
       templateSettings: newTemplateSettings.data,
     };
 

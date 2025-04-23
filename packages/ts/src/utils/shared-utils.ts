@@ -80,3 +80,12 @@ export function deepSortObject<T>(obj: T): T {
   }
   return obj;
 }
+
+export function isSubset(baseObject: Record<string, any>, objectToCompareTo: Record<string, any>): boolean {
+  for (const key in baseObject) {
+    if (!(key in objectToCompareTo) || baseObject[key] !== objectToCompareTo[key]) {
+      return false;
+    }
+  }
+  return true;
+}

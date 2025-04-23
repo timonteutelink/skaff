@@ -1,4 +1,4 @@
-import { TemplateConfig } from "@timonteutelink/template-types-lib";
+import { TemplateConfig, TemplateDisablingThis } from "@timonteutelink/template-types-lib";
 import z from "zod";
 
 export interface ProjectCreationResult {
@@ -27,7 +27,7 @@ export interface TemplateDTO {
   subTemplates: Record<string, TemplateDTO[]>;
   currentCommitHash?: string; //always defined on root templates.
   isDefault: boolean;
-  // templatesThatDisableThis: string[];//TODO probably make seperate endpoint to retrieve this instead of adding here because can depend on settings and function needs to run on server. Then update frontend to respect this and multiInstance. Nah for now just remove the stringorcallback.
+  templatesThatDisableThis: TemplateDisablingThis[];
   refDir?: string;
 }
 
