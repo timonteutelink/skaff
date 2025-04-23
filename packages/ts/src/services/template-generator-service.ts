@@ -398,7 +398,7 @@ export class TemplateGeneratorService {
     fullParentSettings: TemplateSettingsType<z.AnyZodObject>,
     parentTemplateInstanceId: string,
     templatesToAutoInstantiate?: AutoInstantiatedSubtemplate[],
-  ): Promise<Result<void>> {// TODO also here add 2 types of recursiveness one for children templates that are generated and one for all children also defined. and their children defined. Can be done by passing to this function the list of templates to autoinstantiate. This can then be a list for a child template or one element from children. All them handled the same. But one comes from 'children' and another from the childTemplate 'autoInstantiatedSubTemplates'. both require fullParentSettings to be properly updated.
+  ): Promise<Result<void>> {
     if (this.options.dontAutoInstantiate) {
       return { data: undefined };
     }
@@ -425,23 +425,11 @@ export class TemplateGeneratorService {
         newTemplateSettings,
       );
 
-      const nameOfTemplateToAutoInstantiate = stringOrCallbackToString(
-        templateToAutoInstantiate.subTemplateName,
-        newFullTemplateSettings,
-      );
-
-      if ("error" in nameOfTemplateToAutoInstantiate) {
-        console.error(
-          `Failed to parse template name: ${nameOfTemplateToAutoInstantiate.error}`,
-        );
-        return {
-          error: `Failed to parse template name: ${nameOfTemplateToAutoInstantiate.error}`,
-        };
-      }
+      const nameOfTemplateToAutoInstantiate = templateToAutoInstantiate.subTemplateName;
 
       const templateToInstantiate =
         this.currentlyGeneratingTemplate.findSubTemplate(
-          nameOfTemplateToAutoInstantiate.data,
+          nameOfTemplateToAutoInstantiate,
         );
 
       if (!templateToInstantiate) {
@@ -462,7 +450,7 @@ export class TemplateGeneratorService {
 
       const addTemplateResult = this.addNewTemplate(
         newTemplateSettings.data,
-        nameOfTemplateToAutoInstantiate.data,
+        nameOfTemplateToAutoInstantiate,
         parentTemplateInstanceId,
         true,
       );

@@ -1,4 +1,4 @@
-import { TemplateSettingsType, UserTemplateSettings } from "@timonteutelink/template-types-lib";
+import { AutoInstantiatedSubtemplate, TemplateSettingsType, UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { Template } from "../models/template-models";
 import { NewTemplateDiffResult, ParsedFile, ProjectSettings, Result } from "../utils/types";
 import { generateProjectFromExistingProject, generateProjectFromTemplateSettings, getParsedUserSettingsWithParentSettings } from "./project-service";
@@ -30,7 +30,21 @@ async function modifyAutoInstantiatedTemplatesInProjectSettings(
     return { error: newFullTemplateSettings.error };
   }
 
+  const templatesToAutoInstantiate = anyOrCallbackToAny(currentTemplateToAddChildren.config.autoInstantiatedSubtemplates, newFullTemplateSettings.data);
+
+  if ("error" in templatesToAutoInstantiate) {
+    console.error(
+      `Failed to parse auto instantiated templates: ${templatesToAutoInstantiate.error}`,
+    );
+    return { error: templatesToAutoInstantiate.error };
+  }
+
+  if (!templatesToAutoInstantiate.data) {
+    return { data: projectSettings };
+  }
+
   return recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
+    templatesToAutoInstantiate.data,
     projectSettings,
     currentTemplateToAddChildren,
     parentInstanceId,
@@ -40,21 +54,14 @@ async function modifyAutoInstantiatedTemplatesInProjectSettings(
 
 // Only all automatically instantiated subtemplates have settings influenced by the parent so we only need to modify the settings of subtemplates that are auto instantiated. This is done by recursively adding all auto instantiated templates to the project settings.
 async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
+  templatesToAutoInstantiate: AutoInstantiatedSubtemplate[],
   projectSettings: ProjectSettings,
   currentTemplateToAddChildren: Template,
   parentInstanceId: string,
-  fullParentTemplateSettings: TemplateSettingsType<AnyZodObject>,// TODO I think this never needed to be recursive until now. Now i will use the recursiveness of this function to find all children and instantiate them also. Ah yes it is recursive because when instantiating child templates they can also have autoinstantiated templates. So we need to do 2 kinds of recursiveness/loops. 2 params differing. Force autoInstantiatedTemplate to be direct child of template. If nested use 'children' to autoinstantiate parent and child. Then also merge this modify function with the add function below
+  fullParentTemplateSettings: TemplateSettingsType<AnyZodObject>,// TODO Force autoInstantiatedTemplate to be direct child of template. If nested use 'children' to autoinstantiate parent and child. Then also merge this modify function with the add function below if possible
 ): Promise<Result<ProjectSettings>> {
-  const templatesToAutoInstantiate = anyOrCallbackToAny(currentTemplateToAddChildren.config.autoInstantiatedSubtemplates, fullParentTemplateSettings);
 
-  if ("error" in templatesToAutoInstantiate) {
-    console.error(
-      `Failed to parse auto instantiated templates: ${templatesToAutoInstantiate.error}`,
-    );
-    return { error: templatesToAutoInstantiate.error };
-  }
-
-  for (const autoInstantiatedTemplate of templatesToAutoInstantiate.data || []) {
+  for (const autoInstantiatedTemplate of templatesToAutoInstantiate || []) {
     const existingTemplateIndex =
       projectSettings.instantiatedTemplates.findIndex(
         (template) =>
@@ -92,17 +99,7 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
       newTemplateSettings.data,
     );
 
-    const subTemplateName = stringOrCallbackToString(
-      autoInstantiatedTemplate.subTemplateName,
-      newFullTemplateSettings,
-    );
-
-    if ("error" in subTemplateName) {
-      console.error(
-        `Failed to parse sub template name: ${subTemplateName.error}`,
-      );
-      return { error: subTemplateName.error };
-    }
+    const subTemplateName = autoInstantiatedTemplate.subTemplateName;
 
     if (!projectSettings.instantiatedTemplates[existingTemplateIndex]) {
       console.error(
@@ -112,7 +109,7 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
     }
 
     const subTemplate = currentTemplateToAddChildren.findSubTemplate(
-      subTemplateName.data,
+      subTemplateName,
     );
 
     if (!subTemplate) {
@@ -130,22 +127,56 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
       templateSettings: newTemplateSettings.data,
     };
 
-    const result =
-      await recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
-        projectSettings,
-        subTemplate,
-        existingTemplate.id,
-        newFullTemplateSettings,
-      );
+    const childTemplatesToAutoInstantiate = autoInstantiatedTemplate.children;
 
-    if ("error" in result) {
-      console.error(
-        `Failed to recursively add auto instantiated templates: ${result.error}`,
-      );
-      return { error: result.error };
+    if (childTemplatesToAutoInstantiate) {
+      const result =
+        await recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
+          childTemplatesToAutoInstantiate,
+          projectSettings,
+          subTemplate,
+          existingTemplate.id,
+          newFullTemplateSettings,
+        );
+
+      if ("error" in result) {
+        console.error(
+          `Failed to recursively add auto instantiated templates: ${result.error}`,
+        );
+        return { error: result.error };
+      }
+
+      projectSettings = result.data;
     }
 
-    projectSettings = result.data;
+    const newTemplatesToAutoInstantiate = anyOrCallbackToAny(subTemplate.config.autoInstantiatedSubtemplates, newFullTemplateSettings);
+
+    if ("error" in newTemplatesToAutoInstantiate) {
+      console.error(
+        `Failed to parse auto instantiated templates: ${newTemplatesToAutoInstantiate.error}`,
+      );
+      return { error: newTemplatesToAutoInstantiate.error };
+    }
+
+    if (newTemplatesToAutoInstantiate.data) {
+      const result =
+        await recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
+          newTemplatesToAutoInstantiate.data,
+          projectSettings,
+          subTemplate,
+          existingTemplate.id,
+          newFullTemplateSettings,
+        );
+
+      if ("error" in result) {
+        console.error(
+          `Failed to recursively add auto instantiated templates: ${result.error}`,
+        );
+        return { error: result.error };
+      }
+
+      projectSettings = result.data;
+    }
   }
   return { data: projectSettings };
 }
@@ -169,7 +200,19 @@ async function addAutoInstantiatedTemplatesToProjectSettings(
     return { error: newFullTemplateSettings.error };
   }
 
+  const templatesToAutoInstantiate = anyOrCallbackToAny(currentTemplateToAddChildren.config.autoInstantiatedSubtemplates, newFullTemplateSettings.data);
+  if ("error" in templatesToAutoInstantiate) {
+    console.error(
+      `Failed to parse auto instantiated templates: ${templatesToAutoInstantiate.error}`,
+    );
+    return { error: templatesToAutoInstantiate.error };
+  }
+  if (!templatesToAutoInstantiate.data) {
+    return { data: projectSettings };
+  }
+
   return recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
+    templatesToAutoInstantiate.data,
     projectSettings,
     currentTemplateToAddChildren,
     parentInstanceId,
@@ -178,21 +221,13 @@ async function addAutoInstantiatedTemplatesToProjectSettings(
 }
 
 async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
+  templatesToAutoInstantiate: AutoInstantiatedSubtemplate[],
   projectSettings: ProjectSettings,
   currentTemplateToAddChildren: Template,
   parentInstanceId: string,
   fullParentTemplateSettings: TemplateSettingsType<AnyZodObject>,
 ): Promise<Result<ProjectSettings>> {
-  const templatesToAutoInstantiate = anyOrCallbackToAny(currentTemplateToAddChildren.config.autoInstantiatedSubtemplates, fullParentTemplateSettings);
-
-  if ("error" in templatesToAutoInstantiate) {
-    console.error(
-      `Failed to parse auto instantiated templates: ${templatesToAutoInstantiate.error}`,
-    );
-    return { error: templatesToAutoInstantiate.error };
-  }
-
-  for (const autoInstantiatedTemplate of templatesToAutoInstantiate.data || []) {
+  for (const autoInstantiatedTemplate of templatesToAutoInstantiate || []) {
     const autoInstantiatedTemplateInstanceId = crypto.randomUUID();
     const newTemplateSettings = anyOrCallbackToAny(autoInstantiatedTemplate.mapSettings, fullParentTemplateSettings);
     if ("error" in newTemplateSettings) {
@@ -208,24 +243,14 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
       fullParentTemplateSettings,
       newTemplateSettings.data,
     );
-    const subTemplateName = stringOrCallbackToString(
-      autoInstantiatedTemplate.subTemplateName,
-      newFullTemplateSettings,
-    );
-
-    if ("error" in subTemplateName) {
-      console.error(
-        `Failed to parse sub template name: ${subTemplateName.error}`,
-      );
-      return { error: subTemplateName.error };
-    }
+    const subTemplateName = autoInstantiatedTemplate.subTemplateName;
 
     projectSettings.instantiatedTemplates.push({
       id: autoInstantiatedTemplateInstanceId,
       parentId: parentInstanceId,
       templateCommitHash: currentTemplateToAddChildren.commitHash,
       automaticallyInstantiatedByParent: true,
-      templateName: subTemplateName.data,
+      templateName: subTemplateName,
       templateSettings: newTemplateSettings.data,
     });
 
@@ -246,7 +271,7 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
       return { error: "Root template not found" };
     }
 
-    const subTemplate = rootTemplate.data.findSubTemplate(subTemplateName.data);
+    const subTemplate = rootTemplate.data.findSubTemplate(subTemplateName);
 
     if (!subTemplate) {
       console.error(
@@ -257,22 +282,54 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
       };
     }
 
-    const result =
-      await recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
-        projectSettings,
-        subTemplate,
-        autoInstantiatedTemplateInstanceId,
-        newFullTemplateSettings,
-      );
+    const childTemplatesToAutoInstantiate = autoInstantiatedTemplate.children;
+    if (childTemplatesToAutoInstantiate) {
+      const result =
+        await recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
+          childTemplatesToAutoInstantiate,
+          projectSettings,
+          subTemplate,
+          autoInstantiatedTemplateInstanceId,
+          newFullTemplateSettings,
+        );
 
-    if ("error" in result) {
-      console.error(
-        `Failed to recursively add auto instantiated templates: ${result.error}`,
-      );
-      return { error: result.error };
+      if ("error" in result) {
+        console.error(
+          `Failed to recursively add auto instantiated templates: ${result.error}`,
+        );
+        return { error: result.error };
+      }
+
+      projectSettings = result.data;
     }
 
-    projectSettings = result.data;
+    const newTemplatesToAutoInstantiate = anyOrCallbackToAny(subTemplate.config.autoInstantiatedSubtemplates, newFullTemplateSettings);
+    if ("error" in newTemplatesToAutoInstantiate) {
+      console.error(
+        `Failed to parse auto instantiated templates: ${newTemplatesToAutoInstantiate.error}`,
+      );
+      return { error: newTemplatesToAutoInstantiate.error };
+    }
+
+    if (newTemplatesToAutoInstantiate.data) {
+      const result =
+        await recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
+          newTemplatesToAutoInstantiate.data,
+          projectSettings,
+          subTemplate,
+          autoInstantiatedTemplateInstanceId,
+          newFullTemplateSettings,
+        );
+
+      if ("error" in result) {
+        console.error(
+          `Failed to recursively add auto instantiated templates: ${result.error}`,
+        );
+        return { error: result.error };
+      }
+
+      projectSettings = result.data;
+    }
   }
   return { data: projectSettings };
 }
