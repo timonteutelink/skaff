@@ -198,14 +198,14 @@ export interface TemplateConfigModule<
   templateSettingsSchema: TSettingsType;
 
   /**
-   * Side effects to be applied when generating the template.
-   */
-  sideEffects?: AnyOrCallback<TFullSettingsType, SideEffect<TFullSettingsType>[]>;
-
-  /**
    * Templates that when already existing in the project will disable the generation of this template.
    */
   templatesThatDisableThis?: TemplateDisablingThis[];
+
+  /**
+   * Side effects to be applied when generating the template.
+   */
+  sideEffects?: AnyOrCallback<TFullSettingsType, SideEffect<TFullSettingsType>[]>;
 
   /**
    * Redirects of files or directories to another location based from project root.
@@ -215,7 +215,7 @@ export interface TemplateConfigModule<
   /**
    * Overwrite Rules
    */
-  allowedOverwrites: AnyOrCallback<TFullSettingsType, AllowOverwrite[]>;
+  allowedOverwrites?: AnyOrCallback<TFullSettingsType, AllowOverwrite[]>;
 
   /**
    * Auto instantiate subtemplates.
