@@ -41,8 +41,7 @@ Handlebars.registerHelper(
 );
 
 const snakeCaseHelper = (str: string) => {
-  return str?
-    .replace("-", "_")
+  return str?.replace("-", "_")
     .replace(/([a-z])([A-Z])/g, '$1_$2')
     .replace(/\s+/g, '_')
     .toLowerCase();
