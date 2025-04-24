@@ -40,6 +40,19 @@ Handlebars.registerHelper(
   eqHelper
 );
 
+const snakeCaseHelper = (str: string) => {
+  return str
+    .replace("-", "_")
+    .replace(/([a-z])([A-Z])/g, '$1_$2')
+    .replace(/\s+/g, '_')
+    .toLowerCase();
+}
+
+Handlebars.registerHelper(
+  'snakeCase',
+  snakeCaseHelper
+);
+
 export interface GeneratorOptions {
   /**
    * Don't add git.
