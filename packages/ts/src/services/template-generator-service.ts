@@ -303,6 +303,8 @@ export class TemplateGeneratorService {
         await fs.ensureDir(path.dirname(destPath));
         await fs.writeFile(destPath, result, "utf-8");
 
+        await fs.chmod(destPath, srcStats.mode);
+
         console.log(`Generated: ${destPath}`);
       } catch (error) {
         console.error(`Error processing file ${srcPath}: ${error}`);
