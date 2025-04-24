@@ -59,7 +59,7 @@ async function writeProjectSettings(
 
   const canonical = deepSortObject(projectSettings);
 
-  const serializedProjectSettings = JSON.stringify(canonical, null, 2);
+  const serializedProjectSettings = JSON.stringify(canonical, null, 2).replace(/\n$/, '');
 
   try {
     await fs.writeFile(projectSettingsPath, serializedProjectSettings, "utf-8");
