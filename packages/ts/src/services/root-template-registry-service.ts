@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises";
 import { Template } from "../models/template-models";
-import { TEMPLATE_DIR_PATHS } from "../utils/env";
-import { Result } from "../utils/types";
+import { TEMPLATE_DIR_PATHS } from "../lib/env";
+import { Result } from "../lib/types";
 import path from "node:path";
 import { cloneRevisionToCache } from "./git-service";
 

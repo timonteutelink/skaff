@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { useCallback, useState } from "react"
-import { Result } from "@repo/ts/utils/types"
+import { Result } from "@repo/ts/lib/types"
 import { toast } from "sonner"
 
 interface ConfirmationDialogProps {

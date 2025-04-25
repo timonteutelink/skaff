@@ -1,5 +1,5 @@
 import * as fs from "node:fs/promises";
-import { Result } from "../utils/types";
+import { Result } from "../lib/types";
 
 export async function makeDir(path: string): Promise<Result<void>> {
   try {

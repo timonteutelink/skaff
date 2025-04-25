@@ -2,7 +2,7 @@
 import { eraseCache, reloadTemplates, retrieveDefaultTemplates } from "@/app/actions/template";
 import { ConfirmationDialog } from "@/components/general/confirmation-dialog";
 import TablePage, { FieldInfo } from "@/components/general/table-page";
-import { DefaultTemplateResult } from "@repo/ts/utils/types";
+import { DefaultTemplateResult } from "@repo/ts/lib/types";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";

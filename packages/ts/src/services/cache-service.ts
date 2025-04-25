@@ -2,7 +2,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import * as fs from "node:fs/promises";
 import { makeDir } from "./file-service";
-import { Result } from "../utils/types";
+import { Result } from "../lib/types";
 import { createHash } from "node:crypto";
 
 export type CacheKey =

@@ -3,7 +3,7 @@ import {
   AnyOrCallback,
 } from "@timonteutelink/template-types-lib";
 import z from "zod";
-import { Result, TemplateDTO } from "./types";
+import { Result, TemplateDTO } from "./../lib/types";
 
 export function anyOrCallbackToAny<
   TSettings extends TemplateSettingsType<z.AnyZodObject>,

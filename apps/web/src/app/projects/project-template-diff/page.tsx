@@ -2,7 +2,7 @@
 import { diffProjectFromItsTemplate } from "@/app/actions/git";
 import { DiffVisualizerPage } from "@/components/general/git/diff-visualizer-page";
 import { Button } from "@/components/ui/button";
-import type { ParsedFile, Result } from "@repo/ts/utils/types";
+import type { ParsedFile, Result } from "@repo/ts/lib/types";
 import { ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";

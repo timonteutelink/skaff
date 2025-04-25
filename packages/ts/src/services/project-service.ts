@@ -9,7 +9,7 @@ import {
   ProjectCreationResult,
   ProjectSettings,
   Result
-} from "../utils/types";
+} from "../lib/types";
 import {
   parseGitDiff
 } from "./git-service";

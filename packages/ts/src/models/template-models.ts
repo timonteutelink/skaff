@@ -19,7 +19,7 @@ import {
   ProjectSettings,
   Result,
   TemplateDTO,
-} from "../utils/types";
+} from "../lib/types";
 import { Project } from "./project-models";
 
 export class Template {

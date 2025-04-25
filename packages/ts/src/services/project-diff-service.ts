@@ -1,15 +1,15 @@
 import { AutoInstantiatedSubtemplate, TemplateSettingsType, UserTemplateSettings } from "@timonteutelink/template-types-lib";
-import { Template } from "../models/template-models";
-import { NewTemplateDiffResult, ParsedFile, ProjectSettings, Result } from "../utils/types";
-import { generateProjectFromExistingProject, generateProjectFromTemplateSettings, getParsedUserSettingsWithParentSettings } from "./project-service";
+import * as fs from "node:fs/promises";
 import { AnyZodObject } from "zod";
-import { anyOrCallbackToAny, stringOrCallbackToString } from "../utils/shared-utils";
-import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
+import { NewTemplateDiffResult, ParsedFile, ProjectSettings, Result } from "../lib/types";
 import { Project } from "../models/project-models";
-import { PROJECT_REGISTRY } from "./project-registry-service";
+import { Template } from "../models/template-models";
+import { anyOrCallbackToAny } from "../utils/shared-utils";
 import { getHash, pathInCache, retrieveFromCache, saveToCache } from "./cache-service";
 import { addAllAndDiff, applyDiffToGitRepo, diffDirectories, isConflictAfterApply, parseGitDiff } from "./git-service";
-import * as fs from "node:fs/promises";
+import { PROJECT_REGISTRY } from "./project-registry-service";
+import { generateProjectFromExistingProject, generateProjectFromTemplateSettings, getParsedUserSettingsWithParentSettings } from "./project-service";
+import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
 
 async function modifyAutoInstantiatedTemplatesInProjectSettings(
   projectSettings: ProjectSettings,

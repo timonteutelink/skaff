@@ -38,7 +38,7 @@ import {
   projectNameRegex,
   type ProjectDTO,
   type TemplateDTO,
-} from "@repo/ts/utils/types";
+} from "@repo/ts/lib/types";
 import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";

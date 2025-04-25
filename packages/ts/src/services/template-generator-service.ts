@@ -17,7 +17,6 @@ import {
   isSubset,
   stringOrCallbackToString,
 } from "../utils/shared-utils";
-import { CreateProjectResult, ProjectSettings, Result } from "../utils/types";
 import { makeDir } from "./file-service";
 import { addAllAndDiff, commitAll, createGitRepo } from "./git-service";
 import { getParsedUserSettingsWithParentSettings } from "./project-service";
@@ -25,6 +24,7 @@ import {
   writeNewProjectSettings,
   writeNewTemplateToSettings,
 } from "./project-settings-service";
+import { CreateProjectResult, ProjectSettings, Result } from "../lib/types";
 
 const eqHelper = (a: any, b: any, options?: HelperOptions) => {
   // block form: options.fn is a function

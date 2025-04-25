@@ -1,7 +1,7 @@
 "use client"
 
 import { Tree } from "@/components/general/tree"
-import type { Result, TemplateDTO } from "@repo/ts/utils/types"
+import type { Result, TemplateDTO } from "@repo/ts/lib/types"
 import { useRouter, useSearchParams } from "next/navigation"
 import type React from "react"
 import { useCallback, useEffect, useMemo, useState } from "react"

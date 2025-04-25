@@ -22,7 +22,7 @@ import {
   ParsedFile,
   ProjectDTO,
   TemplateDTO
-} from "@repo/ts/utils/types";
+} from "@repo/ts/lib/types";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";

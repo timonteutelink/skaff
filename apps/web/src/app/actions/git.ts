@@ -8,7 +8,7 @@ import {
 } from "@repo/ts/services/git-service";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import { diffProjectFromTemplate } from "@repo/ts/services/project-diff-service";
-import { ParsedFile, Result } from "@repo/ts/utils/types";
+import { ParsedFile, Result } from "@repo/ts/lib/types";
 
 export async function commitChanges(
   projectName: string,

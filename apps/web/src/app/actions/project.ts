@@ -1,7 +1,7 @@
 "use server";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
-import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
-import { ProjectDTO, Result } from "@repo/ts/utils/types";
+import { PROJECT_SEARCH_PATHS } from "@repo/ts/lib/env";
+import { ProjectDTO, Result } from "@repo/ts/lib/types";
 
 export async function retrieveProjectSearchPaths(): Promise<
   { id: string; path: string }[]

@@ -2,7 +2,7 @@
 import { getCacheDir } from "@repo/ts/services/cache-service";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import { ROOT_TEMPLATE_REGISTRY } from "@repo/ts/services/root-template-registry-service";
-import { DefaultTemplateResult, Result, TemplateDTO } from "@repo/ts/utils/types";
+import { DefaultTemplateResult, Result, TemplateDTO } from "@repo/ts/lib/types";
 
 export async function eraseCache(): Promise<Result<DefaultTemplateResult[]>> {
   const eraseResult = await eraseCache();

@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import type { ProjectTreeNode } from "./types";
-import { ProjectDTO, TemplateDTO } from "@repo/ts/utils/types";
+import { ProjectDTO, TemplateDTO } from "@repo/ts/lib/types";
 import { findTemplate } from "@repo/ts/utils/shared-utils";
 import { useMemo } from "react";
 import { toastNullError } from "@/lib/utils";

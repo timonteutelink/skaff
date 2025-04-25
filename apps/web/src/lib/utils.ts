@@ -1,4 +1,4 @@
-import { Result } from "@repo/ts/utils/types";
+import { Result } from "@repo/ts/lib/types";
 import { clsx, type ClassValue } from "clsx";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";

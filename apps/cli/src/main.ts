@@ -1,6 +1,6 @@
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import { ROOT_TEMPLATE_REGISTRY } from "@repo/ts/services/root-template-registry-service";
-import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
+import { PROJECT_SEARCH_PATHS } from "@repo/ts/lib/env";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { Command } from "commander";
 import { input, select } from "@inquirer/prompts";

@@ -1,10 +1,9 @@
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import path from "node:path";
+import { GitStatus, ProjectDTO, ProjectSettings, Result } from "../lib/types";
 import { loadGitStatus } from "../services/git-service";
-import { GitStatus, ProjectDTO, ProjectSettings, Result } from "../utils/types";
-import { Template } from "./template-models";
 import { loadProjectSettings } from "../services/project-settings-service";
-import { ROOT_TEMPLATE_REGISTRY } from "../services/root-template-registry-service";
+import { Template } from "./template-models";
 
 // every project name inside a root project should be unique.
 // The root project can be uniquely identified by its name and author.(and version)

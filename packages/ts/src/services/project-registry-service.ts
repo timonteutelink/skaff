@@ -1,8 +1,8 @@
 import * as fs from "node:fs/promises";
-import { PROJECT_SEARCH_PATHS } from "../utils/env";
+import { PROJECT_SEARCH_PATHS } from "../lib/env";
 import { Project } from "../models/project-models";
 import path from "node:path";
-import { Result } from "../utils/types";
+import { Result } from "../lib/types";
 
 export class ProjectRegistry {
   private loading: boolean = false;

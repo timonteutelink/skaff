@@ -1,5 +1,5 @@
 "use client";
-import { ParsedFile } from "@repo/ts/utils/types";
+import { ParsedFile } from "@repo/ts/lib/types";
 import { useEffect, useMemo, useState } from "react";
 import { FileTree } from "./file-tree";
 import { DiffVisualizer } from "./diff-visualizer";

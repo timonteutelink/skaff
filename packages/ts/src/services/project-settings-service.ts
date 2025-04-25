@@ -6,7 +6,7 @@ import {
   ProjectSettings,
   ProjectSettingsSchema,
   Result,
-} from "../utils/types";
+} from "../lib/types";
 import { makeDir } from "./file-service";
 import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
 import { deepSortObject } from "../utils/shared-utils";

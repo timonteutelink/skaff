@@ -11,7 +11,7 @@ import type {
   InstantiatedTemplate,
   ProjectDTO,
   TemplateDTO
-} from "@repo/ts/utils/types";
+} from "@repo/ts/lib/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";

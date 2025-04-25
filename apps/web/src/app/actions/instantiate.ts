@@ -6,13 +6,13 @@ import {
   generateProjectFromTemplateSettings,
   instantiateProject,
 } from "@repo/ts/services/project-service";
-import { PROJECT_SEARCH_PATHS } from "@repo/ts/utils/env";
+import { PROJECT_SEARCH_PATHS } from "@repo/ts/lib/env";
 import {
   NewTemplateDiffResult,
   ParsedFile,
   ProjectCreationResult,
   Result,
-} from "@repo/ts/utils/types";
+} from "@repo/ts/lib/types";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import path from "node:path";
 

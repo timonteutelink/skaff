@@ -3,8 +3,8 @@ import * as fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { Template } from "../models/template-models";
-import { GENERATE_DIFF_SCRIPT_PATH } from "../utils/env";
-import { DiffHunk, GitStatus, ParsedFile, Result } from "../utils/types";
+import { GENERATE_DIFF_SCRIPT_PATH } from "../lib/env";
+import { DiffHunk, GitStatus, ParsedFile, Result } from "../lib/types";
 import { pathInCache } from "./cache-service";
 
 const asyncExecFile = promisify(execFile);
