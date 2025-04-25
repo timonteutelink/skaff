@@ -13,7 +13,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Copy, Download, RefreshCw } from "lucide-react"
 import { fetchLogs, getAvailableLogDates, type LogJSON } from "@/app/actions/logs"
-import type { Level } from "pino"
+
+type Level = "fatal" | "error" | "warn" | "info" | "debug" | "trace";
 
 const LEVEL_COLORS: Record<Level, string> = {
   trace: "bg-slate-500",

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, LayoutGrid } from "lucide-react";
+import { FileStack, FileText, LayoutGrid } from "lucide-react";
 
 import {
   Sidebar,
@@ -32,6 +32,11 @@ export function MainSidebar() {
       title: "Projects",
       href: "/projects",
       icon: LayoutGrid,
+    },
+    {
+      title: "Logs",
+      href: "/logs",
+      icon: FileStack,
     },
   ];
 
