@@ -102,7 +102,7 @@ export class TemplateGeneratorService {
     userSettings: UserTemplateSettings,
   ): Result<void> {
     if (!this.currentlyGeneratingTemplate) {
-      console.error("No template is currently being generated.");
+      logger.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
     }
     const result = getParsedUserSettingsWithParentSettings(
@@ -113,7 +113,7 @@ export class TemplateGeneratorService {
     );
 
     if ("error" in result) {
-      console.error(`Failed to parse user settings: ${result.error}`);
+      logger.error(`Failed to parse user settings: ${result.error}`);
       return { error: `Failed to parse user settings: ${result.error}` };
     }
 
@@ -127,7 +127,7 @@ export class TemplateGeneratorService {
       !this.currentlyGeneratingTemplate ||
       !this.currentlyGeneratingTemplateFullSettings
     ) {
-      console.error("No template is currently being generated.");
+      logger.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
     }
     const targetPath = this.currentlyGeneratingTemplate.config.targetPath;
@@ -139,7 +139,7 @@ export class TemplateGeneratorService {
       this.currentlyGeneratingTemplateFullSettings,
     );
     if ("error" in path) {
-      console.error(`Failed to parse target path: ${path.error}`);
+      logger.error(`Failed to parse target path: ${path.error}`);
       return { error: `Failed to parse target path: ${path.error}` };
     }
     return { data: path.data };
@@ -149,7 +149,7 @@ export class TemplateGeneratorService {
     const pathResult = this.getTargetPath();
 
     if ("error" in pathResult) {
-      console.error(`Failed to parse target path: ${pathResult.error}`);
+      logger.error(`Failed to parse target path: ${pathResult.error}`);
       return { error: `Failed to parse target path: ${pathResult.error}` };
     }
 
@@ -168,7 +168,7 @@ export class TemplateGeneratorService {
     const fullSettings = this.currentlyGeneratingTemplateFullSettings;
     const redirects = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.redirects, fullSettings);
     if ("error" in redirects) {
-      console.error(`Failed to parse redirects: ${redirects.error}`);
+      logger.error(`Failed to parse redirects: ${redirects.error}`);
       return { error: `Failed to parse redirects: ${redirects.error}` };
     }
     if (!redirects.data) {
@@ -189,7 +189,7 @@ export class TemplateGeneratorService {
     const fullSettings = this.currentlyGeneratingTemplateFullSettings;
     const overwrites = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.allowedOverwrites, fullSettings);
     if ("error" in overwrites) {
-      console.error(`Failed to parse overwrites: ${overwrites.error}`);
+      logger.error(`Failed to parse overwrites: ${overwrites.error}`);
       return { error: `Failed to parse overwrites: ${overwrites.error}` };
     }
     if (!overwrites.data) {
@@ -209,7 +209,7 @@ export class TemplateGeneratorService {
     const fullSettings = this.currentlyGeneratingTemplateFullSettings;
     const templatesToAutoInstantiate = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.autoInstantiatedSubtemplates, fullSettings);
     if ("error" in templatesToAutoInstantiate) {
-      console.error(`Failed to parse templatesToAutoInstantiate: ${templatesToAutoInstantiate.error}`);
+      logger.error(`Failed to parse templatesToAutoInstantiate: ${templatesToAutoInstantiate.error}`);
       return { error: `Failed to parse templatesToAutoInstantiate: ${templatesToAutoInstantiate.error}` };
     }
     if (!templatesToAutoInstantiate.data) {
@@ -226,7 +226,7 @@ export class TemplateGeneratorService {
   // TODO never use a template if commit hashes dont match
   private async copyDirectory(): Promise<Result<void>> {
     if (!this.currentlyGeneratingTemplate) {
-      console.error("No template is currently being generated.");
+      logger.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
     }
 
@@ -235,21 +235,21 @@ export class TemplateGeneratorService {
     const dest = this.getAbsoluteTargetPath();
 
     if ("error" in dest) {
-      console.error(`Failed to parse target path: ${dest.error}`);
+      logger.error(`Failed to parse target path: ${dest.error}`);
       return { error: `Failed to parse target path: ${dest.error}` };
     }
 
     const redirects = this.getRedirects();
 
     if ("error" in redirects) {
-      console.error(`Failed to parse redirects: ${redirects.error}`);
+      logger.error(`Failed to parse redirects: ${redirects.error}`);
       return { error: `Failed to parse redirects: ${redirects.error}` };
     }
 
     const overwrites = this.getOverwrites();
 
     if ("error" in overwrites) {
-      console.error(`Failed to parse overwrites: ${overwrites.error}`);
+      logger.error(`Failed to parse overwrites: ${overwrites.error}`);
       return { error: `Failed to parse overwrites: ${overwrites.error}` };
     }
 
@@ -281,7 +281,7 @@ export class TemplateGeneratorService {
           if (destStats.isFile()) {
             const allowedOverwrite = overwrites.data.find((overwrite) => overwrite.srcRegex.test(entry));
             if (!allowedOverwrite || allowedOverwrite.mode === 'error') {
-              console.error(`File: ${entry} at ${destPath} already exists.`);
+              logger.error(`File: ${entry} at ${destPath} already exists.`);
               return { error: `File: ${entry} at ${destPath} already exists.` }
             }
 
@@ -306,7 +306,7 @@ export class TemplateGeneratorService {
 
         console.log(`Generated: ${destPath}`);
       } catch (error) {
-        console.error(`Error processing file ${srcPath}: ${error}`);
+        logger.error(`Error processing file ${srcPath}: ${error}`);
         return {
           error: `Error processing file ${srcPath}: ${error}`,
         };
@@ -324,14 +324,14 @@ export class TemplateGeneratorService {
       !this.currentlyGeneratingTemplate ||
       !this.currentlyGeneratingTemplateFullSettings
     ) {
-      console.error("No template is currently being generated.");
+      logger.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
     }
 
     const fullSettings = this.currentlyGeneratingTemplateFullSettings;
     const sideEffects = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.sideEffects, fullSettings);
     if ("error" in sideEffects) {
-      console.error(`Failed to parse side effects: ${sideEffects.error}`);
+      logger.error(`Failed to parse side effects: ${sideEffects.error}`);
       return { error: `Failed to parse side effects: ${sideEffects.error}` };
     }
 
@@ -342,7 +342,7 @@ export class TemplateGeneratorService {
       );
 
       if ("error" in applyResult) {
-        console.error(`Failed to apply side effect: ${applyResult.error}`);
+        logger.error(`Failed to apply side effect: ${applyResult.error}`);
         return {
           error: `Failed to apply side effect: ${applyResult.error}`,
         };
@@ -363,7 +363,7 @@ export class TemplateGeneratorService {
       !this.currentlyGeneratingTemplate ||
       !this.currentlyGeneratingTemplateFullSettings
     ) {
-      console.error("No template is currently being generated.");
+      logger.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
     }
     const absoluteFilePath = path.join(
@@ -385,14 +385,14 @@ export class TemplateGeneratorService {
         oldFileContents,
       );
     } catch (e) {
-      console.error(`Failed to apply side effect: ${e}`);
+      logger.error(`Failed to apply side effect: ${e}`);
       return { error: `Failed to apply side effect: ${e}` };
     }
 
     try {
       await fs.writeFile(absoluteFilePath, sideEffectResult, "utf8");
     } catch (e) {
-      console.error(`Failed to write file: ${e}`);
+      logger.error(`Failed to write file: ${e}`);
       return { error: `Failed to write file: ${e}` };
     }
 
@@ -418,7 +418,7 @@ export class TemplateGeneratorService {
       return { data: undefined };
     }
     if (!this.currentlyGeneratingTemplate) {
-      console.error("No template is currently being generated.");
+      logger.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
     }
 
@@ -426,7 +426,7 @@ export class TemplateGeneratorService {
       const newTemplateSettings = anyOrCallbackToAny(templateToAutoInstantiate.mapSettings, fullParentSettings);
 
       if ("error" in newTemplateSettings) {
-        console.error(
+        logger.error(
           `Failed to parse template settings: ${newTemplateSettings.error}`,
         );
         return {
@@ -448,7 +448,7 @@ export class TemplateGeneratorService {
         );
 
       if (!templateToInstantiate) {
-        console.error(
+        logger.error(
           `Template ${nameOfTemplateToAutoInstantiate} not found in ${this.currentlyGeneratingTemplate.config.templateConfig.name}`,
         );
         return {
@@ -457,7 +457,7 @@ export class TemplateGeneratorService {
       }
 
       if (!templateToInstantiate.parentTemplate || templateToInstantiate.parentTemplate.config.templateConfig.name !== this.currentlyGeneratingTemplate.config.templateConfig.name) {
-        console.error(
+        logger.error(
           `Subtemplate ${templateToAutoInstantiate.subTemplateName} is not a child of template ${this.currentlyGeneratingTemplate.config.templateConfig.name}`,
         );
         return {
@@ -473,7 +473,7 @@ export class TemplateGeneratorService {
       );
 
       if ("error" in addTemplateResult) {
-        console.error(
+        logger.error(
           `Failed to add template to project settings: ${addTemplateResult.error}`,
         );
         return {
@@ -498,7 +498,7 @@ export class TemplateGeneratorService {
           savedCurrentlyGeneratingTemplateFullSettings;
         this.currentlyGeneratingTemplateParentInstanceId =
           savedCurrentlyGeneratingTemplateParentInstanceId;
-        console.error(
+        logger.error(
           `Failed to instantiate template: ${instantiateTemplateResult.error}`,
         );
         return {
@@ -521,7 +521,7 @@ export class TemplateGeneratorService {
             savedCurrentlyGeneratingTemplateFullSettings;
           this.currentlyGeneratingTemplateParentInstanceId =
             savedCurrentlyGeneratingTemplateParentInstanceId;
-          console.error(
+          logger.error(
             `Failed to auto-instantiate children subtemplates: ${autoInstantiationResult.error}`,
           );
           return {
@@ -538,7 +538,7 @@ export class TemplateGeneratorService {
           savedCurrentlyGeneratingTemplateFullSettings;
         this.currentlyGeneratingTemplateParentInstanceId =
           savedCurrentlyGeneratingTemplateParentInstanceId;
-        console.error(
+        logger.error(
           `Failed to parse auto instantiated subtemplates: ${templatesToAutoInstantiate.error}`,
         );
         return {
@@ -558,7 +558,7 @@ export class TemplateGeneratorService {
           savedCurrentlyGeneratingTemplateFullSettings;
         this.currentlyGeneratingTemplateParentInstanceId =
           savedCurrentlyGeneratingTemplateParentInstanceId;
-        console.error(
+        logger.error(
           `Failed to auto-instantiate subtemplates: ${autoInstantiationResult.error}`,
         );
         return {
@@ -584,7 +584,7 @@ export class TemplateGeneratorService {
     newUuid?: string,
   ): Result<string> {
     if (this.destinationProjectSettings.instantiatedTemplates.length > 0) {
-      console.error(
+      logger.error(
         `Project ${this.destinationProjectSettings.projectName} already has instantiated templates.`,
       );
       return {
@@ -595,7 +595,7 @@ export class TemplateGeneratorService {
     const parsedUserSettings =
       this.rootTemplate.config.templateSettingsSchema.safeParse(userSettings);
     if (!parsedUserSettings.success) {
-      console.error(
+      logger.error(
         `Failed to parse user settings: ${parsedUserSettings.error}`,
       );
       return {
@@ -624,7 +624,7 @@ export class TemplateGeneratorService {
   ): Result<string> {
     const template = this.rootTemplate.findSubTemplate(templateName);
     if (!template) {
-      console.error(
+      logger.error(
         `Template ${templateName} could not be found in rootTemplate ${this.rootTemplate.config.templateConfig.name}`,
       );
       return {
@@ -635,7 +635,7 @@ export class TemplateGeneratorService {
     const parsedUserSettings =
       template.config.templateSettingsSchema.safeParse(userSettings);
     if (!parsedUserSettings.success) {
-      console.error(
+      logger.error(
         `Failed to parse user settings: ${parsedUserSettings.error}`,
       );
       return {
@@ -650,7 +650,7 @@ export class TemplateGeneratorService {
         instantiatedTemplate.templateName === templateName &&
         !template.config.templateConfig.multiInstance
       ) {
-        console.error(`Template ${templateName} is already instantiated.`);
+        logger.error(`Template ${templateName} is already instantiated.`);
         return { error: `Template ${templateName} is already instantiated.` };
       }
     }
@@ -695,7 +695,7 @@ export class TemplateGeneratorService {
       );
 
     if (!instantiatedTemplate) {
-      console.error(`Template with id ${newTemplateInstanceId} not found.`);
+      logger.error(`Template with id ${newTemplateInstanceId} not found.`);
       return { error: `Template with id ${newTemplateInstanceId} not found.` };
     }
 
@@ -704,7 +704,7 @@ export class TemplateGeneratorService {
     const parentInstanceId = instantiatedTemplate.parentId;
 
     if (!parentInstanceId) {
-      console.error(
+      logger.error(
         `Parent instance ID is required for template ${templateName}. Maybe you are trying to instantiate the root template?`,
       );
       return {
@@ -714,7 +714,7 @@ export class TemplateGeneratorService {
 
     const template = this.rootTemplate.findSubTemplate(templateName);
     if (!template) {
-      console.error(
+      logger.error(
         `Template ${templateName} could not be found in rootTemplate ${this.rootTemplate.config.templateConfig.name}`,
       );
       return {
@@ -729,7 +729,7 @@ export class TemplateGeneratorService {
     );
 
     if ("error" in result) {
-      console.error(
+      logger.error(
         `Failed to set template generation values: ${result.error}`,
       );
       return {
@@ -740,7 +740,7 @@ export class TemplateGeneratorService {
     // NO actually just make sure always before generating to git checkout the right template. I guess before every generation/copydirectory we need to git checkout the right commit hash, load the template again from this the newly checked out template. Run the generation and git checkout the old branch again. This needs to happen for every generation but also when displaying the template.
     // NO maybe we will NEED to make another copy of the templates dir and checkout there so we can just retrieve templates and get all versions not only the newest. So when retrieving projects if there is a oldtemplatehash used anywhere we call a function to copy the template dir to cache. There we checkout this commit hash and we load it from there. This way we can also display the other revisions of template in frontend on templates list since they will have been added. Then we can make it so the apps requires restart if you change and recommit the templates dir because before that all templates will be loaded in memory with a commit hash and will never be loaded again. So add checks everywhere if commit hash still the same and if git dir is clean before actually generating the template. So now to uniquely identify template should use everywhere name and commit hash and when searching template you have the newest one and then all revisions used for projects. Probaly store the copied revisions in the cachedir inside a dir with the commithash as name. This way we in generation we can reference files from any revision directly to use old and new templates and also to update from old to new template. When app starts and projects are loaded will check if revisions in cache else copy dir there and checkout right revision. Add error TEMPLATE DIR CHANGED and a button to manually reload all templates and then revisions and will delete all cached revisions. This way no restart of app is needed. So the registry will fill up with revisions while app is running and when user press reload will clean and load again.
     if (!this.currentlyGeneratingTemplateFullSettings) {
-      console.error("Failed to parse user settings.");
+      logger.error("Failed to parse user settings.");
       return { error: "Failed to parse user settings." };
     }
 
@@ -750,7 +750,7 @@ export class TemplateGeneratorService {
     );
 
     if ("error" in templatesThatDisableThisTemplate) {
-      console.error(
+      logger.error(
         `Failed to parse templates that disable this template: ${templatesThatDisableThisTemplate.error}`,
       );
       return {
@@ -765,7 +765,7 @@ export class TemplateGeneratorService {
           instantiatedTemplate.templateName,
         )
       ) {
-        console.error(
+        logger.error(
           `Template ${templateName} cannot be instantiated because ${instantiatedTemplate.templateName} is already instantiated.`,
         );
         return {
@@ -780,26 +780,26 @@ export class TemplateGeneratorService {
     );
 
     if ("error" in assertions) {
-      console.error(`Failed to parse assertions: ${assertions.error}`);
+      logger.error(`Failed to parse assertions: ${assertions.error}`);
       return {
         error: `Failed to parse assertions: ${assertions.error}`,
       };
     }
 
     if (assertions.data !== undefined && !assertions.data) {
-      console.error(`Template ${templateName} failed assertions.`);
+      logger.error(`Template ${templateName} failed assertions.`);
       return { error: `Template ${templateName} failed assertions.` };
     }
 
     try {
       const copyResult = await this.copyDirectory();
       if ("error" in copyResult) {
-        console.error(`Failed to copy directory: ${copyResult.error}`);
+        logger.error(`Failed to copy directory: ${copyResult.error}`);
         return { error: `Failed to copy directory: ${copyResult.error}` };
       }
       const sideEffectResult = await this.applySideEffects();
       if ("error" in sideEffectResult) {
-        console.error(
+        logger.error(
           `Failed to apply side effects: ${sideEffectResult.error}`,
         );
         return {
@@ -814,7 +814,7 @@ export class TemplateGeneratorService {
         );
 
         if ("error" in newTemplateResult) {
-          console.error(
+          logger.error(
             `Failed to add template to settings: ${newTemplateResult.error}`,
           );
           return {
@@ -826,7 +826,7 @@ export class TemplateGeneratorService {
       const templatesToAutoInstantiate = this.getTemplatesToAutoInstantiate();
 
       if ("error" in templatesToAutoInstantiate) {
-        console.error(
+        logger.error(
           `Failed to parse auto instantiated subtemplates: ${templatesToAutoInstantiate.error}`,
         );
         return {
@@ -841,7 +841,7 @@ export class TemplateGeneratorService {
       );
 
       if ("error" in result) {
-        console.error(
+        logger.error(
           `Failed to auto-instantiate subtemplates: ${result.error}`,
         );
         return {
@@ -849,7 +849,7 @@ export class TemplateGeneratorService {
         };
       }
     } catch (e) {
-      console.error(`Failed to instantiate template: ${e}`);
+      logger.error(`Failed to instantiate template: ${e}`);
       return { error: `Failed to instantiate template: ${e}` };
     }
 
@@ -866,7 +866,7 @@ export class TemplateGeneratorService {
     const instantiatedTemplate =
       this.destinationProjectSettings.instantiatedTemplates[0];
     if (!instantiatedTemplate) {
-      console.error(
+      logger.error(
         `Template with id ${this.currentlyGeneratingTemplateParentInstanceId} not found.`,
       );
       return {
@@ -878,7 +878,7 @@ export class TemplateGeneratorService {
       instantiatedTemplate.templateName !==
       this.rootTemplate.config.templateConfig.name
     ) {
-      console.error(
+      logger.error(
         `Root template name mismatch in project settings. Make sure root template is the first one in the list.`,
       );
       return {
@@ -893,7 +893,7 @@ export class TemplateGeneratorService {
       .stat(this.options.absoluteDestinationPath)
       .catch(() => null);
     if (dirStat && dirStat.isDirectory()) {
-      console.error(
+      logger.error(
         `Directory ${this.options.absoluteDestinationPath} already exists.`,
       );
       return {
@@ -904,7 +904,7 @@ export class TemplateGeneratorService {
     const result = this.setTemplateGenerationValues(userSettings, template);
 
     if ("error" in result) {
-      console.error(
+      logger.error(
         `Failed to set template generation values: ${result.error}`,
       );
       return {
@@ -913,7 +913,7 @@ export class TemplateGeneratorService {
     }
 
     if (!this.currentlyGeneratingTemplateFullSettings) {
-      console.error("Failed to parse user settings.");
+      logger.error("Failed to parse user settings.");
       return { error: "Failed to parse user settings." };
     }
 
@@ -924,7 +924,7 @@ export class TemplateGeneratorService {
           this.options.absoluteDestinationPath,
         );
         if (!createRepoResult) {
-          console.error(
+          logger.error(
             `Failed to create git repository in ${this.options.absoluteDestinationPath}`,
           );
           return {
@@ -939,7 +939,7 @@ export class TemplateGeneratorService {
           false,
         );
         if ("error" in writeSettingsResult) {
-          console.error(
+          logger.error(
             `Failed to write project settings: ${writeSettingsResult.error}`,
           );
           return {
@@ -953,7 +953,7 @@ export class TemplateGeneratorService {
           `Initial commit for ${this.destinationProjectSettings.projectName}`,
         );
         if (!commitResult) {
-          console.error(`Failed to commit project settings: ${commitResult}`);
+          logger.error(`Failed to commit project settings: ${commitResult}`);
           return {
             error: `Failed to commit project settings: ${commitResult}`,
           };
@@ -962,13 +962,13 @@ export class TemplateGeneratorService {
 
       const copyResult = await this.copyDirectory();
       if ("error" in copyResult) {
-        console.error(`Failed to copy directory: ${copyResult.error}`);
+        logger.error(`Failed to copy directory: ${copyResult.error}`);
         return { error: `Failed to copy directory: ${copyResult.error}` };
       }
 
       const sideEffectResult = await this.applySideEffects();
       if ("error" in sideEffectResult) {
-        console.error(
+        logger.error(
           `Failed to apply side effects: ${sideEffectResult.error}`,
         );
         return {
@@ -981,7 +981,7 @@ export class TemplateGeneratorService {
       const templatesToAutoInstantiate = this.getTemplatesToAutoInstantiate();
 
       if ("error" in templatesToAutoInstantiate) {
-        console.error(
+        logger.error(
           `Failed to parse auto instantiated subtemplates: ${templatesToAutoInstantiate.error}`,
         );
         return {
@@ -994,7 +994,7 @@ export class TemplateGeneratorService {
         templatesToAutoInstantiate.data,
       );
       if ("error" in result) {
-        console.error(
+        logger.error(
           `Failed to auto-instantiate subtemplates: ${result.error}`,
         );
         return {
@@ -1002,7 +1002,7 @@ export class TemplateGeneratorService {
         };
       }
     } catch (e) {
-      console.error(`Failed to instantiate new project: ${e}`);
+      logger.error(`Failed to instantiate new project: ${e}`);
       return { error: `Failed to instantiate new project: ${e}` };
     }
 
@@ -1012,7 +1012,7 @@ export class TemplateGeneratorService {
       );
 
       if ("error" in diffResult) {
-        console.error(`Failed to add all and diff: ${diffResult.error}`);
+        logger.error(`Failed to add all and diff: ${diffResult.error}`);
         return { error: `Failed to add all and diff: ${diffResult.error}` };
       }
 
@@ -1036,7 +1036,7 @@ export class TemplateGeneratorService {
     Result<CreateProjectResult>
   > {
     if (!this.options.dontDoGit) {
-      console.error(
+      logger.error(
         "Git is not supported for this operation. Please use the CLI.",
       );
       return {
@@ -1045,7 +1045,7 @@ export class TemplateGeneratorService {
     }
 
     if (!this.options.dontAutoInstantiate) {
-      console.error(
+      logger.error(
         "Please make sure child templates are not autoinstantiated before generating a full project from existing settings.",
       );
       return {
@@ -1059,12 +1059,12 @@ export class TemplateGeneratorService {
         this.rootTemplate.config.templateConfig.name !==
         this.destinationProjectSettings.rootTemplateName
       ) {
-        console.error("Root template name mismatch in project settings.");
+        logger.error("Root template name mismatch in project settings.");
         return { error: "Root template name mismatch in project settings." };
       }
 
       if (this.destinationProjectSettings.instantiatedTemplates.length === 0) {
-        console.error("No instantiated templates found in project settings.");
+        logger.error("No instantiated templates found in project settings.");
         return {
           error: "No instantiated templates found in project settings.",
         };
@@ -1073,7 +1073,7 @@ export class TemplateGeneratorService {
       const projectGenerationResult = await this.instantiateNewProject();
 
       if ("error" in projectGenerationResult) {
-        console.error(
+        logger.error(
           `Failed to instantiate project: ${projectGenerationResult.error}`,
         );
         return {
@@ -1093,7 +1093,7 @@ export class TemplateGeneratorService {
           instantiated.templateName,
         );
         if (!subTemplate) {
-          console.error(
+          logger.error(
             `Subtemplate ${instantiated.templateName} not found. Skipping...`,
           );
           continue;
@@ -1101,7 +1101,7 @@ export class TemplateGeneratorService {
 
         const res = await this.instantiateTemplateInProject(instantiated.id);
         if ("error" in res) {
-          console.error(
+          logger.error(
             `Error instantiating template ${instantiated.templateName}: ${res.error}`,
           );
           return {
@@ -1113,7 +1113,7 @@ export class TemplateGeneratorService {
         data: { resultPath: this.options.absoluteDestinationPath, diff: "" },
       };
     } catch (e) {
-      console.error(`Failed to instantiate full project from settings: ${e}`);
+      logger.error(`Failed to instantiate full project from settings: ${e}`);
       return {
         error: `Failed to instantiate full project from settings: ${e}`,
       };

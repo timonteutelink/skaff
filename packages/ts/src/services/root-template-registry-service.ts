@@ -29,7 +29,7 @@ export class RootTemplateRegistry {
       try {
         rootTemplateDirs = await fs.readdir(rootTemplateDirsPath);
       } catch (e) {
-        console.error(
+        logger.error(
           `Failed to read root template directories at ${rootTemplateDirsPath}: ${e}`,
         );
         continue;
@@ -42,13 +42,13 @@ export class RootTemplateRegistry {
         try {
           const stat = await fs.stat(rootTemplateDirPath);
           if (!stat.isDirectory()) {
-            console.error(
+            logger.error(
               `Root template directory at ${rootTemplateDirPath} is not a directory`,
             );
             continue;
           }
         } catch (e) {
-          console.error(
+          logger.error(
             `Failed to read root template directory at ${rootTemplateDirPath}: ${e}`,
           );
           continue;
@@ -56,7 +56,7 @@ export class RootTemplateRegistry {
 
         const template = await Template.createAllTemplates(rootTemplateDirPath);
         if ("error" in template) {
-          console.error(
+          logger.error(
             `Failed to create template from directory ${rootTemplateDirPath}: ${template.error}`,
           );
           continue;
@@ -78,11 +78,11 @@ export class RootTemplateRegistry {
     if (!this.templates.length) {
       const result = await this.loadDefaultTemplates();
       if ("error" in result) {
-        console.error(`Failed to load templates: ${result.error}`);
+        logger.error(`Failed to load templates: ${result.error}`);
         return { error: result.error };
       }
       if (!this.templates.length) {
-        console.error("No templates found.");
+        logger.error("No templates found.");
         return { error: "No templates found." };
       }
     }
@@ -93,11 +93,11 @@ export class RootTemplateRegistry {
     if (!this.templates.length) {
       const result = await this.loadDefaultTemplates();
       if ("error" in result) {
-        console.error(`Failed to load templates: ${result.error}`);
+        logger.error(`Failed to load templates: ${result.error}`);
         return { error: result.error };
       }
       if (!this.templates.length) {
-        console.error("No templates found.");
+        logger.error("No templates found.");
         return { error: "No templates found." };
       }
     }
@@ -114,7 +114,7 @@ export class RootTemplateRegistry {
     const template = await this.getAllTemplates();
 
     if ("error" in template) {
-      console.error(`Failed to load templates: ${template.error}`);
+      logger.error(`Failed to load templates: ${template.error}`);
       return { error: template.error };
     }
 
@@ -123,7 +123,7 @@ export class RootTemplateRegistry {
     });
 
     if (revisions.length === 0) {
-      console.error(`No revisions found for template ${templateName}`);
+      logger.error(`No revisions found for template ${templateName}`);
       return { data: null };
     }
 
@@ -133,7 +133,7 @@ export class RootTemplateRegistry {
   async loadRevision(templateName: string, revisionHash: string): Promise<Result<Template | null>> {
     const result = await this.findAllTemplateRevisions(templateName);
     if ("error" in result) {
-      console.error(`Failed to find template: ${result.error}`);
+      logger.error(`Failed to find template: ${result.error}`);
       return { error: result.error };
     }
     const revisions = result.data;
@@ -152,14 +152,14 @@ export class RootTemplateRegistry {
     }
 
     if (!defaultTemplate) {
-      console.error(`No default template found for ${templateName}`);
+      logger.error(`No default template found for ${templateName}`);
       return { data: null };
     }
 
     const saveRevisionInCacheResult = await cloneRevisionToCache(defaultTemplate, revisionHash);
 
     if ("error" in saveRevisionInCacheResult) {
-      console.error(`Failed to save revision in cache: ${saveRevisionInCacheResult.error}`);
+      logger.error(`Failed to save revision in cache: ${saveRevisionInCacheResult.error}`);
       return { error: saveRevisionInCacheResult.error };
     }
 
@@ -168,7 +168,7 @@ export class RootTemplateRegistry {
     const newTemplate = await Template.createAllTemplates(newTemplatePath);
 
     if ("error" in newTemplate) {
-      console.error(`Failed to create template from revision: ${newTemplate.error}`);
+      logger.error(`Failed to create template from revision: ${newTemplate.error}`);
       return { error: newTemplate.error };
     }
 

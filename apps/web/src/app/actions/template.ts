@@ -7,20 +7,20 @@ import { DefaultTemplateResult, Result, TemplateDTO } from "@repo/ts/lib/types";
 export async function eraseCache(): Promise<Result<DefaultTemplateResult[]>> {
   const eraseResult = await eraseCache();
   if ("error" in eraseResult) {
-    console.error("Failed to erase cache:", eraseResult.error);
+    logger.error("Failed to erase cache:", eraseResult.error);
     return { error: eraseResult.error };
   }
 
   const reloadResult = await ROOT_TEMPLATE_REGISTRY.reloadTemplates();
   if ("error" in reloadResult) {
-    console.error("Failed to reload templates:", reloadResult.error);
+    logger.error("Failed to reload templates:", reloadResult.error);
     return { error: reloadResult.error };
   }
 
   const allNewTemplates = await retrieveDefaultTemplates();
 
   if ("error" in allNewTemplates) {
-    console.error("Failed to load templates:", allNewTemplates.error);
+    logger.error("Failed to load templates:", allNewTemplates.error);
     return { error: allNewTemplates.error };
   }
 
@@ -31,14 +31,14 @@ export async function reloadTemplates(): Promise<Result<DefaultTemplateResult[]>
   const result = await ROOT_TEMPLATE_REGISTRY.reloadTemplates();
 
   if ("error" in result) {
-    console.error("Failed to load templates:", result.error);
+    logger.error("Failed to load templates:", result.error);
     return { error: result.error };
   }
 
   const allNewTemplates = await retrieveDefaultTemplates();
 
   if ("error" in allNewTemplates) {
-    console.error("Failed to load templates:", allNewTemplates.error);
+    logger.error("Failed to load templates:", allNewTemplates.error);
     return { error: allNewTemplates.error };
   }
 
@@ -49,7 +49,7 @@ export async function retrieveTemplates(): Promise<Result<TemplateDTO[]>> {
   const templates = await ROOT_TEMPLATE_REGISTRY.getAllTemplates();
 
   if ("error" in templates) {
-    console.error("Failed to load templates:", templates.error);
+    logger.error("Failed to load templates:", templates.error);
     return { error: templates.error };
   }
 
@@ -62,14 +62,14 @@ export async function retrieveDefaultTemplates(): Promise<Result<DefaultTemplate
   const templates = await ROOT_TEMPLATE_REGISTRY.getAllTemplates();
 
   if ("error" in templates) {
-    console.error("Failed to load templates:", templates.error);
+    logger.error("Failed to load templates:", templates.error);
     return { error: templates.error };
   }
 
   const cacheDir = await getCacheDir();
 
   if ("error" in cacheDir) {
-    console.error("Failed to get cache directory:", cacheDir.error);
+    logger.error("Failed to get cache directory:", cacheDir.error);
     return { error: cacheDir.error };
   }
 
@@ -97,7 +97,7 @@ export async function retrieveDefaultTemplate(
 ): Promise<Result<DefaultTemplateResult | null>> {
   const templates = await ROOT_TEMPLATE_REGISTRY.findAllTemplateRevisions(templateName);
   if ("error" in templates) {
-    console.error(templates.error);
+    logger.error(templates.error);
     return { error: templates.error };
   }
   if (!templates.data) {
@@ -107,7 +107,7 @@ export async function retrieveDefaultTemplate(
   const cacheDir = await getCacheDir();
 
   if ("error" in cacheDir) {
-    console.error("Failed to get cache directory:", cacheDir.error);
+    logger.error("Failed to get cache directory:", cacheDir.error);
     return { error: cacheDir.error };
   }
 
@@ -135,7 +135,7 @@ export async function retrieveAllTemplateRevisions(
   const revisions = await ROOT_TEMPLATE_REGISTRY.findAllTemplateRevisions(templateName);
 
   if ("error" in revisions) {
-    console.error(revisions.error);
+    logger.error(revisions.error);
     return { error: revisions.error };
   }
 
@@ -153,12 +153,12 @@ export async function retrieveTemplateRevisionForProject(
 ): Promise<Result<TemplateDTO | null>> {
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in reloadResult) {
-    console.error("Failed to reload templates:", reloadResult.error);
+    logger.error("Failed to reload templates:", reloadResult.error);
     return { error: reloadResult.error };
   }
   const project = await PROJECT_REGISTRY.findProject(projectName);
   if ("error" in project) {
-    console.error(project.error);
+    logger.error(project.error);
     return { error: project.error };
   }
   if (!project.data) {
@@ -169,14 +169,14 @@ export async function retrieveTemplateRevisionForProject(
   const commitHash = project.data.instantiatedProjectSettings.instantiatedTemplates[0]?.templateCommitHash;
 
   if (!commitHash) {
-    console.error(`No commit hash found for project ${projectName}`);
+    logger.error(`No commit hash found for project ${projectName}`);
     return { error: `No commit hash found for project ${projectName}` };
   }
 
   const revision = await ROOT_TEMPLATE_REGISTRY.loadRevision(rootTemplateName, commitHash);
 
   if ("error" in revision) {
-    console.error(revision.error);
+    logger.error(revision.error);
     return { error: revision.error };
   }
   if (!revision.data) {

@@ -196,7 +196,7 @@ export default function ProjectTemplateTreePage() {
   // Fetch project data.
   useEffect(() => {
     if (!projectNameParam) {
-      console.error("No project name provided in search params.");
+      logger.error("No project name provided in search params.");
       toast.error("No project name provided in search params.");
       router.push("/projects");
       return;
@@ -206,18 +206,18 @@ export default function ProjectTemplateTreePage() {
       const [projectResult, revision] = await Promise.all([retrieveProject(projectNameParam), retrieveTemplateRevisionForProject(projectNameParam)]);
 
       if ("error" in projectResult) {
-        console.error("Error retrieving project:", projectResult.error);
+        logger.error("Error retrieving project:", projectResult.error);
         toast.error("Error retrieving project: " + projectResult.error);
         return;
       }
       if (!projectResult.data) {
-        console.error("Project not found:", projectNameParam);
+        logger.error("Project not found:", projectNameParam);
         toast.error("Project not found: " + projectNameParam);
         router.push("/projects");
         return;
       }
       if (projectResult.data.settings.instantiatedTemplates.length === 0) {
-        console.error("No instantiated templates found in project.");
+        logger.error("No instantiated templates found in project.");
         toast.error("No instantiated templates found in project.");
         router.push("/projects");
         return;
@@ -226,13 +226,13 @@ export default function ProjectTemplateTreePage() {
       setProject(projectResult.data);
 
       if ("error" in revision) {
-        console.error("Error retrieving template:", revision.error);
+        logger.error("Error retrieving template:", revision.error);
         toast.error("Error retrieving template: " + revision.error);
         return;
       }
 
       if (!revision.data) {
-        console.error("Template not found for project:", projectNameParam);
+        logger.error("Template not found for project:", projectNameParam);
         toast.error("Template not found for project: " + projectNameParam);
         router.push("/projects");
         return;
@@ -247,12 +247,12 @@ export default function ProjectTemplateTreePage() {
     if (rootTemplate) {
       retrieveDefaultTemplate(rootTemplate.config.templateConfig.name).then((defaultTemplate) => {
         if ("error" in defaultTemplate) {
-          console.error("Error retrieving default template:", defaultTemplate.error);
+          logger.error("Error retrieving default template:", defaultTemplate.error);
           toast.error("Error retrieving default template: " + defaultTemplate.error);
           return;
         }
         if (!defaultTemplate.data) {
-          console.error("No default template found.");
+          logger.error("No default template found.");
           toast.error("No default template found.");
           return;
         }
@@ -283,18 +283,18 @@ export default function ProjectTemplateTreePage() {
 
       const result = await switchProjectBranch(projectNameParam, branch);
       if ("error" in result) {
-        console.error("Failed to switch branch:", result.error);
+        logger.error("Failed to switch branch:", result.error);
         toast.error("Failed to switch branch.");
         return;
       }
       const updatedProject = await retrieveProject(projectNameParam);
       if ("error" in updatedProject) {
-        console.error("Failed to retrieve project:", updatedProject.error);
+        logger.error("Failed to retrieve project:", updatedProject.error);
         toast.error("Failed to retrieve project.");
         return;
       }
       if (!updatedProject.data) {
-        console.error("Project not found:", projectNameParam);
+        logger.error("Project not found:", projectNameParam);
         toast.error("Project not found.");
         return;
       }

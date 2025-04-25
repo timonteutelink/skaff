@@ -69,13 +69,13 @@ const TemplateInstantiationPage: React.FC = () => {
 
   useEffect(() => {
     if (!projectNameParam) {
-      console.error("No project name provided in search params.");
+      logger.error("No project name provided in search params.");
       toast.error("No project name provided in search params.");
       router.push("/projects");
       return;
     }
     if (!newRevisionHashParam && !existingTemplateInstanceIdParam && !templateNameParam) {
-      console.error("No template name provided in search params.");
+      logger.error("No template name provided in search params.");
       toast.error("No template name provided in search params.");
       router.push("/projects");
       return;
@@ -92,7 +92,7 @@ const TemplateInstantiationPage: React.FC = () => {
         !existingTemplateInstanceIdParam &&
         !newRevisionHashParam)
     ) {
-      console.error(
+      logger.error(
         "Cannot only provide one of selectedDirectoryId or parentTemplateInstanceId or existingTemplateInstanceId or newRevisionHash.",
       );
       toast.error(
@@ -105,13 +105,13 @@ const TemplateInstantiationPage: React.FC = () => {
       const [projectResult, revision] = await Promise.all([retrieveProject(projectNameParam), selectedDirectoryIdParam ? retrieveDefaultTemplate(templateNameParam!) : retrieveTemplateRevisionForProject(projectNameParam)]);
 
       if ("error" in revision) {
-        console.error("Error retrieving template:", revision.error);
+        logger.error("Error retrieving template:", revision.error);
         toast.error("Error retrieving template: " + revision.error);
         return;
       }
 
       if (!revision.data) {
-        console.error("Template not found for project:", projectNameParam);
+        logger.error("Template not found for project:", projectNameParam);
         toast.error("Template not found for project: " + projectNameParam);
         router.push("/projects");
         return;
@@ -120,7 +120,7 @@ const TemplateInstantiationPage: React.FC = () => {
       if ("template" in revision.data) {
         const template = revision.data.template;
         if (!template) {
-          console.error("Template not found in revision data.");
+          logger.error("Template not found in revision data.");
           toast.error("Template not found in revision data.");
           return;
         }
@@ -131,20 +131,20 @@ const TemplateInstantiationPage: React.FC = () => {
       setRootTemplate(revision.data);
 
       if ("error" in projectResult) {
-        console.error("Error retrieving project:", projectResult.error);
+        logger.error("Error retrieving project:", projectResult.error);
         toast.error("Error retrieving project: " + projectResult.error);
         return;
       }
       if (!projectResult.data) {
         if (!selectedDirectoryIdParam) {
-          console.error("Project not found:", projectNameParam);
+          logger.error("Project not found:", projectNameParam);
           toast.error("Project not found: " + projectNameParam);
           router.push("/projects");
         }
         return;
       }
       if (projectResult.data.settings.instantiatedTemplates.length === 0) {
-        console.error("No instantiated templates found in project.");
+        logger.error("No instantiated templates found in project.");
         toast.error("No instantiated templates found in project.");
         router.push("/projects");
         return;
@@ -160,7 +160,7 @@ const TemplateInstantiationPage: React.FC = () => {
         newRevisionHashParam,
       );
       if ("error" in newRevisionResult) {
-        console.error("Error retrieving template:", newRevisionResult.error);
+        logger.error("Error retrieving template:", newRevisionResult.error);
         toast.error("Error retrieving template: " + newRevisionResult.error);
         return;
       }
@@ -192,7 +192,7 @@ const TemplateInstantiationPage: React.FC = () => {
         !rootTemplate ||
         !subTemplate
       ) {
-        console.error("Project name or root template not found.");
+        logger.error("Project name or root template not found.");
         toast.error("Project name or root template not found.");
         return;
       }
@@ -207,8 +207,8 @@ const TemplateInstantiationPage: React.FC = () => {
         );
 
         if ("error" in newProjectResult) {
-          console.error("Failed to create project");
-          console.error(newProjectResult.error);
+          logger.error("Failed to create project");
+          logger.error(newProjectResult.error);
           toast.error("Failed to create project: " + newProjectResult.error);
           return;
         }
@@ -216,25 +216,25 @@ const TemplateInstantiationPage: React.FC = () => {
         setAppliedDiff(newProjectResult.data.diff);
       } else if (parentTemplateInstanceIdParam) {
         if (!project) {
-          console.error("Project not found.");
+          logger.error("Project not found.");
           toast.error("Project not found.");
           return;
         }
 
         if (project.settings.projectName !== projectNameParam) {
-          console.error("Project name does not match.");
+          logger.error("Project name does not match.");
           toast.error("Project name does not match.");
           return;
         }
 
         if ("error" in subTemplate) {
-          console.error("Error finding sub-template:", subTemplate.error);
+          logger.error("Error finding sub-template:", subTemplate.error);
           toast.error("Error finding sub-template: " + subTemplate.error);
           return;
         }
 
         if (!subTemplate.data) {
-          console.error("Sub-template not found.");
+          logger.error("Sub-template not found.");
           toast.error("Sub-template not found.");
           return;
         }
@@ -243,7 +243,7 @@ const TemplateInstantiationPage: React.FC = () => {
           subTemplate.data.config.templateConfig.name ===
           rootTemplate.config.templateConfig.name
         ) {
-          console.error(
+          logger.error(
             "Root template cannot be instantiated as a sub-template.",
           );
           toast.error(
@@ -261,7 +261,7 @@ const TemplateInstantiationPage: React.FC = () => {
         );
 
         if ("error" in result) {
-          console.error("Error instantiating template:", result.error);
+          logger.error("Error instantiating template:", result.error);
           toast.error("Error instantiating template: " + result.error);
           return;
         }
@@ -269,25 +269,25 @@ const TemplateInstantiationPage: React.FC = () => {
         setDiffToApply(result.data);
       } else if (existingTemplateInstanceIdParam) {
         if (!project) {
-          console.error("Project not found.");
+          logger.error("Project not found.");
           toast.error("Project not found.");
           return;
         }
 
         if (project.settings.projectName !== projectNameParam) {
-          console.error("Project name does not match.");
+          logger.error("Project name does not match.");
           toast.error("Project name does not match.");
           return;
         }
 
         if ("error" in subTemplate) {
-          console.error("Error finding sub-template:", subTemplate.error);
+          logger.error("Error finding sub-template:", subTemplate.error);
           toast.error("Error finding sub-template: " + subTemplate.error);
           return;
         }
 
         if (!subTemplate.data) {
-          console.error("Sub-template not found.");
+          logger.error("Sub-template not found.");
           toast.error("Sub-template not found.");
           return;
         }
@@ -299,14 +299,14 @@ const TemplateInstantiationPage: React.FC = () => {
         );
 
         if ("error" in result) {
-          console.error("Error instantiating template:", result.error);
+          logger.error("Error instantiating template:", result.error);
           toast.error("Error instantiating template: " + result.error);
           return;
         }
 
         setDiffToApply(result.data);
       } else {
-        console.error(
+        logger.error(
           "No parent template instance ID or selected directory ID provided.",
         );
         toast.error(
@@ -330,19 +330,19 @@ const TemplateInstantiationPage: React.FC = () => {
   const handleConfirmAppliedDiff = useCallback(
     async (commitMessage: string) => {
       if (!projectNameParam || !commitMessage) {
-        console.error("Project name or commit message not found.");
+        logger.error("Project name or commit message not found.");
         toast.error("Project name or commit message not found.");
         return;
       }
       if (!commitMessage) {
-        console.error("Commit message is required.");
+        logger.error("Commit message is required.");
         toast.error("Commit message is required.");
         return;
       }
 
       const result = await commitChanges(projectNameParam, commitMessage);
       if ("error" in result) {
-        console.error("Error committing changes:", result.error);
+        logger.error("Error committing changes:", result.error);
         toast.error("Error committing changes: " + result.error);
         return;
       }
@@ -353,17 +353,17 @@ const TemplateInstantiationPage: React.FC = () => {
 
   const handleSubmitDiffToApply = useCallback(async () => {
     if (!projectNameParam) {
-      console.error("Project name not found.");
+      logger.error("Project name not found.");
       toast.error("Project name not found.");
       return;
     }
     if (!diffToApply) {
-      console.error("Diff to apply is null.");
+      logger.error("Diff to apply is null.");
       toast.error("Diff to apply is null.");
       return;
     }
     if (selectedDirectoryIdParam) {
-      console.error(
+      logger.error(
         "When creating new project the diffToApply should not be shown.",
       );
       toast.error(
@@ -377,7 +377,7 @@ const TemplateInstantiationPage: React.FC = () => {
       diffToApply.diffHash,
     );
     if ("error" in result) {
-      console.error("Error committing changes:", result.error);
+      logger.error("Error committing changes:", result.error);
       toast.error("Error committing changes: " + result.error);
       return;
     }
@@ -394,7 +394,7 @@ const TemplateInstantiationPage: React.FC = () => {
       const resolveResult = await resolveConflictsAndDiff(projectNameParam);
 
       if ("error" in resolveResult) {
-        console.error("Error resolving conflicts:", resolveResult.error);
+        logger.error("Error resolving conflicts:", resolveResult.error);
         toast.error("Error resolving conflicts: " + resolveResult.error);
         return;
       }
@@ -409,7 +409,7 @@ const TemplateInstantiationPage: React.FC = () => {
 
   const handleBackFromAppliedDiff = useCallback(async () => {
     if (!projectNameParam) {
-      console.error("Project name not found.");
+      logger.error("Project name not found.");
       toast.error("Project name not found.");
       return;
     }
@@ -418,7 +418,7 @@ const TemplateInstantiationPage: React.FC = () => {
       // when going back just delete project that was created. Then recreate again when going to diff. For projects this is an easy workflow for templates will be another step after viewing the diff. and no changes will be applied to project when showing first diff so when going back from first diff no deletion is necessary.
       const result = await cancelProjectCreation(projectNameParam);
       if ("error" in result) {
-        console.error("Error deleting project:", result.error);
+        logger.error("Error deleting project:", result.error);
         toast.error("Error deleting project: " + result.error);
         return;
       }
@@ -426,7 +426,7 @@ const TemplateInstantiationPage: React.FC = () => {
       const restoreResult =
         await restoreAllChangesToCleanProject(projectNameParam);
       if ("error" in restoreResult) {
-        console.error("Error restoring changes:", restoreResult.error);
+        logger.error("Error restoring changes:", restoreResult.error);
         toast.error("Error restoring changes: " + restoreResult.error);
         return;
       }

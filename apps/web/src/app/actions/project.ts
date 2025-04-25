@@ -12,13 +12,13 @@ export async function retrieveProjectSearchPaths(): Promise<
 export async function retrieveProjects(): Promise<Result<ProjectDTO[]>> {
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in reloadResult) {
-    console.error("Failed to reload projects:", reloadResult.error);
+    logger.error("Failed to reload projects:", reloadResult.error);
     return { error: reloadResult.error };
   }
   const projects = await PROJECT_REGISTRY.getProjects();
 
   if ("error" in projects) {
-    console.error("Failed to load projects:", projects.error);
+    logger.error("Failed to load projects:", projects.error);
     return { error: projects.error };
   }
 
@@ -28,7 +28,7 @@ export async function retrieveProjects(): Promise<Result<ProjectDTO[]>> {
     const projectDto = project.mapToDTO();
 
     if ("error" in projectDto) {
-      console.error("Failed to map project to DTO:", projectDto.error);
+      logger.error("Failed to map project to DTO:", projectDto.error);
       return { error: projectDto.error };
     }
 
@@ -43,25 +43,25 @@ export async function retrieveProject(
 ): Promise<Result<ProjectDTO | null>> {
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in reloadResult) {
-    console.error("Failed to reload projects:", reloadResult.error);
+    logger.error("Failed to reload projects:", reloadResult.error);
     return { error: reloadResult.error };
   }
   const project = await PROJECT_REGISTRY.findProject(projectName);
 
   if ("error" in project) {
-    console.error("Failed to find project:", project.error);
+    logger.error("Failed to find project:", project.error);
     return { error: project.error };
   }
 
   if (!project.data) {
-    console.error("Project not found");
+    logger.error("Project not found");
     return { data: null };
   }
 
   const projectDto = project.data.mapToDTO();
 
   if ("error" in projectDto) {
-    console.error("Failed to map project to DTO:", projectDto.error);
+    logger.error("Failed to map project to DTO:", projectDto.error);
     return { error: projectDto.error };
   }
 

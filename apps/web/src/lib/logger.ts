@@ -16,7 +16,7 @@ const logger = pino({
             meta: logEvent,
           })
         } catch (error) {
-          console.error("Failed to send log to server:", error)
+          logger.error("Failed to send log to server:", error)
         }
       },
     },

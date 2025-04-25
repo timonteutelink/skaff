@@ -24,7 +24,7 @@ async function modifyAutoInstantiatedTemplatesInProjectSettings(
     parentInstanceId,
   );
   if ("error" in newFullTemplateSettings) {
-    console.error(
+    logger.error(
       `Failed to parse user settings: ${newFullTemplateSettings.error}`,
     );
     return { error: newFullTemplateSettings.error };
@@ -33,7 +33,7 @@ async function modifyAutoInstantiatedTemplatesInProjectSettings(
   const templatesToAutoInstantiate = anyOrCallbackToAny(currentTemplateToAddChildren.config.autoInstantiatedSubtemplates, newFullTemplateSettings.data);
 
   if ("error" in templatesToAutoInstantiate) {
-    console.error(
+    logger.error(
       `Failed to parse auto instantiated templates: ${templatesToAutoInstantiate.error}`,
     );
     return { error: templatesToAutoInstantiate.error };
@@ -71,7 +71,7 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
       );
 
     if (existingTemplateIndex === -1) {
-      console.error(
+      logger.error(
         `Auto instantiated template ${autoInstantiatedTemplate.subTemplateName} not found`,
       );
       return {
@@ -85,7 +85,7 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
     const newTemplateSettings = anyOrCallbackToAny(autoInstantiatedTemplate.mapSettings, fullParentTemplateSettings);
 
     if ("error" in newTemplateSettings) {
-      console.error(
+      logger.error(
         `Failed to map settings for auto instantiated template: ${newTemplateSettings.error}`,
       );
       return {
@@ -102,7 +102,7 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
     const subTemplateName = autoInstantiatedTemplate.subTemplateName;
 
     if (!projectSettings.instantiatedTemplates[existingTemplateIndex]) {
-      console.error(
+      logger.error(
         `Instantiated template ${autoInstantiatedTemplate.subTemplateName} not found in project settings`,
       );
       return { error: "Instantiated template not found in project settings" };
@@ -113,7 +113,7 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
     );
 
     if (!subTemplate) {
-      console.error(
+      logger.error(
         `Subtemplate ${autoInstantiatedTemplate.subTemplateName} not found`,
       );
       return {
@@ -122,7 +122,7 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
     }
 
     if (!subTemplate.parentTemplate || subTemplate.parentTemplate.config.templateConfig.name !== currentTemplateToAddChildren.config.templateConfig.name) {
-      console.error(
+      logger.error(
         `Subtemplate ${autoInstantiatedTemplate.subTemplateName} is not a child of template ${currentTemplateToAddChildren.config.templateConfig.name}`,
       );
       return {
@@ -149,7 +149,7 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
         );
 
       if ("error" in result) {
-        console.error(
+        logger.error(
           `Failed to recursively add auto instantiated templates: ${result.error}`,
         );
         return { error: result.error };
@@ -161,7 +161,7 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
     const newTemplatesToAutoInstantiate = anyOrCallbackToAny(subTemplate.config.autoInstantiatedSubtemplates, newFullTemplateSettings);
 
     if ("error" in newTemplatesToAutoInstantiate) {
-      console.error(
+      logger.error(
         `Failed to parse auto instantiated templates: ${newTemplatesToAutoInstantiate.error}`,
       );
       return { error: newTemplatesToAutoInstantiate.error };
@@ -178,7 +178,7 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
         );
 
       if ("error" in result) {
-        console.error(
+        logger.error(
           `Failed to recursively add auto instantiated templates: ${result.error}`,
         );
         return { error: result.error };
@@ -203,7 +203,7 @@ async function addAutoInstantiatedTemplatesToProjectSettings(
     parentInstanceId,
   );
   if ("error" in newFullTemplateSettings) {
-    console.error(
+    logger.error(
       `Failed to parse user settings: ${newFullTemplateSettings.error}`,
     );
     return { error: newFullTemplateSettings.error };
@@ -211,7 +211,7 @@ async function addAutoInstantiatedTemplatesToProjectSettings(
 
   const templatesToAutoInstantiate = anyOrCallbackToAny(currentTemplateToAddChildren.config.autoInstantiatedSubtemplates, newFullTemplateSettings.data);
   if ("error" in templatesToAutoInstantiate) {
-    console.error(
+    logger.error(
       `Failed to parse auto instantiated templates: ${templatesToAutoInstantiate.error}`,
     );
     return { error: templatesToAutoInstantiate.error };
@@ -240,7 +240,7 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
     const autoInstantiatedTemplateInstanceId = crypto.randomUUID();
     const newTemplateSettings = anyOrCallbackToAny(autoInstantiatedTemplate.mapSettings, fullParentTemplateSettings);
     if ("error" in newTemplateSettings) {
-      console.error(
+      logger.error(
         `Failed to map settings for auto instantiated template: ${newTemplateSettings.error}`,
       );
       return {
@@ -269,12 +269,12 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
     );
 
     if ("error" in rootTemplate) {
-      console.error(`Failed to find root template: ${rootTemplate.error}`);
+      logger.error(`Failed to find root template: ${rootTemplate.error}`);
       return { error: rootTemplate.error };
     }
 
     if (!rootTemplate.data) {
-      console.error(
+      logger.error(
         `Root template not found: ${projectSettings.rootTemplateName}`,
       );
       return { error: "Root template not found" };
@@ -283,7 +283,7 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
     const subTemplate = rootTemplate.data.findSubTemplate(subTemplateName);
 
     if (!subTemplate) {
-      console.error(
+      logger.error(
         `Subtemplate ${autoInstantiatedTemplate.subTemplateName} not found`,
       );
       return {
@@ -292,7 +292,7 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
     }
 
     if (!subTemplate.parentTemplate || subTemplate.parentTemplate.config.templateConfig.name !== currentTemplateToAddChildren.config.templateConfig.name) {
-      console.error(
+      logger.error(
         `Subtemplate ${autoInstantiatedTemplate.subTemplateName} is not a child of template ${currentTemplateToAddChildren.config.templateConfig.name}`,
       );
       return {
@@ -312,7 +312,7 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
         );
 
       if ("error" in result) {
-        console.error(
+        logger.error(
           `Failed to recursively add auto instantiated templates: ${result.error}`,
         );
         return { error: result.error };
@@ -323,7 +323,7 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
 
     const newTemplatesToAutoInstantiate = anyOrCallbackToAny(subTemplate.config.autoInstantiatedSubtemplates, newFullTemplateSettings);
     if ("error" in newTemplatesToAutoInstantiate) {
-      console.error(
+      logger.error(
         `Failed to parse auto instantiated templates: ${newTemplatesToAutoInstantiate.error}`,
       );
       return { error: newTemplatesToAutoInstantiate.error };
@@ -340,7 +340,7 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
         );
 
       if ("error" in result) {
-        console.error(
+        logger.error(
           `Failed to recursively add auto instantiated templates: ${result.error}`,
         );
         return { error: result.error };
@@ -363,7 +363,7 @@ export async function generateModifyTemplateDiff(
     );
 
   if (instantiatedTemplateIndex === -1) {
-    console.error(`Instantiated template ${instantiatedTemplateId} not found`);
+    logger.error(`Instantiated template ${instantiatedTemplateId} not found`);
     return { error: "Instantiated template not found" };
   }
 
@@ -378,12 +378,12 @@ export async function generateModifyTemplateDiff(
   );
 
   if ("error" in template) {
-    console.error(`Failed to find template: ${template.error}`);
+    logger.error(`Failed to find template: ${template.error}`);
     return { error: template.error };
   }
 
   if (!template.data) {
-    console.error(`Template ${instantiatedTemplate.templateName} not found`);
+    logger.error(`Template ${instantiatedTemplate.templateName} not found`);
     return { error: "Template not found" };
   }
 
@@ -395,7 +395,7 @@ export async function generateModifyTemplateDiff(
   };
 
   if (!newProjectSettings.instantiatedTemplates[instantiatedTemplateIndex]) {
-    console.error(
+    logger.error(
       `Instantiated template ${instantiatedTemplateId} not found in project settings`,
     );
     return { error: "Instantiated template not found in project settings" };
@@ -415,7 +415,7 @@ export async function generateModifyTemplateDiff(
     );
 
   if ("error" in modifyChildrenResult) {
-    console.error(
+    logger.error(
       `Failed to add auto instantiated templates: ${modifyChildrenResult.error}`,
     );
     return { error: modifyChildrenResult.error };
@@ -435,11 +435,11 @@ async function diffNewTempProjects(
 
   const project = await PROJECT_REGISTRY.findProject(projectName);
   if ("error" in project) {
-    console.error(`Failed to find project: ${project.error}`);
+    logger.error(`Failed to find project: ${project.error}`);
     return { error: project.error };
   }
   if (!project.data) {
-    console.error(`Project ${projectName} not found`);
+    logger.error(`Project ${projectName} not found`);
     return { error: "Project not found" };
   }
 
@@ -453,7 +453,7 @@ async function diffNewTempProjects(
   );
 
   if ("error" in existingSavedDiff) {
-    console.error(
+    logger.error(
       `Failed to retrieve diff from cache: ${existingSavedDiff.error}`,
     );
     return { error: existingSavedDiff.error };
@@ -474,13 +474,13 @@ async function diffNewTempProjects(
   const tempOldProjectPath = await pathInCache(tempOldProjectName);
   const tempNewProjectPath = await pathInCache(tempNewProjectName);
   if ("error" in tempOldProjectPath) {
-    console.error(
+    logger.error(
       `Failed to create temp old project path: ${tempOldProjectPath.error}`,
     );
     return { error: tempOldProjectPath.error };
   }
   if ("error" in tempNewProjectPath) {
-    console.error(
+    logger.error(
       `Failed to create temp new project path: ${tempNewProjectPath.error}`,
     );
     return { error: tempNewProjectPath.error };
@@ -500,14 +500,14 @@ async function diffNewTempProjects(
       );
 
     if ("error" in cleanProjectFromCurrentProjectSettingsResult) {
-      console.error(
+      logger.error(
         `Failed to create clean project from current project settings: ${cleanProjectFromCurrentProjectSettingsResult.error}`,
       );
       return { error: cleanProjectFromCurrentProjectSettingsResult.error };
     }
 
     if ("error" in cleanProjectFromNewSettingsResult) {
-      console.error(
+      logger.error(
         `Failed to create clean project from new settings: ${cleanProjectFromNewSettingsResult.error}`,
       );
       return { error: cleanProjectFromNewSettingsResult.error };
@@ -524,7 +524,7 @@ async function diffNewTempProjects(
     );
 
     if ("error" in diff) {
-      console.error(`Failed to diff directories: ${diff.error}`);
+      logger.error(`Failed to diff directories: ${diff.error}`);
       return { error: diff.error };
     }
 
@@ -536,7 +536,7 @@ async function diffNewTempProjects(
     );
 
     if ("error" in saveResult) {
-      console.error(`Failed to save diff to cache: ${saveResult.error}`);
+      logger.error(`Failed to save diff to cache: ${saveResult.error}`);
       return { error: saveResult.error };
     }
 
@@ -549,7 +549,7 @@ async function diffNewTempProjects(
       },
     };
   } catch (e) {
-    console.error(e);
+    logger.error(e);
     return {
       error: "Failed to create clean project from current project settings",
     };
@@ -569,26 +569,26 @@ export async function generateNewTemplateDiff(
 ): Promise<Result<NewTemplateDiffResult>> {
   const instantiatedRootTemplate = destinationProject.instantiatedProjectSettings.instantiatedTemplates[0]?.templateCommitHash;
   if (!instantiatedRootTemplate) {
-    console.error(`No instantiated root template commit hash found in project settings`);
+    logger.error(`No instantiated root template commit hash found in project settings`);
     return { error: "No instantiated root template commit hash found in project settings" };
   }
   const rootTemplate =
     await ROOT_TEMPLATE_REGISTRY.loadRevision(rootTemplateName, instantiatedRootTemplate);
 
   if ("error" in rootTemplate) {
-    console.error(`Failed to find root template: ${rootTemplate.error}`);
+    logger.error(`Failed to find root template: ${rootTemplate.error}`);
     return { error: rootTemplate.error };
   }
 
   if (!rootTemplate.data) {
-    console.error(`Root template not found: ${rootTemplateName}`);
+    logger.error(`Root template not found: ${rootTemplateName}`);
     return { error: "Root template not found" };
   }
 
   const template = rootTemplate.data.findSubTemplate(templateName);
 
   if (!template) {
-    console.error(`Template ${templateName} not found`);
+    logger.error(`Template ${templateName} not found`);
     return { error: "Template not found" };
   }
 
@@ -617,7 +617,7 @@ export async function generateNewTemplateDiff(
   );
 
   if ("error" in addResult) {
-    console.error(
+    logger.error(
       `Failed to add auto instantiated templates: ${addResult.error}`,
     );
     return { error: addResult.error };
@@ -634,19 +634,19 @@ export async function resolveConflictsAndRetrieveAppliedDiff(
 ): Promise<Result<ParsedFile[]>> {
   const project = await PROJECT_REGISTRY.findProject(projectName);
   if ("error" in project) {
-    console.error(`Failed to find project: ${project.error}`);
+    logger.error(`Failed to find project: ${project.error}`);
     return { error: project.error };
   }
 
   if (!project.data) {
-    console.error(`Project ${projectName} not found`);
+    logger.error(`Project ${projectName} not found`);
     return { error: "Project not found" };
   }
 
   const addAllResult = await addAllAndDiff(project.data.absoluteRootDir);
 
   if ("error" in addAllResult) {
-    console.error(`Failed to add all and generate diff: ${addAllResult.error}`);
+    logger.error(`Failed to add all and generate diff: ${addAllResult.error}`);
     return { error: addAllResult.error };
   }
 
@@ -660,24 +660,24 @@ export async function applyDiffToProject(
   const project = await PROJECT_REGISTRY.findProject(projectName);
 
   if ("error" in project) {
-    console.error(`Failed to find project: ${project.error}`);
+    logger.error(`Failed to find project: ${project.error}`);
     return { error: project.error };
   }
 
   if (!project.data) {
-    console.error(`Project ${projectName} not found`);
+    logger.error(`Project ${projectName} not found`);
     return { error: "Project not found" };
   }
 
   const diff = await retrieveFromCache("new-template-diff", diffHash, "patch");
 
   if ("error" in diff) {
-    console.error(`Failed to retrieve diff from cache: ${diff.error}`);
+    logger.error(`Failed to retrieve diff from cache: ${diff.error}`);
     return { error: diff.error };
   }
 
   if (!diff.data) {
-    console.error(`Diff not found in cache`);
+    logger.error(`Diff not found in cache`);
     return { error: "Diff not found" };
   }
 
@@ -687,14 +687,14 @@ export async function applyDiffToProject(
   );
 
   if (!applyResult) {
-    console.error(`Failed to apply diff to project`);
+    logger.error(`Failed to apply diff to project`);
     return { error: "Failed to apply diff" };
   }
 
   // TODO: check if there are any merge conflicts and notify user. Then user will press button("Conflicts Resolved") to add all after he has manually resolved the conflicts. Otherwise here we automatically add all and diff.
   const isConflict = await isConflictAfterApply(project.data.absoluteRootDir);
   if ("error" in isConflict) {
-    console.error(`Failed to check for conflicts: ${isConflict.error}`);
+    logger.error(`Failed to check for conflicts: ${isConflict.error}`);
     return { error: isConflict.error };
   }
   if (isConflict.data) {
@@ -704,7 +704,7 @@ export async function applyDiffToProject(
   const addAllResult = await addAllAndDiff(project.data.absoluteRootDir);
 
   if ("error" in addAllResult) {
-    console.error(`Failed to add all and generate diff: ${addAllResult.error}`);
+    logger.error(`Failed to add all and generate diff: ${addAllResult.error}`);
     return { error: addAllResult.error };
   }
 
@@ -715,7 +715,7 @@ export async function diffProjectFromTemplate(
 ): Promise<Result<ParsedFile[]>> {
 
   if (!project.gitStatus.isClean) {
-    console.error("Cannot diff project with uncommitted changes");
+    logger.error("Cannot diff project with uncommitted changes");
     return { error: "Cannot diff project with uncommitted changes" };
   }
 
@@ -728,7 +728,7 @@ export async function diffProjectFromTemplate(
   );
 
   if ("error" in existingSavedDiff) {
-    console.error(
+    logger.error(
       `Failed to existingSavedDiff directories: ${existingSavedDiff.error}`,
     );
     return { error: existingSavedDiff.error };
@@ -741,7 +741,7 @@ export async function diffProjectFromTemplate(
   const tempNewProjectName = `${project.instantiatedProjectSettings.projectName}-${crypto.randomUUID()}`;
   const tempNewProjectPath = await pathInCache(tempNewProjectName);
   if ("error" in tempNewProjectPath) {
-    console.error(
+    logger.error(
       `Failed to create temp new project path: ${tempNewProjectPath.error}`,
     );
     return { error: tempNewProjectPath.error };
@@ -754,7 +754,7 @@ export async function diffProjectFromTemplate(
         tempNewProjectPath.data,
       );
     if ("error" in newProjectFromExistingProjectResult) {
-      console.error(
+      logger.error(
         `Failed to create new project from existing project: ${newProjectFromExistingProjectResult.error}`,
       );
       return { error: newProjectFromExistingProjectResult.error };
@@ -766,7 +766,7 @@ export async function diffProjectFromTemplate(
     );
 
     if ("error" in diff) {
-      console.error(`Failed to diff directories: ${diff.error}`);
+      logger.error(`Failed to diff directories: ${diff.error}`);
       return { error: diff.error };
     }
 
@@ -778,7 +778,7 @@ export async function diffProjectFromTemplate(
     );
 
     if ("error" in saveCacheResult) {
-      console.error(`Failed to save diff to cache: ${saveCacheResult.error}`);
+      logger.error(`Failed to save diff to cache: ${saveCacheResult.error}`);
       return { error: saveCacheResult.error };
     }
 
@@ -795,7 +795,7 @@ export async function generateUpdateTemplateDiff(
   const rootInstantiatedTemplate = project.instantiatedProjectSettings.instantiatedTemplates[0];
 
   if (!rootInstantiatedTemplate) {
-    console.error(`No instantiated root template found`);
+    logger.error(`No instantiated root template found`);
     return { error: "No instantiated root template found" };
   }
 
@@ -805,12 +805,12 @@ export async function generateUpdateTemplateDiff(
   );
 
   if ("error" in template) {
-    console.error(`Failed to find template: ${template.error}`);
+    logger.error(`Failed to find template: ${template.error}`);
     return { error: template.error };
   }
 
   if (!template.data) {
-    console.error(`Template ${rootInstantiatedTemplate.templateName} not found`);
+    logger.error(`Template ${rootInstantiatedTemplate.templateName} not found`);
     return { error: "Template not found" };
   }
 
@@ -822,7 +822,7 @@ export async function generateUpdateTemplateDiff(
   };
 
   if (!newProjectSettings.instantiatedTemplates[0]) {
-    console.error(
+    logger.error(
       `Instantiated template ${rootInstantiatedTemplate.templateName} not found in project settings`,
     );
     return { error: "Instantiated template not found in project settings" };

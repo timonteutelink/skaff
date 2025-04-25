@@ -29,7 +29,7 @@ export function getParsedUserSettingsWithParentSettings(
       userSettings,
     );
   if (!parsedUserSettings?.success) {
-    console.error(
+    logger.error(
       `Failed to parse user settings: ${parsedUserSettings?.error}`,
     );
     return {
@@ -52,7 +52,7 @@ export function getParsedUserSettingsWithParentSettings(
     );
 
     if ("error" in newInstantiatedSettings) {
-      console.error(
+      logger.error(
         `Failed to get instantiated settings: ${newInstantiatedSettings.error}`,
       );
       return { error: newInstantiatedSettings.error };
@@ -75,12 +75,12 @@ export async function instantiateProject(
   const template = await ROOT_TEMPLATE_REGISTRY.findDefaultTemplate(rootTemplateName);
 
   if ("error" in template) {
-    console.error(`Failed to find root template: ${template.error}`);
+    logger.error(`Failed to find root template: ${template.error}`);
     return { error: template.error };
   }
 
   if (!template.data) {
-    console.error(`Root template not found: ${rootTemplateName}`);
+    logger.error(`Root template not found: ${rootTemplateName}`);
     return { error: "Root template not found" };
   }
 
@@ -91,26 +91,26 @@ export async function instantiateProject(
   );
 
   if ("error" in instantiationResult) {
-    console.error(`Failed to instantiate project: ${instantiationResult.error}`);
+    logger.error(`Failed to instantiate project: ${instantiationResult.error}`);
     return { error: "Failed to create project, " + instantiationResult.error };
   }
 
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
 
   if ("error" in reloadResult) {
-    console.error(`Failed to reload projects: ${reloadResult.error}`);
+    logger.error(`Failed to reload projects: ${reloadResult.error}`);
     return { error: reloadResult.error };
   }
 
   const project = await PROJECT_REGISTRY.findProject(newProjectName);
 
   if ("error" in project) {
-    console.error(`Failed to find project: ${project.error}`);
+    logger.error(`Failed to find project: ${project.error}`);
     return { error: project.error };
   }
 
   if (!project.data) {
-    console.error(`Project ${newProjectName} not found after creation`);
+    logger.error(`Project ${newProjectName} not found after creation`);
     return {
       error: "Failed to create project, project not found after creation",
     };
@@ -121,7 +121,7 @@ export async function instantiateProject(
   const projectDTO = project.data.mapToDTO();
 
   if ("error" in projectDTO) {
-    console.error(`Failed to map project to DTO: ${projectDTO.error}`);
+    logger.error(`Failed to map project to DTO: ${projectDTO.error}`);
     return { error: projectDTO.error };
   }
 
@@ -146,7 +146,7 @@ export async function generateProjectFromTemplateSettings(
   const instantiatedRootTemplate = projectSettings.instantiatedTemplates[0]?.templateCommitHash;
 
   if (!instantiatedRootTemplate) {
-    console.error(`No instantiated root template commit hash found in project settings`);
+    logger.error(`No instantiated root template commit hash found in project settings`);
     return { error: "No instantiated root template commit hash found in project settings" };
   }
 
@@ -156,12 +156,12 @@ export async function generateProjectFromTemplateSettings(
   );
 
   if ("error" in rootTemplate) {
-    console.error(`Failed to find root template: ${rootTemplate.error}`);
+    logger.error(`Failed to find root template: ${rootTemplate.error}`);
     return { error: rootTemplate.error };
   }
 
   if (!rootTemplate.data) {
-    console.error(
+    logger.error(
       `Root template not found: ${projectSettings.rootTemplateName}`,
     );
     return { error: "Root template not found" };
@@ -181,7 +181,7 @@ export async function generateProjectFromTemplateSettings(
     await newProjectGenerator.instantiateFullProjectFromSettings();
 
   if ("error" in instantiationResult) {
-    console.error(`Failed to instantiate project: ${instantiationResult.error}`);
+    logger.error(`Failed to instantiate project: ${instantiationResult.error}`);
     return { error: instantiationResult.error };
   }
 

@@ -64,7 +64,7 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
     try {
       await action(data)
     } catch (error) {
-      console.error("Error submitting form:", error)
+      logger.error("Error submitting form:", error)
     } finally {
       setIsSubmitting(false)
     }

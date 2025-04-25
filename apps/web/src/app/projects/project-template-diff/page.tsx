@@ -19,7 +19,7 @@ export default function ProjectStagedChangesPage() {
 
   useEffect(() => {
     if (!projectNameParam) {
-      console.error("No project name provided in search params.");
+      logger.error("No project name provided in search params.");
       toast.error("No project name provided in search params.");
       router.push("/projects");
       return;
@@ -28,12 +28,12 @@ export default function ProjectStagedChangesPage() {
     diffProjectFromItsTemplate(projectNameParam).then(
       (data: Result<ParsedFile[]>) => {
         if ("error" in data) {
-          console.error("Error retrieving project diff:", data.error);
+          logger.error("Error retrieving project diff:", data.error);
           toast.error("Error retrieving project diff" + data.error);
           return;
         }
         if (!data.data) {
-          console.error("Project diff not found:", projectNameParam);
+          logger.error("Project diff not found:", projectNameParam);
           toast.error("Project diff not found" + projectNameParam);
 
           router.push("/projects");

@@ -92,7 +92,7 @@ export default function TemplatesListPage() {
   useEffect(() => {
     retrieveProjects().then((projects) => {
       if ("error" in projects) {
-        console.error("Error retrieving projects:", projects.error);
+        logger.error("Error retrieving projects:", projects.error);
         toast.error("Error retrieving projects: " + projects.error);
         return;
       }
@@ -100,7 +100,7 @@ export default function TemplatesListPage() {
     });
     retrieveDefaultTemplates().then((templates) => {
       if ("error" in templates) {
-        console.error("Error retrieving templates:", templates.error);
+        logger.error("Error retrieving templates:", templates.error);
         toast.error("Error retrieving templates: " + templates.error);
         return;
       }

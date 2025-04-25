@@ -16,23 +16,23 @@ export async function commitChanges(
 ): Promise<Result<void>> {
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in reloadResult) {
-    console.error("Failed to reload projects:", reloadResult.error);
+    logger.error("Failed to reload projects:", reloadResult.error);
     return { error: reloadResult.error };
   }
 
   const project = await PROJECT_REGISTRY.findProject(projectName);
   if ("error" in project) {
-    console.error("Failed to find project:", project.error);
+    logger.error("Failed to find project:", project.error);
     return { error: "Failed to find project" };
   }
 
   if (!project.data) {
-    console.error("Project not found");
+    logger.error("Project not found");
     return { error: "Project not found" };
   }
 
   if (project.data.gitStatus.isClean) {
-    console.error("No changes to commit");
+    logger.error("No changes to commit");
     return { error: "No changes to commit" };
   }
 
@@ -41,13 +41,13 @@ export async function commitChanges(
     commitMessage,
   );
   if ("error" in commitResult) {
-    console.error("Failed to commit changes:", commitResult.error);
+    logger.error("Failed to commit changes:", commitResult.error);
     return { error: "Failed to commit changes" };
   }
 
   const newReloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in newReloadResult) {
-    console.error("Failed to reload projects:", newReloadResult.error);
+    logger.error("Failed to reload projects:", newReloadResult.error);
     return { error: "Failed to reload projects" };
   }
   return { data: undefined };
@@ -59,44 +59,44 @@ export async function switchProjectBranch(
 ): Promise<Result<void>> {
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in reloadResult) {
-    console.error("Failed to reload projects:", reloadResult.error);
+    logger.error("Failed to reload projects:", reloadResult.error);
     return { error: reloadResult.error };
   }
   const project = await PROJECT_REGISTRY.findProject(projectName);
 
   if ("error" in project) {
-    console.error("Failed to find project:", project.error);
+    logger.error("Failed to find project:", project.error);
     return { error: "Failed to find project" };
   }
 
   if (!project.data) {
-    console.error("Project not found");
+    logger.error("Project not found");
     return { error: "Project not found" };
   }
 
   const branchExists = project.data.gitStatus.branches.includes(branch);
 
   if (!branchExists) {
-    console.error(`Branch ${branch} does not exist`);
+    logger.error(`Branch ${branch} does not exist`);
     return { error: `Branch ${branch} does not exist` };
   }
 
   if (!project.data.gitStatus.isClean) {
-    console.error("Cannot switch branches with uncommitted changes");
+    logger.error("Cannot switch branches with uncommitted changes");
     return { error: "Cannot switch branches with uncommitted changes" };
   }
 
   const result = await switchBranch(project.data.absoluteRootDir, branch);
 
   if ("error" in result) {
-    console.error("Failed to switch branches:", result.error);
+    logger.error("Failed to switch branches:", result.error);
     return { error: "Failed to switch branches" };
   }
 
   const newReloadResult = await PROJECT_REGISTRY.reloadProjects();
 
   if ("error" in newReloadResult) {
-    console.error("Failed to reload projects:", newReloadResult.error);
+    logger.error("Failed to reload projects:", newReloadResult.error);
     return { error: "Failed to reload projects" };
   }
   return { data: undefined };
@@ -107,26 +107,26 @@ export async function addAllAndRetrieveCurrentDiff(
 ): Promise<Result<ParsedFile[]>> {
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in reloadResult) {
-    console.error("Failed to reload projects:", reloadResult.error);
+    logger.error("Failed to reload projects:", reloadResult.error);
     return { error: reloadResult.error };
   }
 
   const project = await PROJECT_REGISTRY.findProject(projectName);
 
   if ("error" in project) {
-    console.error("Failed to find project:", project.error);
+    logger.error("Failed to find project:", project.error);
     return { error: "Failed to find project" };
   }
 
   if (!project.data) {
-    console.error("Project not found");
+    logger.error("Project not found");
     return { error: "Project not found" };
   }
 
   const diff = await addAllAndDiff(project.data.absoluteRootDir);
 
   if ("error" in diff) {
-    console.error("Failed to add all and retrieve diff:", diff.error);
+    logger.error("Failed to add all and retrieve diff:", diff.error);
     return { error: "Failed to add all and retrieve diff" };
   }
 
@@ -135,7 +135,7 @@ export async function addAllAndRetrieveCurrentDiff(
   const newReloadResult = await PROJECT_REGISTRY.reloadProjects();
 
   if ("error" in newReloadResult) {
-    console.error("Failed to reload projects:", newReloadResult.error);
+    logger.error("Failed to reload projects:", newReloadResult.error);
     return { error: "Failed to reload projects" };
   }
 
@@ -147,18 +147,18 @@ export async function diffProjectFromItsTemplate(
 ): Promise<Result<ParsedFile[]>> {
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in reloadResult) {
-    console.error("Failed to reload projects:", reloadResult.error);
+    logger.error("Failed to reload projects:", reloadResult.error);
     return { error: reloadResult.error };
   }
   const project = await PROJECT_REGISTRY.findProject(projectName);
 
   if ("error" in project) {
-    console.error(`Failed to find project: ${project.error}`);
+    logger.error(`Failed to find project: ${project.error}`);
     return { error: project.error };
   }
 
   if (!project.data) {
-    console.error(`Project ${projectName} not found`);
+    logger.error(`Project ${projectName} not found`);
     return { error: "Project not found" };
   }
   return diffProjectFromTemplate(project.data);

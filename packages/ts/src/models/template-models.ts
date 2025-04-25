@@ -105,21 +105,21 @@ export class Template {
     const absoluteBaseDir = path.dirname(absoluteRootDir);
     const isRepoClean = await isGitRepoClean(absoluteBaseDir);
     if ("error" in isRepoClean) {
-      console.error(
+      logger.error(
         `Error getting git status for project at ${absoluteBaseDir}`,
       );
-      console.error(isRepoClean.error);
+      logger.error(isRepoClean.error);
       return {
         error: `Error getting git status for project at ${absoluteBaseDir}: ${isRepoClean.error}`,
       };
     }
     if (!isRepoClean.data) {
-      console.error("Template dir is not clean");
+      logger.error("Template dir is not clean");
       return { error: "Template dir is not clean" };
     }
     const commitHash = await getCommitHash(absoluteRootDir);
     if ("error" in commitHash) {
-      console.error(
+      logger.error(
         `Error getting commit hash for project at ${absoluteRootDir}`,
       );
       return {
@@ -131,7 +131,7 @@ export class Template {
     try {
       configs = await loadAllTemplateConfigs(absoluteRootDir);
     } catch (error) {
-      console.error(
+      logger.error(
         `Failed to load template configurations from ${absoluteRootDir}: ${error}`,
       );
       return { error: `Failed to load template configurations: ${error}` };
@@ -241,13 +241,13 @@ export class Template {
       (template) => !template.parentTemplate,
     );
     if (rootTemplates.length === 0) {
-      console.error(`No root templates found.`);
+      logger.error(`No root templates found.`);
       return { error: "No root templates found" };
     }
 
     if (rootTemplates.length > 1) {
-      console.error(rootTemplates);
-      console.error(
+      logger.error(rootTemplates);
+      logger.error(
         `Multiple root templates found. Make sure the directory structure is correct.`,
       );
       return {
@@ -283,7 +283,7 @@ export class Template {
     );
 
     if ("error" in addTemplateResult) {
-      console.error(
+      logger.error(
         `Failed to add template to project: ${addTemplateResult.error}`,
       );
       return addTemplateResult;
@@ -294,7 +294,7 @@ export class Template {
     );
 
     if ("error" in resultPath) {
-      console.error(`Failed to instantiate template: ${resultPath.error}`);
+      logger.error(`Failed to instantiate template: ${resultPath.error}`);
       return resultPath;
     } else {
       console.log(`Template instantiated at: ${resultPath.data}`);
@@ -332,12 +332,12 @@ export class Template {
     const addProjectResult =
       generatorService.addNewProject(rootTemplateSettings);
     if ("error" in addProjectResult) {
-      console.error(`Failed to add project: ${addProjectResult.error}`);
+      logger.error(`Failed to add project: ${addProjectResult.error}`);
       return addProjectResult;
     }
     const result = await generatorService.instantiateNewProject();
     if ("error" in result) {
-      console.error(`Failed to instantiate new project: ${result.error}`);
+      logger.error(`Failed to instantiate new project: ${result.error}`);
     } else {
       console.log(`New project created at: ${result.data.resultPath}`);
     }

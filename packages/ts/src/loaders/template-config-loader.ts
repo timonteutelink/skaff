@@ -223,7 +223,7 @@ export async function loadAllTemplateConfigs(
   const cachedBundle = await retrieveFromCache("template-config", hash, "mjs");
 
   if ("error" in cachedBundle) {
-    console.error(
+    logger.error(
       `Failed to retrieve cached bundle for template configs: ${cachedBundle.error}`,
     );
   } else if (cachedBundle.data) {

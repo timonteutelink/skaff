@@ -12,6 +12,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { CopyIcon } from "lucide-react"
 import { retrieveAllTemplateRevisions } from "@/app/actions/template"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { toastNullError } from "@/lib/utils"
 
 /* =============================================================================
    Template Tree and Helper Functions
@@ -177,29 +178,28 @@ const TemplatePage: React.FC = () => {
 
   useEffect(() => {
     if (!templateName) {
-      toast.error("No template name provided in search params.")
-      console.error("No template name provided in search params.")
+      toastNullError({
+        shortMessage: "No template name provided in search params.",
+      })
       router.push("/templates")
       return
     }
     retrieveAllTemplateRevisions(templateName).then((data: Result<TemplateDTO[] | null>) => {
-      if ("error" in data) {
-        toast.error(data.error)
-        console.error("Error retrieving template:", data.error)
+      const toastResult = toastNullError({
+        result: data,
+        shortMessage: "Error retrieving template revisions",
+        nullErrorMessage: "No template revisions found.",
+      })
+      if (!toastResult) {
         router.push("/templates")
         return
       }
-      if (!data.data) {
-        toast.error("Template not found.")
-        console.error("Template not found.")
-        router.push("/templates")
-        return
-      }
-      setAllTemplates(data.data)
-      const defaultTemplate = data.data.find((t) => t.isDefault)
+      setAllTemplates(toastResult)
+      const defaultTemplate = toastResult.find((t) => t.isDefault)
       if (!defaultTemplate) {
-        toast.error("No default template found.")
-        console.error("No default template found.")
+        toastNullError({
+          shortMessage: "No default template found.",
+        })
         router.push("/templates")
         return
       }

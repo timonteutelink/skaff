@@ -29,7 +29,7 @@ export async function pathInCache(
 ): Promise<Result<string>> {
   const cacheDir = await getCacheDir();
   if ("error" in cacheDir) {
-    console.error("Failed to get cache directory:", cacheDir.error);
+    logger.error("Failed to get cache directory:", cacheDir.error);
     return { error: `Failed to get cache directory: ${cacheDir.error}` };
   }
 
@@ -47,7 +47,7 @@ export async function saveToCache(
   const cacheFilePath = await pathInCache(`${cacheKey}-${hash}.${extension}`);
 
   if ("error" in cacheFilePath) {
-    console.error("Failed to get cache file path:", cacheFilePath.error);
+    logger.error("Failed to get cache file path:", cacheFilePath.error);
     throw new Error(`Failed to get cache file path: ${cacheFilePath.error}`);
   }
 
@@ -55,7 +55,7 @@ export async function saveToCache(
     await fs.writeFile(cacheFilePath.data, value.trim() + "\n", "utf-8");
     console.log("Cache file created:", cacheFilePath);
   } catch (error) {
-    console.error("Failed to write cache file:", error);
+    logger.error("Failed to write cache file:", error);
     throw new Error(`Failed to write cache file: ${error}`);
   }
 
@@ -70,7 +70,7 @@ export async function retrieveFromCache(
   const cacheFilePath = await pathInCache(`${cacheKey}-${hash}.${extension}`);
 
   if ("error" in cacheFilePath) {
-    console.error("Failed to get cache file path:", cacheFilePath.error);
+    logger.error("Failed to get cache file path:", cacheFilePath.error);
     return { error: `Failed to get cache file path: ${cacheFilePath.error}` };
   }
 
@@ -88,7 +88,7 @@ export async function retrieveFromCache(
 
     return { data: null };
   } catch (error) {
-    console.error("Failed to read cache file:", error);
+    logger.error("Failed to read cache file:", error);
     return { error: `Failed to read cache file: ${error}` };
   }
 }
@@ -96,7 +96,7 @@ export async function retrieveFromCache(
 export async function eraseCache(): Promise<Result<void>> {
   const cacheDir = await getCacheDir();
   if ("error" in cacheDir) {
-    console.error("Failed to get cache directory:", cacheDir.error);
+    logger.error("Failed to get cache directory:", cacheDir.error);
     return { error: `Failed to get cache directory: ${cacheDir.error}` };
   }
 
@@ -104,7 +104,7 @@ export async function eraseCache(): Promise<Result<void>> {
     await fs.rm(cacheDir.data, { recursive: true, force: true });
     console.log("Cache erased");
   } catch (error) {
-    console.error("Failed to erase cache:", error);
+    logger.error("Failed to erase cache:", error);
     return { error: `Failed to erase cache: ${error}` };
   }
 

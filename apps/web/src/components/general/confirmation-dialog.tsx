@@ -33,7 +33,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({ buttonTe
   const handleConfirmAction = useCallback(async () => {
     const actionResult = await onConfirm()
     if ("error" in actionResult) {
-      console.error("Error:", actionResult.error)
+      logger.error("Error:", actionResult.error)
       toast.error("An error occurred while performing the action.")
       return
     }
@@ -48,7 +48,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({ buttonTe
     }
     const cancelResult = await onCancel()
     if ("error" in cancelResult) {
-      console.error("Error:", cancelResult.error)
+      logger.error("Error:", cancelResult.error)
       toast.error("An error occurred while performing the action.")
       return
     }

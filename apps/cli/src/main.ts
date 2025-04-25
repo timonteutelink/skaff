@@ -23,7 +23,7 @@ program
   .action(async () => {
     const templateResults = await ROOT_TEMPLATE_REGISTRY.getTemplates();
     if ("error" in templateResults) {
-      console.error("Error:", templateResults.error);
+      logger.error("Error:", templateResults.error);
       process.exit(1);
     }
     const templates = templateResults.data.map((t) => t.mapToDTO());
@@ -36,11 +36,11 @@ program
   .action(async (templateName: string) => {
     const result = await ROOT_TEMPLATE_REGISTRY.findTemplate(templateName);
     if ("error" in result) {
-      console.error("Error:", result.error);
+      logger.error("Error:", result.error);
       process.exit(1);
     }
     if (!result.data) {
-      console.error("Template not found");
+      logger.error("Template not found");
       process.exit(1);
     }
     console.log(JSON.stringify(result.data.mapToDTO(), null, 2));
@@ -52,7 +52,7 @@ program
   .action(async () => {
     const projectResults = await PROJECT_REGISTRY.getProjects();
     if ("error" in projectResults) {
-      console.error("Error:", projectResults.error);
+      logger.error("Error:", projectResults.error);
       process.exit(1);
     }
     const projects = projectResults.data.map((p) => p.mapToDTO());
@@ -65,11 +65,11 @@ program
   .action(async (projectName: string) => {
     const project = await PROJECT_REGISTRY.findProject(projectName);
     if ("error" in project) {
-      console.error("Error:", project.error);
+      logger.error("Error:", project.error);
       process.exit(1);
     }
     if (!project.data) {
-      console.error("Project not found");
+      logger.error("Project not found");
       process.exit(1);
     }
     console.log(JSON.stringify(project.data.mapToDTO(), null, 2));
@@ -81,7 +81,7 @@ program
   .action(async () => {
     const result = await ROOT_TEMPLATE_REGISTRY.reloadTemplates();
     if ("error" in result) {
-      console.error("Error:", result.error);
+      logger.error("Error:", result.error);
       process.exit(1);
     }
     console.log("Templates precompiled successfully");
@@ -104,11 +104,11 @@ program
 
     const template = await ROOT_TEMPLATE_REGISTRY.findTemplate(templateName);
     if ("error" in template) {
-      console.error(template.error);
+      logger.error(template.error);
       process.exit(1);
     }
     if (!template.data) {
-      console.error("Template not found");
+      logger.error("Template not found");
       process.exit(1);
     }
 
@@ -118,23 +118,23 @@ program
       projectName,
     );
     if ("error" in result) {
-      console.error("Failed to create project", result.error);
+      logger.error("Failed to create project", result.error);
       process.exit(1);
     }
 
     const reloadResult = await PROJECT_REGISTRY.reloadProjects();
     if ("error" in reloadResult) {
-      console.error("Failed to reload projects", reloadResult.error);
+      logger.error("Failed to reload projects", reloadResult.error);
       process.exit(1);
     }
     const newProject = await PROJECT_REGISTRY.findProject(projectName);
 
     if ("error" in newProject) {
-      console.error("Failed to find new project", newProject.error);
+      logger.error("Failed to find new project", newProject.error);
       process.exit(1);
     }
     if (!newProject.data) {
-      console.error("Project creation failed");
+      logger.error("Project creation failed");
       process.exit(1);
     }
 
@@ -158,27 +158,27 @@ program
     const rootTemplate =
       await ROOT_TEMPLATE_REGISTRY.findTemplate(rootTemplateName);
     if ("error" in rootTemplate) {
-      console.error(rootTemplate.error);
+      logger.error(rootTemplate.error);
       process.exit(1);
     }
     if (!rootTemplate.data) {
-      console.error("Root template not found");
+      logger.error("Root template not found");
       process.exit(1);
     }
 
     const subTemplate = rootTemplate.data.findSubTemplate(templateName);
     if (!subTemplate) {
-      console.error("Subtemplate not found");
+      logger.error("Subtemplate not found");
       process.exit(1);
     }
 
     const project = await PROJECT_REGISTRY.findProject(destinationProjectName);
     if ("error" in project) {
-      console.error(project.error);
+      logger.error(project.error);
       process.exit(1);
     }
     if (!project.data) {
-      console.error("Destination project not found");
+      logger.error("Destination project not found");
       process.exit(1);
     }
 
@@ -188,7 +188,7 @@ program
       parentInstanceId,
     );
     if ("error" in result) {
-      console.error(result.error);
+      logger.error(result.error);
       process.exit(1);
     }
 
@@ -199,7 +199,7 @@ program.command("instantiate-full-project-from-existing").action(async () => {
   const existingProjects = await PROJECT_REGISTRY.getProjects();
 
   if ("error" in existingProjects) {
-    console.error(existingProjects.error);
+    logger.error(existingProjects.error);
     process.exit(1);
   }
 
@@ -221,7 +221,7 @@ program.command("instantiate-full-project-from-existing").action(async () => {
   );
 
   if ("error" in instantiateResult) {
-    console.error(instantiateResult.error);
+    logger.error(instantiateResult.error);
     process.exit(1);
   }
 

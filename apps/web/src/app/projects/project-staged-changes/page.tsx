@@ -1,13 +1,13 @@
 "use client";
 import { addAllAndRetrieveCurrentDiff, commitChanges } from "@/app/actions/git";
+import CommitButton from "@/components/general/git/commit-dialog";
 import { DiffVisualizerPage } from "@/components/general/git/diff-visualizer-page";
+import { Button } from "@/components/ui/button";
+import { toastNullError } from "@/lib/utils";
 import type { ParsedFile, Result } from "@repo/ts/lib/types";
+import { ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import CommitButton from "@/components/general/git/commit-dialog";
-import { toast } from "sonner";
 
 export default function ProjectStagedChangesPage() {
   const searchParams = useSearchParams();
@@ -21,27 +21,25 @@ export default function ProjectStagedChangesPage() {
 
   useEffect(() => {
     if (!projectNameParam) {
-      console.error("No project name provided in search params.");
-      toast.error("No project name provided in search params.");
+      toastNullError({
+        shortMessage: "No project name provided in search params.",
+      });
       router.push("/projects");
       return;
     }
 
     addAllAndRetrieveCurrentDiff(projectNameParam).then(
       (data: Result<ParsedFile[] | null>) => {
-        if ("error" in data) {
-          console.error("Error retrieving project diff:", data.error);
-          toast.error("Error retrieving project diff" + data.error);
+        const toastResult = toastNullError({
+          result: data,
+          shortMessage: "Error retrieving project diff",
+          nullErrorMessage: `Project diff not found for ${projectNameParam}`,
+          nullRedirectPath: "/projects",
+        });
+        if (!toastResult) {
           return;
         }
-        if (!data.data) {
-          console.error("Project diff not found:", projectNameParam);
-          toast.error("Project diff not found" + projectNameParam);
-
-          router.push("/projects");
-          return;
-        }
-        setProjectDiff(data.data);
+        setProjectDiff(toastResult);
       },
     );
   }, [projectNameParam, router]);
@@ -53,16 +51,19 @@ export default function ProjectStagedChangesPage() {
       setIsLoading(true);
       try {
         const result = await commitChanges(projectNameParam, message);
-        if ("error" in result) {
-          console.error("Error committing changes:", result.error);
-          toast.error("Error committing changes: " + result.error);
+
+        const toastResult = toastNullError({ result, shortMessage: "Error committing changes" });
+        if (!toastResult) {
           return;
         }
 
         router.push(`/projects/project/?projectName=${projectNameParam}`);
       } catch (error) {
-        console.error("Error committing changes:", error);
-        toast.error("Error committing changes: " + error);
+        toastNullError({
+          error,
+          shortMessage: "Error committing changes",
+        })
+
       } finally {
         setIsLoading(false);
       }
@@ -70,7 +71,7 @@ export default function ProjectStagedChangesPage() {
     [projectNameParam, router],
   );
 
-  const handleCancel = useCallback(() => {}, []);
+  const handleCancel = useCallback(() => { }, []);
 
   const handleBack = useCallback(() => {
     if (projectNameParam) {

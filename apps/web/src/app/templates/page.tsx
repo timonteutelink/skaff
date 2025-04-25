@@ -29,7 +29,7 @@ export default function TemplatesListPage() {
   useEffect(() => {
     retrieveDefaultTemplates().then((templates) => {
       if ("error" in templates) {
-        console.error("Error retrieving templates:", templates.error);
+        logger.error("Error retrieving templates:", templates.error);
         toast.error("Error retrieving templates: " + templates.error);
         return;
       }
@@ -40,7 +40,7 @@ export default function TemplatesListPage() {
   const handleReload = useCallback(async () => {
     const result = await reloadTemplates();
     if ("error" in result) {
-      console.error("Error reloading templates:", result.error);
+      logger.error("Error reloading templates:", result.error);
       toast.error("Error reloading templates: " + result.error);
       return { error: result.error };
     }
@@ -52,7 +52,7 @@ export default function TemplatesListPage() {
   const handleClearCache = useCallback(async () => {
     const result = await eraseCache();
     if ("error" in result) {
-      console.error("Error clearing cache:", result.error);
+      logger.error("Error clearing cache:", result.error);
       toast.error("Error clearing cache: " + result.error);
       return { error: result.error };
     }

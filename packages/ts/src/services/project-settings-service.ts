@@ -17,7 +17,7 @@ export async function writeNewProjectSettings(
   overwrite?: boolean,
 ): Promise<Result<void>> {
   if (!projectSettings.instantiatedTemplates[0]) {
-    console.error("No instantiated templates found in project settings");
+    logger.error("No instantiated templates found in project settings");
     return { error: "No instantiated templates found in project settings" };
   }
   const newProjectSettings: ProjectSettings = {
@@ -44,7 +44,7 @@ async function writeProjectSettings(
   if (!overwrite) {
     try {
       await fs.access(projectSettingsPath);
-      console.error(
+      logger.error(
         `Project settings file already exists at ${projectSettingsPath}`,
       );
       return {
@@ -64,7 +64,7 @@ async function writeProjectSettings(
   try {
     await fs.writeFile(projectSettingsPath, serializedProjectSettings, "utf-8");
   } catch (error) {
-    console.error(`Failed to write templateSettings.json: ${error}`);
+    logger.error(`Failed to write templateSettings.json: ${error}`);
     return { error: `Failed to write templateSettings.json: ${error}` };
   }
   return { data: undefined };
@@ -81,7 +81,7 @@ export async function writeNewTemplateToSettings(
   const projectSettingsResult = await loadProjectSettings(projectSettingsPath);
 
   if ("error" in projectSettingsResult) {
-    console.error(
+    logger.error(
       `Failed to load project settings: ${projectSettingsResult.error}`,
     );
     return { error: projectSettingsResult.error };
@@ -97,7 +97,7 @@ export async function writeNewTemplateToSettings(
   );
 
   if ("error" in result) {
-    console.error(
+    logger.error(
       `Failed to write new template to project settings: ${result.error}`,
     );
     return { error: result.error };
@@ -119,7 +119,7 @@ export async function loadProjectSettings(
     const projectSettings = await fs.readFile(projectSettingsPath, "utf-8");
     parsedProjectSettings = JSON.parse(projectSettings);
   } catch (error) {
-    console.error(`Failed to read templateSettings.json: ${error}`);
+    logger.error(`Failed to read templateSettings.json: ${error}`);
     return {
       error: `Failed to read templateSettings.json: ${error}`,
     };
@@ -129,7 +129,7 @@ export async function loadProjectSettings(
     parsedProjectSettings,
   );
   if (!finalProjectSettings.success) {
-    console.error(
+    logger.error(
       `Invalid templateSettings.json: ${finalProjectSettings.error}`,
     );
     return {
@@ -141,7 +141,7 @@ export async function loadProjectSettings(
   const instantiatedRootTemplateCommitHash = finalProjectSettings.data.instantiatedTemplates[0]?.templateCommitHash
 
   if (!instantiatedRootTemplateCommitHash) {
-    console.error(
+    logger.error(
       `No instantiated root template commit hash found in project settings`,
     );
     return {
@@ -154,14 +154,14 @@ export async function loadProjectSettings(
     instantiatedRootTemplateCommitHash,
   );
   if ("error" in rootTemplate) {
-    console.error(
+    logger.error(
       `Failed to find root template ${finalProjectSettings.data.rootTemplateName}: ${rootTemplate.error}`,
     );
     return { error: rootTemplate.error };
   }
 
   if (!rootTemplate.data) {
-    console.error(
+    logger.error(
       `Root template ${finalProjectSettings.data.rootTemplateName} not found`,
     );
     return {
@@ -175,7 +175,7 @@ export async function loadProjectSettings(
       subTemplateSettings.templateName,
     );
     if (!subTemplate) {
-      console.error(
+      logger.error(
         `Sub template ${subTemplateSettings.templateName} not found in root template ${finalProjectSettings.data.rootTemplateName}`,
       );
       return {
@@ -188,7 +188,7 @@ export async function loadProjectSettings(
         subTemplateSettings.templateSettings,
       );
     if (!subTemplateSettingsSchema.success) {
-      console.error(
+      logger.error(
         `Invalid templateSettings.json for template ${subTemplateSettings.templateName}: ${subTemplateSettingsSchema.error}`,
       );
       return {

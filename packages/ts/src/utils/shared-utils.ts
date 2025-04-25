@@ -20,7 +20,7 @@ export function anyOrCallbackToAny<
           : anyOrCallback,
     };
   } catch (e) {
-    console.error("Error in anyOrCallbackToAny:", e);
+    logger.error("Error in anyOrCallbackToAny:", e);
     return { error: "Invalid anyOrCallback" + e };
   }
 }
@@ -46,7 +46,7 @@ export function findTemplate(
     for (const subTemplate of subTemplates) {
       const result = findTemplate(subTemplate, subTemplateName);
       if ('error' in result) {
-        console.error(result.error);
+        logger.error(result.error);
         return result;
       }
       if ("data" in result && result.data) {
@@ -60,7 +60,7 @@ export function findTemplate(
 
 export function nullError<T>(result: Result<T>): T | null {
   if ("error" in result) {
-    console.error(result.error);
+    logger.error(result.error);
     return null;
   }
   return result.data;

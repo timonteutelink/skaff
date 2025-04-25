@@ -13,8 +13,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Copy, Download, RefreshCw } from "lucide-react"
 import { fetchLogs, getAvailableLogDates, type LogJSON } from "@/app/actions/logs"
-
-type Level = "fatal" | "error" | "warn" | "info" | "debug" | "trace";
+import { Level } from "pino"
+import { toastNullError } from "@/lib/utils"
+import { toast } from "sonner"
 
 const LEVEL_COLORS: Record<Level, string> = {
   trace: "bg-slate-500",
@@ -57,18 +58,16 @@ export default function LogsPage() {
   useEffect(() => {
     const loadDates = async () => {
       try {
-        const dates = await getAvailableLogDates()
-        if ('error' in dates) {
-          console.error("Failed to load log dates:", dates.error)
-          return
-        }
-        setAvailableDates(dates.data)
+        const result = await getAvailableLogDates()
+        const datesResult = toastNullError({ result, shortMessage: "Failed to load log dates" })
+        if (!datesResult) return
+        setAvailableDates(datesResult)
 
-        if (dates.data.length > 0 && !selectedDate) {
-          setSelectedDate(dates.data[0]!)
+        if (datesResult.length > 0 && !selectedDate) {
+          setSelectedDate(datesResult[0]!)
         }
       } catch (error) {
-        console.error("Failed to load log dates:", error)
+        toastNullError({ error, shortMessage: "Failed to load log dates" })
       }
     }
 
@@ -90,18 +89,17 @@ export default function LogsPage() {
         limit: 500,
       })
 
-      if ('error' in result) {
-        console.error("Error fetching logs:", result.error)
-        return
-      }
+      const logsResult = toastNullError({ result, shortMessage: "Failed to load logs" })
 
-      if (typeof result.data === "string") {
-        setRawLogs(result.data)
+      if (!logsResult) return
+
+      if (typeof logsResult === "string") {
+        setRawLogs(logsResult)
       } else {
-        setLogs(result.data)
+        setLogs(logsResult)
       }
     } catch (error) {
-      console.error("Error fetching logs:", error)
+      toastNullError({ error, shortMessage: "Failed to load logs" })
     } finally {
       setIsLoading(false)
     }
@@ -146,8 +144,8 @@ export default function LogsPage() {
 
     navigator.clipboard
       .writeText(content)
-      .then(() => alert("Logs copied to clipboard"))
-      .catch((err) => console.error("Failed to copy logs:", err))
+      .then(() => toast.info("Logs copied to clipboard"))
+      .catch((error) => toastNullError({ error, shortMessage: "Failed to copy logs" }))
   }, [logs, rawLogs, pretty])
 
   const downloadLogs = useCallback(() => {

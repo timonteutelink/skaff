@@ -24,7 +24,7 @@ export class ProjectRegistry {
       try {
         dirs = await fs.readdir(searchPath);
       } catch (e) {
-        console.error(
+        logger.error(
           `Failed to read project directories at ${searchPath}: ${e}`,
         );
         continue;
@@ -40,7 +40,7 @@ export class ProjectRegistry {
           if (stat.isDirectory() && projectSettingsStat.isFile()) {
             const project = await Project.create(absDir);
             if ("error" in project) {
-              console.error(
+              logger.error(
                 `Failed to load project at ${absDir}: ${project.error}`,
               );
               continue;
@@ -49,7 +49,7 @@ export class ProjectRegistry {
           }
         } catch (e) {
           // Change logs here to do normal logging of ignores and debug logs with errors included.
-          console.error(`Ignoring ${absDir}`);
+          logger.error(`Ignoring ${absDir}`);
           continue;
         }
       }
@@ -67,11 +67,11 @@ export class ProjectRegistry {
     if (!this.projects.length) {
       const result = await this.loadProjects();
       if ("error" in result) {
-        console.error(`Failed to load projects: ${result.error}`);
+        logger.error(`Failed to load projects: ${result.error}`);
         return { error: result.error };
       }
       if (!this.projects.length) {
-        console.error("No projects found.");
+        logger.error("No projects found.");
         return { data: [] };
       }
     }
@@ -82,11 +82,11 @@ export class ProjectRegistry {
     if (!this.projects.length) {
       const result = await this.loadProjects();
       if ("error" in result) {
-        console.error(`Failed to load projects: ${result.error}`);
+        logger.error(`Failed to load projects: ${result.error}`);
         return { error: result.error };
       }
       if (!this.projects.length) {
-        console.error("No projects found.");
+        logger.error("No projects found.");
         return { data: null };
       }
     }

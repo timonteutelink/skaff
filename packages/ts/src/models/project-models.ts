@@ -50,7 +50,7 @@ export class Project {
           t.templateName === template.config.templateConfig.name,
       );
     if (!projectTemplateSettings) {
-      console.error(
+      logger.error(
         `Template ${template.config.templateConfig.name} with id ${instanceId} not found in project settings`,
       );
       return { data: instantiatedSettings };
@@ -61,7 +61,7 @@ export class Project {
     );
 
     if (!parsedSchema.success) {
-      console.error(
+      logger.error(
         `Invalid template settings for template ${template.config.templateConfig.name}: ${parsedSchema.error}`,
       );
       return { error: `${parsedSchema.error}` };
@@ -77,7 +77,7 @@ export class Project {
         instantiatedProjectSettings,
       );
       if ("error" in parentSettings) {
-        console.error(
+        logger.error(
           `Failed to get instantiated settings for parent template ${parentTemplate.config.templateConfig.name}: ${parentSettings.error}`,
         );
         return { error: parentSettings.error };
@@ -92,7 +92,7 @@ export class Project {
     const projectSettings = await loadProjectSettings(projectSettingsPath);
 
     if ("error" in projectSettings) {
-      console.error(
+      logger.error(
         `Failed to load project settings from ${projectSettingsPath}: ${projectSettings.error}`,
       );
       return { error: projectSettings.error };
@@ -101,7 +101,7 @@ export class Project {
     const gitStatus = await loadGitStatus(absDir);
 
     if ("error" in gitStatus) {
-      console.error(
+      logger.error(
         `Failed to load git status for project at ${absDir}: ${gitStatus.error}`,
       );
       return {
