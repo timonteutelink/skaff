@@ -1,38 +1,34 @@
-import pino from "pino"
-import path from "path"
-import { getCacheDirPath } from "../services/cache-service"
+import pino from 'pino';
+import path from 'node:path';
+import { getCacheDirPath } from '../services/cache-service';
 
-export const logger = pino({
-  level: process.env.LOG_LEVEL ?? "info",
-  base: { src: "backend" },
-
+export const serverLogger = pino({
+  level: process.env.LOG_LEVEL ?? 'info',
   transport: {
     targets: [
-      ...(process.env.NODE_ENV !== "production"
-        ? [
-          {
-            target: "pino-pretty",
-            level: process.env.LOG_LEVEL ?? "info",
-            options: { colorize: true },
-          },
-        ]
+      ...(process.env.NODE_ENV !== 'production'
+        ? [{
+          target: 'pino-pretty',
+          options: { colorize: true },
+          level: process.env.LOG_LEVEL ?? 'info',
+        }]
         : []),
-
       {
-        target: "pino/file",
+        target: 'pino/file',
+        level: process.env.LOG_LEVEL ?? 'info',
         options: {
-          destination: path.join(getCacheDirPath(), "logs", "app-%Y-%m-%d.log"),
+          destination: path.join(
+            getCacheDirPath(),
+            'logs',
+            `app.${new Date().toISOString().slice(0, 10)}.log`
+          ),
           mkdir: true,
-          sync: false,
-          rotate: {
-            interval: "1d", // rotate daily
-            size: "10m", // or when file hits 10 MiB
-            maxFiles: 14, // keep two weeks
-          },
+          rotate: { interval: '1d', size: '10m', maxFiles: 14 },
         },
-        level: process.env.LOG_LEVEL ?? "info",
-      },
+      }
     ],
   },
-})
+});
+
+export const logger = serverLogger.child({ src: 'backend' });
 

@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   webpack(config, { isServer }) {
     if (isServer) {
       config.externals = config.externals || [];
-      config.externals.push({ esbuild: "commonjs esbuild" });
       config.resolve.alias = {
         ...config.resolve.alias,
         handlebars: "handlebars/dist/handlebars.js",
@@ -13,6 +12,7 @@ const nextConfig: NextConfig = {
 
     return config;
   },
+  serverExternalPackages: ["esbuild", "pino"],
   typescript: {
     ignoreBuildErrors: true,
   },

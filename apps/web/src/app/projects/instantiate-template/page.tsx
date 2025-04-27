@@ -28,7 +28,6 @@ import {
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { toastNullError } from "@/lib/utils";
 
 // TODO: when updating to a new template version we should reiterate all settings of all templates for possible changes. Or we fully automate go directly to diff but require the template to setup sensible defaults for possible new options.
@@ -586,8 +585,7 @@ const TemplateInstantiationPage: React.FC = () => {
       formDefaultValues={templateSettingsDefaultValues}
       action={handleSubmitSettings}
       cancel={() => {
-        //TODO would delete project here if it was created. Should but now i realise editing a newly created project by going back from the diff is currently not possible. Maybe now going back from the diff should delete the project and then when settings are changed we can just recreate the project.
-        router.push(`/projects/`);
+        router.push(`/projects/${projectNameParam && !selectedDirectoryIdParam ? `project/?projectName=${projectNameParam}` : ''}`);
       }}
     />
   );

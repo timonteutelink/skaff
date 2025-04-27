@@ -18,7 +18,7 @@ export function anyOrCallbackToAny<
           : anyOrCallback,
     };
   } catch (error) {
-    logger.error(`Error in anyOrCallbackToAny: ${error}`);
+    logger.error({ error }, `Error in anyOrCallbackToAny.`);
     return { error: `Error in anyOrCallbackToAny: ${error}` };
   }
 }
