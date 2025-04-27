@@ -1,39 +1,4 @@
-import {
-  TemplateSettingsType,
-  AnyOrCallback,
-} from "@timonteutelink/template-types-lib";
-import z from "zod";
 import { Result, TemplateDTO } from "./../lib/types";
-import { logger } from "../lib/logger";
-
-export function anyOrCallbackToAny<
-  TSettings extends TemplateSettingsType<z.AnyZodObject>,
-  T,
->(
-  anyOrCallback: AnyOrCallback<TSettings, T>,
-  parsedUserSettings: TSettings,
-): Result<T> {
-  try {
-    return {
-      data:
-        anyOrCallback instanceof Function
-          ? anyOrCallback(parsedUserSettings)
-          : anyOrCallback,
-    };
-  } catch (error) {
-    logger.error({ error }, "Error in anyOrCallbackToAny.");
-    return { error: `Error in anyOrCallbackToAny: ${error}` };
-  }
-}
-
-export function stringOrCallbackToString<
-  TSettings extends TemplateSettingsType<z.AnyZodObject>,
->(
-  strOrCallback: AnyOrCallback<TSettings, string>,
-  parsedUserSettings: TSettings,
-): Result<string> {
-  return anyOrCallbackToAny(strOrCallback, parsedUserSettings);
-}
 
 export function findTemplate(
   rootTemplate: TemplateDTO,

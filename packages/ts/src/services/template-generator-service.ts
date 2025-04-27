@@ -13,9 +13,7 @@ import * as path from "node:path";
 import z from "zod";
 import { Template } from "../models/template-models";
 import {
-  anyOrCallbackToAny,
   isSubset,
-  stringOrCallbackToString,
 } from "../utils/shared-utils";
 import { makeDir } from "./file-service";
 import { addAllAndDiff, commitAll, createGitRepo } from "./git-service";
@@ -26,6 +24,7 @@ import {
 } from "./project-settings-service";
 import { CreateProjectResult, ProjectSettings, Result } from "../lib/types";
 import { logger } from "../lib/logger";
+import { anyOrCallbackToAny, stringOrCallbackToString } from "../lib/utils";
 
 const eqHelper = (a: any, b: any, options?: HelperOptions) => {
   // block form: options.fn is a function

@@ -4,13 +4,13 @@ import { AnyZodObject } from "zod";
 import { NewTemplateDiffResult, ParsedFile, ProjectSettings, Result } from "../lib/types";
 import { Project } from "../models/project-models";
 import { Template } from "../models/template-models";
-import { anyOrCallbackToAny } from "../utils/shared-utils";
 import { getHash, pathInCache, retrieveFromCache, saveToCache } from "./cache-service";
 import { addAllAndDiff, applyDiffToGitRepo, diffDirectories, isConflictAfterApply, parseGitDiff } from "./git-service";
 import { PROJECT_REGISTRY } from "./project-registry-service";
 import { generateProjectFromExistingProject, generateProjectFromTemplateSettings, getParsedUserSettingsWithParentSettings } from "./project-service";
 import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
 import { logger } from "../lib/logger";
+import { anyOrCallbackToAny } from "../lib/utils";
 
 async function modifyAutoInstantiatedTemplatesInProjectSettings(
   projectSettings: ProjectSettings,
