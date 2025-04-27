@@ -46,8 +46,9 @@ export async function fetchLogs(filter: LogFilter): Promise<Result<LogJSON[] | s
   try {
     await fs.promises.access(logPath, fs.constants.R_OK)
   } catch {
-    logger.error({ file }, "Log file not found")
-    return { error: `Log file not found: ${logPath}` }
+    return { data: [] };
+    // logger.error({ file }, "Log file not found")
+    // return { error: `Log file not found: ${logPath}` }
   }
 
   const rli = readline.createInterface({
@@ -107,6 +108,7 @@ export async function logFromClient(data: {
 
   const allowed: Level[] = ["trace", "debug", "info", "warn", "error", "fatal"]
   if (!allowed.includes(level)) {
+    logger.error(`Invalid log level: ${level}`)
     return { error: `Invalid log level: ${level}` }
   }
 

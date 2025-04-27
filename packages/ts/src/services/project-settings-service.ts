@@ -10,6 +10,7 @@ import {
 import { makeDir } from "./file-service";
 import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
 import { deepSortObject } from "../utils/shared-utils";
+import { logger } from "../lib/logger";
 
 export async function writeNewProjectSettings(
   absoluteProjectPath: string,
@@ -64,7 +65,7 @@ async function writeProjectSettings(
   try {
     await fs.writeFile(projectSettingsPath, serializedProjectSettings, "utf-8");
   } catch (error) {
-    logger.error(`Failed to write templateSettings.json: ${error}`);
+    logger.error({ error }, `Failed to write templateSettings.json.`);
     return { error: `Failed to write templateSettings.json: ${error}` };
   }
   return { data: undefined };
@@ -81,10 +82,7 @@ export async function writeNewTemplateToSettings(
   const projectSettingsResult = await loadProjectSettings(projectSettingsPath);
 
   if ("error" in projectSettingsResult) {
-    logger.error(
-      `Failed to load project settings: ${projectSettingsResult.error}`,
-    );
-    return { error: projectSettingsResult.error };
+    return projectSettingsResult;
   }
 
   const projectSettings = projectSettingsResult.data.settings;
@@ -97,10 +95,7 @@ export async function writeNewTemplateToSettings(
   );
 
   if ("error" in result) {
-    logger.error(
-      `Failed to write new template to project settings: ${result.error}`,
-    );
-    return { error: result.error };
+    return result;
   }
 
   return { data: undefined };
@@ -119,7 +114,7 @@ export async function loadProjectSettings(
     const projectSettings = await fs.readFile(projectSettingsPath, "utf-8");
     parsedProjectSettings = JSON.parse(projectSettings);
   } catch (error) {
-    logger.error(`Failed to read templateSettings.json: ${error}`);
+    logger.error({ error }, `Failed to read templateSettings.json.`);
     return {
       error: `Failed to read templateSettings.json: ${error}`,
     };
@@ -154,10 +149,7 @@ export async function loadProjectSettings(
     instantiatedRootTemplateCommitHash,
   );
   if ("error" in rootTemplate) {
-    logger.error(
-      `Failed to find root template ${finalProjectSettings.data.rootTemplateName}: ${rootTemplate.error}`,
-    );
-    return { error: rootTemplate.error };
+    return rootTemplate;
   }
 
   if (!rootTemplate.data) {

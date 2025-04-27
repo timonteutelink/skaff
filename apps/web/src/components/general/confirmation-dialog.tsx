@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { useCallback, useState } from "react"
 import { Result } from "@repo/ts/lib/types"
 import { toast } from "sonner"
+import { toastNullError } from "@/lib/utils"
 
 interface ConfirmationDialogProps {
   buttonText: string
@@ -31,13 +32,10 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({ buttonTe
   const [open, setOpen] = useState(false)
 
   const handleConfirmAction = useCallback(async () => {
-    const actionResult = await onConfirm()
-    if ("error" in actionResult) {
-      logger.error("Error:", actionResult.error)
-      toast.error("An error occurred while performing the action.")
+    const result = await onConfirm()
+    if ("error" in result) {
       return
     }
-    console.log("Action completed successfully")
     setOpen(false)
   }, [onConfirm])
 
@@ -48,11 +46,8 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({ buttonTe
     }
     const cancelResult = await onCancel()
     if ("error" in cancelResult) {
-      logger.error("Error:", cancelResult.error)
-      toast.error("An error occurred while performing the action.")
       return
     }
-    console.log("Cancel action completed successfully")
     setOpen(false)
   }, [onCancel])
 

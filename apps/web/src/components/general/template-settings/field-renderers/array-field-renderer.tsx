@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useState } from "react"
 import { useFieldArray } from "react-hook-form"
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,7 +22,8 @@ import { Badge } from "@/components/ui/badge"
 import { renderInputByType } from "../input-renderers"
 import type { ArrayFieldRendererProps } from "../types"
 import { ObjectFieldRenderer } from "./object-field-renderer"
-import { UnionFieldRenderer } from "./union-field-renderer"
+import { ArrayUnionItem, UnionFieldRenderer } from "./union-field-renderer"
+import { buildDiscriminatedUnionSchema } from "../schema-utils"
 
 export function ArrayFieldRenderer({
   form,
@@ -58,6 +59,25 @@ export function ArrayFieldRenderer({
     const itemToDuplicate = form.getValues(`${fieldPath}.${index}`)
     fieldArray.insert(index + 1, JSON.parse(JSON.stringify(itemToDuplicate)))
   }
+
+  const onAddItem = useCallback(() => {
+    let newItem
+    if (property.items.anyOf) {
+      const firstVariant = property.items.anyOf[0]
+
+      const discrKey = Object.entries(firstVariant.properties)
+        .find(([, v]: any) => v.const !== undefined)?.[0] as string
+      const discrVal = firstVariant.properties[discrKey].const
+
+      const { defaults } = buildDiscriminatedUnionSchema(property.items)
+      newItem = { ...defaults, [discrKey]: discrVal }
+    } else {
+      newItem = createDefaultItem ? createDefaultItem(property.items) : {}
+    }
+
+    fieldArray.append(newItem)
+    setExpandedItems((prev) => ({ ...prev, [fieldArray.fields.length]: true }))
+  }, [fieldArray, property, createDefaultItem])
 
   return (
     <FormField
@@ -105,16 +125,7 @@ export function ArrayFieldRenderer({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    // Create a new item with default values based on the item schema
-                    const newItem = createDefaultItem ? createDefaultItem(property.items) : {}
-                    fieldArray.append(newItem)
-                    // Auto-expand the newly added item
-                    setExpandedItems((prev) => ({
-                      ...prev,
-                      [fieldArray.fields.length]: true,
-                    }))
-                  }}
+                  onClick={onAddItem}
                   disabled={property.maxItems !== undefined && fieldArray.fields.length >= property.maxItems}
                 >
                   <PlusCircle className="h-4 w-4 mr-2" />
@@ -127,24 +138,35 @@ export function ArrayFieldRenderer({
 
             {fieldArray.fields.length === 0 ? (
               <div className="text-sm text-muted-foreground py-6 text-center border rounded-md bg-muted/20">
-                No items added yet. Click "Add Item" to add your first item.
+                {`No items added yet. Click "Add Item" to add your first item.`}
               </div>
             ) : (
               <div className="space-y-3">
                 {fieldArray.fields.map((item, index) => {
                   const itemPath = `${fieldPath}.${index}`
                   if (property.items.anyOf) {
+                    const isExpanded = expandedItems[index] !== false
                     return (
-                      <UnionFieldRenderer
+                      <ArrayUnionItem
                         key={item.id}
-                        fieldPath={itemPath}
-                        property={property.items}
-                        isRequired={false}
+                        index={index}
+                        isExpanded={isExpanded}
+                        toggleItemExpansion={toggleItemExpansion}
+                        moveItem={moveItem}
+                        duplicateItem={duplicateItem}
+                        fieldArray={fieldArray}
                         isReadOnly={isReadOnly}
-                        form={form}
-                        requiredFields={requiredFields}
-                        renderFormField={renderFormField}
-                      />
+                      >
+                        <UnionFieldRenderer
+                          fieldPath={itemPath}
+                          property={property.items}
+                          isRequired={false}
+                          isReadOnly={isReadOnly}
+                          form={form}
+                          requiredFields={requiredFields}
+                          renderFormField={renderFormField}
+                        />
+                      </ArrayUnionItem>
                     )
                   }
                   const isExpanded = expandedItems[index] !== false

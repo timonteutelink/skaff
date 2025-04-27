@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toastNullError } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   projectNameRegex,
@@ -43,7 +44,6 @@ import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import * as z from "zod";
 
 const columnMapping: FieldInfo<ProjectDTO>[] = [
@@ -90,21 +90,25 @@ export default function TemplatesListPage() {
   });
 
   useEffect(() => {
-    retrieveProjects().then((projects) => {
-      if ("error" in projects) {
-        logger.error("Error retrieving projects:", projects.error);
-        toast.error("Error retrieving projects: " + projects.error);
+    retrieveProjects().then((projectsResult) => {
+      const projects = toastNullError({
+        result: projectsResult,
+        shortMessage: "Error retrieving projects",
+      });
+      if (!projects) {
         return;
       }
-      setProjects(projects.data || []);
+      setProjects(projects || []);
     });
-    retrieveDefaultTemplates().then((templates) => {
-      if ("error" in templates) {
-        logger.error("Error retrieving templates:", templates.error);
-        toast.error("Error retrieving templates: " + templates.error);
+    retrieveDefaultTemplates().then((templatesResult) => {
+      const templates = toastNullError({
+        result: templatesResult,
+        shortMessage: "Error retrieving templates",
+      });
+      if (!templates) {
         return;
       }
-      setTemplates(templates.data.map(t => t.template) || []);
+      setTemplates(templates.map(t => t.template) || []);
     });
     retrieveProjectSearchPaths().then((paths) => {
       setProjectSearchPaths(paths);

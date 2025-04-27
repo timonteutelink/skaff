@@ -2,6 +2,7 @@
 import { diffProjectFromItsTemplate } from "@/app/actions/git";
 import { DiffVisualizerPage } from "@/components/general/git/diff-visualizer-page";
 import { Button } from "@/components/ui/button";
+import { toastNullError } from "@/lib/utils";
 import type { ParsedFile, Result } from "@repo/ts/lib/types";
 import { ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -19,27 +20,34 @@ export default function ProjectStagedChangesPage() {
 
   useEffect(() => {
     if (!projectNameParam) {
-      logger.error("No project name provided in search params.");
-      toast.error("No project name provided in search params.");
+      toastNullError({
+        shortMessage: "No project name provided in search params.",
+      });
       router.push("/projects");
       return;
     }
 
     diffProjectFromItsTemplate(projectNameParam).then(
-      (data: Result<ParsedFile[]>) => {
-        if ("error" in data) {
-          logger.error("Error retrieving project diff:", data.error);
-          toast.error("Error retrieving project diff" + data.error);
+      (diffResult: Result<ParsedFile[]>) => {
+        const diff = toastNullError({
+          result: diffResult,
+          shortMessage: "Error retrieving project diff",
+          nullErrorMessage: `Project diff not found for ${projectNameParam}`,
+          nullRedirectPath: "/projects",
+        });
+
+        if (!diff) {
           return;
         }
-        if (!data.data) {
-          logger.error("Project diff not found:", projectNameParam);
-          toast.error("Project diff not found" + projectNameParam);
 
+        if (diff.length === 0) {
+          toastNullError({
+            shortMessage: "No changes found in project diff",
+          });
           router.push("/projects");
           return;
         }
-        setProjectDiff(data.data);
+        setProjectDiff(diff);
       },
     );
   }, [projectNameParam, router]);

@@ -2,6 +2,7 @@
 import { eraseCache, reloadTemplates, retrieveDefaultTemplates } from "@/app/actions/template";
 import { ConfirmationDialog } from "@/components/general/confirmation-dialog";
 import TablePage, { FieldInfo } from "@/components/general/table-page";
+import { toastNullError } from "@/lib/utils";
 import { DefaultTemplateResult } from "@repo/ts/lib/types";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -27,36 +28,50 @@ export default function TemplatesListPage() {
   const [templates, setTemplates] = useState<DefaultTemplateResult[]>([]);
 
   useEffect(() => {
-    retrieveDefaultTemplates().then((templates) => {
-      if ("error" in templates) {
-        logger.error("Error retrieving templates:", templates.error);
-        toast.error("Error retrieving templates: " + templates.error);
+    retrieveDefaultTemplates().then((templatesResult) => {
+      const templates = toastNullError({
+        result: templatesResult,
+        shortMessage: "Error retrieving templates",
+      });
+      if (!templates) {
         return;
       }
-      setTemplates(templates.data);
+      setTemplates(templates);
     });
   }, []);
 
   const handleReload = useCallback(async () => {
     const result = await reloadTemplates();
-    if ("error" in result) {
-      logger.error("Error reloading templates:", result.error);
-      toast.error("Error reloading templates: " + result.error);
-      return { error: result.error };
+    const toastResult = toastNullError({
+      result,
+      shortMessage: "Error reloading templates",
+    });
+    if (!toastResult) {
+      if ('error' in result) {
+        return { error: result.error };
+      } else {
+        return { error: "Unknown error" };
+      }
     }
-    setTemplates(result.data);
+    setTemplates(toastResult);
     toast.success("Templates reloaded successfully");
     return { data: undefined };
   }, []);
 
   const handleClearCache = useCallback(async () => {
     const result = await eraseCache();
-    if ("error" in result) {
-      logger.error("Error clearing cache:", result.error);
-      toast.error("Error clearing cache: " + result.error);
-      return { error: result.error };
+    const toastResult = toastNullError({
+      result,
+      shortMessage: "Error clearing cache",
+    });
+    if (!toastResult) {
+      if ('error' in result) {
+        return { error: result.error };
+      } else {
+        return { error: "Unknown error" };
+      }
     }
-    setTemplates(result.data);
+    setTemplates(toastResult);
     toast.success("Cache cleared successfully");
     return { data: undefined };
   }, []);

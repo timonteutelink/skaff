@@ -4,6 +4,7 @@ import { TEMPLATE_DIR_PATHS } from "../lib/env";
 import { Result } from "../lib/types";
 import path from "node:path";
 import { cloneRevisionToCache } from "./git-service";
+import { logger } from "../lib/logger";
 
 // now only stores the root templates at: <templateDirPath>/root-templates/*
 // later also store reference to files and generic templates to allow direct instantiation without saving state of subtemplates
@@ -28,9 +29,9 @@ export class RootTemplateRegistry {
       let rootTemplateDirs: string[] = [];
       try {
         rootTemplateDirs = await fs.readdir(rootTemplateDirsPath);
-      } catch (e) {
-        logger.error(
-          `Failed to read root template directories at ${rootTemplateDirsPath}: ${e}`,
+      } catch (error) {
+        logger.warn({ error },
+          `Failed to read root template directories at ${rootTemplateDirsPath}.`
         );
         continue;
       }
@@ -42,13 +43,13 @@ export class RootTemplateRegistry {
         try {
           const stat = await fs.stat(rootTemplateDirPath);
           if (!stat.isDirectory()) {
-            logger.error(
+            logger.warn(
               `Root template directory at ${rootTemplateDirPath} is not a directory`,
             );
             continue;
           }
         } catch (e) {
-          logger.error(
+          logger.warn(
             `Failed to read root template directory at ${rootTemplateDirPath}: ${e}`,
           );
           continue;
@@ -56,9 +57,6 @@ export class RootTemplateRegistry {
 
         const template = await Template.createAllTemplates(rootTemplateDirPath);
         if ("error" in template) {
-          logger.error(
-            `Failed to create template from directory ${rootTemplateDirPath}: ${template.error}`,
-          );
           continue;
         }
         this.templates.push(template.data);
@@ -78,8 +76,7 @@ export class RootTemplateRegistry {
     if (!this.templates.length) {
       const result = await this.loadDefaultTemplates();
       if ("error" in result) {
-        logger.error(`Failed to load templates: ${result.error}`);
-        return { error: result.error };
+        return result;
       }
       if (!this.templates.length) {
         logger.error("No templates found.");
@@ -93,8 +90,7 @@ export class RootTemplateRegistry {
     if (!this.templates.length) {
       const result = await this.loadDefaultTemplates();
       if ("error" in result) {
-        logger.error(`Failed to load templates: ${result.error}`);
-        return { error: result.error };
+        return result;
       }
       if (!this.templates.length) {
         logger.error("No templates found.");
@@ -114,8 +110,7 @@ export class RootTemplateRegistry {
     const template = await this.getAllTemplates();
 
     if ("error" in template) {
-      logger.error(`Failed to load templates: ${template.error}`);
-      return { error: template.error };
+      return template;
     }
 
     const revisions = template.data.filter((template) => {
@@ -123,7 +118,7 @@ export class RootTemplateRegistry {
     });
 
     if (revisions.length === 0) {
-      logger.error(`No revisions found for template ${templateName}`);
+      logger.warn(`No revisions found for template ${templateName}`);
       return { data: null };
     }
 
@@ -133,8 +128,7 @@ export class RootTemplateRegistry {
   async loadRevision(templateName: string, revisionHash: string): Promise<Result<Template | null>> {
     const result = await this.findAllTemplateRevisions(templateName);
     if ("error" in result) {
-      logger.error(`Failed to find template: ${result.error}`);
-      return { error: result.error };
+      return result;
     }
     const revisions = result.data;
     if (!revisions || revisions.length === 0) {
@@ -159,8 +153,7 @@ export class RootTemplateRegistry {
     const saveRevisionInCacheResult = await cloneRevisionToCache(defaultTemplate, revisionHash);
 
     if ("error" in saveRevisionInCacheResult) {
-      logger.error(`Failed to save revision in cache: ${saveRevisionInCacheResult.error}`);
-      return { error: saveRevisionInCacheResult.error };
+      return saveRevisionInCacheResult;
     }
 
     const newTemplatePath = path.join(saveRevisionInCacheResult.data, "root-templates", path.basename(defaultTemplate.absoluteDir));
@@ -168,8 +161,7 @@ export class RootTemplateRegistry {
     const newTemplate = await Template.createAllTemplates(newTemplatePath);
 
     if ("error" in newTemplate) {
-      logger.error(`Failed to create template from revision: ${newTemplate.error}`);
-      return { error: newTemplate.error };
+      return newTemplate
     }
 
     this.templates.push(newTemplate.data);

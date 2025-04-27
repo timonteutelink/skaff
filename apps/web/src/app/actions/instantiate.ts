@@ -15,6 +15,7 @@ import {
 } from "@repo/ts/lib/types";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import path from "node:path";
+import { logger } from "@repo/ts/lib/logger";
 
 // TODO make sure the templategenerationengine enforces to use the right templatecommithash unless specified otherwise
 // TODO fix that changing one character in env vars in turbo_repo generates empty diff.
@@ -27,16 +28,16 @@ export async function createNewProject(
 ): Promise<Result<ProjectCreationResult>> {
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in reloadResult) {
-    logger.error("Failed to reload projects:", reloadResult.error);
     return { error: reloadResult.error };
   }
 
   const parentDirPath = PROJECT_SEARCH_PATHS.find(
     (dir) => dir.id === projectDirPathId,
   )?.path;
+
   if (!parentDirPath) {
-    logger.error("Invalid project directory path ID");
-    return { error: "Invalid project directory path ID" };
+    logger.error(`Invalid project directory path ID: ${projectDirPathId}`);
+    return { error: `Invalid project directory path ID: ${projectDirPathId}` };
   }
 
   const result = await instantiateProject(
@@ -47,7 +48,6 @@ export async function createNewProject(
   );
 
   if ("error" in result) {
-    logger.error("Failed to instantiate project:", result.error);
     return { error: result.error };
   }
 
@@ -61,20 +61,18 @@ export async function prepareTemplateModificationDiff(
 ): Promise<Result<NewTemplateDiffResult>> {
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in reloadResult) {
-    logger.error("Failed to reload projects:", reloadResult.error);
     return { error: reloadResult.error };
   }
 
   const project = await PROJECT_REGISTRY.findProject(destinationProjectName);
 
   if ("error" in project) {
-    logger.error(`Failed to find project: ${project.error}`);
     return { error: project.error };
   }
 
   if (!project.data) {
     logger.error(`Project ${destinationProjectName} not found`);
-    return { error: "Project not found" };
+    return { error: `Project ${destinationProjectName} not found` };
   }
 
   const result = await generateModifyTemplateDiff(
@@ -84,7 +82,6 @@ export async function prepareTemplateModificationDiff(
   );
 
   if ("error" in result) {
-    logger.error("Failed to generate template diff:", result.error);
     return { error: result.error };
   }
 
@@ -100,7 +97,6 @@ export async function prepareTemplateInstantiationDiff(
 ): Promise<Result<NewTemplateDiffResult>> {
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in reloadResult) {
-    logger.error("Failed to reload projects:", reloadResult.error);
     return { error: reloadResult.error };
   }
 
@@ -109,15 +105,12 @@ export async function prepareTemplateInstantiationDiff(
   );
 
   if ("error" in destinationProject) {
-    logger.error(
-      `Failed to find destination project: ${destinationProject.error}`,
-    );
     return { error: destinationProject.error };
   }
 
   if (!destinationProject.data) {
     logger.error(`Destination project ${destinationProjectName} not found`);
-    return { error: "Destination project not found" };
+    return { error: `Destination project ${destinationProjectName} not found` };
   }
 
   const result = await generateNewTemplateDiff(
@@ -129,7 +122,6 @@ export async function prepareTemplateInstantiationDiff(
   );
 
   if ("error" in result) {
-    logger.error("Failed to generate template diff:", result.error);
     return { error: result.error };
   }
 
@@ -141,14 +133,12 @@ export async function resolveConflictsAndDiff(
 ): Promise<Result<ParsedFile[]>> {
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in reloadResult) {
-    logger.error("Failed to reload projects:", reloadResult.error);
     return { error: reloadResult.error };
   }
 
   const result = await resolveConflictsAndRetrieveAppliedDiff(projectName);
 
   if ("error" in result) {
-    logger.error("Failed to resolve conflicts:", result.error);
     return { error: result.error };
   }
 
@@ -160,26 +150,23 @@ export async function restoreAllChangesToCleanProject(
 ): Promise<Result<void>> {
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in reloadResult) {
-    logger.error("Failed to reload projects:", reloadResult.error);
     return { error: reloadResult.error };
   }
 
   const project = await PROJECT_REGISTRY.findProject(projectName);
 
   if ("error" in project) {
-    logger.error("Failed to find project:", project.error);
     return { error: project.error };
   }
 
   if (!project.data) {
-    logger.error("Project not found");
-    return { error: "Project not found" };
+    logger.error(`Project ${projectName} not found`);
+    return { error: `Project ${projectName} not found` };
   }
 
   const restoreResult = await resetAllChanges(project.data.absoluteRootDir);
 
   if ("error" in restoreResult) {
-    logger.error("Failed to restore changes:", restoreResult.error);
     return { error: restoreResult.error };
   }
 
@@ -192,14 +179,12 @@ export async function applyTemplateDiffToProject(
 ): Promise<Result<ParsedFile[] | { resolveBeforeContinuing: boolean }>> {
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in reloadResult) {
-    logger.error("Failed to reload projects:", reloadResult.error);
     return { error: reloadResult.error };
   }
 
   const result = await applyDiffToProject(projectName, diffHash);
 
   if ("error" in result) {
-    logger.error("Failed to apply diff:", result.error);
     return { error: result.error };
   }
 
@@ -211,26 +196,23 @@ export async function cancelProjectCreation(
 ): Promise<Result<void>> {
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in reloadResult) {
-    logger.error("Failed to reload projects:", reloadResult.error);
     return { error: reloadResult.error };
   }
 
   const project = await PROJECT_REGISTRY.findProject(projectName);
 
   if ("error" in project) {
-    logger.error("Failed to find project:", project.error);
     return { error: project.error };
   }
 
   if (!project.data) {
-    logger.error("Project not found");
-    return { error: "Project not found" };
+    logger.error(`Project ${projectName} not found`);
+    return { error: `Project ${projectName} not found` };
   }
 
   const deleteResult = await deleteRepo(project.data.absoluteRootDir);
 
   if ("error" in deleteResult) {
-    logger.error("Failed to delete project:", deleteResult.error);
     return { error: deleteResult.error };
   }
 
@@ -248,28 +230,27 @@ export async function generateNewProjectFromExisting(
 ): Promise<Result<string>> {
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in reloadResult) {
-    logger.error("Failed to reload projects:", reloadResult.error);
     return { error: reloadResult.error };
   }
 
   const parentDirPath = PROJECT_SEARCH_PATHS.find(
     (dir) => dir.id === newProjectDestinationDirPathId,
   )?.path;
+
   if (!parentDirPath) {
-    logger.error("Invalid project directory path ID");
-    return { error: "Invalid project directory path ID" };
+    logger.error(`Invalid project directory path ID: ${newProjectDestinationDirPathId}`);
+    return { error: `Invalid project directory path ID: ${newProjectDestinationDirPathId}` };
   }
 
   const project = await PROJECT_REGISTRY.findProject(currentProjectName);
 
   if ("error" in project) {
-    logger.error("Failed to find project:", project.error);
     return { error: project.error };
   }
 
   if (!project.data) {
-    logger.error("Project not found");
-    return { error: "Project not found" };
+    logger.error(`Project ${currentProjectName} not found`);
+    return { error: `Project ${currentProjectName} not found` };
   }
 
   project.data.instantiatedProjectSettings.projectName = newProjectName;
@@ -280,7 +261,6 @@ export async function generateNewProjectFromExisting(
   );
 
   if ("error" in result) {
-    logger.error("Failed to generate new project:", result.error);
     return { error: result.error };
   }
 
@@ -293,20 +273,18 @@ export async function retrieveDiffUpdateProjectNewTemplateRevision(
 ): Promise<Result<NewTemplateDiffResult>> {
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in reloadResult) {
-    logger.error("Failed to reload projects:", reloadResult.error);
     return { error: reloadResult.error };
   }
 
   const project = await PROJECT_REGISTRY.findProject(projectName);
 
   if ("error" in project) {
-    logger.error("Failed to find project:", project.error);
     return { error: project.error };
   }
 
   if (!project.data) {
-    logger.error("Project not found");
-    return { error: "Project not found" };
+    logger.error(`Project ${projectName} not found`);
+    return { error: `Project ${projectName} not found` };
   }
 
   const result = await generateUpdateTemplateDiff(
@@ -315,7 +293,6 @@ export async function retrieveDiffUpdateProjectNewTemplateRevision(
   );
 
   if ("error" in result) {
-    logger.error("Failed to generate template diff:", result.error);
     return { error: result.error };
   }
 

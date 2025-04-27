@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { toastNullError } from "@/lib/utils";
 import { ParsedFile, ProjectDTO, Result, TemplateDTO } from "@repo/ts/lib/types";
 import { FileDiffIcon, GitBranchIcon, GitCommitIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -26,13 +27,17 @@ export function ProjectHeader({ project, defaultTemplate, onBranchChange }: Proj
 
   useEffect(() => {
     diffProjectFromItsTemplate(project.name).then(
-      (data: Result<ParsedFile[]>) => {
-        if ("error" in data) {
-          logger.error("Error retrieving project diff:", data.error);
+      (result: Result<ParsedFile[]>) => {
+        const parsedFiles = toastNullError({
+          result,
+          shortMessage: "Error retrieving project diff",
+        })
+
+        if (parsedFiles === undefined) {
           setIsDiffClean(true);
           return;
         }
-        setIsDiffClean(data.data.length === 0);
+        setIsDiffClean(parsedFiles.length === 0);
       },
     );
   }, [project]);

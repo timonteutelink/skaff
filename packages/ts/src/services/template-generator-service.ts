@@ -25,6 +25,7 @@ import {
   writeNewTemplateToSettings,
 } from "./project-settings-service";
 import { CreateProjectResult, ProjectSettings, Result } from "../lib/types";
+import { logger } from "../lib/logger";
 
 const eqHelper = (a: any, b: any, options?: HelperOptions) => {
   // block form: options.fn is a function
@@ -113,8 +114,7 @@ export class TemplateGeneratorService {
     );
 
     if ("error" in result) {
-      logger.error(`Failed to parse user settings: ${result.error}`);
-      return { error: `Failed to parse user settings: ${result.error}` };
+      return result;
     }
 
     this.currentlyGeneratingTemplateFullSettings = result.data;
@@ -139,8 +139,7 @@ export class TemplateGeneratorService {
       this.currentlyGeneratingTemplateFullSettings,
     );
     if ("error" in path) {
-      logger.error(`Failed to parse target path: ${path.error}`);
-      return { error: `Failed to parse target path: ${path.error}` };
+      return path;
     }
     return { data: path.data };
   }
@@ -149,8 +148,7 @@ export class TemplateGeneratorService {
     const pathResult = this.getTargetPath();
 
     if ("error" in pathResult) {
-      logger.error(`Failed to parse target path: ${pathResult.error}`);
-      return { error: `Failed to parse target path: ${pathResult.error}` };
+      return pathResult;
     }
 
     return {
@@ -168,8 +166,7 @@ export class TemplateGeneratorService {
     const fullSettings = this.currentlyGeneratingTemplateFullSettings;
     const redirects = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.redirects, fullSettings);
     if ("error" in redirects) {
-      logger.error(`Failed to parse redirects: ${redirects.error}`);
-      return { error: `Failed to parse redirects: ${redirects.error}` };
+      return redirects;
     }
     if (!redirects.data) {
       return { data: [] };
@@ -189,8 +186,7 @@ export class TemplateGeneratorService {
     const fullSettings = this.currentlyGeneratingTemplateFullSettings;
     const overwrites = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.allowedOverwrites, fullSettings);
     if ("error" in overwrites) {
-      logger.error(`Failed to parse overwrites: ${overwrites.error}`);
-      return { error: `Failed to parse overwrites: ${overwrites.error}` };
+      return overwrites;
     }
     if (!overwrites.data) {
       return { data: [] };
@@ -209,8 +205,7 @@ export class TemplateGeneratorService {
     const fullSettings = this.currentlyGeneratingTemplateFullSettings;
     const templatesToAutoInstantiate = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.autoInstantiatedSubtemplates, fullSettings);
     if ("error" in templatesToAutoInstantiate) {
-      logger.error(`Failed to parse templatesToAutoInstantiate: ${templatesToAutoInstantiate.error}`);
-      return { error: `Failed to parse templatesToAutoInstantiate: ${templatesToAutoInstantiate.error}` };
+      return templatesToAutoInstantiate;
     }
     if (!templatesToAutoInstantiate.data) {
       return { data: [] };
@@ -235,22 +230,19 @@ export class TemplateGeneratorService {
     const dest = this.getAbsoluteTargetPath();
 
     if ("error" in dest) {
-      logger.error(`Failed to parse target path: ${dest.error}`);
-      return { error: `Failed to parse target path: ${dest.error}` };
+      return dest;
     }
 
     const redirects = this.getRedirects();
 
     if ("error" in redirects) {
-      logger.error(`Failed to parse redirects: ${redirects.error}`);
-      return { error: `Failed to parse redirects: ${redirects.error}` };
+      return redirects;
     }
 
     const overwrites = this.getOverwrites();
 
     if ("error" in overwrites) {
-      logger.error(`Failed to parse overwrites: ${overwrites.error}`);
-      return { error: `Failed to parse overwrites: ${overwrites.error}` };
+      return overwrites;
     }
 
     await makeDir(dest.data);
@@ -286,7 +278,7 @@ export class TemplateGeneratorService {
             }
 
             if (allowedOverwrite.mode.endsWith('warn')) {
-              console.warn(`File: ${entry} at ${destPath} already exists. ${allowedOverwrite.mode.startsWith('ignore') ? 'Ignoring' : 'Overwriting'} it.`)
+              logger.warn(`File: ${entry} at ${destPath} already exists. ${allowedOverwrite.mode.startsWith('ignore') ? 'Ignoring' : 'Overwriting'} it.`)
             }
 
             if (allowedOverwrite.mode.startsWith('ignore')) {
@@ -304,9 +296,9 @@ export class TemplateGeneratorService {
 
         await fs.chmod(destPath, srcStats.mode);
 
-        console.log(`Generated: ${destPath}`);
+        logger.trace(`Generated: ${destPath}`);
       } catch (error) {
-        logger.error(`Error processing file ${srcPath}: ${error}`);
+        logger.error({ error }, `Error processing file ${srcPath}`);
         return {
           error: `Error processing file ${srcPath}: ${error}`,
         };
@@ -331,8 +323,7 @@ export class TemplateGeneratorService {
     const fullSettings = this.currentlyGeneratingTemplateFullSettings;
     const sideEffects = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.sideEffects, fullSettings);
     if ("error" in sideEffects) {
-      logger.error(`Failed to parse side effects: ${sideEffects.error}`);
-      return { error: `Failed to parse side effects: ${sideEffects.error}` };
+      return sideEffects;
     }
 
     for (const sideEffect of sideEffects.data || []) {
@@ -342,10 +333,7 @@ export class TemplateGeneratorService {
       );
 
       if ("error" in applyResult) {
-        logger.error(`Failed to apply side effect: ${applyResult.error}`);
-        return {
-          error: `Failed to apply side effect: ${applyResult.error}`,
-        };
+        return applyResult;
       }
     }
 
@@ -384,26 +372,34 @@ export class TemplateGeneratorService {
         this.currentlyGeneratingTemplateFullSettings,
         oldFileContents,
       );
-    } catch (e) {
-      logger.error(`Failed to apply side effect: ${e}`);
-      return { error: `Failed to apply side effect: ${e}` };
+    } catch (error) {
+      logger.error({ error }, `Failed to apply side effect.`);
+      return { error: `Failed to apply side effect: ${error}` };
     }
 
     try {
       await fs.writeFile(absoluteFilePath, sideEffectResult, "utf8");
-    } catch (e) {
-      logger.error(`Failed to write file: ${e}`);
-      return { error: `Failed to write file: ${e}` };
+    } catch (error) {
+      logger.error({ error }, `Failed to write file.`);
+      return { error: `Failed to write file: ${error}` };
     }
 
     return { data: undefined };
   }
 
-  private setTemplateGenerationValues(
+  private async setTemplateGenerationValues(
     userSettings: UserTemplateSettings,
     template: Template,
     parentInstanceId?: string,
-  ): Result<void> {
+  ): Promise<Result<void>> {
+    if (!template.isValid()) {
+      logger.error(
+        `Template repo is not clean or template commit hash is not valid.`,
+      );
+      return {
+        error: `Template repo is not clean or template commit hash is not valid.`,
+      };
+    }
     this.currentlyGeneratingTemplate = template;
     this.currentlyGeneratingTemplateParentInstanceId = parentInstanceId;
     return this.updateParsedUserSettingsWithAllParentSettings(userSettings);
@@ -426,12 +422,7 @@ export class TemplateGeneratorService {
       const newTemplateSettings = anyOrCallbackToAny(templateToAutoInstantiate.mapSettings, fullParentSettings);
 
       if ("error" in newTemplateSettings) {
-        logger.error(
-          `Failed to parse template settings: ${newTemplateSettings.error}`,
-        );
-        return {
-          error: `Failed to parse template settings: ${newTemplateSettings.error}`,
-        };
+        return newTemplateSettings;
       }
 
       const newFullTemplateSettings = Object.assign(
@@ -473,12 +464,7 @@ export class TemplateGeneratorService {
       );
 
       if ("error" in addTemplateResult) {
-        logger.error(
-          `Failed to add template to project settings: ${addTemplateResult.error}`,
-        );
-        return {
-          error: `Failed to add template to project settings: ${addTemplateResult.error}`,
-        };
+        return addTemplateResult;
       }
 
       const savedCurrentlyGeneratingTemplate: Template =
@@ -498,12 +484,7 @@ export class TemplateGeneratorService {
           savedCurrentlyGeneratingTemplateFullSettings;
         this.currentlyGeneratingTemplateParentInstanceId =
           savedCurrentlyGeneratingTemplateParentInstanceId;
-        logger.error(
-          `Failed to instantiate template: ${instantiateTemplateResult.error}`,
-        );
-        return {
-          error: `Failed to instantiate template: ${instantiateTemplateResult.error}`,
-        };
+        return instantiateTemplateResult;
       }
 
       const childrenTemplatesToAutoInstantiate = templateToAutoInstantiate.children;
@@ -521,12 +502,7 @@ export class TemplateGeneratorService {
             savedCurrentlyGeneratingTemplateFullSettings;
           this.currentlyGeneratingTemplateParentInstanceId =
             savedCurrentlyGeneratingTemplateParentInstanceId;
-          logger.error(
-            `Failed to auto-instantiate children subtemplates: ${autoInstantiationResult.error}`,
-          );
-          return {
-            error: `Failed to auto-instantiate children subtemplates: ${autoInstantiationResult.error}`,
-          };
+          return autoInstantiationResult;
         }
       }
 
@@ -538,12 +514,7 @@ export class TemplateGeneratorService {
           savedCurrentlyGeneratingTemplateFullSettings;
         this.currentlyGeneratingTemplateParentInstanceId =
           savedCurrentlyGeneratingTemplateParentInstanceId;
-        logger.error(
-          `Failed to parse auto instantiated subtemplates: ${templatesToAutoInstantiate.error}`,
-        );
-        return {
-          error: `Failed to parse auto instantiated subtemplates: ${templatesToAutoInstantiate.error}`,
-        };
+        return templatesToAutoInstantiate;
       }
 
       const autoInstantiationResult = await this.autoInstantiateSubTemplates(
@@ -558,12 +529,7 @@ export class TemplateGeneratorService {
           savedCurrentlyGeneratingTemplateFullSettings;
         this.currentlyGeneratingTemplateParentInstanceId =
           savedCurrentlyGeneratingTemplateParentInstanceId;
-        logger.error(
-          `Failed to auto-instantiate subtemplates: ${autoInstantiationResult.error}`,
-        );
-        return {
-          error: `Failed to auto-instantiate subtemplates: ${autoInstantiationResult.error}`,
-        };
+        return autoInstantiationResult;
       }
 
       this.currentlyGeneratingTemplate = savedCurrentlyGeneratingTemplate;
@@ -722,19 +688,14 @@ export class TemplateGeneratorService {
       };
     }
 
-    const result = this.setTemplateGenerationValues(
+    const result = await this.setTemplateGenerationValues(
       userSettings,
       template,
       parentInstanceId,
     );
 
     if ("error" in result) {
-      logger.error(
-        `Failed to set template generation values: ${result.error}`,
-      );
-      return {
-        error: `Failed to set template generation values: ${result.error}`,
-      };
+      return result;
     }
     // TODO: disable every other action in project page when the commithash is not equal.
     // NO actually just make sure always before generating to git checkout the right template. I guess before every generation/copydirectory we need to git checkout the right commit hash, load the template again from this the newly checked out template. Run the generation and git checkout the old branch again. This needs to happen for every generation but also when displaying the template.
@@ -750,12 +711,7 @@ export class TemplateGeneratorService {
     );
 
     if ("error" in templatesThatDisableThisTemplate) {
-      logger.error(
-        `Failed to parse templates that disable this template: ${templatesThatDisableThisTemplate.error}`,
-      );
-      return {
-        error: `Failed to parse templates that disable this template: ${templatesThatDisableThisTemplate.error}`,
-      };
+      return templatesThatDisableThisTemplate;
     }
 
     for (const instantiatedTemplate of this.destinationProjectSettings
@@ -780,10 +736,7 @@ export class TemplateGeneratorService {
     );
 
     if ("error" in assertions) {
-      logger.error(`Failed to parse assertions: ${assertions.error}`);
-      return {
-        error: `Failed to parse assertions: ${assertions.error}`,
-      };
+      return assertions;
     }
 
     if (assertions.data !== undefined && !assertions.data) {
@@ -794,17 +747,11 @@ export class TemplateGeneratorService {
     try {
       const copyResult = await this.copyDirectory();
       if ("error" in copyResult) {
-        logger.error(`Failed to copy directory: ${copyResult.error}`);
-        return { error: `Failed to copy directory: ${copyResult.error}` };
+        return copyResult;
       }
       const sideEffectResult = await this.applySideEffects();
       if ("error" in sideEffectResult) {
-        logger.error(
-          `Failed to apply side effects: ${sideEffectResult.error}`,
-        );
-        return {
-          error: `Failed to apply side effects: ${sideEffectResult.error}`,
-        };
+        return sideEffectResult;
       }
 
       if (!this.options.dontGenerateTemplateSettings) {
@@ -814,24 +761,14 @@ export class TemplateGeneratorService {
         );
 
         if ("error" in newTemplateResult) {
-          logger.error(
-            `Failed to add template to settings: ${newTemplateResult.error}`,
-          );
-          return {
-            error: `Failed to add template to settings: ${newTemplateResult.error}`,
-          };
+          return newTemplateResult;
         }
       }
 
       const templatesToAutoInstantiate = this.getTemplatesToAutoInstantiate();
 
       if ("error" in templatesToAutoInstantiate) {
-        logger.error(
-          `Failed to parse auto instantiated subtemplates: ${templatesToAutoInstantiate.error}`,
-        );
-        return {
-          error: `Failed to parse auto instantiated subtemplates: ${templatesToAutoInstantiate.error}`,
-        };
+        return templatesToAutoInstantiate;
       }
 
       const result = await this.autoInstantiateSubTemplates(
@@ -841,16 +778,11 @@ export class TemplateGeneratorService {
       );
 
       if ("error" in result) {
-        logger.error(
-          `Failed to auto-instantiate subtemplates: ${result.error}`,
-        );
-        return {
-          error: `Failed to auto-instantiate subtemplates: ${result.error}`,
-        };
+        return result;
       }
-    } catch (e) {
-      logger.error(`Failed to instantiate template: ${e}`);
-      return { error: `Failed to instantiate template: ${e}` };
+    } catch (error) {
+      logger.error({ error }, `Failed to instantiate template.`);
+      return { error: `Failed to instantiate template: ${error}` };
     }
 
     return this.getAbsoluteTargetPath();
@@ -901,15 +833,10 @@ export class TemplateGeneratorService {
       };
     }
 
-    const result = this.setTemplateGenerationValues(userSettings, template);
+    const result = await this.setTemplateGenerationValues(userSettings, template);
 
     if ("error" in result) {
-      logger.error(
-        `Failed to set template generation values: ${result.error}`,
-      );
-      return {
-        error: `Failed to set template generation values: ${result.error}`,
-      };
+      return result;
     }
 
     if (!this.currentlyGeneratingTemplateFullSettings) {
@@ -939,12 +866,7 @@ export class TemplateGeneratorService {
           false,
         );
         if ("error" in writeSettingsResult) {
-          logger.error(
-            `Failed to write project settings: ${writeSettingsResult.error}`,
-          );
-          return {
-            error: `Failed to write project settings: ${writeSettingsResult.error}`,
-          };
+          return writeSettingsResult;
         }
       }
       if (!this.options.dontDoGit) {
@@ -962,18 +884,12 @@ export class TemplateGeneratorService {
 
       const copyResult = await this.copyDirectory();
       if ("error" in copyResult) {
-        logger.error(`Failed to copy directory: ${copyResult.error}`);
-        return { error: `Failed to copy directory: ${copyResult.error}` };
+        return copyResult;
       }
 
       const sideEffectResult = await this.applySideEffects();
       if ("error" in sideEffectResult) {
-        logger.error(
-          `Failed to apply side effects: ${sideEffectResult.error}`,
-        );
-        return {
-          error: `Failed to apply side effects: ${sideEffectResult.error}`,
-        };
+        return sideEffectResult;
       }
 
       // TODO: Revise this to be able to be called recursively so add this as a param to function and use getTemplatesToAutoInstantiate. Then call this function on the children list.
@@ -981,12 +897,7 @@ export class TemplateGeneratorService {
       const templatesToAutoInstantiate = this.getTemplatesToAutoInstantiate();
 
       if ("error" in templatesToAutoInstantiate) {
-        logger.error(
-          `Failed to parse auto instantiated subtemplates: ${templatesToAutoInstantiate.error}`,
-        );
-        return {
-          error: `Failed to parse auto instantiated subtemplates: ${templatesToAutoInstantiate.error}`,
-        };
+        return templatesToAutoInstantiate;
       }
       const result = await this.autoInstantiateSubTemplates(
         this.currentlyGeneratingTemplateFullSettings,
@@ -994,16 +905,11 @@ export class TemplateGeneratorService {
         templatesToAutoInstantiate.data,
       );
       if ("error" in result) {
-        logger.error(
-          `Failed to auto-instantiate subtemplates: ${result.error}`,
-        );
-        return {
-          error: `Failed to auto-instantiate subtemplates: ${result.error}`,
-        };
+        return result;
       }
-    } catch (e) {
-      logger.error(`Failed to instantiate new project: ${e}`);
-      return { error: `Failed to instantiate new project: ${e}` };
+    } catch (error) {
+      logger.error({ error }, `Failed to instantiate new project.`);
+      return { error: `Failed to instantiate new project: ${error}` };
     }
 
     if (!this.options.dontDoGit) {
@@ -1012,8 +918,7 @@ export class TemplateGeneratorService {
       );
 
       if ("error" in diffResult) {
-        logger.error(`Failed to add all and diff: ${diffResult.error}`);
-        return { error: `Failed to add all and diff: ${diffResult.error}` };
+        return diffResult;
       }
 
       return {
@@ -1073,12 +978,7 @@ export class TemplateGeneratorService {
       const projectGenerationResult = await this.instantiateNewProject();
 
       if ("error" in projectGenerationResult) {
-        logger.error(
-          `Failed to instantiate project: ${projectGenerationResult.error}`,
-        );
-        return {
-          error: `Failed to instantiate project: ${projectGenerationResult.error}`,
-        };
+        return projectGenerationResult;
       }
 
       for (const instantiated of this.destinationProjectSettings
@@ -1101,21 +1001,16 @@ export class TemplateGeneratorService {
 
         const res = await this.instantiateTemplateInProject(instantiated.id);
         if ("error" in res) {
-          logger.error(
-            `Error instantiating template ${instantiated.templateName}: ${res.error}`,
-          );
-          return {
-            error: `Error instantiating template ${instantiated.templateName}: ${res.error}`,
-          };
+          return res;
         }
       }
       return {
         data: { resultPath: this.options.absoluteDestinationPath, diff: "" },
       };
-    } catch (e) {
-      logger.error(`Failed to instantiate full project from settings: ${e}`);
+    } catch (error) {
+      logger.error({ error }, `Failed to instantiate full project from settings.`);
       return {
-        error: `Failed to instantiate full project from settings: ${e}`,
+        error: `Failed to instantiate full project from settings: ${error}`,
       };
     }
   }

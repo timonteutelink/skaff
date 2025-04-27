@@ -4,6 +4,7 @@ import {
 } from "@timonteutelink/template-types-lib";
 import z from "zod";
 import { Result, TemplateDTO } from "./../lib/types";
+import { logger } from "../lib/logger";
 
 export function anyOrCallbackToAny<
   TSettings extends TemplateSettingsType<z.AnyZodObject>,
@@ -19,9 +20,9 @@ export function anyOrCallbackToAny<
           ? anyOrCallback(parsedUserSettings)
           : anyOrCallback,
     };
-  } catch (e) {
-    logger.error("Error in anyOrCallbackToAny:", e);
-    return { error: "Invalid anyOrCallback" + e };
+  } catch (error) {
+    logger.error({ error }, "Error in anyOrCallbackToAny.");
+    return { error: `Error in anyOrCallbackToAny: ${error}` };
   }
 }
 
@@ -46,7 +47,6 @@ export function findTemplate(
     for (const subTemplate of subTemplates) {
       const result = findTemplate(subTemplate, subTemplateName);
       if ('error' in result) {
-        logger.error(result.error);
         return result;
       }
       if ("data" in result && result.data) {
@@ -56,14 +56,6 @@ export function findTemplate(
   }
 
   return { data: null };
-}
-
-export function nullError<T>(result: Result<T>): T | null {
-  if ("error" in result) {
-    logger.error(result.error);
-    return null;
-  }
-  return result.data;
 }
 
 export function deepSortObject<T>(obj: T): T {

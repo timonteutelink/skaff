@@ -1,3 +1,4 @@
+'use client';
 import { logFromClient } from "@/app/actions/logs"
 import pino, { Level, LogEvent } from "pino"
 

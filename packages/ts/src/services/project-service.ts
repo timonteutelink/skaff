@@ -16,6 +16,7 @@ import {
 import { PROJECT_REGISTRY } from "./project-registry-service";
 import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
 import { TemplateGeneratorService } from "./template-generator-service";
+import { logger } from "../lib/logger";
 
 // TODO: do some refactoring so most functions in this file take a full Project not projectname
 export function getParsedUserSettingsWithParentSettings(
@@ -52,10 +53,7 @@ export function getParsedUserSettingsWithParentSettings(
     );
 
     if ("error" in newInstantiatedSettings) {
-      logger.error(
-        `Failed to get instantiated settings: ${newInstantiatedSettings.error}`,
-      );
-      return { error: newInstantiatedSettings.error };
+      return newInstantiatedSettings;
     }
 
     newUserSettings = {
@@ -75,8 +73,7 @@ export async function instantiateProject(
   const template = await ROOT_TEMPLATE_REGISTRY.findDefaultTemplate(rootTemplateName);
 
   if ("error" in template) {
-    logger.error(`Failed to find root template: ${template.error}`);
-    return { error: template.error };
+    return template;
   }
 
   if (!template.data) {
@@ -91,22 +88,19 @@ export async function instantiateProject(
   );
 
   if ("error" in instantiationResult) {
-    logger.error(`Failed to instantiate project: ${instantiationResult.error}`);
-    return { error: "Failed to create project, " + instantiationResult.error };
+    return instantiationResult;
   }
 
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
 
   if ("error" in reloadResult) {
-    logger.error(`Failed to reload projects: ${reloadResult.error}`);
-    return { error: reloadResult.error };
+    return reloadResult;
   }
 
   const project = await PROJECT_REGISTRY.findProject(newProjectName);
 
   if ("error" in project) {
-    logger.error(`Failed to find project: ${project.error}`);
-    return { error: project.error };
+    return project;
   }
 
   if (!project.data) {
@@ -121,8 +115,7 @@ export async function instantiateProject(
   const projectDTO = project.data.mapToDTO();
 
   if ("error" in projectDTO) {
-    logger.error(`Failed to map project to DTO: ${projectDTO.error}`);
-    return { error: projectDTO.error };
+    return projectDTO
   }
 
   return { data: { newProject: projectDTO.data, diff: processedDiff } };
@@ -156,8 +149,7 @@ export async function generateProjectFromTemplateSettings(
   );
 
   if ("error" in rootTemplate) {
-    logger.error(`Failed to find root template: ${rootTemplate.error}`);
-    return { error: rootTemplate.error };
+    return rootTemplate
   }
 
   if (!rootTemplate.data) {
@@ -181,8 +173,7 @@ export async function generateProjectFromTemplateSettings(
     await newProjectGenerator.instantiateFullProjectFromSettings();
 
   if ("error" in instantiationResult) {
-    logger.error(`Failed to instantiate project: ${instantiationResult.error}`);
-    return { error: instantiationResult.error };
+    return instantiationResult;
   }
 
   return { data: newProjectPath };

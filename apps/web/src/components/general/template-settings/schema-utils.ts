@@ -299,7 +299,10 @@ export function buildDiscriminatedUnionSchema(jsonSchema: any, path = ""): Schem
     variants.push(variantSchema)
 
     // Store the discriminator value and its associated defaults
-    variantDefaults[discriminatorValue] = defaults
+    variantDefaults[discriminatorValue] = {
+      ...defaults,
+      [discriminator]: discriminatorValue
+    }
 
     // Merge required fields
     Object.assign(required, variantRequired)

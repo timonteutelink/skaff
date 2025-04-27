@@ -3,24 +3,22 @@ import { getCacheDir } from "@repo/ts/services/cache-service";
 import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import { ROOT_TEMPLATE_REGISTRY } from "@repo/ts/services/root-template-registry-service";
 import { DefaultTemplateResult, Result, TemplateDTO } from "@repo/ts/lib/types";
+import { logger } from "@repo/ts/lib/logger";
 
 export async function eraseCache(): Promise<Result<DefaultTemplateResult[]>> {
   const eraseResult = await eraseCache();
   if ("error" in eraseResult) {
-    logger.error("Failed to erase cache:", eraseResult.error);
     return { error: eraseResult.error };
   }
 
   const reloadResult = await ROOT_TEMPLATE_REGISTRY.reloadTemplates();
   if ("error" in reloadResult) {
-    logger.error("Failed to reload templates:", reloadResult.error);
     return { error: reloadResult.error };
   }
 
   const allNewTemplates = await retrieveDefaultTemplates();
 
   if ("error" in allNewTemplates) {
-    logger.error("Failed to load templates:", allNewTemplates.error);
     return { error: allNewTemplates.error };
   }
 
@@ -31,14 +29,12 @@ export async function reloadTemplates(): Promise<Result<DefaultTemplateResult[]>
   const result = await ROOT_TEMPLATE_REGISTRY.reloadTemplates();
 
   if ("error" in result) {
-    logger.error("Failed to load templates:", result.error);
     return { error: result.error };
   }
 
   const allNewTemplates = await retrieveDefaultTemplates();
 
   if ("error" in allNewTemplates) {
-    logger.error("Failed to load templates:", allNewTemplates.error);
     return { error: allNewTemplates.error };
   }
 
@@ -49,7 +45,6 @@ export async function retrieveTemplates(): Promise<Result<TemplateDTO[]>> {
   const templates = await ROOT_TEMPLATE_REGISTRY.getAllTemplates();
 
   if ("error" in templates) {
-    logger.error("Failed to load templates:", templates.error);
     return { error: templates.error };
   }
 
@@ -62,14 +57,12 @@ export async function retrieveDefaultTemplates(): Promise<Result<DefaultTemplate
   const templates = await ROOT_TEMPLATE_REGISTRY.getAllTemplates();
 
   if ("error" in templates) {
-    logger.error("Failed to load templates:", templates.error);
     return { error: templates.error };
   }
 
   const cacheDir = await getCacheDir();
 
   if ("error" in cacheDir) {
-    logger.error("Failed to get cache directory:", cacheDir.error);
     return { error: cacheDir.error };
   }
 
@@ -97,7 +90,6 @@ export async function retrieveDefaultTemplate(
 ): Promise<Result<DefaultTemplateResult | null>> {
   const templates = await ROOT_TEMPLATE_REGISTRY.findAllTemplateRevisions(templateName);
   if ("error" in templates) {
-    logger.error(templates.error);
     return { error: templates.error };
   }
   if (!templates.data) {
@@ -107,7 +99,6 @@ export async function retrieveDefaultTemplate(
   const cacheDir = await getCacheDir();
 
   if ("error" in cacheDir) {
-    logger.error("Failed to get cache directory:", cacheDir.error);
     return { error: cacheDir.error };
   }
 
@@ -135,7 +126,6 @@ export async function retrieveAllTemplateRevisions(
   const revisions = await ROOT_TEMPLATE_REGISTRY.findAllTemplateRevisions(templateName);
 
   if ("error" in revisions) {
-    logger.error(revisions.error);
     return { error: revisions.error };
   }
 
@@ -153,12 +143,10 @@ export async function retrieveTemplateRevisionForProject(
 ): Promise<Result<TemplateDTO | null>> {
   const reloadResult = await PROJECT_REGISTRY.reloadProjects();
   if ("error" in reloadResult) {
-    logger.error("Failed to reload templates:", reloadResult.error);
     return { error: reloadResult.error };
   }
   const project = await PROJECT_REGISTRY.findProject(projectName);
   if ("error" in project) {
-    logger.error(project.error);
     return { error: project.error };
   }
   if (!project.data) {
@@ -176,7 +164,6 @@ export async function retrieveTemplateRevisionForProject(
   const revision = await ROOT_TEMPLATE_REGISTRY.loadRevision(rootTemplateName, commitHash);
 
   if ("error" in revision) {
-    logger.error(revision.error);
     return { error: revision.error };
   }
   if (!revision.data) {

@@ -4,6 +4,7 @@ import { GitStatus, ProjectDTO, ProjectSettings, Result } from "../lib/types";
 import { loadGitStatus } from "../services/git-service";
 import { loadProjectSettings } from "../services/project-settings-service";
 import { Template } from "./template-models";
+import { logger } from "../lib/logger";
 
 // every project name inside a root project should be unique.
 // The root project can be uniquely identified by its name and author.(and version)
@@ -77,9 +78,6 @@ export class Project {
         instantiatedProjectSettings,
       );
       if ("error" in parentSettings) {
-        logger.error(
-          `Failed to get instantiated settings for parent template ${parentTemplate.config.templateConfig.name}: ${parentSettings.error}`,
-        );
         return { error: parentSettings.error };
       }
       Object.assign(instantiatedSettings, parentSettings.data);
@@ -92,20 +90,14 @@ export class Project {
     const projectSettings = await loadProjectSettings(projectSettingsPath);
 
     if ("error" in projectSettings) {
-      logger.error(
-        `Failed to load project settings from ${projectSettingsPath}: ${projectSettings.error}`,
-      );
       return { error: projectSettings.error };
     }
 
     const gitStatus = await loadGitStatus(absDir);
 
     if ("error" in gitStatus) {
-      logger.error(
-        `Failed to load git status for project at ${absDir}: ${gitStatus.error}`,
-      );
       return {
-        error: `Failed to load git status for project at ${absDir}`,
+        error: gitStatus.error,
       };
     }
 

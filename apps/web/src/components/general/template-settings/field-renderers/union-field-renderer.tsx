@@ -1,16 +1,16 @@
 "use client"
 import { useState } from "react"
 import { FormField, FormItem, FormLabel, FormMessage, FormControl } from "@/components/ui/form"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { InfoIcon } from "lucide-react"
+import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Copy, InfoIcon, MoreHorizontal, Trash2 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import type { FieldRendererProps } from "../types"
 import { renderInputByType } from "../input-renderers"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
-// Modify the UnionFieldRenderer to handle both discriminated and regular unions
 export function UnionFieldRenderer({
   fieldPath,
   property,
@@ -290,3 +290,85 @@ export function UnionFieldRenderer({
     )
   }
 }
+
+export function ArrayUnionItem({
+  index,
+  isExpanded: initialExpanded,
+  toggleItemExpansion,
+  moveItem,
+  duplicateItem,
+  fieldArray,
+  isReadOnly,
+  children,               // ← whatever we want to render inside (the Union)
+}: any) {
+  const [isExpanded, setIsExpanded] = useState(initialExpanded)
+
+  const onToggle = () => {
+    setIsExpanded(!isExpanded)
+    toggleItemExpansion(index)
+  }
+
+  return (
+    <Card className="overflow-visible border shadow-sm">
+      <CardHeader className="p-3 flex flex-row items-center justify-between bg-muted/20">
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onToggle}
+            className="p-1 h-auto"
+          >
+            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+          <CardTitle className="text-sm font-medium">Item {index + 1}</CardTitle>
+        </div>
+
+        {!isReadOnly && (
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="p-1 h-auto"
+              disabled={index === 0}
+              onClick={() => moveItem(index, "up")}
+            >
+              <ArrowUp className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="p-1 h-auto"
+              disabled={index === fieldArray.fields.length - 1}
+              onClick={() => moveItem(index, "down")}
+            >
+              <ArrowDown className="h-4 w-4" />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="p-1 h-auto">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => duplicateItem(index)}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Duplicate
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => fieldArray.remove(index)} className="text-destructive">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
+      </CardHeader>
+
+      {isExpanded && <CardContent className="p-4 pt-3">{children}</CardContent>}
+    </Card>
+  )
+}
+

@@ -189,9 +189,10 @@ const TemplatePage: React.FC = () => {
         result: data,
         shortMessage: "Error retrieving template revisions",
         nullErrorMessage: "No template revisions found.",
+        nullRedirectPath: "/templates",
+        router,
       })
       if (!toastResult) {
-        router.push("/templates")
         return
       }
       setAllTemplates(toastResult)

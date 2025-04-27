@@ -25,7 +25,7 @@ export function ProjectDetailsPanel({
   const selectedNodeTemplate = useMemo(
     () =>
       selectedNode?.type === "instantiated"
-        ? toastNullError(findTemplate(rootTemplate, selectedNode.name))
+        ? toastNullError({ result: findTemplate(rootTemplate, selectedNode.name), shortMessage: "An error occurred trying to find the template.", nullErrorMessage: "No template was found" }) || null
         : null,
     [selectedNode, rootTemplate],
   );

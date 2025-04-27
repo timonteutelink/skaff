@@ -19,6 +19,7 @@ import { PrimitiveFieldRenderer } from "./field-renderers/primitive-field-render
 import { UnionFieldRenderer } from "./field-renderers/union-field-renderer"
 import { TupleFieldRenderer } from "./field-renderers/tuple-field-renderer"
 import { RecordFieldRenderer } from "./field-renderers/record-field-renderer"
+import { toastNullError } from "@/lib/utils"
 
 export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
   projectName,
@@ -64,7 +65,10 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
     try {
       await action(data)
     } catch (error) {
-      logger.error("Error submitting form:", error)
+      toastNullError({
+        error,
+        shortMessage: "Failed to save template settings",
+      })
     } finally {
       setIsSubmitting(false)
     }

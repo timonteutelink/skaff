@@ -21,6 +21,7 @@ import {
   TemplateDTO,
 } from "../lib/types";
 import { Project } from "./project-models";
+import { logger } from "../lib/logger";
 
 export class Template {
   // The loaded configuration module.
@@ -105,12 +106,8 @@ export class Template {
     const absoluteBaseDir = path.dirname(absoluteRootDir);
     const isRepoClean = await isGitRepoClean(absoluteBaseDir);
     if ("error" in isRepoClean) {
-      logger.error(
-        `Error getting git status for project at ${absoluteBaseDir}`,
-      );
-      logger.error(isRepoClean.error);
       return {
-        error: `Error getting git status for project at ${absoluteBaseDir}: ${isRepoClean.error}`,
+        error: isRepoClean.error,
       };
     }
     if (!isRepoClean.data) {
@@ -119,11 +116,8 @@ export class Template {
     }
     const commitHash = await getCommitHash(absoluteRootDir);
     if ("error" in commitHash) {
-      logger.error(
-        `Error getting commit hash for project at ${absoluteRootDir}`,
-      );
       return {
-        error: `Error getting commit hash for project at ${absoluteRootDir}: ${commitHash.error}`,
+        error: commitHash.error,
       };
     }
 
@@ -132,7 +126,8 @@ export class Template {
       configs = await loadAllTemplateConfigs(absoluteRootDir);
     } catch (error) {
       logger.error(
-        `Failed to load template configurations from ${absoluteRootDir}: ${error}`,
+        { error, absoluteRootDir },
+        `Failed to load template configurations`,
       );
       return { error: `Failed to load template configurations: ${error}` };
     }
@@ -246,8 +241,8 @@ export class Template {
     }
 
     if (rootTemplates.length > 1) {
-      logger.error(rootTemplates);
       logger.error(
+        { rootTemplates },
         `Multiple root templates found. Make sure the directory structure is correct.`,
       );
       return {
@@ -283,9 +278,6 @@ export class Template {
     );
 
     if ("error" in addTemplateResult) {
-      logger.error(
-        `Failed to add template to project: ${addTemplateResult.error}`,
-      );
       return addTemplateResult;
     }
 
@@ -294,10 +286,9 @@ export class Template {
     );
 
     if ("error" in resultPath) {
-      logger.error(`Failed to instantiate template: ${resultPath.error}`);
       return resultPath;
     } else {
-      console.log(`Template instantiated at: ${resultPath.data}`);
+      logger.info(`Template instantiated at: ${resultPath.data}`);
     }
     return resultPath;
   }
@@ -331,15 +322,13 @@ export class Template {
     );
     const addProjectResult =
       generatorService.addNewProject(rootTemplateSettings);
+
     if ("error" in addProjectResult) {
-      logger.error(`Failed to add project: ${addProjectResult.error}`);
       return addProjectResult;
     }
     const result = await generatorService.instantiateNewProject();
-    if ("error" in result) {
-      logger.error(`Failed to instantiate new project: ${result.error}`);
-    } else {
-      console.log(`New project created at: ${result.data.resultPath}`);
+    if (!("error" in result)) {
+      logger.info(`New project created at: ${result.data.resultPath}`);
     }
     return result;
   }
@@ -386,10 +375,34 @@ export class Template {
   }
 
   public findRootTemplate(): Template {
-    let currentTemplate: Template | undefined = this;
+    let currentTemplate: Template = this;
     while (currentTemplate.parentTemplate) {
       currentTemplate = currentTemplate.parentTemplate;
     }
     return currentTemplate!;
+  }
+
+  public findCommitHash(): string {
+    if (this.commitHash) {
+      return this.commitHash;
+    }
+    if (this.parentTemplate) {
+      return this.parentTemplate.findCommitHash();
+    }
+    return "";
+  }
+
+  public async isValid(): Promise<boolean> {
+    const isRepoClean = await isGitRepoClean(this.absoluteBaseDir);
+    if ("error" in isRepoClean) {
+      return false;
+    }
+
+    const commitResult = await getCommitHash(this.absoluteBaseDir);
+    if ("error" in commitResult) {
+      return false;
+    }
+
+    return isRepoClean.data && commitResult.data === this.findCommitHash();
   }
 }

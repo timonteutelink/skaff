@@ -15,6 +15,7 @@ import {
   saveToCache,
 } from "../services/cache-service";
 import { getEsbuild } from "../utils/get-esbuild";
+import { logger } from "../lib/logger";
 
 //TODO renovate, mkDocs, .github/settings.yml
 
@@ -126,13 +127,13 @@ async function findTemplateConfigFiles(
                 await findTemplateConfigFilesInSubdirs(resolvedRefDir),
               );
             } else {
-              console.warn(
+              logger.warn(
                 `Referenced templateConfig.ts not found at ${resolvedRefPath}`,
               );
             }
           }
         } catch (err) {
-          console.warn(
+          logger.warn(
             `Error parsing ${refCandidate}: ${(err as Error).message}`,
           );
         }
@@ -227,7 +228,6 @@ export async function loadAllTemplateConfigs(
       `Failed to retrieve cached bundle for template configs: ${cachedBundle.error}`,
     );
   } else if (cachedBundle.data) {
-    console.log(`Using cached bundle at ${cachedBundle.data.path}`);
     return importTemplateConfigModule(cachedBundle.data.path);
   }
 
@@ -260,7 +260,7 @@ export async function loadAllTemplateConfigs(
   await fs.writeFile(tempIndexPath, indexCode, "utf-8");
   try {
     await typeCheckFile(tempIndexPath);
-    console.log(
+    logger.trace(
       `Temporary index file at ${tempIndexPath} passed type checking.`,
     );
   } finally {
@@ -293,7 +293,7 @@ export async function loadAllTemplateConfigs(
     "mjs",
     bundledCode,
   );
-  console.log(`Created bundled template configs at ${resultPath}`);
+  logger.trace(`Created bundled template configs at ${resultPath}`);
 
   if ("error" in resultPath) {
     throw new Error(

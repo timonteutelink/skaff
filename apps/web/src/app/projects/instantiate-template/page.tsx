@@ -18,15 +18,18 @@ import { TemplateSettingsForm } from "@/components/general/template-settings/tem
 import { Button } from "@/components/ui/button";
 import { findTemplate } from "@repo/ts/utils/shared-utils";
 import {
+  DefaultTemplateResult,
   NewTemplateDiffResult,
   ParsedFile,
   ProjectDTO,
+  Result,
   TemplateDTO
 } from "@repo/ts/lib/types";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { toastNullError } from "@/lib/utils";
 
 // TODO: when updating to a new template version we should reiterate all settings of all templates for possible changes. Or we fully automate go directly to diff but require the template to setup sensible defaults for possible new options.
 
@@ -69,14 +72,16 @@ const TemplateInstantiationPage: React.FC = () => {
 
   useEffect(() => {
     if (!projectNameParam) {
-      logger.error("No project name provided in search params.");
-      toast.error("No project name provided in search params.");
+      toastNullError({
+        shortMessage: "Project name not provided in search params.",
+      })
       router.push("/projects");
       return;
     }
     if (!newRevisionHashParam && !existingTemplateInstanceIdParam && !templateNameParam) {
-      logger.error("No template name provided in search params.");
-      toast.error("No template name provided in search params.");
+      toastNullError({
+        shortMessage: "Template name not provided in search params.",
+      })
       router.push("/projects");
       return;
     }
@@ -92,65 +97,63 @@ const TemplateInstantiationPage: React.FC = () => {
         !existingTemplateInstanceIdParam &&
         !newRevisionHashParam)
     ) {
-      logger.error(
-        "Cannot only provide one of selectedDirectoryId or parentTemplateInstanceId or existingTemplateInstanceId or newRevisionHash.",
-      );
-      toast.error(
-        "Cannot only provide one of selectedDirectoryId or parentTemplateInstanceId or existingTemplateInstanceId or newRevisionHash.",
-      );
+      toastNullError({
+        shortMessage: "Cannot only provide one of selectedDirectoryId or parentTemplateInstanceId or existingTemplateInstanceId or newRevisionHash.",
+      })
       router.push("/projects");
       return;
     }
     const retrieveStuff = async () => {
-      const [projectResult, revision] = await Promise.all([retrieveProject(projectNameParam), selectedDirectoryIdParam ? retrieveDefaultTemplate(templateNameParam!) : retrieveTemplateRevisionForProject(projectNameParam)]);
+      const [projectResult, revisionResult] = await Promise.all([retrieveProject(projectNameParam), selectedDirectoryIdParam ? retrieveDefaultTemplate(templateNameParam!) : retrieveTemplateRevisionForProject(projectNameParam)]);
 
-      if ("error" in revision) {
-        logger.error("Error retrieving template:", revision.error);
-        toast.error("Error retrieving template: " + revision.error);
-        return;
+      const revision = toastNullError({
+        result: revisionResult as Result<DefaultTemplateResult | TemplateDTO | null>,
+        shortMessage: "Error retrieving template.",
+        nullErrorMessage: `Template not found for project: ${projectNameParam}`,
+        nullRedirectPath: "/projects",
+        router,
+      })
+
+      if (!revision) {
+        return
       }
 
-      if (!revision.data) {
-        logger.error("Template not found for project:", projectNameParam);
-        toast.error("Template not found for project: " + projectNameParam);
-        router.push("/projects");
-        return;
-      }
-
-      if ("template" in revision.data) {
-        const template = revision.data.template;
+      if ("template" in revision) {
+        const template = revision.template;
         if (!template) {
-          logger.error("Template not found in revision data.");
-          toast.error("Template not found in revision data.");
+          toastNullError({
+            shortMessage: "Template not found in revision data.",
+          })
           return;
         }
         setRootTemplate(template);
         return;
       }
 
-      setRootTemplate(revision.data);
+      setRootTemplate(revision);
 
-      if ("error" in projectResult) {
-        logger.error("Error retrieving project:", projectResult.error);
-        toast.error("Error retrieving project: " + projectResult.error);
-        return;
-      }
-      if (!projectResult.data) {
+      const project = toastNullError({
+        result: projectResult,
+        shortMessage: "Error retrieving project.",
+      })
+      if (!project) {
         if (!selectedDirectoryIdParam) {
-          logger.error("Project not found:", projectNameParam);
-          toast.error("Project not found: " + projectNameParam);
+          toastNullError({
+            shortMessage: `Project not found: ${projectNameParam}`,
+          })
           router.push("/projects");
         }
         return;
       }
-      if (projectResult.data.settings.instantiatedTemplates.length === 0) {
-        logger.error("No instantiated templates found in project.");
-        toast.error("No instantiated templates found in project.");
+      if (project.settings.instantiatedTemplates.length === 0) {
+        toastNullError({
+          shortMessage: "No instantiated templates found in project.",
+        })
         router.push("/projects");
         return;
       }
 
-      setProject(projectResult.data);
+      setProject(project)
 
       if (!newRevisionHashParam) {
         return;
@@ -159,12 +162,14 @@ const TemplateInstantiationPage: React.FC = () => {
         projectNameParam,
         newRevisionHashParam,
       );
-      if ("error" in newRevisionResult) {
-        logger.error("Error retrieving template:", newRevisionResult.error);
-        toast.error("Error retrieving template: " + newRevisionResult.error);
-        return;
+      const newRevision = toastNullError({
+        result: newRevisionResult,
+        shortMessage: "Error retrieving template.",
+      })
+      if (!newRevision) {
+        return
       }
-      setDiffToApply(newRevisionResult.data);
+      setDiffToApply(newRevision)
     };
     retrieveStuff();
   }, [
@@ -192,8 +197,9 @@ const TemplateInstantiationPage: React.FC = () => {
         !rootTemplate ||
         !subTemplate
       ) {
-        logger.error("Project name or root template not found.");
-        toast.error("Project name or root template not found.");
+        toastNullError({
+          shortMessage: "Project name or template name not found.",
+        })
         return;
       }
 
@@ -206,112 +212,112 @@ const TemplateInstantiationPage: React.FC = () => {
           data,
         );
 
-        if ("error" in newProjectResult) {
-          logger.error("Failed to create project");
-          logger.error(newProjectResult.error);
-          toast.error("Failed to create project: " + newProjectResult.error);
-          return;
+        const newProject = toastNullError({
+          result: newProjectResult,
+          shortMessage: "Error creating project.",
+        })
+
+        if (!newProject) {
+          return
         }
 
-        setAppliedDiff(newProjectResult.data.diff);
+        setAppliedDiff(newProject.diff);
       } else if (parentTemplateInstanceIdParam) {
         if (!project) {
-          logger.error("Project not found.");
-          toast.error("Project not found.");
+          toastNullError({
+            shortMessage: "Project not found.",
+          })
           return;
         }
 
         if (project.settings.projectName !== projectNameParam) {
-          logger.error("Project name does not match.");
-          toast.error("Project name does not match.");
+          toastNullError({
+            shortMessage: "Project name does not match.",
+          })
           return;
         }
 
-        if ("error" in subTemplate) {
-          logger.error("Error finding sub-template:", subTemplate.error);
-          toast.error("Error finding sub-template: " + subTemplate.error);
-          return;
-        }
+        const subTemplateValue = toastNullError({
+          result: subTemplate,
+          shortMessage: "Error finding sub-template.",
+          nullErrorMessage: "Sub-template not found.",
+        })
 
-        if (!subTemplate.data) {
-          logger.error("Sub-template not found.");
-          toast.error("Sub-template not found.");
-          return;
+        if (!subTemplateValue) {
+          return
         }
 
         if (
-          subTemplate.data.config.templateConfig.name ===
+          subTemplateValue.config.templateConfig.name ===
           rootTemplate.config.templateConfig.name
         ) {
-          logger.error(
-            "Root template cannot be instantiated as a sub-template.",
-          );
-          toast.error(
-            "Root template cannot be instantiated as a sub-template.",
-          );
+          toastNullError({
+            shortMessage: "Root template cannot be instantiated as a sub-template.",
+          })
           return;
         }
 
-        const result = await prepareTemplateInstantiationDiff(
+        const templateInstantiationResult = await prepareTemplateInstantiationDiff(
           rootTemplate.config.templateConfig.name,
-          subTemplate.data.config.templateConfig.name,
+          subTemplateValue.config.templateConfig.name,
           parentTemplateInstanceIdParam!,
           projectNameParam,
           data,
         );
 
-        if ("error" in result) {
-          logger.error("Error instantiating template:", result.error);
-          toast.error("Error instantiating template: " + result.error);
-          return;
+        const result = toastNullError({
+          result: templateInstantiationResult,
+          shortMessage: "Error instantiating template.",
+        })
+
+        if (!result) {
+          return
         }
 
-        setDiffToApply(result.data);
+        setDiffToApply(result);
       } else if (existingTemplateInstanceIdParam) {
         if (!project) {
-          logger.error("Project not found.");
-          toast.error("Project not found.");
+          toastNullError({
+            shortMessage: `Project not found: ${projectNameParam}`,
+          })
           return;
         }
 
         if (project.settings.projectName !== projectNameParam) {
-          logger.error("Project name does not match.");
-          toast.error("Project name does not match.");
+          toastNullError({
+            shortMessage: "Project name does not match.",
+          })
           return;
         }
 
-        if ("error" in subTemplate) {
-          logger.error("Error finding sub-template:", subTemplate.error);
-          toast.error("Error finding sub-template: " + subTemplate.error);
-          return;
+        const subTemplateValue = toastNullError({
+          result: subTemplate,
+          shortMessage: "Error finding sub-template.",
+          nullErrorMessage: "Sub-template not found.",
+        })
+        if (!subTemplateValue) {
+          return
         }
 
-        if (!subTemplate.data) {
-          logger.error("Sub-template not found.");
-          toast.error("Sub-template not found.");
-          return;
-        }
-
-        const result = await prepareTemplateModificationDiff(
+        const templateModificationResult = await prepareTemplateModificationDiff(
           data,
           projectNameParam,
           existingTemplateInstanceIdParam,
         );
 
-        if ("error" in result) {
-          logger.error("Error instantiating template:", result.error);
-          toast.error("Error instantiating template: " + result.error);
-          return;
+        const templateModification = toastNullError({
+          result: templateModificationResult,
+          shortMessage: "Error instantiating template.",
+        })
+        if (!templateModification) {
+          return
         }
 
-        setDiffToApply(result.data);
+        setDiffToApply(templateModification);
       } else {
-        logger.error(
-          "No parent template instance ID or selected directory ID provided.",
-        );
-        toast.error(
-          "No parent template instance ID or selected directory ID provided.",
-        );
+        toastNullError({
+          shortMessage: "No parent template instance ID or selected directory ID provided.",
+        })
         return;
       }
     },
@@ -330,21 +336,27 @@ const TemplateInstantiationPage: React.FC = () => {
   const handleConfirmAppliedDiff = useCallback(
     async (commitMessage: string) => {
       if (!projectNameParam || !commitMessage) {
-        logger.error("Project name or commit message not found.");
-        toast.error("Project name or commit message not found.");
+        toastNullError({
+          shortMessage: "Project name or commit message not found.",
+        })
         return;
       }
       if (!commitMessage) {
-        logger.error("Commit message is required.");
-        toast.error("Commit message is required.");
+        toastNullError({
+          shortMessage: "Commit message is required.",
+        })
         return;
       }
 
-      const result = await commitChanges(projectNameParam, commitMessage);
-      if ("error" in result) {
-        logger.error("Error committing changes:", result.error);
-        toast.error("Error committing changes: " + result.error);
-        return;
+      const commitResult = await commitChanges(projectNameParam, commitMessage);
+
+      const commit = toastNullError({
+        result: commitResult,
+        shortMessage: "Error committing changes.",
+      })
+
+      if (!commit) {
+        return
       }
       router.push(`/projects/project/?projectName=${projectNameParam}`);
     },
@@ -353,37 +365,40 @@ const TemplateInstantiationPage: React.FC = () => {
 
   const handleSubmitDiffToApply = useCallback(async () => {
     if (!projectNameParam) {
-      logger.error("Project name not found.");
-      toast.error("Project name not found.");
+      toastNullError({
+        shortMessage: "Project name not found.",
+      })
       return;
     }
     if (!diffToApply) {
-      logger.error("Diff to apply is null.");
-      toast.error("Diff to apply is null.");
+      toastNullError({
+        shortMessage: "Diff to apply is null.",
+      })
       return;
     }
     if (selectedDirectoryIdParam) {
-      logger.error(
-        "When creating new project the diffToApply should not be shown.",
-      );
-      toast.error(
-        "When creating new project the diffToApply should not be shown.",
-      );
+      toastNullError({
+        shortMessage: "Diff to apply should not be shown.",
+      })
       return;
     }
 
-    const result = await applyTemplateDiffToProject(
+    const applyDiffResult = await applyTemplateDiffToProject(
       projectNameParam,
       diffToApply.diffHash,
     );
-    if ("error" in result) {
-      logger.error("Error committing changes:", result.error);
-      toast.error("Error committing changes: " + result.error);
-      return;
+
+    const applyDiff = toastNullError({
+      result: applyDiffResult,
+      shortMessage: "Error applying diff.",
+    })
+
+    if (!applyDiff) {
+      return
     }
 
     let diff: ParsedFile[];
-    if ("resolveBeforeContinuing" in result) {
+    if ("resolveBeforeContinuing" in applyDiff) {
       const userConfirmed = confirm(
         "There are conflicts in the diff. Please resolve them and press 'OK' to continue.",
       );
@@ -393,15 +408,18 @@ const TemplateInstantiationPage: React.FC = () => {
 
       const resolveResult = await resolveConflictsAndDiff(projectNameParam);
 
-      if ("error" in resolveResult) {
-        logger.error("Error resolving conflicts:", resolveResult.error);
-        toast.error("Error resolving conflicts: " + resolveResult.error);
-        return;
+      const resolved = toastNullError({
+        result: resolveResult,
+        shortMessage: "Error resolving conflicts.",
+      })
+
+      if (!resolved) {
+        return
       }
 
-      diff = resolveResult.data;
+      diff = resolved
     } else {
-      diff = result.data as ParsedFile[];
+      diff = applyDiff as ParsedFile[];
     }
 
     setAppliedDiff(diff);
@@ -409,26 +427,32 @@ const TemplateInstantiationPage: React.FC = () => {
 
   const handleBackFromAppliedDiff = useCallback(async () => {
     if (!projectNameParam) {
-      logger.error("Project name not found.");
-      toast.error("Project name not found.");
+      toastNullError({
+        shortMessage: "Project name not found.",
+      })
       return;
     }
 
     if (selectedDirectoryIdParam) {
       // when going back just delete project that was created. Then recreate again when going to diff. For projects this is an easy workflow for templates will be another step after viewing the diff. and no changes will be applied to project when showing first diff so when going back from first diff no deletion is necessary.
       const result = await cancelProjectCreation(projectNameParam);
-      if ("error" in result) {
-        logger.error("Error deleting project:", result.error);
-        toast.error("Error deleting project: " + result.error);
-        return;
+
+      const cancel = toastNullError({
+        result: result,
+        shortMessage: "Error deleting project.",
+      })
+      if (cancel === undefined) {
+        return
       }
     } else {
       const restoreResult =
         await restoreAllChangesToCleanProject(projectNameParam);
-      if ("error" in restoreResult) {
-        logger.error("Error restoring changes:", restoreResult.error);
-        toast.error("Error restoring changes: " + restoreResult.error);
-        return;
+      const restored = toastNullError({
+        result: restoreResult,
+        shortMessage: "Error restoring changes.",
+      })
+      if (restored === undefined) {
+        return
       }
     }
 
