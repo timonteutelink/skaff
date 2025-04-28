@@ -16,7 +16,7 @@ localFlake:
 
           LD_LIBRARY_PATH = "${pkgs.stdenv.cc.cc.lib}/lib";
 
-          TEMPLATE_DIR_PATHS = "~/projects/timon/code-templator/assets/example-templates-dir/:~/projects/btc/mcp-templates/:~/projects/timon/timon-templates/";
+          TEMPLATE_DIR_PATHS = "~/projects/timon/example-templates-dir/:~/projects/btc/mcp-templates/:~/projects/timon/timon-templates/";
           PROJECT_SEARCH_PATHS = "~/projects/btc/:~/projects/timon/templated/:~/projects/kosmoy/templated/";
 
           # ESBUILD_BINARY_PATH="/home/tteutelink/projects/timon/code-templator/node_modules/.bin/esbuild";
