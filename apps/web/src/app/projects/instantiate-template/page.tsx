@@ -354,6 +354,7 @@ const TemplateInstantiationPage: React.FC = () => {
         shortMessage: "Error committing changes.",
       })
 
+      console.log({ commit });
       if (commit === undefined) {
         return
       }
