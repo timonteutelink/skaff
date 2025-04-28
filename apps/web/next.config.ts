@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
 
     return config;
   },
-  serverExternalPackages: ["esbuild", "pino"],
+  serverExternalPackages: ["esbuild", "pino", "node:vm"],
   typescript: {
     ignoreBuildErrors: true,
   },

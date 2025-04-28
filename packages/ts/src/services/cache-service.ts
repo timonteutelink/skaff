@@ -5,6 +5,7 @@ import { makeDir } from "./file-service";
 import { Result } from "../lib/types";
 import { createHash } from "node:crypto";
 import { logger } from "../lib/logger";
+import { logError } from "../lib/utils";
 
 export type CacheKey =
   | "template-config"
@@ -86,7 +87,10 @@ export async function retrieveFromCache(
 
     return { data: null };
   } catch (error) {
-    logger.error({ error }, "Failed to read cache file.");
+    logError({
+      shortMessage: "Failed to read cache file",
+      error,
+    })
     return { error: `Failed to read cache file: ${error}` };
   }
 }
@@ -101,7 +105,10 @@ export async function eraseCache(): Promise<Result<void>> {
     await fs.rm(cacheDir.data, { recursive: true, force: true });
     logger.info("Cache erased");
   } catch (error) {
-    logger.error({ error }, "Failed to erase cache.");
+    logError({
+      shortMessage: "Failed to erase cache",
+      error,
+    })
     return { error: `Failed to erase cache: ${error}` };
   }
 

@@ -9,6 +9,7 @@ import { Result } from '@repo/ts/lib/types';
 import { getCacheDirPath } from '@repo/ts/services/cache-service';
 import { logger, serverLogger } from '@repo/ts/lib/logger';
 import { LEVEL_NAMES, LogFilter, LogJSON } from '@/lib/types';
+import { logError } from '@repo/ts/lib/utils';
 
 export async function fetchLogs(
   filter: LogFilter
@@ -97,8 +98,7 @@ export async function logFromClient(data: {
     return { error: `Invalid log level: ${level}` };
   }
 
-  serverLogger.child({ src: 'frontend' })
-  [level](meta ?? {}, msg);
+  serverLogger.child({ src: 'frontend' })[level](meta ?? {}, msg);
 
   return { data: true };
 }
@@ -117,7 +117,10 @@ export async function getAvailableLogDates(): Promise<Result<string[]>> {
         .reverse(),
     };
   } catch (error) {
-    logger.error({ error }, 'Failed to read log directory');
+    logError({
+      shortMessage: 'Failed to read log directory',
+      error,
+    });
     return { error: 'Failed to read log directory' };
   }
 }

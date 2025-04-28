@@ -7,6 +7,7 @@ import { GENERATE_DIFF_SCRIPT_PATH } from "../lib/env";
 import { DiffHunk, GitStatus, ParsedFile, Result } from "../lib/types";
 import { pathInCache } from "./cache-service";
 import { logger } from "../lib/logger";
+import { logError } from "../lib/utils";
 
 const asyncExecFile = promisify(execFile);
 const asyncExec = promisify(exec);
@@ -30,7 +31,10 @@ export async function switchBranch(
     );
     return { data: undefined };
   } catch (error) {
-    logger.error({ error }, "Error switching branches.");
+    logError({
+      shortMessage: "Error switching branches",
+      error,
+    })
     return {
       error: `Error switching branches: ${error}`,
     };
@@ -72,7 +76,10 @@ export async function cloneRevisionToCache(
 
     return { data: destPath.data };
   } catch (error) {
-    logger.error({ error }, 'Error cloning revision to cache.');
+    logError({
+      shortMessage: "Error cloning revision to cache",
+      error,
+    })
     return { error: `Error cloning revision to cache: ${error}` };
   }
 }
@@ -90,7 +97,10 @@ export async function getCommitHash(repoPath: string): Promise<Result<string>> {
     const { stdout } = await asyncExec(`cd ${repoPath} && git rev-parse HEAD`);
     return { data: stdout.trim() };
   } catch (error) {
-    logger.error({ error }, "Error getting commit hash.");
+    logError({
+      shortMessage: "Error getting commit hash",
+      error,
+    })
     return { error: `Error getting commit hash: ${error}` };
   }
 }
@@ -108,7 +118,10 @@ export async function listBranches(
         .filter((branch) => branch.length > 0),
     };
   } catch (error) {
-    logger.error({ error }, "Error listing branches.");
+    logError({
+      shortMessage: "Error listing branches",
+      error,
+    })
     return { error: `Error listing branches: ${error}` };
   }
 }
@@ -122,7 +135,10 @@ export async function getCurrentBranch(
     );
     return { data: stdout.trim() };
   } catch (error) {
-    logger.error({ error }, "Error getting current branch.");
+    logError({
+      shortMessage: "Error getting current branch",
+      error,
+    })
     return { error: `Error getting current branch: ${error}` };
   }
 }
@@ -177,7 +193,10 @@ export async function commitAll(
     await asyncExec(`cd ${repoPath} && git commit -m "${commitMessage}"`);
     return { data: undefined };
   } catch (error) {
-    logger.error({ error }, "Error committing changes.");
+    logError({
+      shortMessage: "Error committing changes",
+      error,
+    })
     return { error: `Error committing changes: ${error}` };
   }
 }
@@ -190,7 +209,10 @@ export async function addAllAndDiff(repoPath: string): Promise<Result<string>> {
     );
     return { data: stdout.trim() };
   } catch (error) {
-    logger.error({ error }, "Error adding files and generating diff.");
+    logError({
+      shortMessage: "Error adding files and generating diff",
+      error,
+    })
     return { error: `Error adding files and generating diff: ${error}` };
   }
 }
@@ -200,7 +222,10 @@ export async function deleteRepo(repoPath: string): Promise<Result<void>> {
     await fs.rm(repoPath, { recursive: true });
     return { data: undefined };
   } catch (error) {
-    logger.error({ error }, "Error deleting git repository.");
+    logError({
+      shortMessage: "Error deleting git repository",
+      error,
+    })
     return { error: `Error deleting git repository: ${error}` };
   }
 }
@@ -212,7 +237,10 @@ export async function createGitRepo(repoPath: string): Promise<Result<void>> {
     );
     return { data: undefined };
   } catch (error) {
-    logger.error({ error }, "Error creating git repository.");
+    logError({
+      shortMessage: "Error creating git repository",
+      error,
+    })
     return { error: `Error creating git repository: ${error}` };
   }
 }
@@ -226,7 +254,10 @@ export async function isGitRepoClean(
     ).stdout.trim();
     return { data: status.length === 0 };
   } catch (error) {
-    logger.error({ error }, "Error checking git status.");
+    logError({
+      shortMessage: "Error checking git status",
+      error,
+    })
     return { error: `Error checking git status: ${error}` };
   }
 }
@@ -239,7 +270,10 @@ export async function applyDiffToGitRepo(
     await asyncExec(`cd ${repoPath} && git apply ${diffPath}`);
     return { data: undefined };
   } catch (error) {
-    logger.error({ error }, "Error applying diff to git repository.");
+    logError({
+      shortMessage: "Error applying diff to git repository",
+      error,
+    })
     return { error: `Error applying diff to git repository: ${error}` };
   }
 }
@@ -250,7 +284,10 @@ export async function resetAllChanges(repoPath: string): Promise<Result<void>> {
     await asyncExec(`cd ${repoPath} && git reset --hard`);
     return { data: undefined };
   } catch (error) {
-    logger.error({ error }, "Error restoring changes.");
+    logError({
+      shortMessage: "Error resetting all changes",
+      error,
+    })
     return { error: `Error restoring changes: ${error}` };
   }
 }
@@ -273,7 +310,10 @@ export async function isConflictAfterApply(
 
     return { data: false };
   } catch (error) {
-    logger.error({ error }, "Error checking for merge conflicts.");
+    logError({
+      shortMessage: "Error checking for merge conflicts",
+      error,
+    })
     return { error: `Error checking for merge conflicts: ${error}` };
   }
 }
@@ -290,7 +330,10 @@ export async function diffDirectories(
 
     return { data: stdout.trim() };
   } catch (error) {
-    logger.error({ error }, "Error generating diff.");
+    logError({
+      shortMessage: "Error generating diff",
+      error,
+    });
     return { error: `Error generating diff: ${error}` };
   }
 }

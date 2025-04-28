@@ -11,6 +11,7 @@ import { makeDir } from "./file-service";
 import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
 import { deepSortObject } from "../utils/shared-utils";
 import { logger } from "../lib/logger";
+import { logError } from "../lib/utils";
 
 export async function writeNewProjectSettings(
   absoluteProjectPath: string,
@@ -65,7 +66,10 @@ async function writeProjectSettings(
   try {
     await fs.writeFile(projectSettingsPath, serializedProjectSettings, "utf-8");
   } catch (error) {
-    logger.error({ error }, `Failed to write templateSettings.json.`);
+    logError({
+      shortMessage: "Failed to write templateSettings.json",
+      error,
+    })
     return { error: `Failed to write templateSettings.json: ${error}` };
   }
   return { data: undefined };
@@ -114,7 +118,10 @@ export async function loadProjectSettings(
     const projectSettings = await fs.readFile(projectSettingsPath, "utf-8");
     parsedProjectSettings = JSON.parse(projectSettings);
   } catch (error) {
-    logger.error({ error }, `Failed to read templateSettings.json.`);
+    logError({
+      shortMessage: "Failed to read templateSettings.json",
+      error,
+    })
     return {
       error: `Failed to read templateSettings.json: ${error}`,
     };

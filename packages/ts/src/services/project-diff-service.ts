@@ -10,7 +10,7 @@ import { PROJECT_REGISTRY } from "./project-registry-service";
 import { generateProjectFromExistingProject, generateProjectFromTemplateSettings, getParsedUserSettingsWithParentSettings } from "./project-service";
 import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
 import { logger } from "../lib/logger";
-import { anyOrCallbackToAny } from "../lib/utils";
+import { anyOrCallbackToAny, logError } from "../lib/utils";
 
 async function modifyAutoInstantiatedTemplatesInProjectSettings(
   projectSettings: ProjectSettings,
@@ -485,7 +485,10 @@ async function diffNewTempProjects(
       },
     };
   } catch (error) {
-    logger.error({ error }, "Failed to create clean project from current project settings");
+    logError({
+      shortMessage: "Failed to create clean project from current project settings",
+      error,
+    })
     return {
       error: "Failed to create clean project from current project settings",
     };

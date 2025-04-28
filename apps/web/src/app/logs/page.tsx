@@ -34,7 +34,7 @@ export default function LogsPage() {
   const [fromDate, setFromDate] = useState("")
   const [toDate, setToDate] = useState("")
   const [pretty, setPretty] = useState(false)
-  const [autoRefresh, setAutoRefresh] = useState(true)
+  const [autoRefresh, setAutoRefresh] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedDate, setSelectedDate] = useState<string>(() => new Date().toISOString().slice(0, 10))
   const [availableDates, setAvailableDates] = useState<string[]>([])

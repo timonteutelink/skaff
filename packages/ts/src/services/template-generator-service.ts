@@ -24,7 +24,7 @@ import {
 } from "./project-settings-service";
 import { CreateProjectResult, ProjectSettings, Result } from "../lib/types";
 import { logger } from "../lib/logger";
-import { anyOrCallbackToAny, stringOrCallbackToString } from "../lib/utils";
+import { anyOrCallbackToAny, logError, stringOrCallbackToString } from "../lib/utils";
 
 const eqHelper = (a: any, b: any, options?: HelperOptions) => {
   // block form: options.fn is a function
@@ -297,7 +297,10 @@ export class TemplateGeneratorService {
 
         logger.trace(`Generated: ${destPath}`);
       } catch (error) {
-        logger.error({ error }, `Error processing file ${srcPath}`);
+        logError({
+          shortMessage: `Error processing file ${srcPath}`,
+          error,
+        })
         return {
           error: `Error processing file ${srcPath}: ${error}`,
         };
@@ -372,14 +375,20 @@ export class TemplateGeneratorService {
         oldFileContents,
       );
     } catch (error) {
-      logger.error({ error }, `Failed to apply side effect.`);
+      logError({
+        shortMessage: `Failed to apply side effect function`,
+        error,
+      })
       return { error: `Failed to apply side effect: ${error}` };
     }
 
     try {
       await fs.writeFile(absoluteFilePath, sideEffectResult, "utf8");
     } catch (error) {
-      logger.error({ error }, `Failed to write file.`);
+      logError({
+        shortMessage: `Failed to write file`,
+        error,
+      })
       return { error: `Failed to write file: ${error}` };
     }
 
@@ -780,7 +789,10 @@ export class TemplateGeneratorService {
         return result;
       }
     } catch (error) {
-      logger.error({ error }, `Failed to instantiate template.`);
+      logError({
+        shortMessage: `Failed to instantiate template`,
+        error,
+      })
       return { error: `Failed to instantiate template: ${error}` };
     }
 
@@ -907,7 +919,10 @@ export class TemplateGeneratorService {
         return result;
       }
     } catch (error) {
-      logger.error({ error }, `Failed to instantiate new project.`);
+      logError({
+        shortMessage: `Failed to instantiate new project`,
+        error,
+      })
       return { error: `Failed to instantiate new project: ${error}` };
     }
 
@@ -1007,7 +1022,10 @@ export class TemplateGeneratorService {
         data: { resultPath: this.options.absoluteDestinationPath, diff: "" },
       };
     } catch (error) {
-      logger.error({ error }, `Failed to instantiate full project from settings.`);
+      logError({
+        shortMessage: `Failed to instantiate full project from settings`,
+        error,
+      })
       return {
         error: `Failed to instantiate full project from settings: ${error}`,
       };

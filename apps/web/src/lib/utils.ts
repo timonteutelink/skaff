@@ -34,36 +34,29 @@ type ToastErrorOptions<T> = {
 }
 
 export function toastNullError<T>({ result, error, level = "error", shortMessage, nullErrorMessage, nullRedirectPath, router, redirectType = "push" }: ToastErrorOptions<T>): T | false {
-  const assumedErrorObject = error as { message: string } | string | undefined;
+  const log = (err: unknown, message: string) => logger[level]({ err }, message);
   const toastErrorMessage = shortMessage || "An error occurred";
 
-  if (assumedErrorObject) {
-    let errorMessage: string = "An error occurred";
-    if (typeof assumedErrorObject === "string") {
-      errorMessage = assumedErrorObject;
-    }
-    if (typeof assumedErrorObject === "object" && "message" in assumedErrorObject) {
-      errorMessage = assumedErrorObject.message;
-    }
-    logger[level]({ shortMessage, error: errorMessage });
+  if (error) {
+    log(error, toastErrorMessage);
     showToast(toastErrorMessage, level);
     return false;
   }
 
   if (!result) {
-    logger[level](toastErrorMessage);
+    log(new Error(toastErrorMessage), toastErrorMessage);
     showToast(toastErrorMessage, level);
     return false;
   }
 
   if ("error" in result) {
-    logger[level]({ shortMessage, error: result.error });
+    log(new Error(result.error), toastErrorMessage);
     showToast(toastErrorMessage, level);
     return false;
   }
 
   if ((nullErrorMessage || (nullRedirectPath && router)) && result.data === null) {
-    logger[level]({ shortMessage, error: nullErrorMessage });
+    log(new Error(nullErrorMessage || toastErrorMessage), nullErrorMessage || toastErrorMessage);
     showToast(nullErrorMessage || toastErrorMessage, level);
     if (router && nullRedirectPath) {
       router[redirectType](nullRedirectPath);

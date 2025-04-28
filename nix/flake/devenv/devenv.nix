@@ -21,6 +21,8 @@ localFlake:
 
           # ESBUILD_BINARY_PATH="/home/tteutelink/projects/timon/code-templator/node_modules/.bin/esbuild";
           GENERATE_DIFF_SCRIPT_PATH ="~/projects/timon/code-templator/scripts/generate-diff-patch.sh";
+
+          NODE_OPTIONS="--experimental-vm-modules";
         };
 
         packages = with pkgs; [

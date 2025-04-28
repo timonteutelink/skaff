@@ -38,6 +38,9 @@ importers:
       pino-pretty:
         specifier: ^13.0.0
         version: 13.0.0
+      yaml:
+        specifier: ^2.7.1
+        version: 2.7.1
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*
@@ -219,6 +222,9 @@ importers:
       vaul:
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@19.1.2(@types/react@19.1.1))(@types/react@19.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      yaml:
+        specifier: ^2.7.1
+        version: 2.7.1
       zod:
         specifier: ^3.24.2
         version: 3.24.2
@@ -362,6 +368,9 @@ importers:
       pino-pretty:
         specifier: ^13.0.0
         version: 13.0.0
+      yaml:
+        specifier: ^2.7.1
+        version: 2.7.1
       zod:
         specifier: ^3.24.2
         version: 3.24.2
@@ -3489,6 +3498,11 @@ packages:
 
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
+
+  yaml@2.7.1:
+    resolution: {integrity: sha512-10ULxpnOCQXxJvBgxsn9ptjq6uviG/htZKk9veJGhlqn3w/DxQ631zFF+nlQXLwmImeS5amR2dl2U8sg6U9jsQ==}
+    engines: {node: '>= 14'}
+    hasBin: true
 
   yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
@@ -6753,6 +6767,8 @@ snapshots:
       strip-ansi: 7.1.0
 
   wrappy@1.0.2: {}
+
+  yaml@2.7.1: {}
 
   yocto-queue@0.1.0: {}
 
