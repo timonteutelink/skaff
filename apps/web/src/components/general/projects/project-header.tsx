@@ -33,7 +33,7 @@ export function ProjectHeader({ project, defaultTemplate, onBranchChange }: Proj
           shortMessage: "Error retrieving project diff",
         })
 
-        if (parsedFiles === undefined) {
+        if (parsedFiles === false) {
           setIsDiffClean(true);
           return;
         }

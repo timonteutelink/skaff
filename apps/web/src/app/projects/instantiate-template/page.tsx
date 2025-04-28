@@ -354,8 +354,7 @@ const TemplateInstantiationPage: React.FC = () => {
         shortMessage: "Error committing changes.",
       })
 
-      console.log({ commit });
-      if (commit === undefined) {
+      if (commit === false) {
         return
       }
       router.push(`/projects/project/?projectName=${projectNameParam}`);
@@ -441,7 +440,7 @@ const TemplateInstantiationPage: React.FC = () => {
         result: result,
         shortMessage: "Error deleting project.",
       })
-      if (cancel === undefined) {
+      if (cancel === false) {
         return
       }
     } else {
@@ -451,7 +450,7 @@ const TemplateInstantiationPage: React.FC = () => {
         result: restoreResult,
         shortMessage: "Error restoring changes.",
       })
-      if (restored === undefined) {
+      if (restored === false) {
         return
       }
     }

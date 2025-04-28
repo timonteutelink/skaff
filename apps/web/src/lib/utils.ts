@@ -33,7 +33,7 @@ type ToastErrorOptions<T> = {
   redirectType?: "push" | "replace";
 }
 
-export function toastNullError<T>({ result, error, level = "error", shortMessage, nullErrorMessage, nullRedirectPath, router, redirectType = "push" }: ToastErrorOptions<T>): T | undefined {
+export function toastNullError<T>({ result, error, level = "error", shortMessage, nullErrorMessage, nullRedirectPath, router, redirectType = "push" }: ToastErrorOptions<T>): T | false {
   const assumedErrorObject = error as { message: string } | string | undefined;
   const toastErrorMessage = shortMessage || "An error occurred";
 
@@ -47,19 +47,19 @@ export function toastNullError<T>({ result, error, level = "error", shortMessage
     }
     logger[level]({ shortMessage, error: errorMessage });
     showToast(toastErrorMessage, level);
-    return undefined;
+    return false;
   }
 
   if (!result) {
     logger[level](toastErrorMessage);
     showToast(toastErrorMessage, level);
-    return undefined;
+    return false;
   }
 
   if ("error" in result) {
     logger[level]({ shortMessage, error: result.error });
     showToast(toastErrorMessage, level);
-    return undefined;
+    return false;
   }
 
   if ((nullErrorMessage || (nullRedirectPath && router)) && result.data === null) {
@@ -68,7 +68,7 @@ export function toastNullError<T>({ result, error, level = "error", shortMessage
     if (router && nullRedirectPath) {
       router[redirectType](nullRedirectPath);
     }
-    return undefined;
+    return false;
   }
 
   return result.data;

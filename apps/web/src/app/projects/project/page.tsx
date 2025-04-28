@@ -15,14 +15,36 @@ import type {
 } from "@repo/ts/lib/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 
-/* =============================================================================
-   Helper: collectTemplates()
+const isTemplateDisabled = (
+  candidate: TemplateDTO,
+  instances: InstantiatedTemplate[],
+): boolean => {
+  const rules = candidate.templatesThatDisableThis;
+  if (!rules || rules.length === 0) return false;
 
-   Recursively traverse a TemplateDTO tree to build a mapping from template name
-   to the corresponding TemplateDTO definition.
-------------------------------------------------------------------------------- */
+  const matchSettings = (
+    instanceSettings: Record<string, unknown>,
+    required: Record<string, unknown>,
+  ) =>
+    Object.entries(required).every(
+      ([k, v]) => instanceSettings[k] === v,
+    );
+
+  return rules.some((rule) =>
+    instances.some((inst) => {
+      if (inst.templateName !== rule.templateName) return false;
+
+      if (!rule.specificSettings || rule.specificSettings.length === 0)
+        return true;
+
+      return rule.specificSettings.some((req) =>
+        matchSettings(inst.templateSettings, req),
+      );
+    }),
+  );
+};
+
 const collectTemplates = (tpl: TemplateDTO): Record<string, TemplateDTO> => {
   let map: Record<string, TemplateDTO> = {};
   map[tpl.config.templateConfig.name] = tpl;
@@ -85,7 +107,6 @@ const buildProjectTree = (
   instances: InstantiatedTemplate[],
   templateMap: Record<string, TemplateDTO>,
 ): ProjectTreeNode[] => {
-  // Group instantiated templates by parentId.
   const childrenByParent: Record<string, InstantiatedTemplate[]> = {};
   const rootInstances: InstantiatedTemplate[] = [];
 
@@ -100,7 +121,6 @@ const buildProjectTree = (
     }
   });
 
-  // Recursively build an instantiated node.
   const buildNode = (inst: InstantiatedTemplate): InstantiatedNode => {
     const node: InstantiatedNode = {
       type: "instantiated",
@@ -112,14 +132,11 @@ const buildProjectTree = (
 
     const parentDef = templateMap[inst.templateName];
     if (parentDef && parentDef.subTemplates) {
-      // For each category in the parent definition.
       Object.keys(parentDef.subTemplates).forEach((category) => {
         const candidateTemplates = parentDef.subTemplates[category]!;
-        // For this category, build a childTemplate node for each candidate.
         const childTemplateNodes: ChildTemplateNode[] = candidateTemplates.map(
           (candidate) => {
             const candidateId = candidate.config.templateConfig.name;
-            // Find already instantiated children whose templateName matches the candidate.
             const childInstances = (childrenByParent[inst.id] || []).filter(
               (child) => child.templateName === candidateId,
             );
@@ -130,9 +147,12 @@ const buildProjectTree = (
             const finalChildren: ProjectTreeNode[] = [
               ...childInstantiatedNodes,
             ];
+            const disabled = isTemplateDisabled(candidate, instances);
+
             if (
-              childInstances.length == 0 ||
-              candidate.config.templateConfig.multiInstance
+              !disabled &&
+              (childInstances.length === 0 ||
+                candidate.config.templateConfig.multiInstance)
             ) {
               // Create a createInstance action node for this candidate.
               const createNode: CreateInstanceNode = {
@@ -143,6 +163,9 @@ const buildProjectTree = (
               };
               finalChildren.push(createNode);
             }
+            if (disabled && childInstances.length === 0) {
+              return null;
+            }
             return {
               type: "childTemplate",
               id: `${inst.id}-${category}-${candidateId}`,
@@ -150,7 +173,7 @@ const buildProjectTree = (
               children: finalChildren,
             } as ChildTemplateNode;
           },
-        );
+        ).filter(res => res !== null);
 
         // Create the subCategory node with the candidate childTemplate nodes.
         const subCategoryNode: SubCategoryNode = {
