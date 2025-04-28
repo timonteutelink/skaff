@@ -20,7 +20,7 @@ export const serverLogger = pino({
           destination: path.join(
             getCacheDirPath(),
             'logs',
-            `app.${new Date().toISOString().slice(0, 10)}.log`
+            `code-templator.${new Date().toISOString().slice(0, 10)}.log`
           ),
           mkdir: true,
           rotate: { interval: '1d', size: '10m', maxFiles: 14 },

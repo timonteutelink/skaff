@@ -47,7 +47,6 @@ export class ProjectRegistry {
             this.projects.push(project.data);
           }
         } catch (error) {
-          logger.warn({ error }, `Ignoring ${absDir}`);
           continue;
         }
       }

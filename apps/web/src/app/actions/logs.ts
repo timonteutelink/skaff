@@ -30,7 +30,7 @@ export async function fetchLogs(
   const logPath = path.join(
     getCacheDirPath(),
     'logs',
-    `app.${file}.log`
+    `code-templator.${file}.log`
   );
 
   try {

@@ -110,11 +110,11 @@ export default function LogsPage() {
     return () => clearInterval(id)
   }, [autoRefresh, loadLogs])
 
-  useEffect(() => {
-    if (logEndRef.current && !pretty) {
-      logEndRef.current.scrollIntoView({ behavior: "smooth" })
-    }
-  }, [logs, pretty])
+  // useEffect(() => {
+  //   if (logEndRef.current && !pretty) {
+  //     logEndRef.current.scrollIntoView({ behavior: "smooth" })
+  //   }
+  // }, [logs, pretty])
 
   const startDrag = useCallback((e: React.MouseEvent) => {
     dragStartYRef.current = e.clientY
@@ -122,10 +122,8 @@ export default function LogsPage() {
 
     const onDrag = (ev: MouseEvent) => {
       const delta = dragStartYRef.current - ev.clientY
-      setPanelHeight(prev => {
-        const newHeight = Math.min(Math.max(startHeightRef.current + delta, 120), 600)
-        return newHeight
-      })
+      const newHeight = Math.min(Math.max(startHeightRef.current + delta, 120), 600)
+      setPanelHeight(newHeight)
     }
 
     const stopDrag = () => {
@@ -373,13 +371,13 @@ export default function LogsPage() {
               className="h-2 w-full cursor-row-resize bg-muted"
               onMouseDown={startDrag}
             />
-            <div className="flex items-center justify-between px-4 py-2 border-b">
+            <div className="flex items-center justify-between px-4 border-b">
               <span className="text-sm font-medium">Log Details</span>
               <Button variant="ghost" size="sm" onClick={() => setSelectedLog(null)}>
                 Close
               </Button>
             </div>
-            <pre className="h-[calc(100%-3rem)] overflow-auto p-4 text-xs whitespace-pre-wrap">
+            <pre className="h-[calc(100%-3rem)] overflow-auto p-4 text-xs whitespace-pre-wrap rounded-b">
               {JSON.stringify(selectedLog, null, 2)}
             </pre>
           </div>
