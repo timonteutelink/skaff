@@ -354,7 +354,7 @@ const TemplateInstantiationPage: React.FC = () => {
         shortMessage: "Error committing changes.",
       })
 
-      if (!commit) {
+      if (commit === undefined) {
         return
       }
       router.push(`/projects/project/?projectName=${projectNameParam}`);
