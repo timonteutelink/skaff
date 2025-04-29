@@ -85,45 +85,47 @@ export function ProjectDetailsPanel({
               <Badge className="ml-4 bg-red-100 text-red-800">Outdated</Badge>
             )) : null}
           </div>
-          {!selectedInstantiatedTemplate.automaticallyInstantiatedByParent ? (
-            <Button
-              disabled={!project?.name}
-              onClick={() => {
-                router.push(
-                  `/projects/instantiate-template/?projectName=${project.name}` +
-                  `&existingTemplateInstanceId=${id}`,
-                );
-              }}
-            >
-              Edit
-            </Button>
-          ) : null}
-          {selectedNodeTemplate?.templateCommands?.length ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Open actions menu"
-                  className="rounded-full"
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent align="end">
-                {selectedNodeTemplate.templateCommands.map((item) => (
-                  <DropdownMenuItem
-                    key={item.title}
-                    onClick={() => handleExecuteCommand(item)}
-                    className="cursor-pointer"
+          <div className="flex items-center gap-2">
+            {!selectedInstantiatedTemplate.automaticallyInstantiatedByParent ? (
+              <Button
+                disabled={!project?.name}
+                onClick={() => {
+                  router.push(
+                    `/projects/instantiate-template/?projectName=${project.name}` +
+                    `&existingTemplateInstanceId=${id}`,
+                  );
+                }}
+              >
+                Edit
+              </Button>
+            ) : null}
+            {selectedNodeTemplate?.templateCommands?.length ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Open actions menu"
+                    className="rounded-full"
                   >
-                    {item.title}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : null}
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="end">
+                  {selectedNodeTemplate.templateCommands.map((item) => (
+                    <DropdownMenuItem
+                      key={item.title}
+                      onClick={() => handleExecuteCommand(item)}
+                      className="cursor-pointer"
+                    >
+                      {item.title}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
+          </div>
 
         </div>
 

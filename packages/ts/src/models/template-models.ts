@@ -373,10 +373,10 @@ export class Template {
       refDir: this.relativeRefDir,
       currentCommitHash: this.commitHash,
       templatesThatDisableThis: this.config.templatesThatDisableThis || [],
-      templateCommands: this.config.templateCommands.map((command) => ({
+      templateCommands: this.config.commands?.map((command) => ({
         title: command.title,
         description: command.description,
-      })),
+      })) || [],
       isDefault: this.isDefault,
     };
   }

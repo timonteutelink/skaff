@@ -83,7 +83,7 @@ export async function runProjectCommand(
     return { error: `Project ${projectName} not found` };
   }
 
-  const result = await project.data.runCommand(
+  const result = await project.data.executeTemplateCommand(
     templateInstanceId,
     commandTitle,
   );

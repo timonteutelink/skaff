@@ -142,7 +142,7 @@ export class Project {
       };
     }
 
-    const templateCommand = template.config.templateCommands.find(
+    const templateCommand = template.config.commands?.find(
       (c) => c.title === commandTitle,
     );
 
