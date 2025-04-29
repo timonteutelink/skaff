@@ -4,9 +4,12 @@ import { Button } from "@/components/ui/button";
 import type { ProjectTreeNode } from "./types";
 import { ProjectDTO, TemplateDTO } from "@repo/ts/lib/types";
 import { findTemplate } from "@repo/ts/utils/shared-utils";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { toastNullError } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreVertical } from "lucide-react";
+import { runProjectCommand } from "@/app/actions/project";
 
 interface ProjectDetailsPanelProps {
   selectedNode: ProjectTreeNode | null;
@@ -37,6 +40,22 @@ export function ProjectDetailsPanel({
       ),
     [project, selectedNode],
   );
+
+  const handleExecuteCommand = useCallback(async (command: { title: string; description: string }) => {
+    if (!selectedNode) {
+      toastNullError({
+        shortMessage: "No selected node",
+      })
+      return;
+    }
+    //TODO first show popup with command to run then actually run it.
+    const result = await runProjectCommand(project.name, selectedNode.id, command.title)
+    const commandOutput = toastNullError({ result, shortMessage: "Error executing command" });
+    if (commandOutput) {
+      console.log("Command output:", commandOutput);
+      alert(`Command executed successfully: ${commandOutput}`);
+    }
+  }, [project, selectedNode]);
 
   if (!selectedNode) {
     return (
@@ -79,6 +98,33 @@ export function ProjectDetailsPanel({
               Edit
             </Button>
           ) : null}
+          {selectedNodeTemplate?.templateCommands?.length ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Open actions menu"
+                  className="rounded-full"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end">
+                {selectedNodeTemplate.templateCommands.map((item) => (
+                  <DropdownMenuItem
+                    key={item.title}
+                    onClick={() => handleExecuteCommand(item)}
+                    className="cursor-pointer"
+                  >
+                    {item.title}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
+
         </div>
 
         {/* Details grid */}
