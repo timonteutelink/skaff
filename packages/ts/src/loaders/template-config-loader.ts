@@ -12,6 +12,7 @@ import zod from "zod";
 import * as zodNS from "zod";           // full namespace object
 import * as templateTypesLibNS from "@timonteutelink/template-types-lib";
 import * as yamlNS from "yaml";
+import * as handlebarsNS from "handlebars";
 
 import {
   getHash,
@@ -22,9 +23,12 @@ import { getEsbuild } from "../utils/get-esbuild";
 import { logger } from "../lib/logger";
 
 const SANDBOX_LIBS: Record<string, unknown> = {
-  zod: zodNS,
-  yaml: yamlNS,
   "@timonteutelink/template-types-lib": templateTypesLibNS,
+  zod: zodNS,
+  handlebars: handlebarsNS,
+
+  // utils
+  yaml: yamlNS,
 };
 
 interface TemplateConfigFileInfo {

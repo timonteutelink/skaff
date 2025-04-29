@@ -8,7 +8,7 @@ import {
 } from "@timonteutelink/template-types-lib";
 import fs from "fs-extra";
 import { glob } from "glob";
-import Handlebars, { HelperOptions } from 'handlebars';
+import Handlebars, { HelperDelegate, HelperOptions } from 'handlebars';
 import * as path from "node:path";
 import z from "zod";
 import { Template } from "../models/template-models";
@@ -213,6 +213,43 @@ export class TemplateGeneratorService {
     return { data: templatesToAutoInstantiate.data };
   }
 
+  private getHandlebarHelpers(): Result<Record<string, HelperDelegate>> {
+    if (
+      !this.currentlyGeneratingTemplate ||
+      !this.currentlyGeneratingTemplateFullSettings
+    ) {
+      return { error: "No template is currently being generated." };
+    }
+    const fullSettings = this.currentlyGeneratingTemplateFullSettings;
+    const handlebarHelpers = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.handlebarHelpers, fullSettings);
+    if ("error" in handlebarHelpers) {
+      return handlebarHelpers;
+    }
+    if (!handlebarHelpers.data) {
+      return { data: {} };
+    }
+
+    return { data: handlebarHelpers.data };
+  }
+
+  private registerHandlebarHelpers(
+    helpers: Record<string, HelperDelegate>,
+  ): Result<void> {
+    for (const [name, helper] of Object.entries(helpers)) {
+      Handlebars.registerHelper(name, helper);
+    }
+    return { data: undefined };
+  }
+
+  private unregisterHandlebarHelpers(
+    helpers: Record<string, HelperDelegate>,
+  ): Result<void> {
+    for (const [name] of Object.entries(helpers)) {
+      Handlebars.unregisterHelper(name);
+    }
+    return { data: undefined };
+  }
+
   /**
    * Copies all files from the template’s adjacent "templates" directory to the destination.
    * Files are processed with Handlebars. If a file ends in ".hbs", the extension is removed.
@@ -244,6 +281,14 @@ export class TemplateGeneratorService {
       return overwrites;
     }
 
+    const handlebarHelpers = this.getHandlebarHelpers();
+
+    if ("error" in handlebarHelpers) {
+      return handlebarHelpers;
+    }
+
+    this.registerHandlebarHelpers(handlebarHelpers.data);
+
     await makeDir(dest.data);
 
     const entries = await glob(`**/*`, { cwd: src, dot: true, nodir: true });
@@ -273,6 +318,7 @@ export class TemplateGeneratorService {
             const allowedOverwrite = overwrites.data.find((overwrite) => overwrite.srcRegex.test(entry));
             if (!allowedOverwrite || allowedOverwrite.mode === 'error') {
               logger.error(`File: ${entry} at ${destPath} already exists.`);
+              this.unregisterHandlebarHelpers(handlebarHelpers.data);
               return { error: `File: ${entry} at ${destPath} already exists.` }
             }
 
@@ -301,11 +347,14 @@ export class TemplateGeneratorService {
           shortMessage: `Error processing file ${srcPath}`,
           error,
         })
+        this.unregisterHandlebarHelpers(handlebarHelpers.data);
         return {
           error: `Error processing file ${srcPath}: ${error}`,
         };
       }
     }
+
+    this.unregisterHandlebarHelpers(handlebarHelpers.data);
 
     return { data: undefined };
   }

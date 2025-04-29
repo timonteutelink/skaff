@@ -1,4 +1,5 @@
 import z from "zod";
+import { HelperDelegate } from "handlebars";
 import {
   StringOrCallback,
   UserTemplateSettings,
@@ -226,6 +227,11 @@ export interface TemplateConfigModule<
    * Assertions. Function must return true otherwise the template generation will fail.
    */
   assertions?: AnyOrCallback<TFullSettingsType, boolean>;
+
+  /**
+   * A list of helper functions provided to handlebars before rendering the template.
+   */
+  handlebarHelpers?: AnyOrCallback<TFullSettingsType, Record<string, HelperDelegate>>;
 
   /**
    * A description of this template. Usefull for the AI.
