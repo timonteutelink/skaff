@@ -135,6 +135,7 @@ export type TemplateCommand<
 > = {
   title: string;
   description: string;
+  path?: string;
   command: StringOrCallback<TFullSettingsType>;
 }
 

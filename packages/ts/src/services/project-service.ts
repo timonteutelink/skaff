@@ -18,7 +18,6 @@ import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
 import { TemplateGeneratorService } from "./template-generator-service";
 import { logger } from "../lib/logger";
 
-// TODO: do some refactoring so most functions in this file take a full Project not projectname
 export function getParsedUserSettingsWithParentSettings(
   userSettings: UserTemplateSettings,
   currentlyGeneratingTemplate: Template,

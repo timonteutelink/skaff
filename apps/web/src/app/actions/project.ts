@@ -62,3 +62,35 @@ export async function retrieveProject(
 
   return { data: projectDto.data };
 }
+
+export async function runProjectCommand(
+  projectName: string,
+  templateInstanceId: string,
+  commandTitle: string,
+): Promise<Result<string>> {
+  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  if ("error" in reloadResult) {
+    return { error: reloadResult.error };
+  }
+  const project = await PROJECT_REGISTRY.findProject(projectName);
+
+  if ("error" in project) {
+    return { error: project.error };
+  }
+
+  if (!project.data) {
+    logger.error(`Project ${projectName} not found`);
+    return { error: `Project ${projectName} not found` };
+  }
+
+  const result = await project.data.runCommand(
+    templateInstanceId,
+    commandTitle,
+  );
+
+  if ("error" in result) {
+    return { error: result.error };
+  }
+
+  return { data: result.data };
+}

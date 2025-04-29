@@ -1,10 +1,13 @@
-import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
+import { TemplateSettingsType, UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import path from "node:path";
 import { GitStatus, ProjectDTO, ProjectSettings, Result } from "../lib/types";
 import { loadGitStatus } from "../services/git-service";
 import { loadProjectSettings } from "../services/project-settings-service";
 import { Template } from "./template-models";
 import { logger } from "../lib/logger";
+import { stringOrCallbackToString } from "../lib/utils";
+import z from "zod";
+import { executeCommand } from "../services/shell-service";
 
 // every project name inside a root project should be unique.
 // The root project can be uniquely identified by its name and author.(and version)
@@ -109,6 +112,80 @@ export class Project {
         projectSettings.data.rootTemplate,
         gitStatus.data,
       ),
+    };
+  }
+
+  async executeTemplateCommand(
+    templateInstanceId: string,
+    commandTitle: string,
+  ): Promise<Result<string>> {
+    const instantiatedTemplate = this.instantiatedProjectSettings.instantiatedTemplates.find(
+      (t) => t.id === templateInstanceId,
+    );
+    if (!instantiatedTemplate) {
+      logger.error(
+        `Template with id ${templateInstanceId} not found in project settings`,
+      );
+      return {
+        error: `Template with id ${templateInstanceId} not found in project settings`,
+      };
+    }
+    const template = this.rootTemplate.findSubTemplate(
+      instantiatedTemplate.templateName,
+    );
+    if (!template) {
+      logger.error(
+        `Template ${instantiatedTemplate.templateName} not found in project`,
+      );
+      return {
+        error: `Template ${instantiatedTemplate.templateName} not found in project`,
+      };
+    }
+
+    const templateCommand = template.config.templateCommands.find(
+      (c) => c.title === commandTitle,
+    );
+
+    if (!templateCommand) {
+      logger.error(
+        `Command ${commandTitle} not found in template ${template.config.templateConfig.name}`,
+      );
+      return {
+        error: `Command ${commandTitle} not found in template ${template.config.templateConfig.name}`,
+      };
+    }
+
+    const fullSettings = Project.getInstantiatedSettings(
+      template,
+      templateInstanceId,
+      this.instantiatedProjectSettings,
+    );
+
+    if ("error" in fullSettings) {
+      return fullSettings;
+    }
+
+    const fullProjectSettings: TemplateSettingsType<z.AnyZodObject> = {
+      project_name: this.instantiatedProjectSettings.projectName,
+      fullSettings: fullSettings.data,
+    }
+
+    const commandToExecute = stringOrCallbackToString(templateCommand.command, fullProjectSettings);
+
+    if ('error' in commandToExecute) {
+      return commandToExecute;
+    }
+
+    const commandCwdPath = path.join(this.absoluteRootDir, templateCommand.path || '.');
+
+    const commandResult = await executeCommand(commandCwdPath, commandToExecute.data);
+
+    if ('error' in commandResult) {
+      return commandResult;
+    }
+
+    return {
+      data: commandResult.data,
     };
   }
 
