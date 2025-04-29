@@ -234,18 +234,61 @@ export class TemplateGeneratorService {
 
   private registerHandlebarHelpers(
     helpers: Record<string, HelperDelegate>,
+    unregister?: boolean,
   ): Result<void> {
     for (const [name, helper] of Object.entries(helpers)) {
-      Handlebars.registerHelper(name, helper);
+      if (unregister) {
+        Handlebars.unregisterHelper(name);
+      } else {
+        Handlebars.registerHelper(name, helper);
+      }
     }
     return { data: undefined };
   }
 
-  private unregisterHandlebarHelpers(
-    helpers: Record<string, HelperDelegate>,
-  ): Result<void> {
-    for (const [name] of Object.entries(helpers)) {
-      Handlebars.unregisterHelper(name);
+  private async loadPartialFiles(
+    partials: Record<string, string>,
+  ): Promise<Result<Record<string, string>>> {
+    const loadedPartials: Record<string, string> = {};
+    for (const [name, filePath] of Object.entries(partials)) {
+      try {
+        const content = await fs.readFile(filePath, "utf-8");
+        loadedPartials[name] = content;
+      } catch (error) {
+        logError({
+          shortMessage: `Error loading partial file ${filePath}`,
+          error,
+        })
+        return { error: `Error loading partial file ${filePath}: ${error}` };
+      }
+    }
+    return { data: loadedPartials };
+  }
+
+  private async registerAllPartials(unregister?: boolean): Promise<Result<void>> {
+    if (!this.currentlyGeneratingTemplate) {
+      logger.error("No template is currently being generated.");
+      return { error: "No template is currently being generated." };
+    }
+
+    const templatePartials = await this.currentlyGeneratingTemplate.findAllPartials();
+
+    if ('error' in templatePartials) {
+      return templatePartials;
+    }
+
+    const partialFiles = await this.loadPartialFiles(templatePartials.data);
+
+    if ("error" in partialFiles) {
+      return partialFiles;
+    }
+
+    for (const [name, partial] of Object.entries(partialFiles.data)) {
+      if (unregister) {
+        Handlebars.unregisterPartial(name);
+      } else {
+        Handlebars.registerPartial(name, partial);
+      }
     }
     return { data: undefined };
   }
@@ -288,6 +331,7 @@ export class TemplateGeneratorService {
     }
 
     this.registerHandlebarHelpers(handlebarHelpers.data);
+    this.registerAllPartials();
 
     await makeDir(dest.data);
 
@@ -318,7 +362,8 @@ export class TemplateGeneratorService {
             const allowedOverwrite = overwrites.data.find((overwrite) => overwrite.srcRegex.test(entry));
             if (!allowedOverwrite || allowedOverwrite.mode === 'error') {
               logger.error(`File: ${entry} at ${destPath} already exists.`);
-              this.unregisterHandlebarHelpers(handlebarHelpers.data);
+              this.registerHandlebarHelpers(handlebarHelpers.data, true);
+              this.registerAllPartials(true);
               return { error: `File: ${entry} at ${destPath} already exists.` }
             }
 
@@ -347,14 +392,16 @@ export class TemplateGeneratorService {
           shortMessage: `Error processing file ${srcPath}`,
           error,
         })
-        this.unregisterHandlebarHelpers(handlebarHelpers.data);
+        this.registerHandlebarHelpers(handlebarHelpers.data, true);
+        this.registerAllPartials(true);
         return {
           error: `Error processing file ${srcPath}: ${error}`,
         };
       }
     }
 
-    this.unregisterHandlebarHelpers(handlebarHelpers.data);
+    this.registerHandlebarHelpers(handlebarHelpers.data, true)
+    this.registerAllPartials(true);
 
     return { data: undefined };
   }

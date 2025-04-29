@@ -11,6 +11,7 @@ import {
   loadAllTemplateConfigs,
   TemplateConfigWithFileInfo,
 } from "../loaders/template-config-loader";
+import { glob } from "glob";
 import { getCacheDirPath } from "../services/cache-service";
 import { getCommitHash, isGitRepoClean } from "../services/git-service";
 import { TemplateGeneratorService } from "../services/template-generator-service";
@@ -34,6 +35,7 @@ export class Template {
   // A reference to the parent template, if this is a subtemplate.
   public parentTemplate?: Template;
 
+  public foundPartials?: Record<string, string>;
 
   // The directory containing the root template
   // TODO move this one higher to point to the root of the git repo containing everything
@@ -46,6 +48,10 @@ export class Template {
   // paths to "templates" directory containing the files to be templated.
   public absoluteTemplatesDir: string;
   public relativeTemplatesDir: string;
+
+  // paths to "partials" directory containing all partials that this template and children can use.
+  public absolutePartialsDir?: string;
+  public relativePartialsDir?: string;
 
   // If this template was reffed, store the dir containing the templateRef.json.
   public relativeRefDir?: string;
@@ -66,6 +72,7 @@ export class Template {
     templatesDir: string,
     commitHash?: string,
     refDir?: string,
+    partialsDir?: string,
   ) {
     this.absoluteBaseDir = baseDir;
 
@@ -74,6 +81,11 @@ export class Template {
 
     this.absoluteTemplatesDir = templatesDir;
     this.relativeTemplatesDir = path.relative(baseDir, templatesDir);
+
+    this.absolutePartialsDir = partialsDir
+      ? path.resolve(baseDir, partialsDir)
+      : undefined;
+    this.relativePartialsDir = partialsDir
 
     this.relativeRefDir = refDir;
 
@@ -146,6 +158,14 @@ export class Template {
         continue;
       }
 
+      let partialsDir: string | undefined = path.join(templateDir, "partials");
+      try {
+        const stat = await fs.stat(partialsDir);
+        if (!stat.isDirectory()) partialsDir = undefined;
+      } catch {
+        partialsDir = undefined;
+      }
+
       let rootCommitHash: string | undefined = "";
 
       if (templateDir === absoluteRootDir) {
@@ -159,6 +179,7 @@ export class Template {
         templatesDir,
         rootCommitHash,
         info.refDir,
+        partialsDir,
       );
       templatesMap[templateDir] = template;
     }
@@ -352,6 +373,10 @@ export class Template {
       refDir: this.relativeRefDir,
       currentCommitHash: this.commitHash,
       templatesThatDisableThis: this.config.templatesThatDisableThis || [],
+      templateCommands: this.config.templateCommands.map((command) => ({
+        title: command.title,
+        description: command.description,
+      })),
       isDefault: this.isDefault,
     };
   }
@@ -390,6 +415,48 @@ export class Template {
       return this.parentTemplate.findCommitHash();
     }
     return "";
+  }
+
+  /**
+   * Finds all partials in the template and its parents.
+   * Does this by finding all files in the partials directory if exists. Then using await glob(`**\/*`, {cwd: src, dot: false, nodir: true}) to find ALL FILES in the directory and subdirectories and use the part before the first dot as the key of the partial. The path to the file is the value.
+   * If the partials directory does not exist, it will return only the partials of the parent templates.
+   */
+  public async findAllPartials(): Promise<Result<Record<string, string>>> {
+    if (this.foundPartials) {
+      return { data: this.foundPartials };
+    }
+    const partials: Record<string, string> = {};
+    if (this.absolutePartialsDir) {
+      try {
+        const entries = await glob(`**/*`, { cwd: this.absolutePartialsDir, dot: false, nodir: true });
+        for (const entry of entries) {
+          const key = entry.split(".")[0]!;
+          const value = path.join(this.absolutePartialsDir, entry);
+          partials[key] = value;
+        }
+      } catch (error) {
+        logger.error(
+          { error, absolutePartialsDir: this.absolutePartialsDir },
+          `Failed to read partials directory`,
+        );
+        return { error: `Failed to read partials directory: ${error}` };
+      }
+    }
+
+    if (this.parentTemplate) {
+      const parentPartialsResult = await this.parentTemplate.findAllPartials();
+      if ("error" in parentPartialsResult) {
+        return parentPartialsResult;
+      }
+      for (const [key, value] of Object.entries(parentPartialsResult.data)) {
+        if (!partials[key]) {
+          partials[key] = value;
+        }
+      }
+    }
+    this.foundPartials = partials;
+    return { data: partials };
   }
 
   public async isValid(): Promise<boolean> {

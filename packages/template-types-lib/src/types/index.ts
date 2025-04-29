@@ -12,6 +12,7 @@ export type {
   TemplateDisablingThis,
   AllowOverwrite,
   AutoInstantiatedSubtemplate,
+  TemplateCommand,
   LLMTools,
   AiContext,
   AiCallbackFunction,

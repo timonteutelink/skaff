@@ -129,6 +129,15 @@ export type AutoInstantiatedSubtemplate<
   children?: AutoInstantiatedSubtemplate<TFullSettingsType>[];
 };
 
+export type TemplateCommand<
+  TFullSettingsType extends
+  TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
+> = {
+  title: string;
+  description: string;
+  command: StringOrCallback<TFullSettingsType>;
+}
+
 export type AiContext = {
   description: string;
   relevantFiles?: string[];
@@ -232,6 +241,11 @@ export interface TemplateConfigModule<
    * A list of helper functions provided to handlebars before rendering the template.
    */
   handlebarHelpers?: AnyOrCallback<TFullSettingsType, Record<string, HelperDelegate>>;
+
+  /**
+   * A list of commands the user might want to run inside the project. Related to this template. Executed using bash.
+   */
+  commands?: TemplateCommand<TFullSettingsType>[];
 
   /**
    * A description of this template. Usefull for the AI.

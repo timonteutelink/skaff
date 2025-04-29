@@ -75,7 +75,6 @@ export function Tree<T extends { id: string; children?: T[] }>({
             </span>
           </div>
         );
-        console.log("node", node);
 
         return renderLabel
           ? renderLabel(

@@ -28,6 +28,7 @@ export interface TemplateDTO {
   currentCommitHash?: string; //always defined on root templates.
   isDefault: boolean;
   templatesThatDisableThis: TemplateDisablingThis[];
+  templateCommands: { title: string, description: string }[];
   refDir?: string;
 }
 

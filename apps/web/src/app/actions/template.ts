@@ -41,18 +41,6 @@ export async function reloadTemplates(): Promise<Result<DefaultTemplateResult[]>
   return { data: allNewTemplates.data };
 }
 
-export async function retrieveTemplates(): Promise<Result<TemplateDTO[]>> {
-  const templates = await ROOT_TEMPLATE_REGISTRY.getAllTemplates();
-
-  if ("error" in templates) {
-    return { error: templates.error };
-  }
-
-  const templateDtos = templates.data.map((template) => template.mapToDTO());
-
-  return { data: templateDtos };
-}
-
 export async function retrieveDefaultTemplates(): Promise<Result<DefaultTemplateResult[]>> {
   const templates = await ROOT_TEMPLATE_REGISTRY.getAllTemplates();
 

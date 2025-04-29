@@ -1,6 +1,6 @@
 {
   "name": "@timonteutelink/template-types-lib",
-  "version": "0.0.31",
+  "version": "0.0.32",
   "exports": {
     ".": "./dist/index.js"
   },
