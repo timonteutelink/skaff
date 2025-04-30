@@ -7,7 +7,6 @@ import type { ParsedFile, Result } from "@repo/ts/lib/types";
 import { ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 
 export default function ProjectStagedChangesPage() {
   const searchParams = useSearchParams();

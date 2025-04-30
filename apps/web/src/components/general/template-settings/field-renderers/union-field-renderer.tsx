@@ -156,9 +156,9 @@ export function UnionFieldRenderer({
                       <SelectValue placeholder={`Select ${discriminator}`} />
                     </SelectTrigger>
                     <SelectContent>
-                      {options.map((option: string) => (
+                      {options.map((option: any) => (
                         <SelectItem key={option} value={option}>
-                          {option.toUpperCase()}
+                          {String(option).toUpperCase()}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -93,7 +93,7 @@ export function ProjectDetailsPanel({
                   router.push(
                     `/projects/instantiate-template/?projectName=${project.name}` +
                     `&existingTemplateInstanceId=${id}` +
-                    `&templateName=${selectedInstantiatedTemplate.templateName}`,
+                    `&template=${selectedInstantiatedTemplate.templateName}`,
                   );
                 }}
               >

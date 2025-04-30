@@ -6,6 +6,7 @@ import { AnyZodObject, z } from "zod";
 import { Project } from "../models/project";
 import { Template } from "../models/template";
 import {
+  CreateProjectResult,
   ProjectCreationResult,
   ProjectSettings,
   Result
@@ -17,6 +18,7 @@ import { TemplateGeneratorService } from "./template-generator-service";
 import { logger } from "../lib/logger";
 import { ROOT_TEMPLATE_REPOSITORY } from "../repositories/root-template-repository";
 import { PROJECT_REPOSITORY } from "../repositories/project-repository";
+import path from "node:path";
 
 export function getParsedUserSettingsWithParentSettings(
   userSettings: UserTemplateSettings,
@@ -123,18 +125,21 @@ export async function instantiateProject(
 export async function generateProjectFromExistingProject(
   existingProject: Project,
   newProjectPath: string,
-): Promise<Result<string>> {
+): Promise<Result<ProjectCreationResult | string>> {
   return await generateProjectFromTemplateSettings(
     existingProject.instantiatedProjectSettings,
     newProjectPath,
   );
 }
 
-// TODO: make sure every time a template is retrieved it retrieves the newest one or it retrieves the one with the right commitHash.
+/**
+ * When git false only returns path to repo
+ */
 export async function generateProjectFromTemplateSettings(
   projectSettings: ProjectSettings,
   newProjectPath: string,
-): Promise<Result<string>> {
+  git?: boolean
+): Promise<Result<ProjectCreationResult | string>> {
   const instantiatedRootTemplate = projectSettings.instantiatedTemplates[0]?.templateCommitHash;
 
   if (!instantiatedRootTemplate) {
@@ -160,7 +165,7 @@ export async function generateProjectFromTemplateSettings(
 
   const newProjectGenerator = new TemplateGeneratorService(
     {
-      dontDoGit: true,
+      dontDoGit: !git,
       dontAutoInstantiate: true,
       absoluteDestinationPath: newProjectPath,
     },
@@ -168,13 +173,46 @@ export async function generateProjectFromTemplateSettings(
     projectSettings,
   );
 
-  const instantiationResult =
-    await newProjectGenerator.instantiateFullProjectFromSettings();
+  const projectCreationResult = await newProjectGenerator.instantiateFullProjectFromSettings();
 
-  if ("error" in instantiationResult) {
-    return instantiationResult;
+  if ("error" in projectCreationResult) {
+    return projectCreationResult;
   }
 
-  return { data: newProjectPath };
+  if (!git) {
+    return { data: projectCreationResult.data.resultPath };
+  }
+
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
+
+  if ("error" in reloadResult) {
+    return reloadResult;
+  }
+
+  const newProjectName = path.basename(projectCreationResult.data.resultPath)
+
+  const project = await PROJECT_REPOSITORY.findProject(newProjectName);
+
+  if ("error" in project) {
+    return project;
+  }
+
+  if (!project.data) {
+    logger.error(`Project ${newProjectName} not found after creation`);
+    return {
+      error: "Failed to create project, project not found after creation",
+    };
+  }
+
+  const processedDiff = parseGitDiff(projectCreationResult.data.diff);
+
+  const projectDTO = project.data.mapToDTO();
+
+  if ("error" in projectDTO) {
+    return projectDTO
+  }
+
+  return { data: { newProject: projectDTO.data, diff: processedDiff } };
+
 }
 

@@ -452,9 +452,9 @@ async function diffNewTempProjects(
     }
 
     const cleanProjectFromCurrentProjectSettingsPath =
-      cleanProjectFromCurrentProjectSettingsResult.data;
+      cleanProjectFromCurrentProjectSettingsResult.data as string;
     const cleanProjectFromNewSettingsPath =
-      cleanProjectFromNewSettingsResult.data;
+      cleanProjectFromNewSettingsResult.data as string;
 
     const diff = await diffDirectories(
       cleanProjectFromCurrentProjectSettingsPath,

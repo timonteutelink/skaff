@@ -7,15 +7,19 @@ import {
 } from "@repo/ts/services/project-service";
 import { PROJECT_SEARCH_PATHS } from "@repo/ts/lib/env";
 import {
+  CreateProjectResult,
   NewTemplateDiffResult,
   ParsedFile,
   ProjectCreationResult,
+  ProjectSettings,
+  ProjectSettingsSchema,
   Result,
 } from "@repo/ts/lib/types";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import path from "node:path";
 import { logger } from "@repo/ts/lib/logger";
 import { PROJECT_REPOSITORY } from "@repo/ts/repositories/project-repository";
+import { logError } from "@repo/ts/lib/utils";
 
 // TODO make sure the templategenerationengine enforces to use the right templatecommithash unless specified otherwise
 // TODO fix that changing one character in env vars in turbo_repo generates empty diff.
@@ -264,7 +268,7 @@ export async function generateNewProjectFromExisting(
     return { error: result.error };
   }
 
-  return { data: result.data };
+  return { data: result.data as string };
 }
 
 export async function retrieveDiffUpdateProjectNewTemplateRevision(
@@ -297,5 +301,43 @@ export async function retrieveDiffUpdateProjectNewTemplateRevision(
   }
 
   return { data: result.data };
+}
 
+
+export async function generateProjectFromProjectSettings(projectSettingsJson: string, projectDirPathId: string, newProjectDirName: string): Promise<Result<ProjectCreationResult>> {
+  let parsedProjectSettings: ProjectSettings | undefined;
+  try {
+    parsedProjectSettings = ProjectSettingsSchema.parse(JSON.parse(projectSettingsJson));
+  } catch (error) {
+    logError({
+      error,
+      shortMessage: "Failed to parse project settings."
+    })
+    return { error: `Failed to parse project settings.` };
+  }
+
+
+  parsedProjectSettings.projectName = newProjectDirName;
+
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
+  if ("error" in reloadResult) {
+    return { error: reloadResult.error };
+  }
+
+  const parentDirPath = PROJECT_SEARCH_PATHS.find(
+    (dir) => dir.id === projectDirPathId,
+  )?.path;
+
+  if (!parentDirPath) {
+    logger.error(`Invalid project directory path ID: ${projectDirPathId}`);
+    return { error: `Invalid project directory path ID: ${projectDirPathId}` };
+  }
+
+  const result = await generateProjectFromTemplateSettings(parsedProjectSettings, path.join(parentDirPath, newProjectDirName), true);
+
+  if ("error" in result) {
+    return { error: result.error };
+  }
+
+  return { data: result.data as ProjectCreationResult };
 }

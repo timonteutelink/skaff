@@ -4,6 +4,7 @@ import {
   applyTemplateDiffToProject,
   cancelProjectCreation,
   createNewProject,
+  generateProjectFromProjectSettings,
   prepareTemplateInstantiationDiff,
   prepareTemplateModificationDiff,
   resolveConflictsAndDiff,
@@ -29,6 +30,7 @@ import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toastNullError } from "@/lib/utils";
+import { FileUploadDialog, JsonFile } from "@/components/general/file-upload-dialog";
 
 // TODO: when updating to a new template version we should reiterate all settings of all templates for possible changes. Or we fully automate go directly to diff but require the template to setup sensible defaults for possible new options.
 
@@ -362,6 +364,47 @@ const TemplateInstantiationPage: React.FC = () => {
     [router, projectNameParam],
   );
 
+  const handleUploadProjectSettings = useCallback(async (jsons: JsonFile[]): Promise<Result<void>> => {
+    if (!templateNameParam || !selectedDirectoryIdParam || !projectNameParam) {
+      toastNullError({
+        shortMessage: "Not creating a project. 'template' or 'selectedDirectoryId' or 'projectName' is missing."
+      })
+      return { data: undefined };
+    }
+    const projectSettingsJson = jsons[0]!;
+
+    try {
+      const parsedProjectSettings = JSON.parse(projectSettingsJson.text);
+
+      if (parsedProjectSettings.rootTemplateName !== templateNameParam) {
+        toastNullError({
+          shortMessage: "The template selected in the previous step does not match the root template in the uploaded project settings"
+        })
+        return { error: "The template selected in the previous step does not match the root template in the uploaded project settings" }
+      }
+    } catch (error) {
+      toastNullError({
+        error,
+        shortMessage: "Error occured parsing the loaded project settings json"
+      })
+      return { error: "Error occured parsing the loaded project settings json" }
+    }
+
+    const newProjectResult = await generateProjectFromProjectSettings(projectSettingsJson.text, selectedDirectoryIdParam, projectNameParam);
+
+    const newProject = toastNullError({
+      result: newProjectResult,
+      shortMessage: "Error creating project.",
+    })
+
+    if (!newProject) {
+      return { error: "Project creating failed" };
+    }
+
+    setAppliedDiff(newProject.diff);
+    return { data: undefined };
+  }, [projectNameParam, selectedDirectoryIdParam, templateNameParam])
+
   const handleSubmitDiffToApply = useCallback(async () => {
     if (!projectNameParam) {
       toastNullError({
@@ -588,18 +631,27 @@ const TemplateInstantiationPage: React.FC = () => {
   }
 
   return (
-    <TemplateSettingsForm
-      projectName={projectNameParam}
-      selectedTemplate={templateNameParam}
-      selectedTemplateSettingsSchema={
-        subTemplate.data.config.templateSettingsSchema
-      }
-      formDefaultValues={templateSettingsDefaultValues}
-      action={handleSubmitSettings}
-      cancel={() => {
-        router.push(`/projects/${projectNameParam && !selectedDirectoryIdParam ? `project/?projectName=${projectNameParam}` : ''}`);
-      }}
-    />
+    <div className="w-full h-full">
+      {selectedDirectoryIdParam ? (<div className="w-full h-16 bg-gray-50 border-b border-b-gray-300 flex items-center justify-end px-4">
+        <FileUploadDialog
+          onUpload={handleUploadProjectSettings}
+          onCancel={async () => ({ data: undefined })}
+          buttonText={"Create from project settings"}
+        />
+      </div>) : null}
+      <TemplateSettingsForm
+        projectName={projectNameParam}
+        selectedTemplate={templateNameParam}
+        selectedTemplateSettingsSchema={
+          subTemplate.data.config.templateSettingsSchema
+        }
+        formDefaultValues={templateSettingsDefaultValues}
+        action={handleSubmitSettings}
+        cancel={() => {
+          router.push(`/projects/${projectNameParam && !selectedDirectoryIdParam ? `project/?projectName=${projectNameParam}` : ''}`);
+        }}
+      />
+    </div>
   );
 };
 

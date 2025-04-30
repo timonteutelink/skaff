@@ -1053,15 +1053,6 @@ export class TemplateGeneratorService {
   public async instantiateFullProjectFromSettings(): Promise<
     Result<CreateProjectResult>
   > {
-    if (!this.options.dontDoGit) {
-      logger.error(
-        "Git is not supported for this operation. Please use the CLI.",
-      );
-      return {
-        error: "Git is not supported for this operation. Please use the CLI.",
-      };
-    }
-
     if (!this.options.dontAutoInstantiate) {
       logger.error(
         "Please make sure child templates are not autoinstantiated before generating a full project from existing settings.",
@@ -1117,6 +1108,24 @@ export class TemplateGeneratorService {
           return res;
         }
       }
+
+      if (!this.options.dontDoGit) {
+        const diffResult = await addAllAndDiff(
+          this.options.absoluteDestinationPath,
+        );
+
+        if ("error" in diffResult) {
+          return diffResult;
+        }
+
+        return {
+          data: {
+            resultPath: this.options.absoluteDestinationPath,
+            diff: diffResult.data,
+          },
+        };
+      }
+
       return {
         data: { resultPath: this.options.absoluteDestinationPath, diff: "" },
       };
