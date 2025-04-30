@@ -5,14 +5,13 @@ import type { Result, TemplateDTO } from "@repo/ts/lib/types"
 import { useRouter, useSearchParams } from "next/navigation"
 import type React from "react"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { toast } from "sonner"
 
+import { retrieveAllTemplateRevisions } from "@/app/actions/template"
 import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { CopyIcon } from "lucide-react"
-import { retrieveAllTemplateRevisions } from "@/app/actions/template"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toastNullError } from "@/lib/utils"
+import { CopyIcon } from "lucide-react"
 
 /* =============================================================================
    Template Tree and Helper Functions

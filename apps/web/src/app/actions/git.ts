@@ -6,21 +6,21 @@ import {
   parseGitDiff,
   switchBranch,
 } from "@repo/ts/services/git-service";
-import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import { diffProjectFromTemplate } from "@repo/ts/services/project-diff-service";
 import { ParsedFile, Result } from "@repo/ts/lib/types";
 import { logger } from "@repo/ts/lib/logger";
+import { PROJECT_REPOSITORY } from "@repo/ts/repositories/project-repository";
 
 export async function commitChanges(
   projectName: string,
   commitMessage: string,
 ): Promise<Result<void>> {
-  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
   if ("error" in reloadResult) {
     return { error: reloadResult.error };
   }
 
-  const project = await PROJECT_REGISTRY.findProject(projectName);
+  const project = await PROJECT_REPOSITORY.findProject(projectName);
   if ("error" in project) {
     return { error: project.error };
   }
@@ -43,7 +43,7 @@ export async function commitChanges(
     return { error: commitResult.error };
   }
 
-  const newReloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const newReloadResult = await PROJECT_REPOSITORY.reloadProjects();
   if ("error" in newReloadResult) {
     return { error: newReloadResult.error };
   }
@@ -54,11 +54,11 @@ export async function switchProjectBranch(
   projectName: string,
   branch: string,
 ): Promise<Result<void>> {
-  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
   if ("error" in reloadResult) {
     return { error: reloadResult.error };
   }
-  const project = await PROJECT_REGISTRY.findProject(projectName);
+  const project = await PROJECT_REPOSITORY.findProject(projectName);
 
   if ("error" in project) {
     return { error: project.error };
@@ -87,7 +87,7 @@ export async function switchProjectBranch(
     return { error: result.error };
   }
 
-  const newReloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const newReloadResult = await PROJECT_REPOSITORY.reloadProjects();
 
   if ("error" in newReloadResult) {
     return { error: newReloadResult.error };
@@ -98,12 +98,12 @@ export async function switchProjectBranch(
 export async function addAllAndRetrieveCurrentDiff(
   projectName: string,
 ): Promise<Result<ParsedFile[]>> {
-  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
   if ("error" in reloadResult) {
     return { error: reloadResult.error };
   }
 
-  const project = await PROJECT_REGISTRY.findProject(projectName);
+  const project = await PROJECT_REPOSITORY.findProject(projectName);
 
   if ("error" in project) {
     return { error: project.error };
@@ -122,7 +122,7 @@ export async function addAllAndRetrieveCurrentDiff(
 
   const parsedDiff = parseGitDiff(diff.data);
 
-  const newReloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const newReloadResult = await PROJECT_REPOSITORY.reloadProjects();
 
   if ("error" in newReloadResult) {
     return { error: newReloadResult.error };
@@ -134,11 +134,11 @@ export async function addAllAndRetrieveCurrentDiff(
 export async function diffProjectFromItsTemplate(
   projectName: string,
 ): Promise<Result<ParsedFile[]>> {
-  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
   if ("error" in reloadResult) {
     return { error: reloadResult.error };
   }
-  const project = await PROJECT_REGISTRY.findProject(projectName);
+  const project = await PROJECT_REPOSITORY.findProject(projectName);
 
   if ("error" in project) {
     return { error: project.error };

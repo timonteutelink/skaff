@@ -92,7 +92,8 @@ export function ProjectDetailsPanel({
                 onClick={() => {
                   router.push(
                     `/projects/instantiate-template/?projectName=${project.name}` +
-                    `&existingTemplateInstanceId=${id}`,
+                    `&existingTemplateInstanceId=${id}` +
+                    `&templateName=${selectedInstantiatedTemplate.templateName}`,
                   );
                 }}
               >

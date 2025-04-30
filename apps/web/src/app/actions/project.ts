@@ -1,8 +1,8 @@
 "use server";
-import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import { PROJECT_SEARCH_PATHS } from "@repo/ts/lib/env";
 import { ProjectDTO, Result } from "@repo/ts/lib/types";
 import { logger } from "@repo/ts/lib/logger";
+import { PROJECT_REPOSITORY } from "@repo/ts/repositories/project-repository";
 
 export async function retrieveProjectSearchPaths(): Promise<
   { id: string; path: string }[]
@@ -11,11 +11,11 @@ export async function retrieveProjectSearchPaths(): Promise<
 }
 
 export async function retrieveProjects(): Promise<Result<ProjectDTO[]>> {
-  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
   if ("error" in reloadResult) {
     return { error: reloadResult.error };
   }
-  const projects = await PROJECT_REGISTRY.getProjects();
+  const projects = await PROJECT_REPOSITORY.getProjects();
 
   if ("error" in projects) {
     return { error: projects.error };
@@ -39,11 +39,11 @@ export async function retrieveProjects(): Promise<Result<ProjectDTO[]>> {
 export async function retrieveProject(
   projectName: string,
 ): Promise<Result<ProjectDTO | null>> {
-  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
   if ("error" in reloadResult) {
     return { error: reloadResult.error };
   }
-  const project = await PROJECT_REGISTRY.findProject(projectName);
+  const project = await PROJECT_REPOSITORY.findProject(projectName);
 
   if ("error" in project) {
     return { error: project.error };
@@ -68,11 +68,11 @@ export async function runProjectCommand(
   templateInstanceId: string,
   commandTitle: string,
 ): Promise<Result<string>> {
-  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
   if ("error" in reloadResult) {
     return { error: reloadResult.error };
   }
-  const project = await PROJECT_REGISTRY.findProject(projectName);
+  const project = await PROJECT_REPOSITORY.findProject(projectName);
 
   if ("error" in project) {
     return { error: project.error };

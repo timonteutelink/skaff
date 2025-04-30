@@ -18,12 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <SidebarProvider>
-          <MainSidebar />
-          <SidebarInset>
-            <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
-          </SidebarInset>
-        </SidebarProvider>
+        <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
         <Toaster />
       </body>
     </html>

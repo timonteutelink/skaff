@@ -2,7 +2,7 @@ import { exec, execFile } from "node:child_process";
 import * as fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
-import { Template } from "../models/template-models";
+import { Template } from "../models/template";
 import { GENERATE_DIFF_SCRIPT_PATH } from "../lib/env";
 import { DiffHunk, GitStatus, ParsedFile, Result } from "../lib/types";
 import { pathInCache } from "./cache-service";

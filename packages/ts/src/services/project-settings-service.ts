@@ -1,6 +1,6 @@
 import * as fs from "node:fs/promises";
 import path from "node:path";
-import { Template } from "../models/template-models";
+import { Template } from "../models/template";
 import {
   InstantiatedTemplate,
   ProjectSettings,
@@ -8,10 +8,10 @@ import {
   Result,
 } from "../lib/types";
 import { makeDir } from "./file-service";
-import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
 import { deepSortObject } from "../utils/shared-utils";
 import { logger } from "../lib/logger";
 import { logError } from "../lib/utils";
+import { ROOT_TEMPLATE_REPOSITORY } from "../repositories/root-template-repository";
 
 export async function writeNewProjectSettings(
   absoluteProjectPath: string,
@@ -151,7 +151,7 @@ export async function loadProjectSettings(
     };
   }
 
-  const rootTemplate = await ROOT_TEMPLATE_REGISTRY.loadRevision(
+  const rootTemplate = await ROOT_TEMPLATE_REPOSITORY.loadRevision(
     finalProjectSettings.data.rootTemplateName,
     instantiatedRootTemplateCommitHash,
   );

@@ -2,15 +2,15 @@ import { AutoInstantiatedSubtemplate, TemplateSettingsType, UserTemplateSettings
 import * as fs from "node:fs/promises";
 import { AnyZodObject } from "zod";
 import { NewTemplateDiffResult, ParsedFile, ProjectSettings, Result } from "../lib/types";
-import { Project } from "../models/project-models";
-import { Template } from "../models/template-models";
+import { Project } from "../models/project";
+import { Template } from "../models/template";
 import { getHash, pathInCache, retrieveFromCache, saveToCache } from "./cache-service";
 import { addAllAndDiff, applyDiffToGitRepo, diffDirectories, isConflictAfterApply, parseGitDiff } from "./git-service";
-import { PROJECT_REGISTRY } from "./project-registry-service";
 import { generateProjectFromExistingProject, generateProjectFromTemplateSettings, getParsedUserSettingsWithParentSettings } from "./project-service";
-import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
 import { logger } from "../lib/logger";
 import { anyOrCallbackToAny, logError } from "../lib/utils";
+import { ROOT_TEMPLATE_REPOSITORY } from "../repositories/root-template-repository";
+import { PROJECT_REPOSITORY } from "../repositories/project-repository";
 
 async function modifyAutoInstantiatedTemplatesInProjectSettings(
   projectSettings: ProjectSettings,
@@ -233,7 +233,7 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
       templateSettings: newTemplateSettings.data,
     });
 
-    const rootTemplate = await ROOT_TEMPLATE_REGISTRY.loadRevision(
+    const rootTemplate = await ROOT_TEMPLATE_REPOSITORY.loadRevision(
       projectSettings.rootTemplateName,
       currentTemplateToAddChildren.findRootTemplate().commitHash!,
     );
@@ -330,7 +330,7 @@ export async function generateModifyTemplateDiff(
     instantiatedTemplateIndex
     ]!;
 
-  const template = await ROOT_TEMPLATE_REGISTRY.loadRevision(
+  const template = await ROOT_TEMPLATE_REPOSITORY.loadRevision(
     instantiatedTemplate.templateName,
     project.instantiatedProjectSettings.instantiatedTemplates[0]!.templateCommitHash!
   );
@@ -387,7 +387,7 @@ async function diffNewTempProjects(
 ): Promise<Result<NewTemplateDiffResult>> {
   const projectName = oldProjectSettings.projectName;
 
-  const project = await PROJECT_REGISTRY.findProject(projectName);
+  const project = await PROJECT_REPOSITORY.findProject(projectName);
   if ("error" in project) {
     return project;
   }
@@ -511,7 +511,7 @@ export async function generateNewTemplateDiff(
     return { error: "No instantiated root template commit hash found in project settings" };
   }
   const rootTemplate =
-    await ROOT_TEMPLATE_REGISTRY.loadRevision(rootTemplateName, instantiatedRootTemplate);
+    await ROOT_TEMPLATE_REPOSITORY.loadRevision(rootTemplateName, instantiatedRootTemplate);
 
   if ("error" in rootTemplate) {
     return rootTemplate;
@@ -565,7 +565,7 @@ export async function generateNewTemplateDiff(
 export async function resolveConflictsAndRetrieveAppliedDiff(
   projectName: string,
 ): Promise<Result<ParsedFile[]>> {
-  const project = await PROJECT_REGISTRY.findProject(projectName);
+  const project = await PROJECT_REPOSITORY.findProject(projectName);
   if ("error" in project) {
     return project;
   }
@@ -588,7 +588,7 @@ export async function applyDiffToProject(
   projectName: string,
   diffHash: string,
 ): Promise<Result<ParsedFile[] | { resolveBeforeContinuing: true }>> {
-  const project = await PROJECT_REGISTRY.findProject(projectName);
+  const project = await PROJECT_REPOSITORY.findProject(projectName);
 
   if ("error" in project) {
     return project;
@@ -716,7 +716,7 @@ export async function generateUpdateTemplateDiff(
     return { error: "No instantiated root template found" };
   }
 
-  const template = await ROOT_TEMPLATE_REGISTRY.loadRevision(
+  const template = await ROOT_TEMPLATE_REPOSITORY.loadRevision(
     rootInstantiatedTemplate.templateName,
     newTemplateRevisionHash,
   );

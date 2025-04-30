@@ -7,7 +7,7 @@ import prettyPrint from 'pino-pretty';
 import type { Level, LogEvent } from 'pino';
 import { Result } from '@repo/ts/lib/types';
 import { getCacheDirPath } from '@repo/ts/services/cache-service';
-import { logger, serverLogger } from '@repo/ts/lib/logger';
+import { serverLogger } from '@repo/ts/lib/logger';
 import { LEVEL_NAMES, LogFilter, LogJSON } from '@/lib/types';
 import { logError } from '@repo/ts/lib/utils';
 

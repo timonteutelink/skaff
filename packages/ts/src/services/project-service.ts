@@ -3,8 +3,8 @@ import {
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import { AnyZodObject, z } from "zod";
-import { Project } from "../models/project-models";
-import { Template } from "../models/template-models";
+import { Project } from "../models/project";
+import { Template } from "../models/template";
 import {
   ProjectCreationResult,
   ProjectSettings,
@@ -13,10 +13,10 @@ import {
 import {
   parseGitDiff
 } from "./git-service";
-import { PROJECT_REGISTRY } from "./project-registry-service";
-import { ROOT_TEMPLATE_REGISTRY } from "./root-template-registry-service";
 import { TemplateGeneratorService } from "./template-generator-service";
 import { logger } from "../lib/logger";
+import { ROOT_TEMPLATE_REPOSITORY } from "../repositories/root-template-repository";
+import { PROJECT_REPOSITORY } from "../repositories/project-repository";
 
 export function getParsedUserSettingsWithParentSettings(
   userSettings: UserTemplateSettings,
@@ -69,7 +69,7 @@ export async function instantiateProject(
   newProjectName: string,
   userTemplateSettings: UserTemplateSettings,
 ): Promise<Result<ProjectCreationResult>> {
-  const template = await ROOT_TEMPLATE_REGISTRY.findDefaultTemplate(rootTemplateName);
+  const template = await ROOT_TEMPLATE_REPOSITORY.findDefaultTemplate(rootTemplateName);
 
   if ("error" in template) {
     return template;
@@ -90,13 +90,13 @@ export async function instantiateProject(
     return instantiationResult;
   }
 
-  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
 
   if ("error" in reloadResult) {
     return reloadResult;
   }
 
-  const project = await PROJECT_REGISTRY.findProject(newProjectName);
+  const project = await PROJECT_REPOSITORY.findProject(newProjectName);
 
   if ("error" in project) {
     return project;
@@ -142,7 +142,7 @@ export async function generateProjectFromTemplateSettings(
     return { error: "No instantiated root template commit hash found in project settings" };
   }
 
-  const rootTemplate = await ROOT_TEMPLATE_REGISTRY.loadRevision(
+  const rootTemplate = await ROOT_TEMPLATE_REPOSITORY.loadRevision(
     projectSettings.rootTemplateName,
     instantiatedRootTemplate,
   );

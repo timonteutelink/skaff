@@ -77,7 +77,7 @@ const TemplateInstantiationPage: React.FC = () => {
       router.push("/projects");
       return;
     }
-    if (!newRevisionHashParam && !existingTemplateInstanceIdParam && !templateNameParam) {
+    if (!newRevisionHashParam && !templateNameParam) {
       toastNullError({
         shortMessage: "Template name not provided in search params.",
       })
@@ -561,6 +561,12 @@ const TemplateInstantiationPage: React.FC = () => {
         {subTemplate && "error" in subTemplate && (
           <p className="text-red-500">Error: {subTemplate.error}</p>
         )}
+
+        <div className="flex justify-between mt-4">
+          <Button variant="outline" onClick={() => router.back()}>
+            Back
+          </Button>
+        </div>
       </div>
     );
   }
@@ -571,6 +577,12 @@ const TemplateInstantiationPage: React.FC = () => {
         <h1 className="text-2xl font-bold">
           Template name not provided in search params.
         </h1>
+        <div className="flex justify-between mt-4">
+          <Button variant="outline" onClick={() => router.back()}>
+            Back
+          </Button>
+        </div>
+
       </div>
     );
   }

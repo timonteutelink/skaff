@@ -3,7 +3,7 @@ import path from "node:path";
 import { GitStatus, ProjectDTO, ProjectSettings, Result } from "../lib/types";
 import { loadGitStatus } from "../services/git-service";
 import { loadProjectSettings } from "../services/project-settings-service";
-import { Template } from "./template-models";
+import { Template } from "./template";
 import { logger } from "../lib/logger";
 import { stringOrCallbackToString } from "../lib/utils";
 import z from "zod";

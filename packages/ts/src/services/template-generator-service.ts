@@ -11,7 +11,7 @@ import { glob } from "glob";
 import Handlebars, { HelperDelegate, HelperOptions } from 'handlebars';
 import * as path from "node:path";
 import z from "zod";
-import { Template } from "../models/template-models";
+import { Template } from "../models/template";
 import {
   isSubset,
 } from "../utils/shared-utils";
@@ -277,6 +277,13 @@ export class TemplateGeneratorService {
       return templatePartials;
     }
 
+    if (unregister) {
+      for (const [name] of Object.entries(templatePartials.data)) {
+        Handlebars.unregisterPartial(name);
+      }
+      return { data: undefined }
+    }
+
     const partialFiles = await this.loadPartialFiles(templatePartials.data);
 
     if ("error" in partialFiles) {
@@ -284,11 +291,7 @@ export class TemplateGeneratorService {
     }
 
     for (const [name, partial] of Object.entries(partialFiles.data)) {
-      if (unregister) {
-        Handlebars.unregisterPartial(name);
-      } else {
-        Handlebars.registerPartial(name, partial);
-      }
+      Handlebars.registerPartial(name, partial);
     }
     return { data: undefined };
   }

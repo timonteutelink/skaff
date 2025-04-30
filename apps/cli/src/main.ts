@@ -1,5 +1,5 @@
-import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
-import { ROOT_TEMPLATE_REGISTRY } from "@repo/ts/services/root-template-registry-service";
+import { PROJECT_REPOSITORY } from "@repo/ts/services/project-registry-service";
+import { ROOT_TEMPLATE_REPOSITORY } from "@repo/ts/services/root-template-registry-service";
 import { PROJECT_SEARCH_PATHS } from "@repo/ts/lib/env";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { Command } from "commander";
@@ -21,7 +21,7 @@ program
   .command("list-templates")
   .description("List all templates")
   .action(async () => {
-    const templateResults = await ROOT_TEMPLATE_REGISTRY.getTemplates();
+    const templateResults = await ROOT_TEMPLATE_REPOSITORY.getTemplates();
     if ("error" in templateResults) {
       logger.error("Error:", templateResults.error);
       process.exit(1);
@@ -34,7 +34,7 @@ program
   .command("get-template <templateName>")
   .description("Get a single template by name")
   .action(async (templateName: string) => {
-    const result = await ROOT_TEMPLATE_REGISTRY.findTemplate(templateName);
+    const result = await ROOT_TEMPLATE_REPOSITORY.findTemplate(templateName);
     if ("error" in result) {
       logger.error("Error:", result.error);
       process.exit(1);
@@ -50,7 +50,7 @@ program
   .command("list-projects")
   .description("List all projects")
   .action(async () => {
-    const projectResults = await PROJECT_REGISTRY.getProjects();
+    const projectResults = await PROJECT_REPOSITORY.getProjects();
     if ("error" in projectResults) {
       logger.error("Error:", projectResults.error);
       process.exit(1);
@@ -63,7 +63,7 @@ program
   .command("get-project <projectName>")
   .description("Get a project by name")
   .action(async (projectName: string) => {
-    const project = await PROJECT_REGISTRY.findProject(projectName);
+    const project = await PROJECT_REPOSITORY.findProject(projectName);
     if ("error" in project) {
       logger.error("Error:", project.error);
       process.exit(1);
@@ -79,7 +79,7 @@ program
   .command("precompile-templates")
   .description("Precompile all templates")
   .action(async () => {
-    const result = await ROOT_TEMPLATE_REGISTRY.reloadTemplates();
+    const result = await ROOT_TEMPLATE_REPOSITORY.reloadTemplates();
     if ("error" in result) {
       logger.error("Error:", result.error);
       process.exit(1);
@@ -102,7 +102,7 @@ program
 
     const userTemplateSettings: UserTemplateSettings = JSON.parse(settings);
 
-    const template = await ROOT_TEMPLATE_REGISTRY.findTemplate(templateName);
+    const template = await ROOT_TEMPLATE_REPOSITORY.findTemplate(templateName);
     if ("error" in template) {
       logger.error(template.error);
       process.exit(1);
@@ -122,12 +122,12 @@ program
       process.exit(1);
     }
 
-    const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+    const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
     if ("error" in reloadResult) {
       logger.error("Failed to reload projects", reloadResult.error);
       process.exit(1);
     }
-    const newProject = await PROJECT_REGISTRY.findProject(projectName);
+    const newProject = await PROJECT_REPOSITORY.findProject(projectName);
 
     if ("error" in newProject) {
       logger.error("Failed to find new project", newProject.error);
@@ -156,7 +156,7 @@ program
     const userTemplateSettings: UserTemplateSettings = JSON.parse(settings);
 
     const rootTemplate =
-      await ROOT_TEMPLATE_REGISTRY.findTemplate(rootTemplateName);
+      await ROOT_TEMPLATE_REPOSITORY.findTemplate(rootTemplateName);
     if ("error" in rootTemplate) {
       logger.error(rootTemplate.error);
       process.exit(1);
@@ -172,7 +172,7 @@ program
       process.exit(1);
     }
 
-    const project = await PROJECT_REGISTRY.findProject(destinationProjectName);
+    const project = await PROJECT_REPOSITORY.findProject(destinationProjectName);
     if ("error" in project) {
       logger.error(project.error);
       process.exit(1);
@@ -196,7 +196,7 @@ program
   });
 
 program.command("instantiate-full-project-from-existing").action(async () => {
-  const existingProjects = await PROJECT_REGISTRY.getProjects();
+  const existingProjects = await PROJECT_REPOSITORY.getProjects();
 
   if ("error" in existingProjects) {
     logger.error(existingProjects.error);

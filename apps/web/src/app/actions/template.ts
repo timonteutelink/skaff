@@ -1,9 +1,9 @@
 "use server";
 import { getCacheDir } from "@repo/ts/services/cache-service";
-import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
-import { ROOT_TEMPLATE_REGISTRY } from "@repo/ts/services/root-template-registry-service";
 import { DefaultTemplateResult, Result, TemplateDTO } from "@repo/ts/lib/types";
 import { logger } from "@repo/ts/lib/logger";
+import { ROOT_TEMPLATE_REPOSITORY } from "@repo/ts/repositories/root-template-repository";
+import { PROJECT_REPOSITORY } from "@repo/ts/repositories/project-repository";
 
 export async function eraseCache(): Promise<Result<DefaultTemplateResult[]>> {
   const eraseResult = await eraseCache();
@@ -11,7 +11,7 @@ export async function eraseCache(): Promise<Result<DefaultTemplateResult[]>> {
     return { error: eraseResult.error };
   }
 
-  const reloadResult = await ROOT_TEMPLATE_REGISTRY.reloadTemplates();
+  const reloadResult = await ROOT_TEMPLATE_REPOSITORY.reloadTemplates();
   if ("error" in reloadResult) {
     return { error: reloadResult.error };
   }
@@ -26,7 +26,7 @@ export async function eraseCache(): Promise<Result<DefaultTemplateResult[]>> {
 }
 
 export async function reloadTemplates(): Promise<Result<DefaultTemplateResult[]>> {
-  const result = await ROOT_TEMPLATE_REGISTRY.reloadTemplates();
+  const result = await ROOT_TEMPLATE_REPOSITORY.reloadTemplates();
 
   if ("error" in result) {
     return { error: result.error };
@@ -42,7 +42,7 @@ export async function reloadTemplates(): Promise<Result<DefaultTemplateResult[]>
 }
 
 export async function retrieveDefaultTemplates(): Promise<Result<DefaultTemplateResult[]>> {
-  const templates = await ROOT_TEMPLATE_REGISTRY.getAllTemplates();
+  const templates = await ROOT_TEMPLATE_REPOSITORY.getAllTemplates();
 
   if ("error" in templates) {
     return { error: templates.error };
@@ -76,7 +76,7 @@ export async function retrieveDefaultTemplates(): Promise<Result<DefaultTemplate
 export async function retrieveDefaultTemplate(
   templateName: string,
 ): Promise<Result<DefaultTemplateResult | null>> {
-  const templates = await ROOT_TEMPLATE_REGISTRY.findAllTemplateRevisions(templateName);
+  const templates = await ROOT_TEMPLATE_REPOSITORY.findAllTemplateRevisions(templateName);
   if ("error" in templates) {
     return { error: templates.error };
   }
@@ -111,7 +111,7 @@ export async function retrieveDefaultTemplate(
 export async function retrieveAllTemplateRevisions(
   templateName: string,
 ): Promise<Result<TemplateDTO[] | null>> {
-  const revisions = await ROOT_TEMPLATE_REGISTRY.findAllTemplateRevisions(templateName);
+  const revisions = await ROOT_TEMPLATE_REPOSITORY.findAllTemplateRevisions(templateName);
 
   if ("error" in revisions) {
     return { error: revisions.error };
@@ -129,11 +129,11 @@ export async function retrieveAllTemplateRevisions(
 export async function retrieveTemplateRevisionForProject(
   projectName: string,
 ): Promise<Result<TemplateDTO | null>> {
-  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
   if ("error" in reloadResult) {
     return { error: reloadResult.error };
   }
-  const project = await PROJECT_REGISTRY.findProject(projectName);
+  const project = await PROJECT_REPOSITORY.findProject(projectName);
   if ("error" in project) {
     return { error: project.error };
   }
@@ -149,7 +149,7 @@ export async function retrieveTemplateRevisionForProject(
     return { error: `No commit hash found for project ${projectName}` };
   }
 
-  const revision = await ROOT_TEMPLATE_REGISTRY.loadRevision(rootTemplateName, commitHash);
+  const revision = await ROOT_TEMPLATE_REPOSITORY.loadRevision(rootTemplateName, commitHash);
 
   if ("error" in revision) {
     return { error: revision.error };

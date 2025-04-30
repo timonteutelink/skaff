@@ -21,7 +21,7 @@ import {
   Result,
   TemplateDTO,
 } from "../lib/types";
-import { Project } from "./project-models";
+import { Project } from "./project";
 import { logger } from "../lib/logger";
 
 export class Template {

@@ -1,7 +1,6 @@
 "use server";
 import { deleteRepo, resetAllChanges } from "@repo/ts/services/git-service";
 import { applyDiffToProject, generateModifyTemplateDiff, generateNewTemplateDiff, generateUpdateTemplateDiff, resolveConflictsAndRetrieveAppliedDiff } from "@repo/ts/services/project-diff-service";
-import { PROJECT_REGISTRY } from "@repo/ts/services/project-registry-service";
 import {
   generateProjectFromTemplateSettings,
   instantiateProject,
@@ -16,6 +15,7 @@ import {
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import path from "node:path";
 import { logger } from "@repo/ts/lib/logger";
+import { PROJECT_REPOSITORY } from "@repo/ts/repositories/project-repository";
 
 // TODO make sure the templategenerationengine enforces to use the right templatecommithash unless specified otherwise
 // TODO fix that changing one character in env vars in turbo_repo generates empty diff.
@@ -26,7 +26,7 @@ export async function createNewProject(
   projectDirPathId: string,
   userTemplateSettings: UserTemplateSettings,
 ): Promise<Result<ProjectCreationResult>> {
-  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
   if ("error" in reloadResult) {
     return { error: reloadResult.error };
   }
@@ -59,12 +59,12 @@ export async function prepareTemplateModificationDiff(
   destinationProjectName: string,
   templateInstanceId: string,
 ): Promise<Result<NewTemplateDiffResult>> {
-  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
   if ("error" in reloadResult) {
     return { error: reloadResult.error };
   }
 
-  const project = await PROJECT_REGISTRY.findProject(destinationProjectName);
+  const project = await PROJECT_REPOSITORY.findProject(destinationProjectName);
 
   if ("error" in project) {
     return { error: project.error };
@@ -95,12 +95,12 @@ export async function prepareTemplateInstantiationDiff(
   destinationProjectName: string,
   userTemplateSettings: UserTemplateSettings,
 ): Promise<Result<NewTemplateDiffResult>> {
-  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
   if ("error" in reloadResult) {
     return { error: reloadResult.error };
   }
 
-  const destinationProject = await PROJECT_REGISTRY.findProject(
+  const destinationProject = await PROJECT_REPOSITORY.findProject(
     destinationProjectName,
   );
 
@@ -131,7 +131,7 @@ export async function prepareTemplateInstantiationDiff(
 export async function resolveConflictsAndDiff(
   projectName: string,
 ): Promise<Result<ParsedFile[]>> {
-  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
   if ("error" in reloadResult) {
     return { error: reloadResult.error };
   }
@@ -148,12 +148,12 @@ export async function resolveConflictsAndDiff(
 export async function restoreAllChangesToCleanProject(
   projectName: string,
 ): Promise<Result<void>> {
-  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
   if ("error" in reloadResult) {
     return { error: reloadResult.error };
   }
 
-  const project = await PROJECT_REGISTRY.findProject(projectName);
+  const project = await PROJECT_REPOSITORY.findProject(projectName);
 
   if ("error" in project) {
     return { error: project.error };
@@ -177,7 +177,7 @@ export async function applyTemplateDiffToProject(
   projectName: string,
   diffHash: string,
 ): Promise<Result<ParsedFile[] | { resolveBeforeContinuing: boolean }>> {
-  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
   if ("error" in reloadResult) {
     return { error: reloadResult.error };
   }
@@ -194,12 +194,12 @@ export async function applyTemplateDiffToProject(
 export async function cancelProjectCreation(
   projectName: string,
 ): Promise<Result<void>> {
-  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
   if ("error" in reloadResult) {
     return { error: reloadResult.error };
   }
 
-  const project = await PROJECT_REGISTRY.findProject(projectName);
+  const project = await PROJECT_REPOSITORY.findProject(projectName);
 
   if ("error" in project) {
     return { error: project.error };
@@ -228,7 +228,7 @@ export async function generateNewProjectFromExisting(
   newProjectDestinationDirPathId: string,
   newProjectName: string,
 ): Promise<Result<string>> {
-  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
   if ("error" in reloadResult) {
     return { error: reloadResult.error };
   }
@@ -242,7 +242,7 @@ export async function generateNewProjectFromExisting(
     return { error: `Invalid project directory path ID: ${newProjectDestinationDirPathId}` };
   }
 
-  const project = await PROJECT_REGISTRY.findProject(currentProjectName);
+  const project = await PROJECT_REPOSITORY.findProject(currentProjectName);
 
   if ("error" in project) {
     return { error: project.error };
@@ -271,12 +271,12 @@ export async function retrieveDiffUpdateProjectNewTemplateRevision(
   projectName: string,
   newTemplateRevisionCommitHash: string,
 ): Promise<Result<NewTemplateDiffResult>> {
-  const reloadResult = await PROJECT_REGISTRY.reloadProjects();
+  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
   if ("error" in reloadResult) {
     return { error: reloadResult.error };
   }
 
-  const project = await PROJECT_REGISTRY.findProject(projectName);
+  const project = await PROJECT_REPOSITORY.findProject(projectName);
 
   if ("error" in project) {
     return { error: project.error };
