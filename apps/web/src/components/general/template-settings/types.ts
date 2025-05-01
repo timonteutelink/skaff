@@ -1,6 +1,7 @@
 import type React from "react"
 import type { z } from "zod"
 import type { UseFormReturn } from "react-hook-form"
+import { ReactNode } from "react"
 
 export interface TemplateSettingsFormProps {
   projectName: string
@@ -9,6 +10,7 @@ export interface TemplateSettingsFormProps {
   formDefaultValues: Record<string, any>
   action: (userSettings: any) => Promise<void>
   cancel?: () => void
+  cancelButton?: ReactNode
 }
 
 export interface SchemaResult {

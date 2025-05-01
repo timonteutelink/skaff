@@ -28,6 +28,7 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
   formDefaultValues,
   action,
   cancel,
+  cancelButton
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [zodSchema, setZodSchema] = useState<z.ZodType<any>>(z.object({}))
@@ -248,11 +249,11 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
             <Separator />
 
             <div className="flex justify-end gap-4">
-              {cancel && (
+              {cancelButton ? cancelButton : cancel ? (
                 <Button type="button" variant="outline" onClick={cancel}>
                   Cancel
                 </Button>
-              )}
+              ) : null}
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "Saving..." : "Save settings"}
               </Button>

@@ -31,6 +31,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toastNullError } from "@/lib/utils";
 import { FileUploadDialog, JsonFile } from "@/components/general/file-upload-dialog";
+import { ConfirmationDialog } from "@/components/general/confirmation-dialog";
 
 // TODO: when updating to a new template version we should reiterate all settings of all templates for possible changes. Or we fully automate go directly to diff but require the template to setup sensible defaults for possible new options.
 
@@ -563,9 +564,19 @@ const TemplateInstantiationPage: React.FC = () => {
           parsedDiff={appliedDiff}
         />
         <div className="flex justify-between mt-4">
-          <Button variant="outline" onClick={handleBackFromAppliedDiff}>
-            Back
-          </Button>
+          {selectedDirectoryIdParam ? (
+            <ConfirmationDialog
+              buttonText={"Back"}
+              actionText={"Delete"}
+              dialogTitle={"Delete Project"}
+              dialogDescription={"Go back and delete current project."}
+              onConfirm={async () => { handleBackFromAppliedDiff(); return { data: undefined } }}
+            />
+          ) : (
+            <Button variant="outline" onClick={handleBackFromAppliedDiff}>
+              Back
+            </Button>
+          )}
           <CommitButton
             onCommit={handleConfirmAppliedDiff}
             onCancel={() => { }}
@@ -587,9 +598,11 @@ const TemplateInstantiationPage: React.FC = () => {
           <Button variant="outline" onClick={handleSubmitDiffToApply}>
             Apply Diff
           </Button>
-          {!newRevisionHashParam ? <Button variant="outline" onClick={handleBackFromDiffToApply}>
-            Back
-          </Button> : null}
+          {!newRevisionHashParam ? (
+            <Button variant="outline" onClick={handleBackFromDiffToApply}>
+              Back
+            </Button>
+          ) : null}
         </div>
       </div>
     );
