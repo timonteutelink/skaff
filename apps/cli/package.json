@@ -9,7 +9,7 @@
   "dependencies": {
     "@inquirer/prompts": "^7.4.1",
     "@repo/ts": "workspace:*",
-    "@timonteutelink/template-types-lib": "0.0.34",
+    "@timonteutelink/template-types-lib": "0.0.35",
     "pino": "^9.6.0",
     "pino-pretty": "^13.0.0",
     "yaml": "^2.7.1"
