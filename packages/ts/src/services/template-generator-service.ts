@@ -467,7 +467,7 @@ export class TemplateGeneratorService {
       // ignore so just creates file
     }
 
-    let sideEffectResult;
+    let sideEffectResult: string | null | undefined;
     try {
       sideEffectResult = await sideEffectFunction(
         this.currentlyGeneratingTemplateFullSettings,
@@ -479,6 +479,11 @@ export class TemplateGeneratorService {
         error,
       })
       return { error: `Failed to apply side effect: ${error}` };
+    }
+
+    if (!sideEffectResult) {
+      logger.debug(`Side effect function returned null. Skipping file write.`);
+      return { data: undefined };
     }
 
     try {

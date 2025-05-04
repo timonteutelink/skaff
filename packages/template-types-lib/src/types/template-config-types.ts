@@ -50,7 +50,7 @@ export type SideEffectFunction<
 > = (
   templateSettings: TFullSettingsType,
   oldFileContents?: string,
-) => Promise<string>;
+) => Promise<string | null>;
 
 export type SideEffect<
   TFullSettingsType extends
