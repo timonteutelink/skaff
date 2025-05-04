@@ -23,9 +23,11 @@ localFlake:
           GENERATE_DIFF_SCRIPT_PATH ="~/projects/timon/code-templator/scripts/generate-diff-patch.sh";
 
           NODE_OPTIONS="--experimental-vm-modules";
+          DENO_UNSTABLE_SLOPPY_IMPORTS="1";
         };
 
         packages = with pkgs; [
+          jupyter
         ];
 
         languages = {

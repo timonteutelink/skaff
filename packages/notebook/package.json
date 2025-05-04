@@ -1,0 +1,12 @@
+{
+	"name": "@repo/notebook",
+	"private": true,
+	"version": "0.0.1",
+	"engines": {
+		"deno": ">=2.2.4"
+	},
+	"scripts": {
+		"jupyter": "deno task jupyter",
+		"install-jupyter": "deno task install-jupyter"
+	}
+}

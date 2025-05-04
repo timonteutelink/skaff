@@ -1,0 +1,6 @@
+{
+	"tasks": {
+		"jupyter": "jupyter lab --notebook-dir=src",
+		"install-jupyter": "deno jupyter --unstable-sloppy-imports --install"
+	}
+}

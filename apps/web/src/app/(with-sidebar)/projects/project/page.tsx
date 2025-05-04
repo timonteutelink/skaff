@@ -341,14 +341,12 @@ export default function ProjectTemplateTreePage() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left: Tree view */}
-        <div className="w-1/3 border-r border-gray-300 overflow-auto">
-          <div className="p-4">
-            <ProjectTree
-              projectTree={projectTree}
-              selectedNode={selectedNode}
-              onSelectNode={handleSelectNode}
-            />
-          </div>
+        <div className="w-1/3 p-4 border-r border-gray-300 overflow-auto">
+          <ProjectTree
+            projectTree={projectTree}
+            selectedNode={selectedNode}
+            onSelectNode={handleSelectNode}
+          />
         </div>
 
         {/* Right: Details panel */}
