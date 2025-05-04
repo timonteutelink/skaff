@@ -4,6 +4,7 @@ import { DefaultTemplateResult, Result, TemplateDTO } from "@repo/ts/lib/types";
 import { logger } from "@repo/ts/lib/logger";
 import { ROOT_TEMPLATE_REPOSITORY } from "@repo/ts/repositories/root-template-repository";
 import { PROJECT_REPOSITORY } from "@repo/ts/repositories/project-repository";
+import { logError } from "@repo/ts/lib/utils";
 
 export async function eraseCache(): Promise<Result<DefaultTemplateResult[]>> {
   const eraseResult = await eraseCache();
@@ -145,7 +146,7 @@ export async function retrieveTemplateRevisionForProject(
   const commitHash = project.data.instantiatedProjectSettings.instantiatedTemplates[0]?.templateCommitHash;
 
   if (!commitHash) {
-    logger.error(`No commit hash found for project ${projectName}`);
+    logError({ shortMessage: `No commit hash found for project ${projectName}` })
     return { error: `No commit hash found for project ${projectName}` };
   }
 

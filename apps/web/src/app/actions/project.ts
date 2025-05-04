@@ -3,6 +3,7 @@ import { PROJECT_SEARCH_PATHS } from "@repo/ts/lib/env";
 import { ProjectDTO, Result } from "@repo/ts/lib/types";
 import { logger } from "@repo/ts/lib/logger";
 import { PROJECT_REPOSITORY } from "@repo/ts/repositories/project-repository";
+import { logError } from "@repo/ts/lib/utils";
 
 export async function retrieveProjectSearchPaths(): Promise<
   { id: string; path: string }[]
@@ -79,7 +80,7 @@ export async function runProjectCommand(
   }
 
   if (!project.data) {
-    logger.error(`Project ${projectName} not found`);
+    logError({ shortMessage: `Project ${projectName} not found` })
     return { error: `Project ${projectName} not found` };
   }
 

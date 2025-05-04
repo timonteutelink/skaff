@@ -9,7 +9,6 @@ import {
 } from "../lib/types";
 import { makeDir } from "./file-service";
 import { deepSortObject } from "../utils/shared-utils";
-import { logger } from "../lib/logger";
 import { logError } from "../lib/utils";
 import { ROOT_TEMPLATE_REPOSITORY } from "../repositories/root-template-repository";
 
@@ -19,7 +18,7 @@ export async function writeNewProjectSettings(
   overwrite?: boolean,
 ): Promise<Result<void>> {
   if (!projectSettings.instantiatedTemplates[0]) {
-    logger.error("No instantiated templates found in project settings");
+    logError({ shortMessage: "No instantiated templates found in project settings" })
     return { error: "No instantiated templates found in project settings" };
   }
   const newProjectSettings: ProjectSettings = {
@@ -46,9 +45,7 @@ async function writeProjectSettings(
   if (!overwrite) {
     try {
       await fs.access(projectSettingsPath);
-      logger.error(
-        `Project settings file already exists at ${projectSettingsPath}`,
-      );
+      logError({ shortMessage: `Project settings file already exists at ${projectSettingsPath}` })
       return {
         error: `Project settings file already exists at ${projectSettingsPath}`,
       };
@@ -131,9 +128,7 @@ export async function loadProjectSettings(
     parsedProjectSettings,
   );
   if (!finalProjectSettings.success) {
-    logger.error(
-      `Invalid templateSettings.json: ${finalProjectSettings.error}`,
-    );
+    logError({ shortMessage: `Invalid templateSettings.json: ${finalProjectSettings.error}` })
     return {
       error: `Invalid templateSettings.json: ${finalProjectSettings.error}`,
     };
@@ -143,9 +138,7 @@ export async function loadProjectSettings(
   const instantiatedRootTemplateCommitHash = finalProjectSettings.data.instantiatedTemplates[0]?.templateCommitHash
 
   if (!instantiatedRootTemplateCommitHash) {
-    logger.error(
-      `No instantiated root template commit hash found in project settings`,
-    );
+    logError({ shortMessage: `No instantiated root template commit hash found in project settings` })
     return {
       error: `No instantiated root template commit hash found in project settings`,
     };
@@ -160,9 +153,7 @@ export async function loadProjectSettings(
   }
 
   if (!rootTemplate.data) {
-    logger.error(
-      `Root template ${finalProjectSettings.data.rootTemplateName} not found`,
-    );
+    logError({ shortMessage: `Root template ${finalProjectSettings.data.rootTemplateName} not found` })
     return {
       error: `Root template ${finalProjectSettings.data.rootTemplateName} not found`,
     };
@@ -174,9 +165,7 @@ export async function loadProjectSettings(
       subTemplateSettings.templateName,
     );
     if (!subTemplate) {
-      logger.error(
-        `Sub template ${subTemplateSettings.templateName} not found in root template ${finalProjectSettings.data.rootTemplateName}`,
-      );
+      logError({ shortMessage: `Sub template ${subTemplateSettings.templateName} not found in root template ${finalProjectSettings.data.rootTemplateName}` })
       return {
         error: `Template ${subTemplateSettings.templateName} not found in root template ${finalProjectSettings.data.rootTemplateName}`,
       };
@@ -187,9 +176,7 @@ export async function loadProjectSettings(
         subTemplateSettings.templateSettings,
       );
     if (!subTemplateSettingsSchema.success) {
-      logger.error(
-        `Invalid templateSettings.json for template ${subTemplateSettings.templateName}: ${subTemplateSettingsSchema.error}`,
-      );
+      logError({ shortMessage: `Invalid templateSettings.json for template ${subTemplateSettings.templateName}: ${subTemplateSettingsSchema.error}` })
       return {
         error: `Invalid templateSettings.json for template ${subTemplateSettings.templateName}: ${subTemplateSettingsSchema.error}`,
       };

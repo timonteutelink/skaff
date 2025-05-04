@@ -23,6 +23,7 @@ import {
 } from "../lib/types";
 import { Project } from "./project";
 import { logger } from "../lib/logger";
+import { logError } from "../lib/utils";
 
 export class Template {
   // The loaded configuration module.
@@ -137,10 +138,10 @@ export class Template {
     try {
       configs = await loadAllTemplateConfigs(absoluteRootDir);
     } catch (error) {
-      logger.error(
-        { error, absoluteRootDir },
-        `Failed to load template configurations`,
-      );
+      logError({
+        error,
+        shortMessage: "Failed to load template configurations",
+      })
       return { error: `Failed to load template configurations: ${error}` };
     }
     const templatesMap: Record<string, Template> = {};
@@ -257,7 +258,7 @@ export class Template {
       (template) => !template.parentTemplate,
     );
     if (rootTemplates.length === 0) {
-      logger.error(`No root templates found.`);
+      logError({ shortMessage: `No root templates found.` })
       return { error: "No root templates found" };
     }
 
@@ -436,11 +437,11 @@ export class Template {
           partials[key] = value;
         }
       } catch (error) {
-        logger.error(
-          { error, absolutePartialsDir: this.absolutePartialsDir },
-          `Failed to read partials directory`,
-        );
-        return { error: `Failed to read partials directory: ${error}` };
+        logError({
+          error,
+          shortMessage: `Failed to read partials directory at ${this.absolutePartialsDir}`,
+        });
+        return { error: `Failed to read partials directory at ${this.absolutePartialsDir}: ${error}` };
       }
     }
 

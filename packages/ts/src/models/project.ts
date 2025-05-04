@@ -1,13 +1,12 @@
 import { TemplateSettingsType, UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import path from "node:path";
+import z from "zod";
 import { GitStatus, ProjectDTO, ProjectSettings, Result } from "../lib/types";
+import { logError, stringOrCallbackToString } from "../lib/utils";
 import { loadGitStatus } from "../services/git-service";
 import { loadProjectSettings } from "../services/project-settings-service";
-import { Template } from "./template";
-import { logger } from "../lib/logger";
-import { stringOrCallbackToString } from "../lib/utils";
-import z from "zod";
 import { executeCommand } from "../services/shell-service";
+import { Template } from "./template";
 
 // every project name inside a root project should be unique.
 // The root project can be uniquely identified by its name and author.(and version)
@@ -54,9 +53,7 @@ export class Project {
           t.templateName === template.config.templateConfig.name,
       );
     if (!projectTemplateSettings) {
-      logger.error(
-        `Template ${template.config.templateConfig.name} with id ${instanceId} not found in project settings`,
-      );
+      logError({ shortMessage: `Template ${template.config.templateConfig.name} with id ${instanceId} not found in project settings` })
       return { data: instantiatedSettings };
     }
 
@@ -65,9 +62,7 @@ export class Project {
     );
 
     if (!parsedSchema.success) {
-      logger.error(
-        `Invalid template settings for template ${template.config.templateConfig.name}: ${parsedSchema.error}`,
-      );
+      logError({ shortMessage: `Invalid template settings for template ${template.config.templateConfig.name}: ${parsedSchema.error}` })
       return { error: `${parsedSchema.error}` };
     }
 
@@ -123,9 +118,7 @@ export class Project {
       (t) => t.id === templateInstanceId,
     );
     if (!instantiatedTemplate) {
-      logger.error(
-        `Template with id ${templateInstanceId} not found in project settings`,
-      );
+      logError({ shortMessage: `Template with id ${templateInstanceId} not found in project settings` })
       return {
         error: `Template with id ${templateInstanceId} not found in project settings`,
       };
@@ -134,9 +127,7 @@ export class Project {
       instantiatedTemplate.templateName,
     );
     if (!template) {
-      logger.error(
-        `Template ${instantiatedTemplate.templateName} not found in project`,
-      );
+      logError({ shortMessage: `Template ${instantiatedTemplate.templateName} not found in project` })
       return {
         error: `Template ${instantiatedTemplate.templateName} not found in project`,
       };
@@ -147,9 +138,7 @@ export class Project {
     );
 
     if (!templateCommand) {
-      logger.error(
-        `Command ${commandTitle} not found in template ${template.config.templateConfig.name}`,
-      );
+      logError({ shortMessage: `Command ${commandTitle} not found in template ${template.config.templateConfig.name}` })
       return {
         error: `Command ${commandTitle} not found in template ${template.config.templateConfig.name}`,
       };

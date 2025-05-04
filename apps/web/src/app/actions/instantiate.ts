@@ -40,7 +40,7 @@ export async function createNewProject(
   )?.path;
 
   if (!parentDirPath) {
-    logger.error(`Invalid project directory path ID: ${projectDirPathId}`);
+    logError({ shortMessage: `Invalid project directory path ID: ${projectDirPathId}` })
     return { error: `Invalid project directory path ID: ${projectDirPathId}` };
   }
 
@@ -75,7 +75,7 @@ export async function prepareTemplateModificationDiff(
   }
 
   if (!project.data) {
-    logger.error(`Project ${destinationProjectName} not found`);
+    logError({ shortMessage: `Project ${destinationProjectName} not found` })
     return { error: `Project ${destinationProjectName} not found` };
   }
 
@@ -113,7 +113,7 @@ export async function prepareTemplateInstantiationDiff(
   }
 
   if (!destinationProject.data) {
-    logger.error(`Destination project ${destinationProjectName} not found`);
+    logError({ shortMessage: `Destination project ${destinationProjectName} not found` })
     return { error: `Destination project ${destinationProjectName} not found` };
   }
 
@@ -164,7 +164,7 @@ export async function restoreAllChangesToCleanProject(
   }
 
   if (!project.data) {
-    logger.error(`Project ${projectName} not found`);
+    logError({ shortMessage: `Project ${projectName} not found` })
     return { error: `Project ${projectName} not found` };
   }
 
@@ -210,7 +210,7 @@ export async function cancelProjectCreation(
   }
 
   if (!project.data) {
-    logger.error(`Project ${projectName} not found`);
+    logError({ shortMessage: `Project ${projectName} not found` })
     return { error: `Project ${projectName} not found` };
   }
 
@@ -242,7 +242,7 @@ export async function generateNewProjectFromExisting(
   )?.path;
 
   if (!parentDirPath) {
-    logger.error(`Invalid project directory path ID: ${newProjectDestinationDirPathId}`);
+    logError({ shortMessage: `Invalid project directory path ID: ${newProjectDestinationDirPathId}` })
     return { error: `Invalid project directory path ID: ${newProjectDestinationDirPathId}` };
   }
 
@@ -253,7 +253,7 @@ export async function generateNewProjectFromExisting(
   }
 
   if (!project.data) {
-    logger.error(`Project ${currentProjectName} not found`);
+    logError({ shortMessage: `Project ${currentProjectName} not found` })
     return { error: `Project ${currentProjectName} not found` };
   }
 
@@ -287,7 +287,7 @@ export async function retrieveDiffUpdateProjectNewTemplateRevision(
   }
 
   if (!project.data) {
-    logger.error(`Project ${projectName} not found`);
+    logError({ shortMessage: `Project ${projectName} not found` })
     return { error: `Project ${projectName} not found` };
   }
 
@@ -329,7 +329,7 @@ export async function generateProjectFromProjectSettings(projectSettingsJson: st
   )?.path;
 
   if (!parentDirPath) {
-    logger.error(`Invalid project directory path ID: ${projectDirPathId}`);
+    logError({ shortMessage: `Invalid project directory path ID: ${projectDirPathId}` })
     return { error: `Invalid project directory path ID: ${projectDirPathId}` };
   }
 

@@ -20,7 +20,7 @@ export async function switchBranch(
     const isClean = await isGitRepoClean(repoPath);
 
     if (!isClean) {
-      logger.error("Cannot switch branches with uncommitted changes.");
+      logError({ shortMessage: "Cannot switch branches with uncommitted changes." })
       return {
         error: "Cannot switch branches with uncommitted changes.",
       };
@@ -158,7 +158,7 @@ export async function loadGitStatus(
   }
 
   if (branches.data.length === 0) {
-    logger.error("No branches found or error listing branches.");
+    logError({ shortMessage: "No branches found or error listing branches." })
     return { error: "No branches found or error listing branches." };
   }
 

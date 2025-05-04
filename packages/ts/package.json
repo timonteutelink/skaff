@@ -23,7 +23,7 @@
     "@langchain/langgraph": "^0.2.67",
     "@langchain/ollama": "^0.2.0",
     "@langchain/openai": "^0.5.10",
-    "@timonteutelink/template-types-lib": "0.0.35",
+    "@timonteutelink/template-types-lib": "^0.0.35",
     "@types/fs-extra": "^11.0.4",
     "esbuild": "^0.25.2",
     "fs-extra": "^11.3.0",

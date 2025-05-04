@@ -10,6 +10,7 @@ import { diffProjectFromTemplate } from "@repo/ts/services/project-diff-service"
 import { ParsedFile, Result } from "@repo/ts/lib/types";
 import { logger } from "@repo/ts/lib/logger";
 import { PROJECT_REPOSITORY } from "@repo/ts/repositories/project-repository";
+import { logError } from "@repo/ts/lib/utils";
 
 export async function commitChanges(
   projectName: string,
@@ -26,12 +27,12 @@ export async function commitChanges(
   }
 
   if (!project.data) {
-    logger.error(`Project ${projectName} not found`);
+    logError({ shortMessage: `Project ${projectName} not found` })
     return { error: `Project ${projectName} not found` };
   }
 
   if (project.data.gitStatus.isClean) {
-    logger.error("No changes to commit");
+    logError({ shortMessage: "No changes to commit" })
     return { error: "No changes to commit" };
   }
 
@@ -65,19 +66,19 @@ export async function switchProjectBranch(
   }
 
   if (!project.data) {
-    logger.error(`Project ${projectName} not found`);
+    logError({ shortMessage: `Project ${projectName} not found` })
     return { error: `Project ${projectName} not found` };
   }
 
   const branchExists = project.data.gitStatus.branches.includes(branch);
 
   if (!branchExists) {
-    logger.error(`Branch ${branch} does not exist`);
+    logError({ shortMessage: `Branch ${branch} does not exist` })
     return { error: `Branch ${branch} does not exist` };
   }
 
   if (!project.data.gitStatus.isClean) {
-    logger.error("Cannot switch branches with uncommitted changes");
+    logError({ shortMessage: "Cannot switch branches with uncommitted changes" })
     return { error: "Cannot switch branches with uncommitted changes" };
   }
 
@@ -110,7 +111,7 @@ export async function addAllAndRetrieveCurrentDiff(
   }
 
   if (!project.data) {
-    logger.error(`Project ${projectName} not found`);
+    logError({ shortMessage: `Project ${projectName} not found` })
     return { error: `Project ${projectName} not found` };
   }
 
@@ -145,7 +146,7 @@ export async function diffProjectFromItsTemplate(
   }
 
   if (!project.data) {
-    logger.error(`Project ${projectName} not found`);
+    logError({ shortMessage: `Project ${projectName} not found` })
     return { error: `Project ${projectName} not found` };
   }
   return diffProjectFromTemplate(project.data);

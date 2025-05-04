@@ -183,8 +183,6 @@ export async function loadAllTemplateConfigs(
   if ("data" in cached && cached.data) {
     const code = await fs.readFile(cached.data.path, "utf8");
     return evaluateBundledCode(code);
-  } else if ("error" in cached) {
-    logger.error(`Failed to retrieve cached bundle: ${cached.error}`);
   }
 
   const imports: string[] = [];

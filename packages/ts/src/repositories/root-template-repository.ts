@@ -6,6 +6,7 @@ import { Result } from "../lib/types";
 import path from "node:path";
 import { cloneRevisionToCache } from "../services/git-service";
 import { logger } from "../lib/logger";
+import { logError } from "../lib/utils";
 
 // now only stores the root templates at: <templateDirPath>/root-templates/*
 // later also store reference to files and generic templates to allow direct instantiation without saving state of subtemplates
@@ -80,7 +81,7 @@ export class RootTemplateRepository {
 				return result;
 			}
 			if (!this.templates.length) {
-				logger.error("No templates found.");
+				logError({ shortMessage: "No templates found." })
 				return { error: "No templates found." };
 			}
 		}
@@ -94,7 +95,7 @@ export class RootTemplateRepository {
 				return result;
 			}
 			if (!this.templates.length) {
-				logger.error("No templates found.");
+				logError({ shortMessage: "No templates found." })
 				return { error: "No templates found." };
 			}
 		}
@@ -147,7 +148,7 @@ export class RootTemplateRepository {
 		}
 
 		if (!defaultTemplate) {
-			logger.error(`No default template found for ${templateName}`);
+			logError({ shortMessage: `No default template found for ${templateName}` })
 			return { data: null };
 		}
 
