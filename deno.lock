@@ -83,7 +83,7 @@
     "npm:ioredis@^5.6.1": "5.6.1",
     "npm:jest@^29.7.0": "29.7.0_@types+node@22.15.17_ts-node@10.9.2__@types+node@22.15.17__typescript@5.8.3_typescript@5.8.3_@swc+core@1.11.24_@swc+helpers@0.5.17_@swc+wasm@1.11.24",
     "npm:kerberos@^2.2.2": "2.2.2",
-    "npm:langchain@~0.3.24": "0.3.24_@langchain+core@0.3.55__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_handlebars@4.7.8_zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_peggy@5.0.2_typeorm@0.3.23__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_pg@8.15.6_pg-native@3.4.5_pg-query-stream@4.9.6__pg@8.15.6___pg-native@3.4.5__pg-native@3.4.5_redis@5.0.1__@redis+client@5.0.1_sql.js@1.13.0_sqlite3@5.1.7_node-gyp@11.2.0_ts-node@10.9.2__@types+node@22.15.17__typescript@5.8.3_@types+node@22.15.17_typescript@5.8.3_@swc+core@1.11.24_@swc+helpers@0.5.17_@swc+wasm@1.11.24",
+    "npm:langchain@~0.3.24": "0.3.24_@langchain+core@0.3.55__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_handlebars@4.7.8_zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_peggy@5.0.2_typeorm@0.3.23__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_pg@8.15.6_pg-native@3.4.5_pg-query-stream@4.9.6__pg@8.15.6___pg-native@3.4.5__pg-native@3.4.5_redis@5.0.1__@redis+client@5.0.1_sql.js@1.13.0_sqlite3@5.1.7_node-gyp@11.2.0_ts-node@10.9.2__@types+node@22.15.17__typescript@5.8.3_@types+node@22.15.17_typescript@5.8.3_@swc+core@1.11.24_@swc+helpers@0.5.17_@swc+wasm@1.11.24_typeorm-aurora-data-api-driver@3.0.1__@aws-sdk+client-rds-data@3.806.0",
     "npm:lucide-react@0.488": "0.488.0_react@19.1.0",
     "npm:mongodb-client-encryption@^6.4.0": "6.4.0",
     "npm:mongodb@^6.16.0": "6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4",
@@ -121,7 +121,8 @@
     "npm:ts-node@^10.9.2": "10.9.2_@types+node@22.15.17_typescript@5.8.3_@swc+core@1.11.24_@swc+helpers@0.5.17_@swc+wasm@1.11.24",
     "npm:turbo@^2.5.0": "2.5.3",
     "npm:tw-animate-css@^1.2.5": "1.2.9",
-    "npm:typeorm@~0.3.23": "0.3.23_reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_pg@8.15.6_pg-native@3.4.5_pg-query-stream@4.9.6__pg@8.15.6___pg-native@3.4.5__pg-native@3.4.5_redis@5.0.1__@redis+client@5.0.1_sql.js@1.13.0_sqlite3@5.1.7_node-gyp@11.2.0_ts-node@10.9.2__@types+node@22.15.17__typescript@5.8.3_@types+node@22.15.17_typescript@5.8.3_@swc+core@1.11.24_@swc+helpers@0.5.17_@swc+wasm@1.11.24",
+    "npm:typeorm-aurora-data-api-driver@^3.0.1": "3.0.1_@aws-sdk+client-rds-data@3.806.0",
+    "npm:typeorm@~0.3.23": "0.3.23_reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_pg@8.15.6_pg-native@3.4.5_pg-query-stream@4.9.6__pg@8.15.6___pg-native@3.4.5__pg-native@3.4.5_redis@5.0.1__@redis+client@5.0.1_sql.js@1.13.0_sqlite3@5.1.7_node-gyp@11.2.0_ts-node@10.9.2__@types+node@22.15.17__typescript@5.8.3_@types+node@22.15.17_typescript@5.8.3_@swc+core@1.11.24_@swc+helpers@0.5.17_@swc+wasm@1.11.24_typeorm-aurora-data-api-driver@3.0.1__@aws-sdk+client-rds-data@3.806.0",
     "npm:typescript-eslint@^8.29.1": "8.32.0_eslint@9.26.0_typescript@5.8.3_@typescript-eslint+parser@8.32.0__eslint@9.26.0__typescript@5.8.3",
     "npm:typescript@5.8.3": "5.8.3",
     "npm:typescript@^5.8.3": "5.8.3",
@@ -398,6 +399,50 @@
         "@types/uuid@9.0.8",
         "tslib@2.8.1",
         "uuid@9.0.1"
+      ]
+    },
+    "@aws-sdk/client-rds-data@3.806.0": {
+      "integrity": "sha512-AVeiSdMh2jn4a72hW+D8FJ8rzPwcnaGVK0dzwHm26KIanZNEA0gDZ2drPLKD4he9S0HOgc1WqJefTQ+BP0oD/w==",
+      "dependencies": [
+        "@aws-crypto/sha256-browser",
+        "@aws-crypto/sha256-js",
+        "@aws-sdk/core",
+        "@aws-sdk/credential-provider-node",
+        "@aws-sdk/middleware-host-header",
+        "@aws-sdk/middleware-logger",
+        "@aws-sdk/middleware-recursion-detection",
+        "@aws-sdk/middleware-user-agent",
+        "@aws-sdk/region-config-resolver",
+        "@aws-sdk/types",
+        "@aws-sdk/util-endpoints",
+        "@aws-sdk/util-user-agent-browser",
+        "@aws-sdk/util-user-agent-node",
+        "@smithy/config-resolver",
+        "@smithy/core",
+        "@smithy/fetch-http-handler",
+        "@smithy/hash-node",
+        "@smithy/invalid-dependency",
+        "@smithy/middleware-content-length",
+        "@smithy/middleware-endpoint",
+        "@smithy/middleware-retry",
+        "@smithy/middleware-serde",
+        "@smithy/middleware-stack",
+        "@smithy/node-config-provider",
+        "@smithy/node-http-handler",
+        "@smithy/protocol-http@5.1.0",
+        "@smithy/smithy-client",
+        "@smithy/types@4.2.0",
+        "@smithy/url-parser",
+        "@smithy/util-base64",
+        "@smithy/util-body-length-browser",
+        "@smithy/util-body-length-node",
+        "@smithy/util-defaults-mode-browser",
+        "@smithy/util-defaults-mode-node",
+        "@smithy/util-endpoints",
+        "@smithy/util-middleware@4.0.2",
+        "@smithy/util-retry",
+        "@smithy/util-utf8@4.0.0",
+        "tslib@2.8.1"
       ]
     },
     "@aws-sdk/client-sagemaker@3.806.0": {
@@ -8635,6 +8680,41 @@
         "zod-to-json-schema"
       ]
     },
+    "langchain@0.3.24_@langchain+core@0.3.55__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_handlebars@4.7.8_zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_peggy@5.0.2_typeorm@0.3.23__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_pg@8.15.6_pg-native@3.4.5_pg-query-stream@4.9.6__pg@8.15.6___pg-native@3.4.5__pg-native@3.4.5_redis@5.0.1__@redis+client@5.0.1_sql.js@1.13.0_sqlite3@5.1.7_node-gyp@11.2.0_ts-node@10.9.2__@types+node@22.15.17__typescript@5.8.3_@types+node@22.15.17_typescript@5.8.3_@swc+core@1.11.24_@swc+helpers@0.5.17_@swc+wasm@1.11.24_typeorm-aurora-data-api-driver@3.0.1__@aws-sdk+client-rds-data@3.806.0": {
+      "integrity": "sha512-BTjiYkUCpWFAmufK8J5zMqc5aUs4eEnAXPWtPe2+R4ZPP+U7bXJSBHAcrB40rQ3VeTdRgMvgDjekOOgCMWut6Q==",
+      "dependencies": [
+        "@langchain/anthropic",
+        "@langchain/aws",
+        "@langchain/cerebras",
+        "@langchain/cohere",
+        "@langchain/core@0.3.55_zod@3.24.4",
+        "@langchain/deepseek",
+        "@langchain/google-genai",
+        "@langchain/google-vertexai",
+        "@langchain/google-vertexai-web",
+        "@langchain/groq",
+        "@langchain/mistralai",
+        "@langchain/ollama",
+        "@langchain/openai@0.5.10_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_openai@4.98.0__zod@3.24.4",
+        "@langchain/textsplitters",
+        "@langchain/xai",
+        "axios",
+        "cheerio",
+        "handlebars",
+        "js-tiktoken",
+        "js-yaml@4.1.0",
+        "jsonpointer",
+        "langsmith",
+        "openapi-types",
+        "p-retry",
+        "peggy",
+        "typeorm@0.3.23_reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_pg@8.15.6_pg-native@3.4.5_pg-query-stream@4.9.6__pg@8.15.6___pg-native@3.4.5__pg-native@3.4.5_redis@5.0.1__@redis+client@5.0.1_sql.js@1.13.0_sqlite3@5.1.7_node-gyp@11.2.0_ts-node@10.9.2__@types+node@22.15.17__typescript@5.8.3_@types+node@22.15.17_typescript@5.8.3_@swc+core@1.11.24_@swc+helpers@0.5.17_@swc+wasm@1.11.24_typeorm-aurora-data-api-driver@3.0.1__@aws-sdk+client-rds-data@3.806.0",
+        "uuid@10.0.0",
+        "yaml",
+        "zod",
+        "zod-to-json-schema"
+      ]
+    },
     "langsmith@0.3.28_openai@4.98.0__zod@3.24.4_zod@3.24.4": {
       "integrity": "sha512-Vq8n0zJ9MhDMhwkOhmOEb/rl/8jpm0LnAF4dE5TEXMdLmhJ784gcrWOghnFh7Qs5B4DY2Bdz3OKxIevkGKn5xg==",
       "dependencies": [
@@ -10997,6 +11077,13 @@
         "reflect.getprototypeof"
       ]
     },
+    "typeorm-aurora-data-api-driver@3.0.1_@aws-sdk+client-rds-data@3.806.0": {
+      "integrity": "sha512-6cqrrgcnESYBZjuX5rKTwbobC03NTobPsqT+zk9GI3Fw8KYvMgh5n6OSWhyMvIZXJTMcAmD0ykRicV0dCkdeyg==",
+      "dependencies": [
+        "@aws-sdk/client-rds-data",
+        "sqlstring"
+      ]
+    },
     "typeorm@0.3.23_reflect-metadata@0.2.2": {
       "integrity": "sha512-CJUZWW7O5zZG0TA7bRpntJx97AvvQwsoSa1UgYlzTOtmkwODrqIyxP9wtzHpBssEKie5chnLiCVyxKNeYo65wQ==",
       "dependencies": [
@@ -11720,6 +11807,42 @@
         "yargs"
       ]
     },
+    "typeorm@0.3.23_reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_pg@8.15.6_pg-native@3.4.5_pg-query-stream@4.9.6__pg@8.15.6___pg-native@3.4.5__pg-native@3.4.5_redis@5.0.1__@redis+client@5.0.1_sql.js@1.13.0_sqlite3@5.1.7_node-gyp@11.2.0_ts-node@10.9.2__@types+node@22.15.17__typescript@5.8.3_@types+node@22.15.17_typescript@5.8.3_@swc+core@1.11.24_@swc+helpers@0.5.17_@swc+wasm@1.11.24_typeorm-aurora-data-api-driver@3.0.1__@aws-sdk+client-rds-data@3.806.0": {
+      "integrity": "sha512-CJUZWW7O5zZG0TA7bRpntJx97AvvQwsoSa1UgYlzTOtmkwODrqIyxP9wtzHpBssEKie5chnLiCVyxKNeYo65wQ==",
+      "dependencies": [
+        "@google-cloud/spanner",
+        "@sap/hana-client",
+        "@sqltools/formatter",
+        "ansis",
+        "app-root-path",
+        "better-sqlite3",
+        "buffer@6.0.3",
+        "dayjs",
+        "debug@4.4.0",
+        "dotenv@16.5.0",
+        "glob@10.4.5",
+        "hdb-pool",
+        "ioredis",
+        "mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4",
+        "mssql",
+        "mysql2",
+        "oracledb",
+        "pg-native",
+        "pg-query-stream",
+        "pg@8.15.6_pg-native@3.4.5",
+        "redis",
+        "reflect-metadata",
+        "sha.js",
+        "sql-highlight",
+        "sql.js",
+        "sqlite3@5.1.7_node-gyp@11.2.0",
+        "ts-node@10.9.2_@types+node@22.15.17_typescript@5.8.3_@swc+core@1.11.24_@swc+helpers@0.5.17_@swc+wasm@1.11.24",
+        "tslib@2.8.1",
+        "typeorm-aurora-data-api-driver",
+        "uuid@11.1.0",
+        "yargs"
+      ]
+    },
     "typescript-eslint@8.32.0_eslint@9.26.0_typescript@5.8.3_@typescript-eslint+parser@8.32.0__eslint@9.26.0__typescript@5.8.3": {
       "integrity": "sha512-UMq2kxdXCzinFFPsXc9o2ozIpYCCOiEC46MG3yEh5Vipq6BO27otTtEBZA1fQ66DulEUgE97ucQ/3YY66CPg0A==",
       "dependencies": [
@@ -12072,7 +12195,7 @@
   },
   "workspace": {
     "dependencies": [
-      "npm:@timonteutelink/code-templator-lib@0.0.31",
+      "npm:@timonteutelink/code-templator-lib@0.0.32",
       "npm:@timonteutelink/template-types-lib@0.0.35",
       "npm:commander@13",
       "npm:fs-extra@11",
@@ -12096,7 +12219,7 @@
       "apps/cli": {
         "packageJson": {
           "dependencies": [
-            "npm:@timonteutelink/code-templator-lib@^0.0.31",
+            "npm:@timonteutelink/code-templator-lib@^0.0.32",
             "npm:commander@^13.1.0",
             "npm:pino@^9.6.0",
             "npm:yaml@^2.7.1"
@@ -12233,6 +12356,7 @@
             "npm:sql.js@^1.13.0",
             "npm:sqlite3@^5.1.7",
             "npm:ts-node@^10.9.2",
+            "npm:typeorm-aurora-data-api-driver@^3.0.1",
             "npm:typeorm@~0.3.23",
             "npm:typescript@5.8.3",
             "npm:yaml@^2.7.1",
