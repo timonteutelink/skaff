@@ -24,8 +24,8 @@ importers:
   apps/cli:
     dependencies:
       '@timonteutelink/code-templator-lib':
-        specifier: ^0.0.13
-        version: 0.0.13(@aws-sdk/credential-providers@3.806.0)(@langchain/core@0.3.51(openai@4.97.0(zod@3.24.2)))(mongodb-client-encryption@6.4.0)(openai@4.97.0(zod@3.24.2))(reflect-metadata@0.2.2)
+        specifier: ^0.0.14
+        version: 0.0.14(@aws-sdk/credential-providers@3.806.0)(@langchain/core@0.3.51(openai@4.97.0(zod@3.24.2)))(openai@4.97.0(zod@3.24.2))(reflect-metadata@0.2.2)(snappy@7.2.2)
       commander:
         specifier: ^13.1.0
         version: 13.1.0
@@ -351,10 +351,10 @@ importers:
         version: 2.2.2
       langchain:
         specifier: ^0.3.24
-        version: 0.3.24(d86c9300e2bf81c6618ad45dac45e1a7)
+        version: 0.3.24(e25e29bd6cdb09242c7680647bd41824)
       mongodb:
         specifier: ^6.16.0
-        version: 6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)
+        version: 6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)
       mongodb-client-encryption:
         specifier: ^6.4.0
         version: 6.4.0
@@ -367,9 +367,12 @@ importers:
       pino-pretty:
         specifier: ^13.0.0
         version: 13.0.0
+      snappy:
+        specifier: ^7.2.2
+        version: 7.2.2
       typeorm:
         specifier: ^0.3.23
-        version: 0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0))(reflect-metadata@0.2.2)
+        version: 0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2))(reflect-metadata@0.2.2)
       yaml:
         specifier: ^2.7.1
         version: 2.7.1
@@ -1446,6 +1449,84 @@ packages:
   '@mongodb-js/zstd@2.0.1':
     resolution: {integrity: sha512-hbQKltFj0hMrhe+Udh9gjkzswIJJVOo55vEHgfHbb6wjPpo4Oc3kng2bao/XnzLPCdd5Q1PXbWTC91LYPQrCtA==}
     engines: {node: '>= 16.20.1'}
+
+  '@napi-rs/snappy-android-arm-eabi@7.2.2':
+    resolution: {integrity: sha512-H7DuVkPCK5BlAr1NfSU8bDEN7gYs+R78pSHhDng83QxRnCLmVIZk33ymmIwurmoA1HrdTxbkbuNl+lMvNqnytw==}
+    engines: {node: '>= 10'}
+    cpu: [arm]
+    os: [android]
+
+  '@napi-rs/snappy-android-arm64@7.2.2':
+    resolution: {integrity: sha512-2R/A3qok+nGtpVK8oUMcrIi5OMDckGYNoBLFyli3zp8w6IArPRfg1yOfVUcHvpUDTo9T7LOS1fXgMOoC796eQw==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [android]
+
+  '@napi-rs/snappy-darwin-arm64@7.2.2':
+    resolution: {integrity: sha512-USgArHbfrmdbuq33bD5ssbkPIoT7YCXCRLmZpDS6dMDrx+iM7eD2BecNbOOo7/v1eu6TRmQ0xOzeQ6I/9FIi5g==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@napi-rs/snappy-darwin-x64@7.2.2':
+    resolution: {integrity: sha512-0APDu8iO5iT0IJKblk2lH0VpWSl9zOZndZKnBYIc+ei1npw2L5QvuErFOTeTdHBtzvUHASB+9bvgaWnQo4PvTQ==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@napi-rs/snappy-freebsd-x64@7.2.2':
+    resolution: {integrity: sha512-mRTCJsuzy0o/B0Hnp9CwNB5V6cOJ4wedDTWEthsdKHSsQlO7WU9W1yP7H3Qv3Ccp/ZfMyrmG98Ad7u7lG58WXA==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [freebsd]
+
+  '@napi-rs/snappy-linux-arm-gnueabihf@7.2.2':
+    resolution: {integrity: sha512-v1uzm8+6uYjasBPcFkv90VLZ+WhLzr/tnfkZ/iD9mHYiULqkqpRuC8zvc3FZaJy5wLQE9zTDkTJN1IvUcZ+Vcg==}
+    engines: {node: '>= 10'}
+    cpu: [arm]
+    os: [linux]
+
+  '@napi-rs/snappy-linux-arm64-gnu@7.2.2':
+    resolution: {integrity: sha512-LrEMa5pBScs4GXWOn6ZYXfQ72IzoolZw5txqUHVGs8eK4g1HR9HTHhb2oY5ySNaKakG5sOgMsb1rwaEnjhChmQ==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@napi-rs/snappy-linux-arm64-musl@7.2.2':
+    resolution: {integrity: sha512-3orWZo9hUpGQcB+3aTLW7UFDqNCQfbr0+MvV67x8nMNYj5eAeUtMmUE/HxLznHO4eZ1qSqiTwLbVx05/Socdlw==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@napi-rs/snappy-linux-x64-gnu@7.2.2':
+    resolution: {integrity: sha512-jZt8Jit/HHDcavt80zxEkDpH+R1Ic0ssiVCoueASzMXa7vwPJeF4ZxZyqUw4qeSy7n8UUExomu8G8ZbP6VKhgw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
+  '@napi-rs/snappy-linux-x64-musl@7.2.2':
+    resolution: {integrity: sha512-Dh96IXgcZrV39a+Tej/owcd9vr5ihiZ3KRix11rr1v0MWtVb61+H1GXXlz6+Zcx9y8jM1NmOuiIuJwkV4vZ4WA==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
+  '@napi-rs/snappy-win32-arm64-msvc@7.2.2':
+    resolution: {integrity: sha512-9No0b3xGbHSWv2wtLEn3MO76Yopn1U2TdemZpCaEgOGccz1V+a/1d16Piz3ofSmnA13HGFz3h9NwZH9EOaIgYA==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@napi-rs/snappy-win32-ia32-msvc@7.2.2':
+    resolution: {integrity: sha512-QiGe+0G86J74Qz1JcHtBwM3OYdTni1hX1PFyLRo3HhQUSpmi13Bzc1En7APn+6Pvo7gkrcy81dObGLDSxFAkQQ==}
+    engines: {node: '>= 10'}
+    cpu: [ia32]
+    os: [win32]
+
+  '@napi-rs/snappy-win32-x64-msvc@7.2.2':
+    resolution: {integrity: sha512-a43cyx1nK0daw6BZxVcvDEXxKMFLSBSDTAhsFD0VqSKcC7MGUBMaqyoWUcMiI7LBSz4bxUmxDWKfCYzpEmeb3w==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
 
   '@next/env@15.3.0':
     resolution: {integrity: sha512-6mDmHX24nWlHOlbwUiAOmMyY7KELimmi+ed8qWcJYjqXeC+G6JzPZ3QosOAfjNwgMIzwhXBiRiCgdh8axTTdTA==}
@@ -2559,8 +2640,8 @@ packages:
   '@tailwindcss/postcss@4.1.3':
     resolution: {integrity: sha512-6s5nJODm98F++QT49qn8xJKHQRamhYHfMi3X7/ltxiSQ9dyRsaFSfFkfaMsanWzf+TMYQtbk8mt5f6cCVXJwfg==}
 
-  '@timonteutelink/code-templator-lib@0.0.13':
-    resolution: {integrity: sha512-A2RP7FQ+FWwAZavCbyFVqAsVs1YIPfDWhLuc26Ahs4TqtudsKl9Dx+EnJxXYcoJzBvABWthT9SvD7KGyKwHtSA==}
+  '@timonteutelink/code-templator-lib@0.0.14':
+    resolution: {integrity: sha512-27I5z1HTsClHSmiWF8TBWLsc0unZOQe8lXkOaEBUrhkGI+4o9nwUgnXk0KrixXa5pUrRO2pVS5cyt+Yl3hzZrA==}
 
   '@timonteutelink/template-types-lib@0.0.35':
     resolution: {integrity: sha512-1XX3gZB4KYC+988cCCqtjdBFVcLwg/J1jHXLhgp2wVVV+EyzQ+MyUEQp0//rhCXtIfpDi5guv3lRpezVBM5BHQ==}
@@ -5309,6 +5390,10 @@ packages:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
     engines: {node: '>=8'}
 
+  snappy@7.2.2:
+    resolution: {integrity: sha512-iADMq1kY0v3vJmGTuKcFWSXt15qYUz7wFkArOrsSg0IFfI3nJqIJvK2/ZbEIndg7erIJLtAVX2nSOqPz7DcwbA==}
+    engines: {node: '>= 10'}
+
   sonic-boom@4.2.0:
     resolution: {integrity: sha512-INb7TM37/mAcsGmc9hyyI6+QR3rR1zVRu36B0NeGXKnOOLiZOfER5SA+N7X7k3yUYRzLWafduTDvJAfDswwEww==}
 
@@ -7444,6 +7529,45 @@ snapshots:
       node-addon-api: 4.3.0
       prebuild-install: 7.1.3
 
+  '@napi-rs/snappy-android-arm-eabi@7.2.2':
+    optional: true
+
+  '@napi-rs/snappy-android-arm64@7.2.2':
+    optional: true
+
+  '@napi-rs/snappy-darwin-arm64@7.2.2':
+    optional: true
+
+  '@napi-rs/snappy-darwin-x64@7.2.2':
+    optional: true
+
+  '@napi-rs/snappy-freebsd-x64@7.2.2':
+    optional: true
+
+  '@napi-rs/snappy-linux-arm-gnueabihf@7.2.2':
+    optional: true
+
+  '@napi-rs/snappy-linux-arm64-gnu@7.2.2':
+    optional: true
+
+  '@napi-rs/snappy-linux-arm64-musl@7.2.2':
+    optional: true
+
+  '@napi-rs/snappy-linux-x64-gnu@7.2.2':
+    optional: true
+
+  '@napi-rs/snappy-linux-x64-musl@7.2.2':
+    optional: true
+
+  '@napi-rs/snappy-win32-arm64-msvc@7.2.2':
+    optional: true
+
+  '@napi-rs/snappy-win32-ia32-msvc@7.2.2':
+    optional: true
+
+  '@napi-rs/snappy-win32-x64-msvc@7.2.2':
+    optional: true
+
   '@next/env@15.3.0': {}
 
   '@next/eslint-plugin-next@15.3.0':
@@ -8653,7 +8777,7 @@ snapshots:
       postcss: 8.5.3
       tailwindcss: 4.1.3
 
-  '@timonteutelink/code-templator-lib@0.0.13(@aws-sdk/credential-providers@3.806.0)(@langchain/core@0.3.51(openai@4.97.0(zod@3.24.2)))(mongodb-client-encryption@6.4.0)(openai@4.97.0(zod@3.24.2))(reflect-metadata@0.2.2)':
+  '@timonteutelink/code-templator-lib@0.0.14(@aws-sdk/credential-providers@3.806.0)(@langchain/core@0.3.51(openai@4.97.0(zod@3.24.2)))(openai@4.97.0(zod@3.24.2))(reflect-metadata@0.2.2)(snappy@7.2.2)':
     dependencies:
       '@google-cloud/spanner': 7.21.0
       '@langchain/anthropic': 0.3.20(@langchain/core@0.3.51(openai@4.97.0(zod@3.24.2)))
@@ -8684,12 +8808,13 @@ snapshots:
       hdb-pool: 0.1.6
       ioredis: 5.6.1
       kerberos: 2.2.2
-      langchain: 0.3.24(d86c9300e2bf81c6618ad45dac45e1a7)
-      mongodb: 6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)
+      langchain: 0.3.24(e25e29bd6cdb09242c7680647bd41824)
+      mongodb: 6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)
+      mongodb-client-encryption: 6.4.0
       peggy: 5.0.2
       pino: 9.6.0
       pino-pretty: 13.0.0
-      typeorm: 0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0))(reflect-metadata@0.2.2)
+      typeorm: 0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2))(reflect-metadata@0.2.2)
       yaml: 2.7.1
       zod: 3.24.2
       zod-to-json-schema: 3.24.5(zod@3.24.2)
@@ -8700,7 +8825,6 @@ snapshots:
       - debug
       - encoding
       - gcp-metadata
-      - mongodb-client-encryption
       - mssql
       - mysql2
       - openai
@@ -10920,7 +11044,7 @@ snapshots:
 
   kleur@3.0.3: {}
 
-  langchain@0.3.24(d86c9300e2bf81c6618ad45dac45e1a7):
+  langchain@0.3.24(e25e29bd6cdb09242c7680647bd41824):
     dependencies:
       '@langchain/core': 0.3.51(openai@4.97.0(zod@3.24.2))
       '@langchain/openai': 0.5.10(@langchain/core@0.3.51(openai@4.97.0(zod@3.24.2)))
@@ -10952,7 +11076,7 @@ snapshots:
       cheerio: 1.0.0
       handlebars: 4.7.8
       peggy: 5.0.2
-      typeorm: 0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0))(reflect-metadata@0.2.2)
+      typeorm: 0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2))(reflect-metadata@0.2.2)
     transitivePeerDependencies:
       - encoding
       - openai
@@ -11125,7 +11249,7 @@ snapshots:
       '@types/whatwg-url': 11.0.5
       whatwg-url: 14.2.0
 
-  mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0):
+  mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2):
     dependencies:
       '@mongodb-js/saslprep': 1.2.2
       bson: 6.10.3
@@ -11135,6 +11259,7 @@ snapshots:
       '@mongodb-js/zstd': 2.0.1
       kerberos: 2.2.2
       mongodb-client-encryption: 6.4.0
+      snappy: 7.2.2
 
   ms@2.0.0: {}
 
@@ -11924,6 +12049,22 @@ snapshots:
 
   slash@3.0.0: {}
 
+  snappy@7.2.2:
+    optionalDependencies:
+      '@napi-rs/snappy-android-arm-eabi': 7.2.2
+      '@napi-rs/snappy-android-arm64': 7.2.2
+      '@napi-rs/snappy-darwin-arm64': 7.2.2
+      '@napi-rs/snappy-darwin-x64': 7.2.2
+      '@napi-rs/snappy-freebsd-x64': 7.2.2
+      '@napi-rs/snappy-linux-arm-gnueabihf': 7.2.2
+      '@napi-rs/snappy-linux-arm64-gnu': 7.2.2
+      '@napi-rs/snappy-linux-arm64-musl': 7.2.2
+      '@napi-rs/snappy-linux-x64-gnu': 7.2.2
+      '@napi-rs/snappy-linux-x64-musl': 7.2.2
+      '@napi-rs/snappy-win32-arm64-msvc': 7.2.2
+      '@napi-rs/snappy-win32-ia32-msvc': 7.2.2
+      '@napi-rs/snappy-win32-x64-msvc': 7.2.2
+
   sonic-boom@4.2.0:
     dependencies:
       atomic-sleep: 1.0.0
@@ -12230,7 +12371,7 @@ snapshots:
       possible-typed-array-names: 1.1.0
       reflect.getprototypeof: 1.0.10
 
-  typeorm@0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0))(reflect-metadata@0.2.2):
+  typeorm@0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2))(reflect-metadata@0.2.2):
     dependencies:
       '@sqltools/formatter': 1.2.5
       ansis: 3.17.0
@@ -12252,7 +12393,7 @@ snapshots:
       better-sqlite3: 11.10.0
       hdb-pool: 0.1.6
       ioredis: 5.6.1
-      mongodb: 6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)
+      mongodb: 6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)
     transitivePeerDependencies:
       - supports-color
 
