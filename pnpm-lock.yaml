@@ -24,8 +24,8 @@ importers:
   apps/cli:
     dependencies:
       '@timonteutelink/code-templator-lib':
-        specifier: ^0.0.22
-        version: 0.0.22(@aws-sdk/credential-providers@3.806.0)(@langchain/core@0.3.51(openai@4.97.0(zod@3.24.2)))(openai@4.97.0(zod@3.24.2))(reflect-metadata@0.2.2)
+        specifier: ^0.0.23
+        version: 0.0.23(@aws-sdk/credential-providers@3.806.0)(@langchain/core@0.3.51(openai@4.97.0(zod@3.24.2)))(openai@4.97.0(zod@3.24.2))(reflect-metadata@0.2.2)(sql.js@1.13.0)
       commander:
         specifier: ^13.1.0
         version: 13.1.0
@@ -351,7 +351,7 @@ importers:
         version: 2.2.2
       langchain:
         specifier: ^0.3.24
-        version: 0.3.24(d4b6490fcc53079f70a03a41dcd06532)
+        version: 0.3.24(9cc1fcd742fd9425c2b22f7fb99f4f5b)
       mongodb:
         specifier: ^6.16.0
         version: 6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4)
@@ -394,9 +394,12 @@ importers:
       socks:
         specifier: ^2.8.4
         version: 2.8.4
+      sql.js:
+        specifier: ^1.13.0
+        version: 1.13.0
       typeorm:
         specifier: ^0.3.23
-        version: 0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)
+        version: 0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)
       yaml:
         specifier: ^2.7.1
         version: 2.7.1
@@ -2762,8 +2765,8 @@ packages:
   '@tediousjs/connection-string@0.5.0':
     resolution: {integrity: sha512-7qSgZbincDDDFyRweCIEvZULFAw5iz/DeunhvuxpL31nfntX3P4Yd4HkHBRg9H8CdqY1e5WFN1PZIz/REL9MVQ==}
 
-  '@timonteutelink/code-templator-lib@0.0.22':
-    resolution: {integrity: sha512-lWhk4/pIB/BFlKLVXXlSTuMLXhCcudK+IlUmd6M0ANTjOSiiftJCAIU+shdsXR7z8adRMF9XWQ567TfFIg9MmA==}
+  '@timonteutelink/code-templator-lib@0.0.23':
+    resolution: {integrity: sha512-gI6nnVU27jkS3yRAdtaRzC0rS4VGOMr6/ADyxd4+HS+VaN1P/RbCv9YGRto5oqCLY3Lj3mPLXzzoaGr5NptKTw==}
 
   '@timonteutelink/template-types-lib@0.0.35':
     resolution: {integrity: sha512-1XX3gZB4KYC+988cCCqtjdBFVcLwg/J1jHXLhgp2wVVV+EyzQ+MyUEQp0//rhCXtIfpDi5guv3lRpezVBM5BHQ==}
@@ -5784,6 +5787,9 @@ packages:
   sql-highlight@6.0.0:
     resolution: {integrity: sha512-+fLpbAbWkQ+d0JEchJT/NrRRXbYRNbG15gFpANx73EwxQB1PRjj+k/OI0GTU0J63g8ikGkJECQp9z8XEJZvPRw==}
     engines: {node: '>=14'}
+
+  sql.js@1.13.0:
+    resolution: {integrity: sha512-RJbVP1HRDlUUXahJ7VMTcu9Rm1Nzw+EBpoPr94vnbD4LwR715F3CcxE2G2k45PewcaZ57pjetYa+LoSJLAASgA==}
 
   sqlstring@2.3.3:
     resolution: {integrity: sha512-qC9iz2FlN7DQl3+wjwn3802RTyjCx7sDvfQEXchwa6CWOx07/WVfh91gBmQ9fahw8snwGEWU3xGzOt4tFyHLxg==}
@@ -9298,7 +9304,7 @@ snapshots:
 
   '@tediousjs/connection-string@0.5.0': {}
 
-  '@timonteutelink/code-templator-lib@0.0.22(@aws-sdk/credential-providers@3.806.0)(@langchain/core@0.3.51(openai@4.97.0(zod@3.24.2)))(openai@4.97.0(zod@3.24.2))(reflect-metadata@0.2.2)':
+  '@timonteutelink/code-templator-lib@0.0.23(@aws-sdk/credential-providers@3.806.0)(@langchain/core@0.3.51(openai@4.97.0(zod@3.24.2)))(openai@4.97.0(zod@3.24.2))(reflect-metadata@0.2.2)(sql.js@1.13.0)':
     dependencies:
       '@google-cloud/spanner': 7.21.0
       '@langchain/anthropic': 0.3.20(@langchain/core@0.3.51(openai@4.97.0(zod@3.24.2)))
@@ -9329,7 +9335,7 @@ snapshots:
       hdb-pool: 0.1.6
       ioredis: 5.6.1
       kerberos: 2.2.2
-      langchain: 0.3.24(d4b6490fcc53079f70a03a41dcd06532)
+      langchain: 0.3.24(9cc1fcd742fd9425c2b22f7fb99f4f5b)
       mongodb: 6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4)
       mongodb-client-encryption: 6.4.0
       mssql: 11.0.1
@@ -9341,9 +9347,10 @@ snapshots:
       pg-query-stream: 4.9.6(pg@8.15.6(pg-native@3.4.5))
       pino: 9.6.0
       pino-pretty: 13.0.0
+      redis: 5.0.1
       snappy: 7.2.2
       socks: 2.8.4
-      typeorm: 0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)
+      typeorm: 0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)
       yaml: 2.7.1
       zod: 3.24.2
       zod-to-json-schema: 3.24.5(zod@3.24.2)
@@ -9356,7 +9363,6 @@ snapshots:
       - gcp-metadata
       - openai
       - react
-      - redis
       - reflect-metadata
       - sql.js
       - sqlite3
@@ -11658,7 +11664,7 @@ snapshots:
 
   kleur@3.0.3: {}
 
-  langchain@0.3.24(d4b6490fcc53079f70a03a41dcd06532):
+  langchain@0.3.24(9cc1fcd742fd9425c2b22f7fb99f4f5b):
     dependencies:
       '@langchain/core': 0.3.51(openai@4.97.0(zod@3.24.2))
       '@langchain/openai': 0.5.10(@langchain/core@0.3.51(openai@4.97.0(zod@3.24.2)))
@@ -11690,7 +11696,7 @@ snapshots:
       cheerio: 1.0.0
       handlebars: 4.7.8
       peggy: 5.0.2
-      typeorm: 0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)
+      typeorm: 0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)
     transitivePeerDependencies:
       - encoding
       - openai
@@ -12865,6 +12871,8 @@ snapshots:
 
   sql-highlight@6.0.0: {}
 
+  sql.js@1.13.0: {}
+
   sqlstring@2.3.3: {}
 
   stack-trace@0.0.10: {}
@@ -13151,7 +13159,7 @@ snapshots:
       possible-typed-array-names: 1.1.0
       reflect.getprototypeof: 1.0.10
 
-  typeorm@0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2):
+  typeorm@0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0):
     dependencies:
       '@sqltools/formatter': 1.2.5
       ansis: 3.17.0
@@ -13181,6 +13189,7 @@ snapshots:
       pg-native: 3.4.5
       pg-query-stream: 4.9.6(pg@8.15.6(pg-native@3.4.5))
       redis: 5.0.1
+      sql.js: 1.13.0
     transitivePeerDependencies:
       - supports-color
 
