@@ -1,6 +1,6 @@
-import pino from 'pino';
 import path from 'node:path';
 import { getCacheDirPath } from '../services/cache-service';
+import { pino } from 'pino';
 
 export const serverLogger = pino({
   level: process.env.LOG_LEVEL ?? 'info',

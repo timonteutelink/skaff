@@ -1,5 +1,5 @@
 "use client";
-import { eraseCache, reloadTemplates, retrieveDefaultTemplates } from "@/app/actions/template";
+import { runEraseCache, reloadTemplates, retrieveDefaultTemplates } from "@/app/actions/template";
 import { ConfirmationDialog } from "@/components/general/confirmation-dialog";
 import TablePage, { FieldInfo } from "@/components/general/table-page";
 import { toastNullError } from "@/lib/utils";
@@ -59,7 +59,7 @@ export default function TemplatesListPage() {
   }, []);
 
   const handleClearCache = useCallback(async () => {
-    const result = await eraseCache();
+    const result = await runEraseCache();
     const toastResult = toastNullError({
       result,
       shortMessage: "Error clearing cache",

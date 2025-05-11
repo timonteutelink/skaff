@@ -602,7 +602,11 @@ const TemplateInstantiationPage: React.FC = () => {
             <Button variant="outline" onClick={handleBackFromDiffToApply}>
               Back
             </Button>
-          ) : null}
+          ) : (
+            <Button variant="outline" onClick={() => router.back()}>
+              Cancel
+            </Button>
+          )}
         </div>
       </div>
     );

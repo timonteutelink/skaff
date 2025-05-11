@@ -2,12 +2,12 @@ import { exec, execFile } from "node:child_process";
 import * as fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
-import { Template } from "../models/template";
 import { GENERATE_DIFF_SCRIPT_PATH } from "../lib/env";
 import { DiffHunk, GitStatus, ParsedFile, Result } from "../lib/types";
-import { pathInCache } from "./cache-service";
-import { logger } from "../lib/logger";
 import { logError } from "../lib/utils";
+import { Template } from "../models/template";
+import { pathInCache } from "./cache-service";
+import { npmInstall } from "./npm-service";
 
 const asyncExecFile = promisify(execFile);
 const asyncExec = promisify(exec);
@@ -73,6 +73,10 @@ export async function cloneRevisionToCache(
   try {
     await asyncExec(`git clone ${repoDir} ${destPath.data}`);
     await asyncExec(`cd ${destPath.data} && git checkout ${revisionHash}`);
+    const installResult = await npmInstall(destPath.data);
+    if ("error" in installResult) {
+      return { error: installResult.error };
+    }
 
     return { data: destPath.data };
   } catch (error) {

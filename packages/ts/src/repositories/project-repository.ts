@@ -4,6 +4,7 @@ import { Project } from "../models/project";
 import path from "node:path";
 import { Result } from "../lib/types";
 import { logger } from "../lib/logger";
+import { logError } from "../lib/utils";
 
 export class ProjectRepository {
 	private loading: boolean = false;

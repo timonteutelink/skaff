@@ -124,9 +124,10 @@ export class Template {
       };
     }
     if (!isRepoClean.data) {
-      logger.debug(`Ignoring template because the repo is not clean`);
+      logger.warn(`Ignoring template because the repo is not clean`);
       return { error: "Template dir is not clean" };
     }
+
     const commitHash = await getCommitHash(absoluteRootDir);
     if ("error" in commitHash) {
       return {

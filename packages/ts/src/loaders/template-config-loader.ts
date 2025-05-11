@@ -1,18 +1,12 @@
-import {
-  TemplateConfigModule,
-  templateConfigSchema,
-  TemplateSettingsType,
-} from "@timonteutelink/template-types-lib";
 import { randomUUID } from "node:crypto";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import ts from "typescript";
-import zod from "zod";
 
-import * as zodNS from "zod";           // full namespace object
 import * as templateTypesLibNS from "@timonteutelink/template-types-lib";
-import * as yamlNS from "yaml";
 import * as handlebarsNS from "handlebars";
+import * as yamlNS from "yaml";
+import * as zodNS from "zod"; // full namespace object
 
 import {
   getHash,
@@ -20,7 +14,12 @@ import {
   saveToCache,
 } from "../services/cache-service";
 import { getEsbuild } from "../utils/get-esbuild";
-import { logger } from "../lib/logger";
+import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
+
+type TemplateConfigModule<TFullSettingsType extends TemplateSettingsType<TSettingsType, UserTemplateSettings>, TSettingsType extends zodNS.AnyZodObject> = templateTypesLibNS.TemplateConfigModule<TFullSettingsType, TSettingsType>;
+type TemplateSettingsType<TSettingsSchema extends zodNS.AnyZodObject, TParentSettings extends UserTemplateSettings = {}> = templateTypesLibNS.TemplateSettingsType<TSettingsSchema, TParentSettings>;
+
+const { templateConfigSchema } = templateTypesLibNS;
 
 const SANDBOX_LIBS: Record<string, unknown> = {
   "@timonteutelink/template-types-lib": templateTypesLibNS,
@@ -38,8 +37,8 @@ interface TemplateConfigFileInfo {
 
 export type TemplateConfigWithFileInfo = {
   templateConfig: TemplateConfigModule<
-    TemplateSettingsType<zod.AnyZodObject>,
-    zod.AnyZodObject
+    TemplateSettingsType<zodNS.AnyZodObject>,
+    zodNS.AnyZodObject
   >;
 } & TemplateConfigFileInfo;
 

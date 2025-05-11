@@ -1,12 +1,11 @@
 "use server";
-import { getCacheDir } from "@repo/ts/services/cache-service";
 import { DefaultTemplateResult, Result, TemplateDTO } from "@repo/ts/lib/types";
-import { logger } from "@repo/ts/lib/logger";
-import { ROOT_TEMPLATE_REPOSITORY } from "@repo/ts/repositories/root-template-repository";
-import { PROJECT_REPOSITORY } from "@repo/ts/repositories/project-repository";
 import { logError } from "@repo/ts/lib/utils";
+import { PROJECT_REPOSITORY } from "@repo/ts/repositories/project-repository";
+import { ROOT_TEMPLATE_REPOSITORY } from "@repo/ts/repositories/root-template-repository";
+import { eraseCache, getCacheDir } from "@repo/ts/services/cache-service";
 
-export async function eraseCache(): Promise<Result<DefaultTemplateResult[]>> {
+export async function runEraseCache(): Promise<Result<DefaultTemplateResult[]>> {
   const eraseResult = await eraseCache();
   if ("error" in eraseResult) {
     return { error: eraseResult.error };

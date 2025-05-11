@@ -8,6 +8,8 @@ import { cloneRevisionToCache } from "../services/git-service";
 import { logger } from "../lib/logger";
 import { logError } from "../lib/utils";
 
+// TODO: findTemplate and loadRevision should only load that specific template not load all templates
+
 // now only stores the root templates at: <templateDirPath>/root-templates/*
 // later also store reference to files and generic templates to allow direct instantiation without saving state of subtemplates
 export class RootTemplateRepository {

@@ -20,10 +20,11 @@ localFlake:
           PROJECT_SEARCH_PATHS = "~/projects/btc/:~/projects/timon/templated/:~/projects/kosmoy/templated/";
 
           # ESBUILD_BINARY_PATH="/home/tteutelink/projects/timon/code-templator/node_modules/.bin/esbuild";
-          GENERATE_DIFF_SCRIPT_PATH ="~/projects/timon/code-templator/scripts/generate-diff-patch.sh";
+          GENERATE_DIFF_SCRIPT_PATH = "~/projects/timon/code-templator/scripts/generate-diff-patch.sh";
+          NPM_PATH = "${pkgs.pnpm}/bin/pnpm";
 
-          NODE_OPTIONS="--experimental-vm-modules";
-          DENO_UNSTABLE_SLOPPY_IMPORTS="1";
+          NODE_OPTIONS = "--experimental-vm-modules";
+          DENO_UNSTABLE_SLOPPY_IMPORTS = "1";
         };
 
         packages = with pkgs; [

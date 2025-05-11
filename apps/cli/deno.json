@@ -1,8 +1,14 @@
 {
+  "name": "@timonteutelink/code-templator",
+  "version": "0.1.0",
+  "exports": "./src/main.ts",
+  "importMap": "./import_map.json",
+  "nodeModulesDir": "auto",
   "tasks": {
-    "build": "deno compile --output=./code-templator --allow-write --allow-run --import-map=./import_map.json --allow-net --allow-env --allow-read --unstable-sloppy-imports src/main.ts",
-    "start": "deno run --import-map=./import_map.json --allow-write --allow-run --allow-net --allow-env --allow-read --unstable-sloppy-imports src/main.ts",
-    "dev": "deno run --import-map=./import_map.json --allow-write --allow-run --allow-net --allow-env --allow-read --unstable-sloppy-imports --watch=src src/main.ts",
+    "prepare": "DENO_NO_PACKAGE_JSON=1 deno install -A --unstable-sloppy-imports --unstable-detect-cjs --entrypoint src/main.ts --lock ./deno.lock",
+    "build": "DENO_NO_PACKAGE_JSON=1 deno compile -A --unstable-sloppy-imports --unstable-detect-cjs --lock ./deno.lock --output=./code-templator src/main.ts ",
+    "start": "DENO_NO_PACKAGE_JSON=1 deno run -A --unstable-sloppy-imports --unstable-detect-cjs --lock ./deno.lock src/main.ts",
+    "lock": "DENO_NO_PACKAGE_JSON=1 deno cache -r --lock=deno.lock src/main.ts",
     "format": "deno fmt"
   }
 }

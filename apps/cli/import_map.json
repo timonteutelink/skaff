@@ -1,5 +1,16 @@
 {
   "imports": {
-    "@/": "./src/"
+    "@/": "./src/",
+    "@repo/ts": "./../../packages/ts/src/index.ts",
+    "@timonteutelink/template-types-lib": "npm:@timonteutelink/template-types-lib@0.0.35",
+    "commander": "npm:commander@^13",
+    "glob": "npm:glob@^11",
+    "zod-to-json-schema": "npm:zod-to-json-schema@^3",
+    "zod": "npm:zod@^3",
+    "yaml": "npm:yaml@^2",
+    "handlebars": "npm:handlebars@^4",
+    "typescript": "npm:typescript@^5",
+    "fs-extra": "npm:fs-extra@^11",
+    "pino": "npm:pino@^9"
   }
 }

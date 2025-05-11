@@ -22,5 +22,9 @@ export const PROJECT_SEARCH_PATHS: { id: string; path: string }[] = (
 
 export const GENERATE_DIFF_SCRIPT_PATH = replaceHome(
   process.env.GENERATE_DIFF_SCRIPT_PATH ||
-    "./../../scripts/generate-diff-patch.sh",
+  "./../../scripts/generate-diff-patch.sh",
+);
+
+export const NPM_PATH = replaceHome(
+  process.env.NPM_PATH || "npm"
 );

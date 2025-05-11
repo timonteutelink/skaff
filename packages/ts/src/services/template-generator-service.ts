@@ -7,6 +7,7 @@ import {
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import fs from "fs-extra";
+import { readFile } from "node:fs/promises";
 import { glob } from "glob";
 import Handlebars, { HelperDelegate, HelperOptions } from 'handlebars';
 import * as path from "node:path";
@@ -252,7 +253,7 @@ export class TemplateGeneratorService {
     const loadedPartials: Record<string, string> = {};
     for (const [name, filePath] of Object.entries(partials)) {
       try {
-        const content = await fs.readFile(filePath, "utf-8");
+        const content = await readFile(filePath, { encoding: "utf-8" });
         loadedPartials[name] = content;
       } catch (error) {
         logError({
@@ -380,7 +381,7 @@ export class TemplateGeneratorService {
           }
         } catch { }
 
-        const content = await fs.readFile(srcPath, "utf-8");
+        const content = await readFile(srcPath, { encoding: "utf-8" });
         const compiled = Handlebars.compile(content);
         const result = compiled(this.currentlyGeneratingTemplateFullSettings);
 
@@ -462,7 +463,7 @@ export class TemplateGeneratorService {
 
     let oldFileContents = "";
     try {
-      oldFileContents = await fs.readFile(absoluteFilePath, "utf8");
+      oldFileContents = await readFile(absoluteFilePath, { encoding: "utf8" });
     } catch {
       // ignore so just creates file
     }

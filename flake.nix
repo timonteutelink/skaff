@@ -3,6 +3,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     devenv.url = "github:cachix/devenv";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    nix-deno.url = "git+file:///home/tteutelink/projects/opensource/nix-deno";
 
     timon-modules = {
       url = "git+ssh://git@github.com/timonteutelink/nix-modules";
