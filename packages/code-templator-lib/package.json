@@ -1,6 +1,6 @@
 {
   "name": "@timonteutelink/code-templator-lib",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "exports": {
     "./*": "./src/*.ts",
     ".": "./src/index.ts"
@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@langchain/anthropic": "^0.3.20",
+    "@langchain/aws": "^0.1.9",
     "@langchain/langgraph": "^0.2.67",
     "@langchain/ollama": "^0.2.0",
     "@langchain/openai": "^0.5.10",
