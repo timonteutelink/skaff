@@ -24,8 +24,8 @@ importers:
   apps/cli:
     dependencies:
       '@timonteutelink/code-templator-lib':
-        specifier: ^0.0.30
-        version: 0.0.30(@aws-sdk/credential-providers@3.806.0)(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.2)))(@swc/wasm@1.11.24)(@types/node@22.14.1)(encoding@0.1.13)(openai@4.97.0(encoding@0.1.13)(zod@3.24.2))(reflect-metadata@0.2.2)(typescript@5.8.3)
+        specifier: ^0.0.31
+        version: 0.0.31(@aws-sdk/credential-providers@3.806.0)(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.2)))(@types/node@22.14.1)(encoding@0.1.13)(openai@4.97.0(encoding@0.1.13)(zod@3.24.2))(reflect-metadata@0.2.2)(typeorm-aurora-data-api-driver@3.0.1(@aws-sdk/client-rds-data@3.806.0))(typescript@5.8.3)
       commander:
         specifier: ^13.1.0
         version: 13.1.0
@@ -360,7 +360,7 @@ importers:
         version: 2.2.2
       langchain:
         specifier: ^0.3.24
-        version: 0.3.24(373e484c236c1832a2a0fc4240d67537)
+        version: 0.3.24(b57abb5248ada0381198c220fff1b832)
       mongodb:
         specifier: ^6.16.0
         version: 6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4)
@@ -417,7 +417,10 @@ importers:
         version: 10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3)
       typeorm:
         specifier: ^0.3.23
-        version: 0.3.23(@google-cloud/spanner@7.21.0(encoding@0.1.13))(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3))
+        version: 0.3.23(@google-cloud/spanner@7.21.0(encoding@0.1.13))(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3))(typeorm-aurora-data-api-driver@3.0.1(@aws-sdk/client-rds-data@3.806.0))
+      typeorm-aurora-data-api-driver:
+        specifier: ^3.0.1
+        version: 3.0.1(@aws-sdk/client-rds-data@3.806.0)
       yaml:
         specifier: ^2.7.1
         version: 2.7.1
@@ -574,6 +577,10 @@ packages:
 
   '@aws-sdk/client-kendra@3.806.0':
     resolution: {integrity: sha512-jWll+rl2GgDQoiChgMGgf9UOv2VwITzkZYcCFhoopVXsDcGnCy0aQxzfpEf6fXBUPf47yt6Humgr6OhZ+xaC0g==}
+    engines: {node: '>=18.0.0'}
+
+  '@aws-sdk/client-rds-data@3.806.0':
+    resolution: {integrity: sha512-AVeiSdMh2jn4a72hW+D8FJ8rzPwcnaGVK0dzwHm26KIanZNEA0gDZ2drPLKD4he9S0HOgc1WqJefTQ+BP0oD/w==}
     engines: {node: '>=18.0.0'}
 
   '@aws-sdk/client-sagemaker@3.806.0':
@@ -2891,8 +2898,8 @@ packages:
   '@tediousjs/connection-string@0.5.0':
     resolution: {integrity: sha512-7qSgZbincDDDFyRweCIEvZULFAw5iz/DeunhvuxpL31nfntX3P4Yd4HkHBRg9H8CdqY1e5WFN1PZIz/REL9MVQ==}
 
-  '@timonteutelink/code-templator-lib@0.0.30':
-    resolution: {integrity: sha512-f3412oKUA3sBSDwOhhuQlkVC3vEIfa4tYuHJL+9PgWD0Sgzv6tZzs3w7lAYOPHI6iktOy8UetbeqbuHP73Ovgg==}
+  '@timonteutelink/code-templator-lib@0.0.31':
+    resolution: {integrity: sha512-i/B0xFigFvRrgpgyENBtEcwVPub276InP+67nkDV6GeBRqk9wbOsqiQLbumD99PsXdDwMTCkWY/ITs4dx3egsQ==}
 
   '@timonteutelink/template-types-lib@0.0.35':
     resolution: {integrity: sha512-1XX3gZB4KYC+988cCCqtjdBFVcLwg/J1jHXLhgp2wVVV+EyzQ+MyUEQp0//rhCXtIfpDi5guv3lRpezVBM5BHQ==}
@@ -6499,6 +6506,12 @@ packages:
     resolution: {integrity: sha512-3KS2b+kL7fsuk/eJZ7EQdnEmQoaho/r6KUef7hxvltNA5DR8NAUM+8wJMbJyZ4G9/7i3v5zPBIMN5aybAh2/Jg==}
     engines: {node: '>= 0.4'}
 
+  typeorm-aurora-data-api-driver@3.0.1:
+    resolution: {integrity: sha512-6cqrrgcnESYBZjuX5rKTwbobC03NTobPsqT+zk9GI3Fw8KYvMgh5n6OSWhyMvIZXJTMcAmD0ykRicV0dCkdeyg==}
+    engines: {node: '>=6.0.0'}
+    peerDependencies:
+      '@aws-sdk/client-rds-data': ^3.490.0
+
   typeorm@0.3.23:
     resolution: {integrity: sha512-CJUZWW7O5zZG0TA7bRpntJx97AvvQwsoSa1UgYlzTOtmkwODrqIyxP9wtzHpBssEKie5chnLiCVyxKNeYo65wQ==}
     engines: {node: '>=16.13.0'}
@@ -7067,6 +7080,50 @@ snapshots:
       '@types/uuid': 9.0.8
       tslib: 2.8.1
       uuid: 9.0.1
+    transitivePeerDependencies:
+      - aws-crt
+
+  '@aws-sdk/client-rds-data@3.806.0':
+    dependencies:
+      '@aws-crypto/sha256-browser': 5.2.0
+      '@aws-crypto/sha256-js': 5.2.0
+      '@aws-sdk/core': 3.806.0
+      '@aws-sdk/credential-provider-node': 3.806.0
+      '@aws-sdk/middleware-host-header': 3.804.0
+      '@aws-sdk/middleware-logger': 3.804.0
+      '@aws-sdk/middleware-recursion-detection': 3.804.0
+      '@aws-sdk/middleware-user-agent': 3.806.0
+      '@aws-sdk/region-config-resolver': 3.806.0
+      '@aws-sdk/types': 3.804.0
+      '@aws-sdk/util-endpoints': 3.806.0
+      '@aws-sdk/util-user-agent-browser': 3.804.0
+      '@aws-sdk/util-user-agent-node': 3.806.0
+      '@smithy/config-resolver': 4.1.2
+      '@smithy/core': 3.3.1
+      '@smithy/fetch-http-handler': 5.0.2
+      '@smithy/hash-node': 4.0.2
+      '@smithy/invalid-dependency': 4.0.2
+      '@smithy/middleware-content-length': 4.0.2
+      '@smithy/middleware-endpoint': 4.1.4
+      '@smithy/middleware-retry': 4.1.5
+      '@smithy/middleware-serde': 4.0.3
+      '@smithy/middleware-stack': 4.0.2
+      '@smithy/node-config-provider': 4.1.1
+      '@smithy/node-http-handler': 4.0.4
+      '@smithy/protocol-http': 5.1.0
+      '@smithy/smithy-client': 4.2.4
+      '@smithy/types': 4.2.0
+      '@smithy/url-parser': 4.0.2
+      '@smithy/util-base64': 4.0.0
+      '@smithy/util-body-length-browser': 4.0.0
+      '@smithy/util-body-length-node': 4.0.0
+      '@smithy/util-defaults-mode-browser': 4.0.12
+      '@smithy/util-defaults-mode-node': 4.0.12
+      '@smithy/util-endpoints': 3.0.4
+      '@smithy/util-middleware': 4.0.2
+      '@smithy/util-retry': 4.0.3
+      '@smithy/util-utf8': 4.0.0
+      tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
 
@@ -9892,7 +9949,7 @@ snapshots:
 
   '@tediousjs/connection-string@0.5.0': {}
 
-  '@timonteutelink/code-templator-lib@0.0.30(@aws-sdk/credential-providers@3.806.0)(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.2)))(@swc/wasm@1.11.24)(@types/node@22.14.1)(encoding@0.1.13)(openai@4.97.0(encoding@0.1.13)(zod@3.24.2))(reflect-metadata@0.2.2)(typescript@5.8.3)':
+  '@timonteutelink/code-templator-lib@0.0.31(@aws-sdk/credential-providers@3.806.0)(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.2)))(@types/node@22.14.1)(encoding@0.1.13)(openai@4.97.0(encoding@0.1.13)(zod@3.24.2))(reflect-metadata@0.2.2)(typeorm-aurora-data-api-driver@3.0.1(@aws-sdk/client-rds-data@3.806.0))(typescript@5.8.3)':
     dependencies:
       '@google-cloud/spanner': 7.21.0(encoding@0.1.13)
       '@langchain/anthropic': 0.3.20(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)
@@ -9913,6 +9970,7 @@ snapshots:
       '@sap/hana-client': 2.24.24
       '@swc/core': 1.11.24(@swc/helpers@0.5.17)
       '@swc/helpers': 0.5.17
+      '@swc/wasm': 1.11.24
       '@timonteutelink/template-types-lib': 0.0.35
       '@types/fs-extra': 11.0.4
       axios: 1.9.0
@@ -9925,7 +9983,7 @@ snapshots:
       hdb-pool: 0.1.6
       ioredis: 5.6.1
       kerberos: 2.2.2
-      langchain: 0.3.24(373e484c236c1832a2a0fc4240d67537)
+      langchain: 0.3.24(b57abb5248ada0381198c220fff1b832)
       mongodb: 6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4)
       mongodb-client-encryption: 6.4.0
       mssql: 11.0.1
@@ -9944,14 +10002,13 @@ snapshots:
       sql.js: 1.13.0
       sqlite3: 5.1.7
       ts-node: 10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3)
-      typeorm: 0.3.23(@google-cloud/spanner@7.21.0(encoding@0.1.13))(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3))
+      typeorm: 0.3.23(@google-cloud/spanner@7.21.0(encoding@0.1.13))(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3))(typeorm-aurora-data-api-driver@3.0.1(@aws-sdk/client-rds-data@3.806.0))
       yaml: 2.7.1
       zod: 3.24.2
       zod-to-json-schema: 3.24.5(zod@3.24.2)
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
       - '@langchain/core'
-      - '@swc/wasm'
       - '@types/node'
       - aws-crt
       - bluebird
@@ -12416,7 +12473,7 @@ snapshots:
 
   kleur@3.0.3: {}
 
-  langchain@0.3.24(373e484c236c1832a2a0fc4240d67537):
+  langchain@0.3.24(b57abb5248ada0381198c220fff1b832):
     dependencies:
       '@langchain/core': 0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.2))
       '@langchain/openai': 0.5.10(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)
@@ -12448,7 +12505,7 @@ snapshots:
       cheerio: 1.0.0
       handlebars: 4.7.8
       peggy: 5.0.2
-      typeorm: 0.3.23(@google-cloud/spanner@7.21.0(encoding@0.1.13))(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3))
+      typeorm: 0.3.23(@google-cloud/spanner@7.21.0(encoding@0.1.13))(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3))(typeorm-aurora-data-api-driver@3.0.1(@aws-sdk/client-rds-data@3.806.0))
     transitivePeerDependencies:
       - encoding
       - openai
@@ -14183,7 +14240,12 @@ snapshots:
       possible-typed-array-names: 1.1.0
       reflect.getprototypeof: 1.0.10
 
-  typeorm@0.3.23(@google-cloud/spanner@7.21.0(encoding@0.1.13))(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3)):
+  typeorm-aurora-data-api-driver@3.0.1(@aws-sdk/client-rds-data@3.806.0):
+    dependencies:
+      '@aws-sdk/client-rds-data': 3.806.0
+      sqlstring: 2.3.3
+
+  typeorm@0.3.23(@google-cloud/spanner@7.21.0(encoding@0.1.13))(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3))(typeorm-aurora-data-api-driver@3.0.1(@aws-sdk/client-rds-data@3.806.0)):
     dependencies:
       '@sqltools/formatter': 1.2.5
       ansis: 3.17.0
@@ -14216,6 +14278,7 @@ snapshots:
       sql.js: 1.13.0
       sqlite3: 5.1.7
       ts-node: 10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3)
+      typeorm-aurora-data-api-driver: 3.0.1(@aws-sdk/client-rds-data@3.806.0)
     transitivePeerDependencies:
       - supports-color
 
