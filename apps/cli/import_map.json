@@ -1,7 +1,7 @@
 {
   "imports": {
     "@/": "./src/",
-    "@timonteutelink/code-templator-lib": "npm:@timonteutelink/code-templator-lib@0.0.7",
+    "@timonteutelink/code-templator-lib": "npm:@timonteutelink/code-templator-lib@0.0.8",
     "@timonteutelink/template-types-lib": "npm:@timonteutelink/template-types-lib@0.0.35",
     "commander": "npm:commander@^13",
     "glob": "npm:glob@^11",

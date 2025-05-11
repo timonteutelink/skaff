@@ -1,7 +1,7 @@
 {
   "version": "4",
   "specifiers": {
-    "npm:@timonteutelink/code-templator-lib@0.0.6": "0.0.6_zod-to-json-schema@3.24.5__zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_handlebars@4.7.8_peggy@5.0.2_typeorm@0.3.23__@google-cloud+spanner@7.21.0___@opentelemetry+api@1.9.0__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_zod@3.24.4",
+    "npm:@timonteutelink/code-templator-lib@0.0.7": "0.0.7_zod-to-json-schema@3.24.5__zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_handlebars@4.7.8_peggy@5.0.2_typeorm@0.3.23__@google-cloud+spanner@7.21.0___@opentelemetry+api@1.9.0__@sap+hana-client@2.24.24__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_zod@3.24.4",
     "npm:@timonteutelink/template-types-lib@0.0.35": "0.0.35",
     "npm:commander@13": "13.1.0",
     "npm:fs-extra@11": "11.3.0",
@@ -1194,6 +1194,12 @@
     "@protobufjs/utf8@1.1.0": {
       "integrity": "sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw=="
     },
+    "@sap/hana-client@2.24.24": {
+      "integrity": "sha512-cZ1OEtkcXlrI+egXxWWW39Zkbxw+8Ejs5q195KX+GksCPbYSW3+VXA4mhTzsS9oR84ORNQGsbYrApOAVojrgUA==",
+      "dependencies": [
+        "debug@3.1.0"
+      ]
+    },
     "@smithy/abort-controller@4.0.2": {
       "integrity": "sha512-Sl/78VDtgqKxN2+1qduaVE140XF+Xg+TafkncspwM4jFP/LHr76ZHmIY/y3V1M0mMLNk+Je6IGbzxy23RSToMw==",
       "dependencies": [
@@ -1669,8 +1675,8 @@
     "@sqltools/formatter@1.2.5": {
       "integrity": "sha512-Uy0+khmZqUrUGm5dmMqVlnvufZRSK0FbYzVgp0UMstm+F5+W2/jnEEQyc9vo1ZR/E5ZI/B1WjjoTqBqwJL6Krw=="
     },
-    "@timonteutelink/code-templator-lib@0.0.6_zod-to-json-schema@3.24.5__zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_handlebars@4.7.8_peggy@5.0.2_typeorm@0.3.23__@google-cloud+spanner@7.21.0___@opentelemetry+api@1.9.0__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_zod@3.24.4": {
-      "integrity": "sha512-1X0YSzU1z5+lBcEjltVzWaQdIYSKutuJxFndbagOkrbu2R9HRCGgGPa6HfqU6uj3bOmIqaw2Mc9Nc85mlJfb0w==",
+    "@timonteutelink/code-templator-lib@0.0.7_zod-to-json-schema@3.24.5__zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_handlebars@4.7.8_peggy@5.0.2_typeorm@0.3.23__@google-cloud+spanner@7.21.0___@opentelemetry+api@1.9.0__@sap+hana-client@2.24.24__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_zod@3.24.4": {
+      "integrity": "sha512-NM9Umfz/EXGhr6QVagDQyxEuDjxFxImVTW6HsMxzvd4x6XLUHa0wv0u4OzSUL1rBp6xhgD/t2ZGWpgjeTM1tvQ==",
       "dependencies": [
         "@google-cloud/spanner",
         "@langchain/anthropic",
@@ -1687,6 +1693,7 @@
         "@langchain/ollama",
         "@langchain/openai@0.5.10_@langchain+core@0.3.55__openai@4.98.0___zod@3.24.4__zod@3.24.4_zod@3.24.4_openai@4.98.0__zod@3.24.4",
         "@langchain/xai",
+        "@sap/hana-client",
         "@timonteutelink/template-types-lib",
         "@types/fs-extra",
         "axios",
@@ -1805,7 +1812,7 @@
     "agent-base@6.0.2": {
       "integrity": "sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==",
       "dependencies": [
-        "debug"
+        "debug@4.4.0"
       ]
     },
     "agent-base@7.1.3": {
@@ -2052,10 +2059,16 @@
     "dayjs@1.11.13": {
       "integrity": "sha512-oaMBel6gjolK862uaPQOVTA7q3TZhuSvuMQAAglQDOWYO9A91IrAOUJEyKVlqJlHE0vq5p5UXxzdPfMH/x6xNg=="
     },
+    "debug@3.1.0": {
+      "integrity": "sha512-OX8XqP7/1a9cqkxYw2yXss15f26NKWBpDXQd0/uK/KPqdQhxbPa994hnzjcE2VqQpDslf55723cKPUOGSmMY3g==",
+      "dependencies": [
+        "ms@2.0.0"
+      ]
+    },
     "debug@4.4.0": {
       "integrity": "sha512-6WTZ/IxCY/T6BALoZHaE4ctp9xm+Z5kY/pzYaCHRFeyVhojxlrm+46y68HA6hr0TcwEssoxNiDEUJQjfPZ/RYA==",
       "dependencies": [
-        "ms"
+        "ms@2.1.3"
       ]
     },
     "decamelize@1.2.0": {
@@ -2473,27 +2486,27 @@
       "dependencies": [
         "@tootallnate/once",
         "agent-base@6.0.2",
-        "debug"
+        "debug@4.4.0"
       ]
     },
     "https-proxy-agent@5.0.1": {
       "integrity": "sha512-dFcAjpTQFgoLMzC2VwU+C/CbS7uRL0lWmxDITmqm7C+7F0Odmj6s9l6alZc6AELXhrnggM2CeWSXHGOdX2YtwA==",
       "dependencies": [
         "agent-base@6.0.2",
-        "debug"
+        "debug@4.4.0"
       ]
     },
     "https-proxy-agent@7.0.6": {
       "integrity": "sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==",
       "dependencies": [
         "agent-base@7.1.3",
-        "debug"
+        "debug@4.4.0"
       ]
     },
     "humanize-ms@1.2.1": {
       "integrity": "sha512-Fl70vYtsAFb/C06PTS9dZBo7ihau+Tu/DNCk/OyHhea07S+aeMWpFFkUaXRa8fI+ScZbEI8dfSxwY7gxZ9SAVQ==",
       "dependencies": [
-        "ms"
+        "ms@2.1.3"
       ]
     },
     "iconv-lite@0.6.3": {
@@ -2591,7 +2604,7 @@
         "safe-buffer@5.2.1"
       ]
     },
-    "langchain@0.3.24_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+core@0.3.55__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_handlebars@4.7.8_peggy@5.0.2_typeorm@0.3.23__@google-cloud+spanner@7.21.0___@opentelemetry+api@1.9.0__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_zod@3.24.4": {
+    "langchain@0.3.24_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+core@0.3.55__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_handlebars@4.7.8_peggy@5.0.2_typeorm@0.3.23__@google-cloud+spanner@7.21.0___@opentelemetry+api@1.9.0__@sap+hana-client@2.24.24__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_zod@3.24.4": {
       "integrity": "sha512-BTjiYkUCpWFAmufK8J5zMqc5aUs4eEnAXPWtPe2+R4ZPP+U7bXJSBHAcrB40rQ3VeTdRgMvgDjekOOgCMWut6Q==",
       "dependencies": [
         "@langchain/anthropic",
@@ -2692,6 +2705,9 @@
     },
     "minipass@7.1.2": {
       "integrity": "sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw=="
+    },
+    "ms@2.0.0": {
+      "integrity": "sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A=="
     },
     "ms@2.1.3": {
       "integrity": "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="
@@ -3198,16 +3214,17 @@
     "tslib@2.8.1": {
       "integrity": "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="
     },
-    "typeorm@0.3.23_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_reflect-metadata@0.2.2": {
+    "typeorm@0.3.23_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_reflect-metadata@0.2.2": {
       "integrity": "sha512-CJUZWW7O5zZG0TA7bRpntJx97AvvQwsoSa1UgYlzTOtmkwODrqIyxP9wtzHpBssEKie5chnLiCVyxKNeYo65wQ==",
       "dependencies": [
         "@google-cloud/spanner",
+        "@sap/hana-client",
         "@sqltools/formatter",
         "ansis",
         "app-root-path",
         "buffer",
         "dayjs",
-        "debug",
+        "debug@4.4.0",
         "dotenv",
         "glob@10.4.5",
         "reflect-metadata",
@@ -3356,7 +3373,7 @@
   },
   "workspace": {
     "dependencies": [
-      "npm:@timonteutelink/code-templator-lib@0.0.6",
+      "npm:@timonteutelink/code-templator-lib@0.0.7",
       "npm:@timonteutelink/template-types-lib@0.0.35",
       "npm:commander@13",
       "npm:fs-extra@11",

@@ -45,6 +45,7 @@
     "npm:@radix-ui/react-toggle-group@^1.1.3": "1.1.9_@types+react@19.1.3_@types+react-dom@19.1.3__@types+react@19.1.3_react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:@radix-ui/react-toggle@^1.1.3": "1.1.8_@types+react@19.1.3_@types+react-dom@19.1.3__@types+react@19.1.3_react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:@radix-ui/react-tooltip@^1.2.0": "1.2.6_@types+react@19.1.3_@types+react-dom@19.1.3__@types+react@19.1.3_react@19.1.0_react-dom@19.1.0__react@19.1.0",
+    "npm:@sap/hana-client@^2.24.24": "2.24.24",
     "npm:@tailwindcss/postcss@^4.1.3": "4.1.6",
     "npm:@types/fs-extra@^11.0.4": "11.0.4",
     "npm:@types/node@^22.13.10": "22.15.17",
@@ -74,7 +75,7 @@
     "npm:ignore-loader@~0.1.2": "0.1.2",
     "npm:input-otp@^1.4.2": "1.4.2_react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:jest@^29.7.0": "29.7.0_@types+node@22.15.17",
-    "npm:langchain@~0.3.24": "0.3.24_@langchain+core@0.3.55__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_handlebars@4.7.8_zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_peggy@5.0.2_typeorm@0.3.23__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0",
+    "npm:langchain@~0.3.24": "0.3.24_@langchain+core@0.3.55__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_handlebars@4.7.8_zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_peggy@5.0.2_typeorm@0.3.23__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24",
     "npm:lucide-react@0.488": "0.488.0_react@19.1.0",
     "npm:next-themes@~0.4.6": "0.4.6_react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:next@^15.3.0": "15.3.2_react@19.1.0_react-dom@19.1.0__react@19.1.0",
@@ -97,7 +98,7 @@
     "npm:tailwindcss@^4.1.3": "4.1.6",
     "npm:turbo@^2.5.0": "2.5.3",
     "npm:tw-animate-css@^1.2.5": "1.2.9",
-    "npm:typeorm@~0.3.23": "0.3.23_reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0",
+    "npm:typeorm@~0.3.23": "0.3.23_reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24",
     "npm:typescript-eslint@^8.29.1": "8.32.0_eslint@9.26.0_typescript@5.8.3_@typescript-eslint+parser@8.32.0__eslint@9.26.0__typescript@5.8.3",
     "npm:typescript@5.8.3": "5.8.3",
     "npm:typescript@^5.8.3": "5.8.3",
@@ -818,7 +819,7 @@
         "@babel/traverse",
         "@babel/types",
         "convert-source-map",
-        "debug",
+        "debug@4.4.0",
         "gensync",
         "json5",
         "semver@6.3.1"
@@ -1023,7 +1024,7 @@
         "@babel/parser",
         "@babel/template",
         "@babel/types",
-        "debug",
+        "debug@4.4.0",
         "globals@11.12.0"
       ]
     },
@@ -1160,7 +1161,7 @@
       "integrity": "sha512-fxlS1kkIjx8+vy2SjuCB94q3htSNrufYTXubwiBFeaQHbH6Ipi43gFJq2zCMt6PHhImH3Xmr0NksKDvchWlpQQ==",
       "dependencies": [
         "@eslint/object-schema",
-        "debug",
+        "debug@4.4.0",
         "minimatch@3.1.2"
       ]
     },
@@ -1177,7 +1178,7 @@
       "integrity": "sha512-gtF186CXhIl1p4pJNGZw8Yc6RlshoePRvE0X91oPGb3vZ8pM3qOS9W9NGPat9LziaBV7XrJWGylNQXkGcnM3IQ==",
       "dependencies": [
         "ajv",
-        "debug",
+        "debug@4.4.0",
         "espree",
         "globals@14.0.0",
         "ignore",
@@ -2762,6 +2763,12 @@
     "@react-dnd/shallowequal@2.0.0": {
       "integrity": "sha512-Pc/AFTdwZwEKJxFJvlxrSmGe/di+aAOBn60sremrpLo6VI/6cmiUYNNwlI5KNYttg7uypzA3ILPMPgxB2GYZEg=="
     },
+    "@sap/hana-client@2.24.24": {
+      "integrity": "sha512-cZ1OEtkcXlrI+egXxWWW39Zkbxw+8Ejs5q195KX+GksCPbYSW3+VXA4mhTzsS9oR84ORNQGsbYrApOAVojrgUA==",
+      "dependencies": [
+        "debug@3.1.0"
+      ]
+    },
     "@sinclair/typebox@0.27.8": {
       "integrity": "sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA=="
     },
@@ -3582,7 +3589,7 @@
         "@typescript-eslint/types",
         "@typescript-eslint/typescript-estree",
         "@typescript-eslint/visitor-keys",
-        "debug",
+        "debug@4.4.0",
         "eslint",
         "typescript"
       ]
@@ -3599,7 +3606,7 @@
       "dependencies": [
         "@typescript-eslint/typescript-estree",
         "@typescript-eslint/utils",
-        "debug",
+        "debug@4.4.0",
         "eslint",
         "ts-api-utils",
         "typescript"
@@ -3613,7 +3620,7 @@
       "dependencies": [
         "@typescript-eslint/types",
         "@typescript-eslint/visitor-keys",
-        "debug",
+        "debug@4.4.0",
         "fast-glob@3.3.3",
         "is-glob",
         "minimatch@9.0.5",
@@ -3665,7 +3672,7 @@
     "agent-base@6.0.2": {
       "integrity": "sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==",
       "dependencies": [
-        "debug"
+        "debug@4.4.0"
       ]
     },
     "agent-base@7.1.3": {
@@ -3932,7 +3939,7 @@
       "dependencies": [
         "bytes",
         "content-type",
-        "debug",
+        "debug@4.4.0",
         "http-errors",
         "iconv-lite",
         "on-finished",
@@ -4367,10 +4374,16 @@
     "dayjs@1.11.13": {
       "integrity": "sha512-oaMBel6gjolK862uaPQOVTA7q3TZhuSvuMQAAglQDOWYO9A91IrAOUJEyKVlqJlHE0vq5p5UXxzdPfMH/x6xNg=="
     },
+    "debug@3.1.0": {
+      "integrity": "sha512-OX8XqP7/1a9cqkxYw2yXss15f26NKWBpDXQd0/uK/KPqdQhxbPa994hnzjcE2VqQpDslf55723cKPUOGSmMY3g==",
+      "dependencies": [
+        "ms@2.0.0"
+      ]
+    },
     "debug@4.4.0": {
       "integrity": "sha512-6WTZ/IxCY/T6BALoZHaE4ctp9xm+Z5kY/pzYaCHRFeyVhojxlrm+46y68HA6hr0TcwEssoxNiDEUJQjfPZ/RYA==",
       "dependencies": [
-        "ms"
+        "ms@2.1.3"
       ]
     },
     "decamelize@1.2.0": {
@@ -4810,7 +4823,7 @@
         "ajv",
         "chalk",
         "cross-spawn",
-        "debug",
+        "debug@4.4.0",
         "escape-string-regexp@4.0.0",
         "eslint-scope",
         "eslint-visitor-keys@4.2.0",
@@ -4927,7 +4940,7 @@
         "content-type",
         "cookie",
         "cookie-signature",
-        "debug",
+        "debug@4.4.0",
         "encodeurl",
         "escape-html",
         "etag",
@@ -5039,7 +5052,7 @@
     "finalhandler@2.1.0": {
       "integrity": "sha512-/t88Ty3d5JWQbWYgaOGCCYfXRwV1+be02WqYYlL6h0lEiUAMPM8o8qKGO01YIkOHzka2up08wvgYD0mDiI+q3Q==",
       "dependencies": [
-        "debug",
+        "debug@4.4.0",
         "encodeurl",
         "escape-html",
         "on-finished",
@@ -5433,21 +5446,21 @@
       "dependencies": [
         "@tootallnate/once",
         "agent-base@6.0.2",
-        "debug"
+        "debug@4.4.0"
       ]
     },
     "https-proxy-agent@5.0.1": {
       "integrity": "sha512-dFcAjpTQFgoLMzC2VwU+C/CbS7uRL0lWmxDITmqm7C+7F0Odmj6s9l6alZc6AELXhrnggM2CeWSXHGOdX2YtwA==",
       "dependencies": [
         "agent-base@6.0.2",
-        "debug"
+        "debug@4.4.0"
       ]
     },
     "https-proxy-agent@7.0.6": {
       "integrity": "sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==",
       "dependencies": [
         "agent-base@7.1.3",
-        "debug"
+        "debug@4.4.0"
       ]
     },
     "human-signals@2.1.0": {
@@ -5456,7 +5469,7 @@
     "humanize-ms@1.2.1": {
       "integrity": "sha512-Fl70vYtsAFb/C06PTS9dZBo7ihau+Tu/DNCk/OyHhea07S+aeMWpFFkUaXRa8fI+ScZbEI8dfSxwY7gxZ9SAVQ==",
       "dependencies": [
-        "ms"
+        "ms@2.1.3"
       ]
     },
     "iconv-lite@0.6.3": {
@@ -5736,7 +5749,7 @@
     "istanbul-lib-source-maps@4.0.1": {
       "integrity": "sha512-n3s8EwkdFIJCG3BPKBYvskgXGoy88ARzvegkitk60NxRdwltLOTaH7CUiMRXvwYorl0Q712iEjcWB+fK/MrWVw==",
       "dependencies": [
-        "debug",
+        "debug@4.4.0",
         "istanbul-lib-coverage",
         "source-map"
       ]
@@ -6477,6 +6490,41 @@
         "zod-to-json-schema"
       ]
     },
+    "langchain@0.3.24_@langchain+core@0.3.55__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_handlebars@4.7.8_zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_peggy@5.0.2_typeorm@0.3.23__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24": {
+      "integrity": "sha512-BTjiYkUCpWFAmufK8J5zMqc5aUs4eEnAXPWtPe2+R4ZPP+U7bXJSBHAcrB40rQ3VeTdRgMvgDjekOOgCMWut6Q==",
+      "dependencies": [
+        "@langchain/anthropic",
+        "@langchain/aws",
+        "@langchain/cerebras",
+        "@langchain/cohere",
+        "@langchain/core@0.3.55_zod@3.24.4",
+        "@langchain/deepseek",
+        "@langchain/google-genai",
+        "@langchain/google-vertexai",
+        "@langchain/google-vertexai-web",
+        "@langchain/groq",
+        "@langchain/mistralai",
+        "@langchain/ollama",
+        "@langchain/openai@0.5.10_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_openai@4.98.0__zod@3.24.4",
+        "@langchain/textsplitters",
+        "@langchain/xai",
+        "axios",
+        "cheerio",
+        "handlebars",
+        "js-tiktoken",
+        "js-yaml@4.1.0",
+        "jsonpointer",
+        "langsmith",
+        "openapi-types",
+        "p-retry",
+        "peggy",
+        "typeorm@0.3.23_reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24",
+        "uuid@10.0.0",
+        "yaml",
+        "zod",
+        "zod-to-json-schema"
+      ]
+    },
     "langsmith@0.3.28_openai@4.98.0__zod@3.24.4_zod@3.24.4": {
       "integrity": "sha512-Vq8n0zJ9MhDMhwkOhmOEb/rl/8jpm0LnAF4dE5TEXMdLmhJ784gcrWOghnFh7Qs5B4DY2Bdz3OKxIevkGKn5xg==",
       "dependencies": [
@@ -6699,6 +6747,9 @@
     },
     "mkdirp@3.0.1": {
       "integrity": "sha512-+NsyUUAZDmo6YVHzL/stxSu3t9YS1iljliy3BSDrXJ/dkn1KYdmtZODGGjLcc9XLgVVpH4KshHB8XmZgMhaBXg=="
+    },
+    "ms@2.0.0": {
+      "integrity": "sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A=="
     },
     "ms@2.1.3": {
       "integrity": "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="
@@ -7524,7 +7575,7 @@
     "router@2.2.0": {
       "integrity": "sha512-nLTrUKm2UyiL7rlhapu/Zl45FwNgkZGaCpZbIHajDYgwlJCOzLSk+cIPAnsEqV955GjILJnKbdQC1nVPz+gAYQ==",
       "dependencies": [
-        "debug",
+        "debug@4.4.0",
         "depd",
         "is-promise",
         "parseurl",
@@ -7589,14 +7640,14 @@
     "send@1.2.0": {
       "integrity": "sha512-uaW0WwXKpL9blXE2o0bRhoL2EGXIrZxQ2ZQ4mgcfoBxdFmQold+qWsD2jLrfZ0trjKL6vOw0j//eAwcALFjKSw==",
       "dependencies": [
-        "debug",
+        "debug@4.4.0",
         "encodeurl",
         "escape-html",
         "etag",
         "fresh",
         "http-errors",
         "mime-types@3.0.1",
-        "ms",
+        "ms@2.1.3",
         "on-finished",
         "range-parser",
         "statuses"
@@ -8144,7 +8195,7 @@
         "app-root-path",
         "buffer",
         "dayjs",
-        "debug",
+        "debug@4.4.0",
         "dotenv@16.5.0",
         "glob@10.4.5",
         "reflect-metadata",
@@ -8164,7 +8215,28 @@
         "app-root-path",
         "buffer",
         "dayjs",
-        "debug",
+        "debug@4.4.0",
+        "dotenv@16.5.0",
+        "glob@10.4.5",
+        "reflect-metadata",
+        "sha.js",
+        "sql-highlight",
+        "tslib@2.8.1",
+        "uuid@11.1.0",
+        "yargs"
+      ]
+    },
+    "typeorm@0.3.23_reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24": {
+      "integrity": "sha512-CJUZWW7O5zZG0TA7bRpntJx97AvvQwsoSa1UgYlzTOtmkwODrqIyxP9wtzHpBssEKie5chnLiCVyxKNeYo65wQ==",
+      "dependencies": [
+        "@google-cloud/spanner",
+        "@sap/hana-client",
+        "@sqltools/formatter",
+        "ansis",
+        "app-root-path",
+        "buffer",
+        "dayjs",
+        "debug@4.4.0",
         "dotenv@16.5.0",
         "glob@10.4.5",
         "reflect-metadata",
@@ -8487,7 +8559,7 @@
   },
   "workspace": {
     "dependencies": [
-      "npm:@timonteutelink/code-templator-lib@0.0.6",
+      "npm:@timonteutelink/code-templator-lib@0.0.7",
       "npm:@timonteutelink/template-types-lib@0.0.35",
       "npm:commander@13",
       "npm:fs-extra@11",
@@ -8511,7 +8583,7 @@
       "apps/cli": {
         "packageJson": {
           "dependencies": [
-            "npm:@timonteutelink/code-templator-lib@^0.0.6",
+            "npm:@timonteutelink/code-templator-lib@^0.0.7",
             "npm:commander@^13.1.0",
             "npm:pino@^9.6.0",
             "npm:yaml@^2.7.1"
@@ -8609,6 +8681,7 @@
             "npm:@langchain/ollama@0.2",
             "npm:@langchain/openai@~0.5.10",
             "npm:@langchain/xai@^0.0.2",
+            "npm:@sap/hana-client@^2.24.24",
             "npm:@timonteutelink/template-types-lib@0.0.35",
             "npm:@types/fs-extra@^11.0.4",
             "npm:@types/node@^22.14.1",
