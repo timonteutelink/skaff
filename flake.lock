@@ -453,17 +453,17 @@
         "nixpkgs": "nixpkgs_4"
       },
       "locked": {
-        "lastModified": 1746934312,
-        "narHash": "sha256-rOfmpR3xqfHgHb/UeWwqLOOEDw9F/d3DopaI6OBTEXs=",
-        "ref": "refs/heads/main",
-        "rev": "05a997ee19a17cf2da90ea7aeffc38928dda966c",
-        "revCount": 25,
-        "type": "git",
-        "url": "file:///home/tteutelink/projects/opensource/nix-deno"
+        "lastModified": 1737659558,
+        "narHash": "sha256-B8He+px8q9t14NcDG24TInwyFF+GbTVb87eIYGuVUu0=",
+        "owner": "identinet",
+        "repo": "nix-deno",
+        "rev": "890e958e0d7ab974c1557a0107e2f191ab5c7b52",
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "file:///home/tteutelink/projects/opensource/nix-deno"
+        "owner": "identinet",
+        "repo": "nix-deno",
+        "type": "github"
       }
     },
     "nix_2": {

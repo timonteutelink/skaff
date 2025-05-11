@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ParsedFile } from "@repo/ts/lib/types";
+import { ParsedFile } from "@timonteutelink/code-templator-lib/lib/types";
 
 interface FileTreeProps {
   projectName: string;

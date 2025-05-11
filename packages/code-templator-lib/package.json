@@ -1,14 +1,18 @@
 {
-  "name": "@repo/ts",
-  "version": "0.0.0",
-  "private": true,
+  "name": "@timonteutelink/code-templator-lib",
+  "version": "0.0.1",
   "exports": {
     "./*": "./src/*.ts",
     ".": "./src/index.ts"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
+    "build": "tsc -p tsconfig.json",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
+    "publish": "pnpm publish --access public",
     "test": "jest",
     "test:watch": "jest --watch"
   },

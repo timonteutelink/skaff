@@ -2,24 +2,25 @@ localFlake:
 { lib, config, self, inputs, ... }: {
   perSystem = { pkgs, system, ... }:
     let
+      cliSrc = ./../../../apps/cli;
     in
     {
       packages.code-templator-cli = pkgs.denoPlatform.mkDenoBinary {
         name = "code-templator";
         version = "0.0.1";
-        src = ./../../../apps/cli;
+        src = cliSrc;
         buildInputs = [ ];
 
-        importMap = ./../../../apps/cli/import_map.json;
-        lockFile = ./../../../apps/cli/deno.lock;
+        additionalDenoArgs = [
+          "--cached-only"
+          "--unstable-sloppy-imports"
+        ];
 
         entrypoint = "./src/main.ts";
 
         permissions.allow.all = true;
 
-        env = {
-          DENO_NO_PACKAGE_JSON = "1";
-        };
+        env = { };
 
         meta = with lib; {
           description = "A CLI tool to template software projects.";

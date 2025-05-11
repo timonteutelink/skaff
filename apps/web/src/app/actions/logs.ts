@@ -5,11 +5,11 @@ import path from 'node:path';
 import readline from 'node:readline';
 import prettyPrint from 'pino-pretty';
 import type { Level, LogEvent } from 'pino';
-import { Result } from '@repo/ts/lib/types';
-import { getCacheDirPath } from '@repo/ts/services/cache-service';
-import { serverLogger } from '@repo/ts/lib/logger';
+import { Result } from '@timonteutelink/code-templator-lib/lib/types';
+import { getCacheDirPath } from '@timonteutelink/code-templator-lib/services/cache-service';
+import { serverLogger } from '@timonteutelink/code-templator-lib/lib/logger';
 import { LEVEL_NAMES, LogFilter, LogJSON } from '@/lib/types';
-import { logError } from '@repo/ts/lib/utils';
+import { logError } from '@timonteutelink/code-templator-lib/lib/utils';
 
 export async function fetchLogs(
   filter: LogFilter

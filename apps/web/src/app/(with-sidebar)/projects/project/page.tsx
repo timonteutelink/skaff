@@ -12,7 +12,7 @@ import type {
   InstantiatedTemplate,
   ProjectDTO,
   TemplateDTO
-} from "@repo/ts/lib/types";
+} from "@timonteutelink/code-templator-lib/lib/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 

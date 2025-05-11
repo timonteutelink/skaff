@@ -1,4 +1,4 @@
-import type { InstantiatedTemplate, TemplateDTO } from "@repo/ts/lib/types";
+import type { InstantiatedTemplate, TemplateDTO } from "@timonteutelink/code-templator-lib/lib/types";
 
 /* =============================================================================
 	 Tree Node Types

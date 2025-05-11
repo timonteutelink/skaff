@@ -1,5 +1,4 @@
-import { logger } from "@repo/ts";
-import { ROOT_TEMPLATE_REPOSITORY } from "@repo/ts";
+import { logger, ROOT_TEMPLATE_REPOSITORY } from "@timonteutelink/code-templator-lib";
 import { Command } from "commander";
 import { addGlobalFormatOption, withFormatting } from "./cli-utils";
 
