@@ -25,6 +25,7 @@
     "typescript": "5.8.3"
   },
   "dependencies": {
+    "@langchain/anthropic": "^0.3.20",
     "@langchain/langgraph": "^0.2.67",
     "@langchain/ollama": "^0.2.0",
     "@langchain/openai": "^0.5.10",

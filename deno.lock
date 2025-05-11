@@ -6099,6 +6099,7 @@
   },
   "workspace": {
     "dependencies": [
+      "npm:@timonteutelink/code-templator-lib@0.0.1",
       "npm:@timonteutelink/template-types-lib@0.0.35",
       "npm:commander@13",
       "npm:fs-extra@11",
@@ -6201,6 +6202,31 @@
           ]
         }
       },
+      "packages/code-templator-lib": {
+        "packageJson": {
+          "dependencies": [
+            "npm:@langchain/langgraph@~0.2.67",
+            "npm:@langchain/ollama@0.2",
+            "npm:@langchain/openai@~0.5.10",
+            "npm:@timonteutelink/template-types-lib@0.0.35",
+            "npm:@types/fs-extra@^11.0.4",
+            "npm:@types/node@^22.14.1",
+            "npm:esbuild@~0.25.2",
+            "npm:eslint@^9.24.0",
+            "npm:fs-extra@^11.3.0",
+            "npm:glob@^11.0.1",
+            "npm:handlebars@^4.7.8",
+            "npm:jest@^29.7.0",
+            "npm:langchain@~0.3.24",
+            "npm:pino-pretty@13",
+            "npm:pino@^9.6.0",
+            "npm:typescript@5.8.3",
+            "npm:yaml@^2.7.1",
+            "npm:zod-to-json-schema@^3.24.5",
+            "npm:zod@^3.24.2"
+          ]
+        }
+      },
       "packages/eslint-config": {
         "packageJson": {
           "dependencies": [
@@ -6235,31 +6261,6 @@
             "npm:handlebars@^4.7.8",
             "npm:typescript-eslint@^8.29.1",
             "npm:typescript@5.8.3",
-            "npm:zod@^3.24.2"
-          ]
-        }
-      },
-      "packages/ts": {
-        "packageJson": {
-          "dependencies": [
-            "npm:@langchain/langgraph@~0.2.67",
-            "npm:@langchain/ollama@0.2",
-            "npm:@langchain/openai@~0.5.10",
-            "npm:@timonteutelink/template-types-lib@0.0.35",
-            "npm:@types/fs-extra@^11.0.4",
-            "npm:@types/node@^22.14.1",
-            "npm:esbuild@~0.25.2",
-            "npm:eslint@^9.24.0",
-            "npm:fs-extra@^11.3.0",
-            "npm:glob@^11.0.1",
-            "npm:handlebars@^4.7.8",
-            "npm:jest@^29.7.0",
-            "npm:langchain@~0.3.24",
-            "npm:pino-pretty@13",
-            "npm:pino@^9.6.0",
-            "npm:typescript@5.8.3",
-            "npm:yaml@^2.7.1",
-            "npm:zod-to-json-schema@^3.24.5",
             "npm:zod@^3.24.2"
           ]
         }
