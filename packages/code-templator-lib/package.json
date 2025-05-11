@@ -1,6 +1,6 @@
 {
   "name": "@timonteutelink/code-templator-lib",
-  "version": "0.0.26",
+  "version": "0.0.27",
   "exports": {
     "./*": "./src/*.ts",
     ".": "./src/index.ts"
@@ -72,6 +72,7 @@
     "socks": "^2.8.4",
     "sql.js": "^1.13.0",
     "sqlite3": "^5.1.7",
+    "ts-node": "^10.9.2",
     "typeorm": "^0.3.23",
     "yaml": "^2.7.1",
     "zod": "^3.24.2",

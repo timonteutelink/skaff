@@ -80,7 +80,7 @@
     "npm:ioredis@^5.6.1": "5.6.1",
     "npm:jest@^29.7.0": "29.7.0_@types+node@22.15.17",
     "npm:kerberos@^2.2.2": "2.2.2",
-    "npm:langchain@~0.3.24": "0.3.24_@langchain+core@0.3.55__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_handlebars@4.7.8_zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_peggy@5.0.2_typeorm@0.3.23__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_pg@8.15.6_pg-native@3.4.5_pg-query-stream@4.9.6__pg@8.15.6___pg-native@3.4.5__pg-native@3.4.5_redis@5.0.1__@redis+client@5.0.1_sql.js@1.13.0_sqlite3@5.1.7",
+    "npm:langchain@~0.3.24": "0.3.24_@langchain+core@0.3.55__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_handlebars@4.7.8_zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_peggy@5.0.2_typeorm@0.3.23__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_pg@8.15.6_pg-native@3.4.5_pg-query-stream@4.9.6__pg@8.15.6___pg-native@3.4.5__pg-native@3.4.5_redis@5.0.1__@redis+client@5.0.1_sql.js@1.13.0_sqlite3@5.1.7_node-gyp@11.2.0",
     "npm:lucide-react@0.488": "0.488.0_react@19.1.0",
     "npm:mongodb-client-encryption@^6.4.0": "6.4.0",
     "npm:mongodb@^6.16.0": "6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4",
@@ -88,6 +88,7 @@
     "npm:mysql2@^3.14.1": "3.14.1",
     "npm:next-themes@~0.4.6": "0.4.6_react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:next@^15.3.0": "15.3.2_react@19.1.0_react-dom@19.1.0__react@19.1.0",
+    "npm:node-gyp@^11.2.0": "11.2.0",
     "npm:oracledb@^6.8.0": "6.8.0",
     "npm:peggy@^5.0.2": "5.0.2",
     "npm:pg-native@^3.4.5": "3.4.5",
@@ -111,12 +112,12 @@
     "npm:socks@^2.8.4": "2.8.4",
     "npm:sonner@^2.0.3": "2.0.3_react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:sql.js@^1.13.0": "1.13.0",
-    "npm:sqlite3@^5.1.7": "5.1.7",
+    "npm:sqlite3@^5.1.7": "5.1.7_node-gyp@11.2.0",
     "npm:tailwind-merge@^3.2.0": "3.2.0",
     "npm:tailwindcss@^4.1.3": "4.1.6",
     "npm:turbo@^2.5.0": "2.5.3",
     "npm:tw-animate-css@^1.2.5": "1.2.9",
-    "npm:typeorm@~0.3.23": "0.3.23_reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_pg@8.15.6_pg-native@3.4.5_pg-query-stream@4.9.6__pg@8.15.6___pg-native@3.4.5__pg-native@3.4.5_redis@5.0.1__@redis+client@5.0.1_sql.js@1.13.0_sqlite3@5.1.7",
+    "npm:typeorm@~0.3.23": "0.3.23_reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_pg@8.15.6_pg-native@3.4.5_pg-query-stream@4.9.6__pg@8.15.6___pg-native@3.4.5__pg-native@3.4.5_redis@5.0.1__@redis+client@5.0.1_sql.js@1.13.0_sqlite3@5.1.7_node-gyp@11.2.0",
     "npm:typescript-eslint@^8.29.1": "8.32.0_eslint@9.26.0_typescript@5.8.3_@typescript-eslint+parser@8.32.0__eslint@9.26.0__typescript@5.8.3",
     "npm:typescript@5.8.3": "5.8.3",
     "npm:typescript@^5.8.3": "5.8.3",
@@ -2203,6 +2204,22 @@
         "fastq"
       ]
     },
+    "@npmcli/agent@3.0.0": {
+      "integrity": "sha512-S79NdEgDQd/NGCay6TCoVzXSj74skRZIKJcpJjC5lOq34SZzyI6MqtiiWoiVWoVrTcGjNeC4ipbh1VIHlpfF5Q==",
+      "dependencies": [
+        "agent-base@7.1.3",
+        "http-proxy-agent@7.0.2",
+        "https-proxy-agent@7.0.6",
+        "lru-cache@10.4.3",
+        "socks-proxy-agent"
+      ]
+    },
+    "@npmcli/fs@4.0.0": {
+      "integrity": "sha512-/xGlezI6xfGO9NwuJlnwz/K14qD1kCSAGtacBHnGzeAIuJGazcp45KP5NuyARXoKb7cwulAGWVsbeSxdG/cb0Q==",
+      "dependencies": [
+        "semver@7.7.1"
+      ]
+    },
     "@opentelemetry/api@1.9.0": {
       "integrity": "sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg=="
     },
@@ -3925,6 +3942,9 @@
         "tslib@2.8.1"
       ]
     },
+    "abbrev@3.0.1": {
+      "integrity": "sha512-AO2ac6pjRB3SJmGJo+v5/aK6Omggp6fsLrs6wN9bd35ulu4cCwaAU9+7ZhXjeqHVkaHThLuzH0nZr0YpCDhygg=="
+    },
     "abort-controller@3.0.0": {
       "integrity": "sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==",
       "dependencies": [
@@ -4002,7 +4022,7 @@
       "integrity": "sha512-KMReFUr0B4t+D+OBkjR3KYqvocp2XaSzO55UcB6mgQMd3KbcE+mWTyvVV7D/zsdEbNnV6acZUutkiHQXvTr1Rw==",
       "dependencies": [
         "normalize-path",
-        "picomatch"
+        "picomatch@2.3.1"
       ]
     },
     "app-root-path@3.1.0": {
@@ -4337,6 +4357,23 @@
     "bytes@3.1.2": {
       "integrity": "sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg=="
     },
+    "cacache@19.0.1": {
+      "integrity": "sha512-hdsUxulXCi5STId78vRVYEtDAjq99ICAUktLTeTYsLoTE6Z8dS0c8pWNCxwdrk9YfJeobDZc2Y186hD/5ZQgFQ==",
+      "dependencies": [
+        "@npmcli/fs",
+        "fs-minipass@3.0.3",
+        "glob@10.4.5",
+        "lru-cache@10.4.3",
+        "minipass-collect",
+        "minipass-flush",
+        "minipass-pipeline",
+        "minipass@7.1.2",
+        "p-map",
+        "ssri",
+        "tar@7.4.3",
+        "unique-filename"
+      ]
+    },
     "call-bind-apply-helpers@1.0.2": {
       "integrity": "sha512-Sp1ablJ0ivDkSzjcaJdxEunN5/XvksFJ2sMBFfq6x0ryhQV/2b/KwFe21cMpmHtPOSij8K99/wSfoEuTObmuMQ==",
       "dependencies": [
@@ -4603,7 +4640,7 @@
       "dependencies": [
         "path-key",
         "shebang-command",
-        "which"
+        "which@2.0.2"
       ]
     },
     "css-select@5.1.0": {
@@ -4928,6 +4965,12 @@
         "whatwg-encoding"
       ]
     },
+    "encoding@0.1.13": {
+      "integrity": "sha512-ETBauow1T35Y/WZMkio9jiM0Z5xjHHmJ4XmjZOq1l/dXz3lr2sRn87nJy20RupqSh1F2m3HHPSp8ShIPQJrJ3A==",
+      "dependencies": [
+        "iconv-lite"
+      ]
+    },
     "end-of-stream@1.4.4": {
       "integrity": "sha512-+uw1inIHVPQoaVuHzRyXd21icM+cnt4CzD5rW+NC1wjOUSTOs+Te7FOv7AhN7vS9x/oIyhLP5PR1H+phQAHu5Q==",
       "dependencies": [
@@ -4946,6 +4989,12 @@
     },
     "entities@6.0.0": {
       "integrity": "sha512-aKstq2TDOndCn4diEyp9Uq/Flu2i1GlLkc6XIDQSDMuaFE3OPW5OphLCyQ5SpSJZTb4reN+kTcYru5yIfXoRPw=="
+    },
+    "env-paths@2.2.1": {
+      "integrity": "sha512-+h1lkLKhZMTYjog1VEpJNG7NZJWcuc2DDk/qsqSTRRCOXiLjeQ1d1/udrUGhqMxUgAlwKNZ0cf2uqan5GLuS2A=="
+    },
+    "err-code@2.0.3": {
+      "integrity": "sha512-2bmlRpNKBxT/CRmPOlyISQpNj+qSeYvcym/uT0Jx2bMOlKLtSy1ZmLuVxSEKKyor/N5yhvp/ZiG1oE3DEYMSFA=="
     },
     "error-ex@1.3.2": {
       "integrity": "sha512-7dFHNmqeFSEt2ZBsCriorKnn3Z2pj+fd9kmI6QoWw4//DL+icEBfc0U7qJCisqrTsKTjw4fNFy2pW9OqStD84g==",
@@ -5292,6 +5341,9 @@
         "jest-util"
       ]
     },
+    "exponential-backoff@3.1.2": {
+      "integrity": "sha512-8QxYTVXUkuy7fIIoitQkPwGonB8F3Zj8eEO8Sqg9Zv/bkI7RJAzowee4gr81Hak/dUTpA2Z7VfQgoijjPNlUZA=="
+    },
     "express-rate-limit@7.5.0_express@5.1.0": {
       "integrity": "sha512-eB5zbQh5h+VenMPM3fh+nw1YExi5nMr6HUCR62ELSP11huvxm/Uir1H1QEyTkk5QX6A58pX6NmaTMceKZ0Eodg==",
       "dependencies": [
@@ -5396,6 +5448,12 @@
       "integrity": "sha512-p5161BqbuCaSnB8jIbzQHOlpgsPmK5rJVDfDKO91Axs5NC1uu3HRQm6wt9cd9/+GtQQIO53JdGXXoyDpTAsgYA==",
       "dependencies": [
         "bser"
+      ]
+    },
+    "fdir@6.4.4_picomatch@4.0.2": {
+      "integrity": "sha512-1NZP+GK4GfuAv3PqKvxQRDMjdSRZjnkq7KfhlNrCNNlZ0ygQFpebfrnfnq/W7fpUnAv9aGWmY1zKx7FYL3gwhg==",
+      "dependencies": [
+        "picomatch@4.0.2"
       ]
     },
     "file-entry-cache@8.0.0": {
@@ -5529,6 +5587,12 @@
       "integrity": "sha512-V/JgOLFCS+R6Vcq0slCuaeWEdNC3ouDlJMNIsacH2VtALiu9mV4LPrHc5cDl8k5aw6J8jwgWWpiTo5RYhmIzvg==",
       "dependencies": [
         "minipass@3.3.6"
+      ]
+    },
+    "fs-minipass@3.0.3": {
+      "integrity": "sha512-XUBA9XClHbnJWSfBzjkm6RvPsyg3sryZt06BEQoXcF7EK/xpGaQYJgQKDJSUH5SGZ76Y7pFx1QBnXz09rU5Fbw==",
+      "dependencies": [
+        "minipass@7.1.2"
       ]
     },
     "fs.realpath@1.0.0": {
@@ -5821,6 +5885,9 @@
         "domutils",
         "entities@4.5.0"
       ]
+    },
+    "http-cache-semantics@4.2.0": {
+      "integrity": "sha512-dTxcvPXqPvXBQpq5dUr6mEMJX4oIEFv6bwom3FDwKRDsuIjjJGANqhBuoAn9c1RQJIdAKav33ED65E2ys+87QQ=="
     },
     "http-errors@2.0.0": {
       "integrity": "sha512-FtwrG/euBzaEjYeRqOgly7G0qviiXoJWnvEH2Z1plBdXgbyjv34pHTSb9zoeHMyDy33+DWy5Wt9Wo+TURtOYSQ==",
@@ -6154,6 +6221,9 @@
     },
     "isexe@2.0.0": {
       "integrity": "sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw=="
+    },
+    "isexe@3.1.1": {
+      "integrity": "sha512-LpB/54B+/2J5hqQ7imZHfdU31OlgQqx7ZicVlkm9kzg9/w8GKLEcFfJl/t7DCEDueOyBAD6zCCwTO6Fzs0NoEQ=="
     },
     "istanbul-lib-coverage@3.2.2": {
       "integrity": "sha512-O8dpsF+r0WV/8MNRKfnmrtCWhuKjxrq2w+jpzBL5UZKTi2LeVWnWOmWRxFlesJONmc+wLAGvKQZEOanko0LFTg=="
@@ -6611,7 +6681,7 @@
         "chalk",
         "ci-info",
         "graceful-fs",
-        "picomatch"
+        "picomatch@2.3.1"
       ]
     },
     "jest-validate@29.7.0": {
@@ -7638,6 +7708,41 @@
         "zod-to-json-schema"
       ]
     },
+    "langchain@0.3.24_@langchain+core@0.3.55__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_handlebars@4.7.8_zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_peggy@5.0.2_typeorm@0.3.23__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_pg@8.15.6_pg-native@3.4.5_pg-query-stream@4.9.6__pg@8.15.6___pg-native@3.4.5__pg-native@3.4.5_redis@5.0.1__@redis+client@5.0.1_sql.js@1.13.0_sqlite3@5.1.7_node-gyp@11.2.0": {
+      "integrity": "sha512-BTjiYkUCpWFAmufK8J5zMqc5aUs4eEnAXPWtPe2+R4ZPP+U7bXJSBHAcrB40rQ3VeTdRgMvgDjekOOgCMWut6Q==",
+      "dependencies": [
+        "@langchain/anthropic",
+        "@langchain/aws",
+        "@langchain/cerebras",
+        "@langchain/cohere",
+        "@langchain/core@0.3.55_zod@3.24.4",
+        "@langchain/deepseek",
+        "@langchain/google-genai",
+        "@langchain/google-vertexai",
+        "@langchain/google-vertexai-web",
+        "@langchain/groq",
+        "@langchain/mistralai",
+        "@langchain/ollama",
+        "@langchain/openai@0.5.10_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_openai@4.98.0__zod@3.24.4",
+        "@langchain/textsplitters",
+        "@langchain/xai",
+        "axios",
+        "cheerio",
+        "handlebars",
+        "js-tiktoken",
+        "js-yaml@4.1.0",
+        "jsonpointer",
+        "langsmith",
+        "openapi-types",
+        "p-retry",
+        "peggy",
+        "typeorm@0.3.23_reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_pg@8.15.6_pg-native@3.4.5_pg-query-stream@4.9.6__pg@8.15.6___pg-native@3.4.5__pg-native@3.4.5_redis@5.0.1__@redis+client@5.0.1_sql.js@1.13.0_sqlite3@5.1.7_node-gyp@11.2.0",
+        "uuid@10.0.0",
+        "yaml",
+        "zod",
+        "zod-to-json-schema"
+      ]
+    },
     "langsmith@0.3.28_openai@4.98.0__zod@3.24.4_zod@3.24.4": {
       "integrity": "sha512-Vq8n0zJ9MhDMhwkOhmOEb/rl/8jpm0LnAF4dE5TEXMdLmhJ784gcrWOghnFh7Qs5B4DY2Bdz3OKxIevkGKn5xg==",
       "dependencies": [
@@ -7816,6 +7921,22 @@
         "semver@7.7.1"
       ]
     },
+    "make-fetch-happen@14.0.3": {
+      "integrity": "sha512-QMjGbFTP0blj97EeidG5hk/QhKQ3T4ICckQGLgz38QF7Vgbk6e6FTARN8KhKxyBbWn8R0HU+bnw8aSoFPD4qtQ==",
+      "dependencies": [
+        "@npmcli/agent",
+        "cacache",
+        "http-cache-semantics",
+        "minipass-fetch",
+        "minipass-flush",
+        "minipass-pipeline",
+        "minipass@7.1.2",
+        "negotiator",
+        "proc-log",
+        "promise-retry",
+        "ssri"
+      ]
+    },
     "makeerror@1.0.12": {
       "integrity": "sha512-JmqCvUhmt43madlpFzG4BQzG2Z3m6tvQDNKdClZnO3VbIudJYmxsT0FNJMeiB2+JTSlTQTSbU8QdesVmwJcmLg==",
       "dependencies": [
@@ -7847,7 +7968,7 @@
       "integrity": "sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==",
       "dependencies": [
         "braces",
-        "picomatch"
+        "picomatch@2.3.1"
       ]
     },
     "mime-db@1.52.0": {
@@ -7894,6 +8015,39 @@
     },
     "minimist@1.2.8": {
       "integrity": "sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA=="
+    },
+    "minipass-collect@2.0.1": {
+      "integrity": "sha512-D7V8PO9oaz7PWGLbCACuI1qEOsq7UKfLotx/C0Aet43fCUB/wfQ7DYeq2oR/svFJGYDHPr38SHATeaj/ZoKHKw==",
+      "dependencies": [
+        "minipass@7.1.2"
+      ]
+    },
+    "minipass-fetch@4.0.1": {
+      "integrity": "sha512-j7U11C5HXigVuutxebFadoYBbd7VSdZWggSe64NVdvWNBqGAiXPL2QVCehjmw7lY1oF9gOllYbORh+hiNgfPgQ==",
+      "dependencies": [
+        "encoding",
+        "minipass-sized",
+        "minipass@7.1.2",
+        "minizlib@3.0.2"
+      ]
+    },
+    "minipass-flush@1.0.5": {
+      "integrity": "sha512-JmQSYYpPUqX5Jyn1mXaRwOda1uQ8HP5KAT/oDSLCzt1BYRhQU0/hDtsB1ufZfEEzMZ9aAVmsBw8+FWsIXlClWw==",
+      "dependencies": [
+        "minipass@3.3.6"
+      ]
+    },
+    "minipass-pipeline@1.2.4": {
+      "integrity": "sha512-xuIq7cIOt09RPRJ19gdi4b+RiNvDFYe5JH+ggNvBqGqpQXcru3PcRmOZuHBKWK1Txf9+cQ+HMVN4d6z46LZP7A==",
+      "dependencies": [
+        "minipass@3.3.6"
+      ]
+    },
+    "minipass-sized@1.0.3": {
+      "integrity": "sha512-MbkQQ2CTiBMlA2Dm/5cY+9SWFEN8pzzOXi6rlM5Xxq0Yqbda5ZQy9sU75a673FE9ZK0Zsbr6Y5iP6u9nktfg2g==",
+      "dependencies": [
+        "minipass@3.3.6"
+      ]
     },
     "minipass@3.3.6": {
       "integrity": "sha512-DxiNidxSEK+tHG6zOIklvNOwm3hvCrbUrdtzY74U6HKTJxvIDfOUL5W5P2Ghd3DTkhhKPYGqeNUIh5qcM4YBfw==",
@@ -8121,11 +8275,32 @@
         "whatwg-url@5.0.0"
       ]
     },
+    "node-gyp@11.2.0": {
+      "integrity": "sha512-T0S1zqskVUSxcsSTkAsLc7xCycrRYmtDHadDinzocrThjyQCn5kMlEBSj6H4qDbgsIOSLmmlRIeb0lZXj+UArA==",
+      "dependencies": [
+        "env-paths",
+        "exponential-backoff",
+        "graceful-fs",
+        "make-fetch-happen",
+        "nopt",
+        "proc-log",
+        "semver@7.7.1",
+        "tar@7.4.3",
+        "tinyglobby",
+        "which@5.0.0"
+      ]
+    },
     "node-int64@0.4.0": {
       "integrity": "sha512-O5lz91xSOeoXP6DulyHfllpq+Eg00MWitZIbtPfoSEvqIHdl5gfcY6hYzDWnj0qD5tz52PI08u9qUvSVeUBeHw=="
     },
     "node-releases@2.0.19": {
       "integrity": "sha512-xxOWJsBKtzAq7DY0J+DTzuz58K8e7sJbdgwkbMWQe8UYB6ekmsQ45q0M/tJDsGaZmbC+l7n57UV8Hl5tHxO9uw=="
+    },
+    "nopt@8.1.0": {
+      "integrity": "sha512-ieGu42u/Qsa4TFktmaKEwM6MQH0pOWnaB3htzh0JRtx84+Mebc0cbZYN5bC+6WTZ4+77xrL9Pn5m7CV6VIkV7A==",
+      "dependencies": [
+        "abbrev"
+      ]
     },
     "normalize-path@3.0.0": {
       "integrity": "sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA=="
@@ -8296,6 +8471,9 @@
         "p-limit@3.1.0"
       ]
     },
+    "p-map@7.0.3": {
+      "integrity": "sha512-VkndIv2fIB99swvQoA65bm+fsmt6UNdGeIB0oxBs+WhAhdh08QA04JXpI7rbB9r08/nkbysKoya9rtDERYOYMA=="
+    },
     "p-queue@6.6.2": {
       "integrity": "sha512-RwFpb72c/BhQLEXIZ5K2e+AhgNVmIejGlTgiB9MzZ0e93GRvqZ7uSi0dvRF7/XIXDeNkra2fNHBxTyPDGySpjQ==",
       "dependencies": [
@@ -8307,7 +8485,7 @@
       "integrity": "sha512-312Id396EbJdvRONlngUx0NydfrIQ5lsYu0znKVUzVvArzEIt08V1qhtyESbGVd1FGX7UKtiFp5uwKZdM8wIuQ==",
       "dependencies": [
         "@types/retry",
-        "retry"
+        "retry@0.13.1"
       ]
     },
     "p-timeout@3.2.0": {
@@ -8485,6 +8663,9 @@
     "picomatch@2.3.1": {
       "integrity": "sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA=="
     },
+    "picomatch@4.0.2": {
+      "integrity": "sha512-M7BAV6Rlcy5u+m6oPhAPFgJTzAioX/6B0DxyvDlo9l8+T3nLKbrczg2WLUyzd45L8RqfUMyGPzekbMvX2Ldkwg=="
+    },
     "pino-abstract-transport@2.0.0": {
       "integrity": "sha512-F63x5tizV6WCh4R6RHyi2Ml+M70DNRXt/+HANowMflpgGFMAym/VKm6G7ZOQRjqN7XbGxK1Lg9t6ZrtzOaivMw==",
       "dependencies": [
@@ -8614,6 +8795,9 @@
         "react-is@18.3.1"
       ]
     },
+    "proc-log@5.0.0": {
+      "integrity": "sha512-Azwzvl90HaF0aCz1JrDdXQykFakSSNPaPoiZ9fm5qJIMHioDZEi7OAdRwSm6rSoPtY3Qutnm3L7ogmg3dc+wbQ=="
+    },
     "process-nextick-args@2.0.1": {
       "integrity": "sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag=="
     },
@@ -8622,6 +8806,13 @@
     },
     "process@0.11.10": {
       "integrity": "sha512-cdGef/drWFoydD1JsMzuFf8100nZl+GT+yacc2bEced5f9Rjk4z+WtFUTBu9PhOi9j/jfmBPu0mMEY4wIdAF8A=="
+    },
+    "promise-retry@2.0.1": {
+      "integrity": "sha512-y+WKFlBR8BGXnsNlIHFGPZmyDf3DFMoLhaflAnyZgV6rG6xu+JwesTo2Q9R6XwYmtmwAFCkAk3e35jEdoeh/3g==",
+      "dependencies": [
+        "err-code",
+        "retry@0.12.0"
+      ]
     },
     "prompts@2.4.2": {
       "integrity": "sha512-NxNv/kLguCA7p3jE8oL2aEBsrJWgAakBpgmgK6lpPWV+WuOmY6r2/zbAVnP+T8bQlA0nzHXSJSJW0Hq7ylaD2Q==",
@@ -9031,6 +9222,9 @@
         "teeny-request"
       ]
     },
+    "retry@0.12.0": {
+      "integrity": "sha512-9LkiTwjUh6rT555DtE9rTX+BKByPfrMzEAtnlEtdEwr3Nkffwiihqe2bWADg+OQRjt9gl6ICdmB/ZFDCGAtSow=="
+    },
     "retry@0.13.1": {
       "integrity": "sha512-XQBQ3I8W1Cge0Seh+6gjj03LbmRFWuoszgK9ooCpwYIrhhoO80pfq4cUkU5DkknwfOfFteRwlZ56PYOGYyFWdg=="
     },
@@ -9303,6 +9497,14 @@
         "@napi-rs/snappy-win32-x64-msvc"
       ]
     },
+    "socks-proxy-agent@8.0.5": {
+      "integrity": "sha512-HehCEsotFqbPW9sJ8WVYB6UbmIMv7kUUORIF2Nncq4VQvBfNBLibW9YZR5dlYCSUhwcD628pRllm7n+E+YTzJw==",
+      "dependencies": [
+        "agent-base@7.1.3",
+        "debug@4.4.0",
+        "socks"
+      ]
+    },
     "socks@2.8.4": {
       "integrity": "sha512-D3YaD0aRxR3mEcqnidIs7ReYJFVzWdd6fXJYUM8ixcQcJRGTka/b3saV0KflYhyVJXKhb947GndU35SxYNResQ==",
       "dependencies": [
@@ -9382,8 +9584,24 @@
         "tar@6.2.1"
       ]
     },
+    "sqlite3@5.1.7_node-gyp@11.2.0": {
+      "integrity": "sha512-GGIyOiFaG+TUra3JIfkI/zGP8yZYLPQ0pl1bH+ODjiX57sPhrLU5sQJn1y9bDKZUFYkX1crlrPfSYt0BKKdkog==",
+      "dependencies": [
+        "bindings",
+        "node-addon-api@7.1.1",
+        "node-gyp",
+        "prebuild-install",
+        "tar@6.2.1"
+      ]
+    },
     "sqlstring@2.3.3": {
       "integrity": "sha512-qC9iz2FlN7DQl3+wjwn3802RTyjCx7sDvfQEXchwa6CWOx07/WVfh91gBmQ9fahw8snwGEWU3xGzOt4tFyHLxg=="
+    },
+    "ssri@12.0.0": {
+      "integrity": "sha512-S7iGNosepx9RadX82oimUkvr0Ct7IjJbEbs4mJcTxst8um95J3sDYU1RBEOvdu6oL1Wek2ODI5i4MAw+dZ6cAQ==",
+      "dependencies": [
+        "minipass@7.1.2"
+      ]
     },
     "stack-trace@0.0.10": {
       "integrity": "sha512-KGzahc7puUKkzyMt+IqAep+TVNbKP+k2Lmwhub39m1AsTSkaDutx56aDCo+HLDzf/D26BIHTJWNiTG1KAJiQCg=="
@@ -9585,7 +9803,7 @@
       "integrity": "sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==",
       "dependencies": [
         "chownr@2.0.0",
-        "fs-minipass",
+        "fs-minipass@2.1.0",
         "minipass@5.0.0",
         "minizlib@2.1.2",
         "mkdirp@1.0.4",
@@ -9660,6 +9878,13 @@
     },
     "tiny-invariant@1.3.3": {
       "integrity": "sha512-+FbBPE1o9QAYvviau/qC5SE3caw21q3xkvWKBtja5vgqOWIHHJ3ioaq1VPfn/Szqctz2bU/oYeKd9/z5BL+PVg=="
+    },
+    "tinyglobby@0.2.13_picomatch@4.0.2": {
+      "integrity": "sha512-mEwzpUgrLySlveBwEVDMKk5B57bhLPYovRfPAXD5gA/98Opn0rCDj3GtLwFvCvH5RK9uPCExUROW5NjDwvqkxw==",
+      "dependencies": [
+        "fdir",
+        "picomatch@4.0.2"
+      ]
     },
     "tmpl@1.0.5": {
       "integrity": "sha512-3f0uOEAQwIqGuWW2MVzYg8fV/QNnc/IpuJNG837rLuczAaLVHslWHZQj4IGiEl5Hs3kkbhwL9Ab7Hrsmuj+Smw=="
@@ -10336,7 +10561,41 @@
         "sha.js",
         "sql-highlight",
         "sql.js",
-        "sqlite3",
+        "sqlite3@5.1.7",
+        "tslib@2.8.1",
+        "uuid@11.1.0",
+        "yargs"
+      ]
+    },
+    "typeorm@0.3.23_reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_pg@8.15.6_pg-native@3.4.5_pg-query-stream@4.9.6__pg@8.15.6___pg-native@3.4.5__pg-native@3.4.5_redis@5.0.1__@redis+client@5.0.1_sql.js@1.13.0_sqlite3@5.1.7_node-gyp@11.2.0": {
+      "integrity": "sha512-CJUZWW7O5zZG0TA7bRpntJx97AvvQwsoSa1UgYlzTOtmkwODrqIyxP9wtzHpBssEKie5chnLiCVyxKNeYo65wQ==",
+      "dependencies": [
+        "@google-cloud/spanner",
+        "@sap/hana-client",
+        "@sqltools/formatter",
+        "ansis",
+        "app-root-path",
+        "better-sqlite3",
+        "buffer@6.0.3",
+        "dayjs",
+        "debug@4.4.0",
+        "dotenv@16.5.0",
+        "glob@10.4.5",
+        "hdb-pool",
+        "ioredis",
+        "mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4",
+        "mssql",
+        "mysql2",
+        "oracledb",
+        "pg-native",
+        "pg-query-stream",
+        "pg@8.15.6_pg-native@3.4.5",
+        "redis",
+        "reflect-metadata",
+        "sha.js",
+        "sql-highlight",
+        "sql.js",
+        "sqlite3@5.1.7_node-gyp@11.2.0",
         "tslib@2.8.1",
         "uuid@11.1.0",
         "yargs"
@@ -10378,6 +10637,18 @@
     },
     "undici@6.21.2": {
       "integrity": "sha512-uROZWze0R0itiAKVPsYhFov9LxrPMHLMEQFszeI2gCN6bnIIZ8twzBCJcN2LJrBBLfrP0t1FW0g+JmKVl8Vk1g=="
+    },
+    "unique-filename@4.0.0": {
+      "integrity": "sha512-XSnEewXmQ+veP7xX2dS5Q4yZAvO40cBN2MWkJ7D/6sW4Dg6wYBNwM1Vrnz1FhH5AdeLIlUXRI9e28z1YZi71NQ==",
+      "dependencies": [
+        "unique-slug"
+      ]
+    },
+    "unique-slug@5.0.0": {
+      "integrity": "sha512-9OdaqO5kwqR+1kVgHAhsp5vPNU0hnxRa26rBFNfNgM7M6pNtgzeBn3s/xbyCQL3dcjzOatcef6UUHpB/6MaETg==",
+      "dependencies": [
+        "imurmurhash"
+      ]
     },
     "universalify@2.0.1": {
       "integrity": "sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw=="
@@ -10578,7 +10849,13 @@
     "which@2.0.2": {
       "integrity": "sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==",
       "dependencies": [
-        "isexe"
+        "isexe@2.0.0"
+      ]
+    },
+    "which@5.0.0": {
+      "integrity": "sha512-JEdGzHwwkrbWoGOlIHqQ5gtprKGOenpDHpxE9zVR1bWbOtYRyPPHMe9FaP6x61CmNaTThSkb0DAJte5jD+DmzQ==",
+      "dependencies": [
+        "isexe@3.1.1"
       ]
     },
     "word-wrap@1.2.5": {
@@ -10670,7 +10947,7 @@
   },
   "workspace": {
     "dependencies": [
-      "npm:@timonteutelink/code-templator-lib@0.0.25",
+      "npm:@timonteutelink/code-templator-lib@0.0.26",
       "npm:@timonteutelink/template-types-lib@0.0.35",
       "npm:commander@13",
       "npm:fs-extra@11",
@@ -10694,7 +10971,7 @@
       "apps/cli": {
         "packageJson": {
           "dependencies": [
-            "npm:@timonteutelink/code-templator-lib@^0.0.25",
+            "npm:@timonteutelink/code-templator-lib@^0.0.26",
             "npm:commander@^13.1.0",
             "npm:pino@^9.6.0",
             "npm:yaml@^2.7.1"
@@ -10814,6 +11091,7 @@
             "npm:mongodb@^6.16.0",
             "npm:mssql@^11.0.1",
             "npm:mysql2@^3.14.1",
+            "npm:node-gyp@^11.2.0",
             "npm:oracledb@^6.8.0",
             "npm:peggy@^5.0.2",
             "npm:pg-native@^3.4.5",
