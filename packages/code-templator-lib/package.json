@@ -1,6 +1,6 @@
 {
   "name": "@timonteutelink/code-templator-lib",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "exports": {
     "./*": "./src/*.ts",
     ".": "./src/index.ts"
@@ -50,6 +50,7 @@
     "fs-extra": "^11.3.0",
     "glob": "^11.0.1",
     "handlebars": "^4.7.8",
+    "hdb-pool": "^0.1.6",
     "langchain": "^0.3.24",
     "peggy": "^5.0.2",
     "pino": "^9.6.0",
