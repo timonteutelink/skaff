@@ -1,7 +1,7 @@
 {
   "version": "4",
   "specifiers": {
-    "npm:@timonteutelink/code-templator-lib@0.0.8": "0.0.8_zod-to-json-schema@3.24.5__zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_handlebars@4.7.8_peggy@5.0.2_typeorm@0.3.23__@google-cloud+spanner@7.21.0___@opentelemetry+api@1.9.0__@sap+hana-client@2.24.24__better-sqlite3@11.10.0__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_zod@3.24.4",
+    "npm:@timonteutelink/code-templator-lib@0.0.9": "0.0.9_zod-to-json-schema@3.24.5__zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_handlebars@4.7.8_peggy@5.0.2_typeorm@0.3.23__@google-cloud+spanner@7.21.0___@opentelemetry+api@1.9.0__@sap+hana-client@2.24.24__better-sqlite3@11.10.0__hdb-pool@0.1.6__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_zod@3.24.4",
     "npm:@timonteutelink/template-types-lib@0.0.35": "0.0.35",
     "npm:commander@13": "13.1.0",
     "npm:fs-extra@11": "11.3.0",
@@ -1675,8 +1675,8 @@
     "@sqltools/formatter@1.2.5": {
       "integrity": "sha512-Uy0+khmZqUrUGm5dmMqVlnvufZRSK0FbYzVgp0UMstm+F5+W2/jnEEQyc9vo1ZR/E5ZI/B1WjjoTqBqwJL6Krw=="
     },
-    "@timonteutelink/code-templator-lib@0.0.8_zod-to-json-schema@3.24.5__zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_handlebars@4.7.8_peggy@5.0.2_typeorm@0.3.23__@google-cloud+spanner@7.21.0___@opentelemetry+api@1.9.0__@sap+hana-client@2.24.24__better-sqlite3@11.10.0__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_zod@3.24.4": {
-      "integrity": "sha512-ZndKYm4wrzD4TVq4g9KL5KvVazw7TdbzNc+OPMQHjO8LwwmCg/2zrOnPtXWjTrBNjbE4Bn7EUdDcOQmNv0HmCA==",
+    "@timonteutelink/code-templator-lib@0.0.9_zod-to-json-schema@3.24.5__zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_handlebars@4.7.8_peggy@5.0.2_typeorm@0.3.23__@google-cloud+spanner@7.21.0___@opentelemetry+api@1.9.0__@sap+hana-client@2.24.24__better-sqlite3@11.10.0__hdb-pool@0.1.6__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_zod@3.24.4": {
+      "integrity": "sha512-k/XLMYgBq39rvKyajYBC2DsPy+JMR7eUg5DlMDNFY8xb8Ev2Ucngje0P6EXwYy4ycb4zoRW7HWIW3X/Jx2Z2/Q==",
       "dependencies": [
         "@google-cloud/spanner",
         "@langchain/anthropic",
@@ -1703,6 +1703,7 @@
         "fs-extra",
         "glob@11.0.2",
         "handlebars",
+        "hdb-pool",
         "langchain",
         "peggy",
         "pino",
@@ -2522,6 +2523,9 @@
         "function-bind"
       ]
     },
+    "hdb-pool@0.1.6": {
+      "integrity": "sha512-8VZOLn1EHamm1NmTFQj2iqjVcfonYIsD7F5DU2bz2N+gF+knp6/MbAVeRXkJtya717IBkPeA5iv0/1iPuYo4ZA=="
+    },
     "help-me@5.0.0": {
       "integrity": "sha512-7xgomUX6ADmcYzFik0HzAxh/73YlKR9bmFzf51CZwR+b6YtzU2m0u49hQCqV6SvlqIqsaxovfwdvbnsw3b/zpg=="
     },
@@ -2663,7 +2667,7 @@
         "safe-buffer@5.2.1"
       ]
     },
-    "langchain@0.3.24_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+core@0.3.55__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_handlebars@4.7.8_peggy@5.0.2_typeorm@0.3.23__@google-cloud+spanner@7.21.0___@opentelemetry+api@1.9.0__@sap+hana-client@2.24.24__better-sqlite3@11.10.0__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_zod@3.24.4": {
+    "langchain@0.3.24_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+core@0.3.55__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_handlebars@4.7.8_peggy@5.0.2_typeorm@0.3.23__@google-cloud+spanner@7.21.0___@opentelemetry+api@1.9.0__@sap+hana-client@2.24.24__better-sqlite3@11.10.0__hdb-pool@0.1.6__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_zod@3.24.4": {
       "integrity": "sha512-BTjiYkUCpWFAmufK8J5zMqc5aUs4eEnAXPWtPe2+R4ZPP+U7bXJSBHAcrB40rQ3VeTdRgMvgDjekOOgCMWut6Q==",
       "dependencies": [
         "@langchain/anthropic",
@@ -3353,7 +3357,7 @@
         "safe-buffer@5.2.1"
       ]
     },
-    "typeorm@0.3.23_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_reflect-metadata@0.2.2": {
+    "typeorm@0.3.23_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_reflect-metadata@0.2.2": {
       "integrity": "sha512-CJUZWW7O5zZG0TA7bRpntJx97AvvQwsoSa1UgYlzTOtmkwODrqIyxP9wtzHpBssEKie5chnLiCVyxKNeYo65wQ==",
       "dependencies": [
         "@google-cloud/spanner",
@@ -3367,6 +3371,7 @@
         "debug@4.4.0",
         "dotenv",
         "glob@10.4.5",
+        "hdb-pool",
         "reflect-metadata",
         "sha.js",
         "sql-highlight",
@@ -3513,7 +3518,7 @@
   },
   "workspace": {
     "dependencies": [
-      "npm:@timonteutelink/code-templator-lib@0.0.8",
+      "npm:@timonteutelink/code-templator-lib@0.0.9",
       "npm:@timonteutelink/template-types-lib@0.0.35",
       "npm:commander@13",
       "npm:fs-extra@11",
