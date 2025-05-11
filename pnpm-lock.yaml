@@ -24,8 +24,8 @@ importers:
   apps/cli:
     dependencies:
       '@timonteutelink/code-templator-lib':
-        specifier: ^0.0.29
-        version: 0.0.29(@aws-sdk/credential-providers@3.806.0)(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.2)))(@swc/helpers@0.5.17)(@types/node@22.14.1)(encoding@0.1.13)(openai@4.97.0(encoding@0.1.13)(zod@3.24.2))(reflect-metadata@0.2.2)(typescript@5.8.3)
+        specifier: ^0.0.30
+        version: 0.0.30(@aws-sdk/credential-providers@3.806.0)(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.2)))(@swc/wasm@1.11.24)(@types/node@22.14.1)(encoding@0.1.13)(openai@4.97.0(encoding@0.1.13)(zod@3.24.2))(reflect-metadata@0.2.2)(typescript@5.8.3)
       commander:
         specifier: ^13.1.0
         version: 13.1.0
@@ -319,6 +319,9 @@ importers:
       '@swc/helpers':
         specifier: ^0.5.17
         version: 0.5.17
+      '@swc/wasm':
+        specifier: ^1.11.24
+        version: 1.11.24
       '@timonteutelink/template-types-lib':
         specifier: 0.0.35
         version: 0.0.35
@@ -357,7 +360,7 @@ importers:
         version: 2.2.2
       langchain:
         specifier: ^0.3.24
-        version: 0.3.24(f60f012c70f9e0a4f36c9c2275239f76)
+        version: 0.3.24(373e484c236c1832a2a0fc4240d67537)
       mongodb:
         specifier: ^6.16.0
         version: 6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4)
@@ -411,10 +414,10 @@ importers:
         version: 5.1.7
       ts-node:
         specifier: ^10.9.2
-        version: 10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3)
+        version: 10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3)
       typeorm:
         specifier: ^0.3.23
-        version: 0.3.23(@google-cloud/spanner@7.21.0(encoding@0.1.13))(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3))
+        version: 0.3.23(@google-cloud/spanner@7.21.0(encoding@0.1.13))(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3))
       yaml:
         specifier: ^2.7.1
         version: 2.7.1
@@ -439,7 +442,7 @@ importers:
         version: 9.24.0(jiti@2.4.2)
       jest:
         specifier: ^29.7.0
-        version: 29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3))
+        version: 29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3))
       typescript:
         specifier: 5.8.3
         version: 5.8.3
@@ -2806,6 +2809,9 @@ packages:
   '@swc/types@0.1.21':
     resolution: {integrity: sha512-2YEtj5HJVbKivud9N4bpPBAyZhj4S2Ipe5LkUG94alTpr7in/GU/EARgPAd3BwU+YOmFVJC2+kjqhGRi3r0ZpQ==}
 
+  '@swc/wasm@1.11.24':
+    resolution: {integrity: sha512-8Eo70Ns3BUboUaHfHhDfT/e0gA92+qpHggnb8oio+bfESMXBkmBdkQIln8TI27axKGc7uWz9M82kC8k9FJFq0w==}
+
   '@tailwindcss/node@4.1.3':
     resolution: {integrity: sha512-H/6r6IPFJkCfBJZ2dKZiPJ7Ueb2wbL592+9bQEl2r73qbX6yGnmQVIfiUvDRB2YI0a3PWDrzUwkvQx1XW1bNkA==}
 
@@ -2885,8 +2891,8 @@ packages:
   '@tediousjs/connection-string@0.5.0':
     resolution: {integrity: sha512-7qSgZbincDDDFyRweCIEvZULFAw5iz/DeunhvuxpL31nfntX3P4Yd4HkHBRg9H8CdqY1e5WFN1PZIz/REL9MVQ==}
 
-  '@timonteutelink/code-templator-lib@0.0.29':
-    resolution: {integrity: sha512-nX2x77yOP3ckyw/aALYTz5jDnxbh+W7nSnfD7qI37J96LH4r6UW5c6C7FJT0gJqApZ0UZ5LVHrDAtE7sCZLDIw==}
+  '@timonteutelink/code-templator-lib@0.0.30':
+    resolution: {integrity: sha512-f3412oKUA3sBSDwOhhuQlkVC3vEIfa4tYuHJL+9PgWD0Sgzv6tZzs3w7lAYOPHI6iktOy8UetbeqbuHP73Ovgg==}
 
   '@timonteutelink/template-types-lib@0.0.35':
     resolution: {integrity: sha512-1XX3gZB4KYC+988cCCqtjdBFVcLwg/J1jHXLhgp2wVVV+EyzQ+MyUEQp0//rhCXtIfpDi5guv3lRpezVBM5BHQ==}
@@ -8132,7 +8138,7 @@ snapshots:
       jest-util: 29.7.0
       slash: 3.0.0
 
-  '@jest/core@29.7.0(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3))':
+  '@jest/core@29.7.0(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3))':
     dependencies:
       '@jest/console': 29.7.0
       '@jest/reporters': 29.7.0
@@ -8146,7 +8152,7 @@ snapshots:
       exit: 0.1.2
       graceful-fs: 4.2.11
       jest-changed-files: 29.7.0
-      jest-config: 29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3))
+      jest-config: 29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3))
       jest-haste-map: 29.7.0
       jest-message-util: 29.7.0
       jest-regex-util: 29.6.3
@@ -9820,6 +9826,8 @@ snapshots:
     dependencies:
       '@swc/counter': 0.1.3
 
+  '@swc/wasm@1.11.24': {}
+
   '@tailwindcss/node@4.1.3':
     dependencies:
       enhanced-resolve: 5.18.1
@@ -9884,7 +9892,7 @@ snapshots:
 
   '@tediousjs/connection-string@0.5.0': {}
 
-  '@timonteutelink/code-templator-lib@0.0.29(@aws-sdk/credential-providers@3.806.0)(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.2)))(@swc/helpers@0.5.17)(@types/node@22.14.1)(encoding@0.1.13)(openai@4.97.0(encoding@0.1.13)(zod@3.24.2))(reflect-metadata@0.2.2)(typescript@5.8.3)':
+  '@timonteutelink/code-templator-lib@0.0.30(@aws-sdk/credential-providers@3.806.0)(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.2)))(@swc/wasm@1.11.24)(@types/node@22.14.1)(encoding@0.1.13)(openai@4.97.0(encoding@0.1.13)(zod@3.24.2))(reflect-metadata@0.2.2)(typescript@5.8.3)':
     dependencies:
       '@google-cloud/spanner': 7.21.0(encoding@0.1.13)
       '@langchain/anthropic': 0.3.20(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)
@@ -9904,6 +9912,7 @@ snapshots:
       '@mongodb-js/zstd': 2.0.1
       '@sap/hana-client': 2.24.24
       '@swc/core': 1.11.24(@swc/helpers@0.5.17)
+      '@swc/helpers': 0.5.17
       '@timonteutelink/template-types-lib': 0.0.35
       '@types/fs-extra': 11.0.4
       axios: 1.9.0
@@ -9916,7 +9925,7 @@ snapshots:
       hdb-pool: 0.1.6
       ioredis: 5.6.1
       kerberos: 2.2.2
-      langchain: 0.3.24(f60f012c70f9e0a4f36c9c2275239f76)
+      langchain: 0.3.24(373e484c236c1832a2a0fc4240d67537)
       mongodb: 6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4)
       mongodb-client-encryption: 6.4.0
       mssql: 11.0.1
@@ -9934,15 +9943,14 @@ snapshots:
       socks: 2.8.4
       sql.js: 1.13.0
       sqlite3: 5.1.7
-      ts-node: 10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3)
-      typeorm: 0.3.23(@google-cloud/spanner@7.21.0(encoding@0.1.13))(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3))
+      ts-node: 10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3)
+      typeorm: 0.3.23(@google-cloud/spanner@7.21.0(encoding@0.1.13))(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3))
       yaml: 2.7.1
       zod: 3.24.2
       zod-to-json-schema: 3.24.5(zod@3.24.2)
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
       - '@langchain/core'
-      - '@swc/helpers'
       - '@swc/wasm'
       - '@types/node'
       - aws-crt
@@ -10740,13 +10748,13 @@ snapshots:
 
   core-util-is@1.0.3: {}
 
-  create-jest@29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3)):
+  create-jest@29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3)):
     dependencies:
       '@jest/types': 29.6.3
       chalk: 4.1.2
       exit: 0.1.2
       graceful-fs: 4.2.11
-      jest-config: 29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3))
+      jest-config: 29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3))
       jest-util: 29.7.0
       prompts: 2.4.2
     transitivePeerDependencies:
@@ -12027,16 +12035,16 @@ snapshots:
       - babel-plugin-macros
       - supports-color
 
-  jest-cli@29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3)):
+  jest-cli@29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3)):
     dependencies:
-      '@jest/core': 29.7.0(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3))
+      '@jest/core': 29.7.0(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3))
       '@jest/test-result': 29.7.0
       '@jest/types': 29.6.3
       chalk: 4.1.2
-      create-jest: 29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3))
+      create-jest: 29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3))
       exit: 0.1.2
       import-local: 3.2.0
-      jest-config: 29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3))
+      jest-config: 29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3))
       jest-util: 29.7.0
       jest-validate: 29.7.0
       yargs: 17.7.2
@@ -12046,7 +12054,7 @@ snapshots:
       - supports-color
       - ts-node
 
-  jest-config@29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3)):
+  jest-config@29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3)):
     dependencies:
       '@babel/core': 7.27.1
       '@jest/test-sequencer': 29.7.0
@@ -12072,7 +12080,7 @@ snapshots:
       strip-json-comments: 3.1.1
     optionalDependencies:
       '@types/node': 22.14.1
-      ts-node: 10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3)
+      ts-node: 10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3)
     transitivePeerDependencies:
       - babel-plugin-macros
       - supports-color
@@ -12292,12 +12300,12 @@ snapshots:
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
-  jest@29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3)):
+  jest@29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3)):
     dependencies:
-      '@jest/core': 29.7.0(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3))
+      '@jest/core': 29.7.0(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3))
       '@jest/types': 29.6.3
       import-local: 3.2.0
-      jest-cli: 29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3))
+      jest-cli: 29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3))
     transitivePeerDependencies:
       - '@types/node'
       - babel-plugin-macros
@@ -12408,7 +12416,7 @@ snapshots:
 
   kleur@3.0.3: {}
 
-  langchain@0.3.24(f60f012c70f9e0a4f36c9c2275239f76):
+  langchain@0.3.24(373e484c236c1832a2a0fc4240d67537):
     dependencies:
       '@langchain/core': 0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.2))
       '@langchain/openai': 0.5.10(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)
@@ -12440,7 +12448,7 @@ snapshots:
       cheerio: 1.0.0
       handlebars: 4.7.8
       peggy: 5.0.2
-      typeorm: 0.3.23(@google-cloud/spanner@7.21.0(encoding@0.1.13))(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3))
+      typeorm: 0.3.23(@google-cloud/spanner@7.21.0(encoding@0.1.13))(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3))
     transitivePeerDependencies:
       - encoding
       - openai
@@ -14076,7 +14084,7 @@ snapshots:
     dependencies:
       typescript: 5.8.3
 
-  ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3):
+  ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.11
@@ -14095,6 +14103,7 @@ snapshots:
       yn: 3.1.1
     optionalDependencies:
       '@swc/core': 1.11.24(@swc/helpers@0.5.17)
+      '@swc/wasm': 1.11.24
 
   tslib@1.14.1: {}
 
@@ -14174,7 +14183,7 @@ snapshots:
       possible-typed-array-names: 1.1.0
       reflect.getprototypeof: 1.0.10
 
-  typeorm@0.3.23(@google-cloud/spanner@7.21.0(encoding@0.1.13))(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3)):
+  typeorm@0.3.23(@google-cloud/spanner@7.21.0(encoding@0.1.13))(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)(kerberos@2.2.2)(mongodb-client-encryption@6.4.0)(snappy@7.2.2)(socks@2.8.4))(mssql@11.0.1)(mysql2@3.14.1)(oracledb@6.8.0)(pg-native@3.4.5)(pg-query-stream@4.9.6(pg@8.15.6(pg-native@3.4.5)))(pg@8.15.6(pg-native@3.4.5))(redis@5.0.1)(reflect-metadata@0.2.2)(sql.js@1.13.0)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3)):
     dependencies:
       '@sqltools/formatter': 1.2.5
       ansis: 3.17.0
@@ -14206,7 +14215,7 @@ snapshots:
       redis: 5.0.1
       sql.js: 1.13.0
       sqlite3: 5.1.7
-      ts-node: 10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@types/node@22.14.1)(typescript@5.8.3)
+      ts-node: 10.9.2(@swc/core@1.11.24(@swc/helpers@0.5.17))(@swc/wasm@1.11.24)(@types/node@22.14.1)(typescript@5.8.3)
     transitivePeerDependencies:
       - supports-color
 
