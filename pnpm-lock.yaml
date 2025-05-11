@@ -24,8 +24,8 @@ importers:
   apps/cli:
     dependencies:
       '@timonteutelink/code-templator-lib':
-        specifier: ^0.0.10
-        version: 0.0.10(@langchain/core@0.3.51(openai@4.97.0(zod@3.24.2)))(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0))(openai@4.97.0(zod@3.24.2))(reflect-metadata@0.2.2)
+        specifier: ^0.0.11
+        version: 0.0.11(@aws-sdk/credential-providers@3.806.0)(@langchain/core@0.3.51(openai@4.97.0(zod@3.24.2)))(@mongodb-js/zstd@2.0.1)(openai@4.97.0(zod@3.24.2))(reflect-metadata@0.2.2)
       commander:
         specifier: ^13.1.0
         version: 13.1.0
@@ -307,6 +307,9 @@ importers:
       '@langchain/xai':
         specifier: ^0.0.2
         version: 0.0.2(@langchain/core@0.3.51(openai@4.97.0(zod@3.24.2)))
+      '@mongodb-js/zstd':
+        specifier: ^2.0.1
+        version: 2.0.1
       '@sap/hana-client':
         specifier: ^2.24.24
         version: 2.24.24
@@ -345,10 +348,10 @@ importers:
         version: 5.6.1
       langchain:
         specifier: ^0.3.24
-        version: 0.3.24(5670d28e78f9820c288ed38ff79086a8)
+        version: 0.3.24(9db800cec235f9477aaa65bf1033badd)
       mongodb:
         specifier: ^6.16.0
-        version: 6.16.0(@aws-sdk/credential-providers@3.806.0)
+        version: 6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)
       peggy:
         specifier: ^5.0.2
         version: 5.0.2
@@ -360,7 +363,7 @@ importers:
         version: 13.0.0
       typeorm:
         specifier: ^0.3.23
-        version: 0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0))(reflect-metadata@0.2.2)
+        version: 0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1))(reflect-metadata@0.2.2)
       yaml:
         specifier: ^2.7.1
         version: 2.7.1
@@ -1433,6 +1436,10 @@ packages:
 
   '@mongodb-js/saslprep@1.2.2':
     resolution: {integrity: sha512-EB0O3SCSNRUFk66iRCpI+cXzIjdswfCs7F6nOC3RAGJ7xr5YhaicvsRwJ9eyzYvYRlCSDUO/c7g4yNulxKC1WA==}
+
+  '@mongodb-js/zstd@2.0.1':
+    resolution: {integrity: sha512-hbQKltFj0hMrhe+Udh9gjkzswIJJVOo55vEHgfHbb6wjPpo4Oc3kng2bao/XnzLPCdd5Q1PXbWTC91LYPQrCtA==}
+    engines: {node: '>= 16.20.1'}
 
   '@next/env@15.3.0':
     resolution: {integrity: sha512-6mDmHX24nWlHOlbwUiAOmMyY7KELimmi+ed8qWcJYjqXeC+G6JzPZ3QosOAfjNwgMIzwhXBiRiCgdh8axTTdTA==}
@@ -2546,8 +2553,8 @@ packages:
   '@tailwindcss/postcss@4.1.3':
     resolution: {integrity: sha512-6s5nJODm98F++QT49qn8xJKHQRamhYHfMi3X7/ltxiSQ9dyRsaFSfFkfaMsanWzf+TMYQtbk8mt5f6cCVXJwfg==}
 
-  '@timonteutelink/code-templator-lib@0.0.10':
-    resolution: {integrity: sha512-VpMxzgmWokfy8ovZx1/G3IY3Ut4675+mQvT012ix0aNuoMWsp5tnosJ2k3d97QF9wy3NeQQt093rD0hkOMMU+g==}
+  '@timonteutelink/code-templator-lib@0.0.11':
+    resolution: {integrity: sha512-1hy0GEWI9kq2tUI9i2wO3FPBQEJb1MwGm2pT9n/SChPkLXY/VcTTRblpBOY5K6/GDv9tZByfZ4BDtiDMqj0YHg==}
 
   '@timonteutelink/template-types-lib@0.0.35':
     resolution: {integrity: sha512-1XX3gZB4KYC+988cCCqtjdBFVcLwg/J1jHXLhgp2wVVV+EyzQ+MyUEQp0//rhCXtIfpDi5guv3lRpezVBM5BHQ==}
@@ -4596,6 +4603,9 @@ packages:
   node-abi@3.75.0:
     resolution: {integrity: sha512-OhYaY5sDsIka7H7AtijtI9jwGYLyl29eQn/W623DiN/MIv5sUqc4g7BIDThX+gb7di9f6xK02nkp8sdfFWZLTg==}
     engines: {node: '>=10'}
+
+  node-addon-api@4.3.0:
+    resolution: {integrity: sha512-73sE9+3UaLYYFmDsFZnqCInzPyh3MqIwZO9cw58yIqAZhONrrabrYyYe3TuIqtIiOuTXVhsGau8hcrhhwSsDIQ==}
 
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
@@ -7412,6 +7422,11 @@ snapshots:
     dependencies:
       sparse-bitfield: 3.0.3
 
+  '@mongodb-js/zstd@2.0.1':
+    dependencies:
+      node-addon-api: 4.3.0
+      prebuild-install: 7.1.3
+
   '@next/env@15.3.0': {}
 
   '@next/eslint-plugin-next@15.3.0':
@@ -8621,7 +8636,7 @@ snapshots:
       postcss: 8.5.3
       tailwindcss: 4.1.3
 
-  '@timonteutelink/code-templator-lib@0.0.10(@langchain/core@0.3.51(openai@4.97.0(zod@3.24.2)))(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0))(openai@4.97.0(zod@3.24.2))(reflect-metadata@0.2.2)':
+  '@timonteutelink/code-templator-lib@0.0.11(@aws-sdk/credential-providers@3.806.0)(@langchain/core@0.3.51(openai@4.97.0(zod@3.24.2)))(@mongodb-js/zstd@2.0.1)(openai@4.97.0(zod@3.24.2))(reflect-metadata@0.2.2)':
     dependencies:
       '@google-cloud/spanner': 7.21.0
       '@langchain/anthropic': 0.3.20(@langchain/core@0.3.51(openai@4.97.0(zod@3.24.2)))
@@ -8650,20 +8665,25 @@ snapshots:
       handlebars: 4.7.8
       hdb-pool: 0.1.6
       ioredis: 5.6.1
-      langchain: 0.3.24(5670d28e78f9820c288ed38ff79086a8)
+      langchain: 0.3.24(9db800cec235f9477aaa65bf1033badd)
+      mongodb: 6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)
       peggy: 5.0.2
       pino: 9.6.0
       pino-pretty: 13.0.0
-      typeorm: 0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0))(reflect-metadata@0.2.2)
+      typeorm: 0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1))(reflect-metadata@0.2.2)
       yaml: 2.7.1
       zod: 3.24.2
       zod-to-json-schema: 3.24.5(zod@3.24.2)
     transitivePeerDependencies:
+      - '@aws-sdk/credential-providers'
       - '@langchain/core'
+      - '@mongodb-js/zstd'
       - aws-crt
       - debug
       - encoding
-      - mongodb
+      - gcp-metadata
+      - kerberos
+      - mongodb-client-encryption
       - mssql
       - mysql2
       - openai
@@ -8674,6 +8694,8 @@ snapshots:
       - react
       - redis
       - reflect-metadata
+      - snappy
+      - socks
       - sql.js
       - sqlite3
       - supports-color
@@ -10876,7 +10898,7 @@ snapshots:
 
   kleur@3.0.3: {}
 
-  langchain@0.3.24(5670d28e78f9820c288ed38ff79086a8):
+  langchain@0.3.24(9db800cec235f9477aaa65bf1033badd):
     dependencies:
       '@langchain/core': 0.3.51(openai@4.97.0(zod@3.24.2))
       '@langchain/openai': 0.5.10(@langchain/core@0.3.51(openai@4.97.0(zod@3.24.2)))
@@ -10908,7 +10930,7 @@ snapshots:
       cheerio: 1.0.0
       handlebars: 4.7.8
       peggy: 5.0.2
-      typeorm: 0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0))(reflect-metadata@0.2.2)
+      typeorm: 0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1))(reflect-metadata@0.2.2)
     transitivePeerDependencies:
       - encoding
       - openai
@@ -11076,13 +11098,14 @@ snapshots:
       '@types/whatwg-url': 11.0.5
       whatwg-url: 14.2.0
 
-  mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0):
+  mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1):
     dependencies:
       '@mongodb-js/saslprep': 1.2.2
       bson: 6.10.3
       mongodb-connection-string-url: 3.0.2
     optionalDependencies:
       '@aws-sdk/credential-providers': 3.806.0
+      '@mongodb-js/zstd': 2.0.1
 
   ms@2.0.0: {}
 
@@ -11132,6 +11155,8 @@ snapshots:
   node-abi@3.75.0:
     dependencies:
       semver: 7.7.1
+
+  node-addon-api@4.3.0: {}
 
   node-domexception@1.0.0: {}
 
@@ -12174,7 +12199,7 @@ snapshots:
       possible-typed-array-names: 1.1.0
       reflect.getprototypeof: 1.0.10
 
-  typeorm@0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0))(reflect-metadata@0.2.2):
+  typeorm@0.3.23(@google-cloud/spanner@7.21.0)(@sap/hana-client@2.24.24)(better-sqlite3@11.10.0)(hdb-pool@0.1.6)(ioredis@5.6.1)(mongodb@6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1))(reflect-metadata@0.2.2):
     dependencies:
       '@sqltools/formatter': 1.2.5
       ansis: 3.17.0
@@ -12196,7 +12221,7 @@ snapshots:
       better-sqlite3: 11.10.0
       hdb-pool: 0.1.6
       ioredis: 5.6.1
-      mongodb: 6.16.0(@aws-sdk/credential-providers@3.806.0)
+      mongodb: 6.16.0(@aws-sdk/credential-providers@3.806.0)(@mongodb-js/zstd@2.0.1)
     transitivePeerDependencies:
       - supports-color
 
