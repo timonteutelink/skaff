@@ -1,7 +1,7 @@
 {
   "version": "4",
   "specifiers": {
-    "npm:@timonteutelink/code-templator-lib@0.0.18": "0.0.18_zod-to-json-schema@3.24.5__zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_handlebars@4.7.8_peggy@5.0.2_typeorm@0.3.23__@google-cloud+spanner@7.21.0___@opentelemetry+api@1.9.0__@sap+hana-client@2.24.24__better-sqlite3@11.10.0__hdb-pool@0.1.6__ioredis@5.6.1__mongodb@6.16.0___@mongodb-js+zstd@2.0.1___kerberos@2.2.2___mongodb-client-encryption@6.4.0___snappy@7.2.2___socks@2.8.4__mssql@11.0.1__mysql2@3.14.1__reflect-metadata@0.2.2__@mongodb-js+zstd@2.0.1__kerberos@2.2.2__mongodb-client-encryption@6.4.0__snappy@7.2.2__socks@2.8.4_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0__@mongodb-js+zstd@2.0.1__kerberos@2.2.2__mongodb-client-encryption@6.4.0__snappy@7.2.2__socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_zod@3.24.4",
+    "npm:@timonteutelink/code-templator-lib@0.0.19": "0.0.19_zod-to-json-schema@3.24.5__zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_handlebars@4.7.8_peggy@5.0.2_typeorm@0.3.23__@google-cloud+spanner@7.21.0___@opentelemetry+api@1.9.0__@sap+hana-client@2.24.24__better-sqlite3@11.10.0__hdb-pool@0.1.6__ioredis@5.6.1__mongodb@6.16.0___@mongodb-js+zstd@2.0.1___kerberos@2.2.2___mongodb-client-encryption@6.4.0___snappy@7.2.2___socks@2.8.4__mssql@11.0.1__mysql2@3.14.1__oracledb@6.8.0__reflect-metadata@0.2.2__@mongodb-js+zstd@2.0.1__kerberos@2.2.2__mongodb-client-encryption@6.4.0__snappy@7.2.2__socks@2.8.4_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0__@mongodb-js+zstd@2.0.1__kerberos@2.2.2__mongodb-client-encryption@6.4.0__snappy@7.2.2__socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_zod@3.24.4",
     "npm:@timonteutelink/template-types-lib@0.0.35": "0.0.35",
     "npm:commander@13": "13.1.0",
     "npm:fs-extra@11": "11.3.0",
@@ -1881,8 +1881,8 @@
     "@tediousjs/connection-string@0.5.0": {
       "integrity": "sha512-7qSgZbincDDDFyRweCIEvZULFAw5iz/DeunhvuxpL31nfntX3P4Yd4HkHBRg9H8CdqY1e5WFN1PZIz/REL9MVQ=="
     },
-    "@timonteutelink/code-templator-lib@0.0.18_zod-to-json-schema@3.24.5__zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_handlebars@4.7.8_peggy@5.0.2_typeorm@0.3.23__@google-cloud+spanner@7.21.0___@opentelemetry+api@1.9.0__@sap+hana-client@2.24.24__better-sqlite3@11.10.0__hdb-pool@0.1.6__ioredis@5.6.1__mongodb@6.16.0___@mongodb-js+zstd@2.0.1___kerberos@2.2.2___mongodb-client-encryption@6.4.0___snappy@7.2.2___socks@2.8.4__mssql@11.0.1__mysql2@3.14.1__reflect-metadata@0.2.2__@mongodb-js+zstd@2.0.1__kerberos@2.2.2__mongodb-client-encryption@6.4.0__snappy@7.2.2__socks@2.8.4_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0__@mongodb-js+zstd@2.0.1__kerberos@2.2.2__mongodb-client-encryption@6.4.0__snappy@7.2.2__socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_zod@3.24.4": {
-      "integrity": "sha512-Y1W2ApzyJTWgGt40VMDE/R3JeF9GUIF+36qAwMC8DOxJAiWXeiCPoNymXp1cbLB3NnLA94PDTFS9D/XtfnOvOA==",
+    "@timonteutelink/code-templator-lib@0.0.19_zod-to-json-schema@3.24.5__zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_handlebars@4.7.8_peggy@5.0.2_typeorm@0.3.23__@google-cloud+spanner@7.21.0___@opentelemetry+api@1.9.0__@sap+hana-client@2.24.24__better-sqlite3@11.10.0__hdb-pool@0.1.6__ioredis@5.6.1__mongodb@6.16.0___@mongodb-js+zstd@2.0.1___kerberos@2.2.2___mongodb-client-encryption@6.4.0___snappy@7.2.2___socks@2.8.4__mssql@11.0.1__mysql2@3.14.1__oracledb@6.8.0__reflect-metadata@0.2.2__@mongodb-js+zstd@2.0.1__kerberos@2.2.2__mongodb-client-encryption@6.4.0__snappy@7.2.2__socks@2.8.4_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0__@mongodb-js+zstd@2.0.1__kerberos@2.2.2__mongodb-client-encryption@6.4.0__snappy@7.2.2__socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_zod@3.24.4": {
+      "integrity": "sha512-7UL5qZWnvueWplxPRwgqh5CzcTW1A8wCN7uk7GNDw/OpgzplNShZwq4+J06U1pWCKZOy18xSXVNnJJ5RNJIMeg==",
       "dependencies": [
         "@google-cloud/spanner",
         "@langchain/anthropic",
@@ -1918,6 +1918,7 @@
         "mongodb-client-encryption",
         "mssql",
         "mysql2",
+        "oracledb",
         "peggy",
         "pino",
         "pino-pretty",
@@ -3044,7 +3045,7 @@
         "prebuild-install"
       ]
     },
-    "langchain@0.3.24_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+core@0.3.55__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_handlebars@4.7.8_peggy@5.0.2_typeorm@0.3.23__@google-cloud+spanner@7.21.0___@opentelemetry+api@1.9.0__@sap+hana-client@2.24.24__better-sqlite3@11.10.0__hdb-pool@0.1.6__ioredis@5.6.1__mongodb@6.16.0___@mongodb-js+zstd@2.0.1___kerberos@2.2.2___mongodb-client-encryption@6.4.0___snappy@7.2.2___socks@2.8.4__mssql@11.0.1__mysql2@3.14.1__reflect-metadata@0.2.2__@mongodb-js+zstd@2.0.1__kerberos@2.2.2__mongodb-client-encryption@6.4.0__snappy@7.2.2__socks@2.8.4_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0__@mongodb-js+zstd@2.0.1__kerberos@2.2.2__mongodb-client-encryption@6.4.0__snappy@7.2.2__socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_zod@3.24.4_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4": {
+    "langchain@0.3.24_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+core@0.3.55__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_handlebars@4.7.8_peggy@5.0.2_typeorm@0.3.23__@google-cloud+spanner@7.21.0___@opentelemetry+api@1.9.0__@sap+hana-client@2.24.24__better-sqlite3@11.10.0__hdb-pool@0.1.6__ioredis@5.6.1__mongodb@6.16.0___@mongodb-js+zstd@2.0.1___kerberos@2.2.2___mongodb-client-encryption@6.4.0___snappy@7.2.2___socks@2.8.4__mssql@11.0.1__mysql2@3.14.1__oracledb@6.8.0__reflect-metadata@0.2.2__@mongodb-js+zstd@2.0.1__kerberos@2.2.2__mongodb-client-encryption@6.4.0__snappy@7.2.2__socks@2.8.4_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0__@mongodb-js+zstd@2.0.1__kerberos@2.2.2__mongodb-client-encryption@6.4.0__snappy@7.2.2__socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_zod@3.24.4_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4": {
       "integrity": "sha512-BTjiYkUCpWFAmufK8J5zMqc5aUs4eEnAXPWtPe2+R4ZPP+U7bXJSBHAcrB40rQ3VeTdRgMvgDjekOOgCMWut6Q==",
       "dependencies": [
         "@langchain/anthropic",
@@ -3336,6 +3337,9 @@
     },
     "openapi-types@12.1.3": {
       "integrity": "sha512-N4YtSYJqghVu4iek2ZUvcN/0aqH1kRDuNqzcycDxhOUpg7GdvLa2F3DgS6yBNhInhv2r/6I0Flkn7CqL8+nIcw=="
+    },
+    "oracledb@6.8.0": {
+      "integrity": "sha512-A4ds4n4xtjPTzk1gwrHWuMeWsEcrScF0GFgVebGrhNpHSAzn6eDwMKcSbakZODKfFcI099iqhmqWsgko8D+7Ww=="
     },
     "p-finally@1.0.0": {
       "integrity": "sha512-LICb2p9CB7FS+0eR1oqWnHhp0FljGLZCWBE9aix0Uye9W8LTQPwMTYVGWQWIw9RdQiDg4+epXQODwIYJtSJaow=="
@@ -3934,7 +3938,7 @@
         "safe-buffer@5.2.1"
       ]
     },
-    "typeorm@0.3.23_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0__@mongodb-js+zstd@2.0.1__kerberos@2.2.2__mongodb-client-encryption@6.4.0__snappy@7.2.2__socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_reflect-metadata@0.2.2_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4": {
+    "typeorm@0.3.23_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0__@mongodb-js+zstd@2.0.1__kerberos@2.2.2__mongodb-client-encryption@6.4.0__snappy@7.2.2__socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_reflect-metadata@0.2.2_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4": {
       "integrity": "sha512-CJUZWW7O5zZG0TA7bRpntJx97AvvQwsoSa1UgYlzTOtmkwODrqIyxP9wtzHpBssEKie5chnLiCVyxKNeYo65wQ==",
       "dependencies": [
         "@google-cloud/spanner",
@@ -3953,6 +3957,7 @@
         "mongodb",
         "mssql",
         "mysql2",
+        "oracledb",
         "reflect-metadata",
         "sha.js",
         "sql-highlight",
@@ -4112,7 +4117,7 @@
   },
   "workspace": {
     "dependencies": [
-      "npm:@timonteutelink/code-templator-lib@0.0.18",
+      "npm:@timonteutelink/code-templator-lib@0.0.19",
       "npm:@timonteutelink/template-types-lib@0.0.35",
       "npm:commander@13",
       "npm:fs-extra@11",
