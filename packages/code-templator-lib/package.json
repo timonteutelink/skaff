@@ -1,6 +1,6 @@
 {
   "name": "@timonteutelink/code-templator-lib",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "exports": {
     "./*": "./src/*.ts",
     ".": "./src/index.ts"
@@ -25,6 +25,7 @@
     "typescript": "5.8.3"
   },
   "dependencies": {
+    "@google-cloud/spanner": "^7.21.0",
     "@langchain/anthropic": "^0.3.20",
     "@langchain/aws": "^0.1.9",
     "@langchain/cerebras": "^0.0.1",
