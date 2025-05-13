@@ -1,11 +1,11 @@
 "use server";
-import { deleteRepo, resetAllChanges } from "@timonteutelink/code-templator-lib/services/git-service";
-import { applyDiffToProject, generateModifyTemplateDiff, generateNewTemplateDiff, generateUpdateTemplateDiff, resolveConflictsAndRetrieveAppliedDiff } from "@timonteutelink/code-templator-lib/services/project-diff-service";
+import { deleteRepo, resetAllChanges } from "@repo/code-templator-lib/services/git-service";
+import { applyDiffToProject, generateModifyTemplateDiff, generateNewTemplateDiff, generateUpdateTemplateDiff, resolveConflictsAndRetrieveAppliedDiff } from "@repo/code-templator-lib/services/project-diff-service";
 import {
   generateProjectFromTemplateSettings,
   instantiateProject,
-} from "@timonteutelink/code-templator-lib/services/project-service";
-import { PROJECT_SEARCH_PATHS } from "@timonteutelink/code-templator-lib/lib/env";
+} from "@repo/code-templator-lib/services/project-service";
+import { PROJECT_SEARCH_PATHS } from "@repo/code-templator-lib/lib/env";
 import {
   CreateProjectResult,
   NewTemplateDiffResult,
@@ -14,12 +14,12 @@ import {
   ProjectSettings,
   ProjectSettingsSchema,
   Result,
-} from "@timonteutelink/code-templator-lib/lib/types";
+} from "@repo/code-templator-lib/lib/types";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import path from "node:path";
-import { logger } from "@timonteutelink/code-templator-lib/lib/logger";
-import { PROJECT_REPOSITORY } from "@timonteutelink/code-templator-lib/repositories/project-repository";
-import { logError } from "@timonteutelink/code-templator-lib/lib/utils";
+import { logger } from "@repo/code-templator-lib/lib/logger";
+import { PROJECT_REPOSITORY } from "@repo/code-templator-lib/repositories/project-repository";
+import { logError } from "@repo/code-templator-lib/lib/utils";
 
 // TODO make sure the templategenerationengine enforces to use the right templatecommithash unless specified otherwise
 // TODO fix that changing one character in env vars in turbo_repo generates empty diff.

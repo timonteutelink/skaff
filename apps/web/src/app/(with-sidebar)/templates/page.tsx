@@ -3,7 +3,7 @@ import { runEraseCache, reloadTemplates, retrieveDefaultTemplates } from "@/app/
 import { ConfirmationDialog } from "@/components/general/confirmation-dialog";
 import TablePage, { FieldInfo } from "@/components/general/table-page";
 import { toastNullError } from "@/lib/utils";
-import { DefaultTemplateResult } from "@timonteutelink/code-templator-lib/lib/types";
+import { DefaultTemplateResult } from "@repo/code-templator-lib/lib/types";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";

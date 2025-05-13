@@ -6,13 +6,13 @@ export const serverLogger = pino({
   level: process.env.LOG_LEVEL ?? 'info',
   transport: {
     targets: [
-      ...(process.env.NODE_ENV !== 'production'
-        ? [{
-          target: 'pino-pretty',
-          options: { colorize: true },
-          level: process.env.LOG_LEVEL ?? 'info',
-        }]
-        : []),
+      // ...(process.env.NODE_ENV !== 'production'
+      //   ? [{
+      //     target: 'pino-pretty',
+      //     options: { colorize: true },
+      //     level: process.env.LOG_LEVEL ?? 'info',
+      //   }]
+      //   : []),
       {
         target: 'pino/file',
         level: process.env.LOG_LEVEL ?? 'info',

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { DiffHunk, ParsedFile } from "@timonteutelink/code-templator-lib/lib/types";
+import { DiffHunk, ParsedFile } from "@repo/code-templator-lib/lib/types";
 
 interface DiffVisualizerProps {
   file: ParsedFile;

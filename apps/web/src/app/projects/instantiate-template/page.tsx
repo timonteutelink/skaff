@@ -17,7 +17,7 @@ import CommitButton from "@/components/general/git/commit-dialog";
 import { DiffVisualizerPage } from "@/components/general/git/diff-visualizer-page";
 import { TemplateSettingsForm } from "@/components/general/template-settings/template-settings-form";
 import { Button } from "@/components/ui/button";
-import { findTemplate } from "@timonteutelink/code-templator-lib/utils/shared-utils";
+import { findTemplate } from "@repo/code-templator-lib/utils/shared-utils";
 import {
   DefaultTemplateResult,
   NewTemplateDiffResult,
@@ -25,7 +25,7 @@ import {
   ProjectDTO,
   Result,
   TemplateDTO
-} from "@timonteutelink/code-templator-lib/lib/types";
+} from "@repo/code-templator-lib/lib/types";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";

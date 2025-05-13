@@ -4,20 +4,20 @@
     "npm:@eslint/js@^9.24.0": "9.26.0",
     "npm:@google-cloud/spanner@^7.21.0": "7.21.0_@opentelemetry+api@1.9.0",
     "npm:@hookform/resolvers@^5.0.1": "5.0.1_react-hook-form@7.56.3__react@19.1.0_react@19.1.0",
-    "npm:@langchain/anthropic@~0.3.20": "0.3.20_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
-    "npm:@langchain/aws@~0.1.9": "0.1.9_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
-    "npm:@langchain/cerebras@^0.0.1": "0.0.1_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
-    "npm:@langchain/cohere@~0.3.3": "0.3.3_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
-    "npm:@langchain/deepseek@^0.0.1": "0.0.1_@langchain+core@0.3.55__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
-    "npm:@langchain/google-genai@~0.2.8": "0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
-    "npm:@langchain/google-vertexai-web@~0.2.8": "0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
-    "npm:@langchain/google-vertexai@~0.2.8": "0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
-    "npm:@langchain/groq@~0.2.2": "0.2.2_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
-    "npm:@langchain/langgraph@~0.2.67": "0.2.71_@langchain+core@0.3.55__zod@3.24.4_zod-to-json-schema@3.24.5__zod@3.24.4_react@19.1.0_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
-    "npm:@langchain/mistralai@0.2": "0.2.0_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
-    "npm:@langchain/ollama@0.2": "0.2.0_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
-    "npm:@langchain/openai@~0.5.10": "0.5.10_@langchain+core@0.3.55__openai@4.98.0___zod@3.24.4__zod@3.24.4_zod@3.24.4_openai@4.98.0__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
-    "npm:@langchain/xai@^0.0.2": "0.0.2_@langchain+core@0.3.55__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
+    "npm:@langchain/anthropic@~0.3.20": "0.3.20_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+    "npm:@langchain/aws@~0.1.9": "0.1.9_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+    "npm:@langchain/cerebras@^0.0.1": "0.0.1_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+    "npm:@langchain/cohere@~0.3.3": "0.3.3_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+    "npm:@langchain/deepseek@^0.0.1": "0.0.1_@langchain+core@0.3.55__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+    "npm:@langchain/google-genai@~0.2.8": "0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+    "npm:@langchain/google-vertexai-web@~0.2.8": "0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+    "npm:@langchain/google-vertexai@~0.2.8": "0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+    "npm:@langchain/groq@~0.2.2": "0.2.2_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+    "npm:@langchain/langgraph@~0.2.67": "0.2.71_@langchain+core@0.3.55__zod@3.24.4_zod-to-json-schema@3.24.5__zod@3.24.4_react@19.1.0_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+    "npm:@langchain/mistralai@0.2": "0.2.0_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+    "npm:@langchain/ollama@0.2": "0.2.0_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+    "npm:@langchain/openai@~0.5.10": "0.5.10_@langchain+core@0.3.55__openai@4.98.0___zod@3.24.4__zod@3.24.4_zod@3.24.4_openai@4.98.0__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+    "npm:@langchain/xai@^0.0.2": "0.0.2_@langchain+core@0.3.55__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
     "npm:@mongodb-js/zstd@^2.0.1": "2.0.1",
     "npm:@next/eslint-plugin-next@^15.3.0": "15.3.2",
     "npm:@radix-ui/react-accordion@^1.2.4": "1.2.10_@types+react@19.1.3_@types+react-dom@19.1.3__@types+react@19.1.3_react@19.1.0_react-dom@19.1.0__react@19.1.0",
@@ -84,7 +84,7 @@
     "npm:ioredis@^5.6.1": "5.6.1",
     "npm:jest@^29.7.0": "29.7.0_@types+node@22.15.17_ts-node@10.9.2__@types+node@22.15.17__typescript@5.8.3_typescript@5.8.3_@swc+core@1.11.24_@swc+helpers@0.5.17_@swc+wasm@1.11.24",
     "npm:kerberos@^2.2.2": "2.2.2",
-    "npm:langchain@~0.3.24": "0.3.24_@langchain+core@0.3.55__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_handlebars@4.7.8_zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_peggy@5.0.2_typeorm@0.3.23__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_pg@8.15.6_pg-native@3.4.5_pg-query-stream@4.9.6__pg@8.15.6___pg-native@3.4.5__pg-native@3.4.5_redis@5.0.1__@redis+client@5.0.1_sql.js@1.13.0_sqlite3@5.1.7_node-gyp@11.2.0_ts-node@10.9.2__@types+node@22.15.17__typescript@5.8.3_@types+node@22.15.17_typescript@5.8.3_@swc+core@1.11.24_@swc+helpers@0.5.17_@swc+wasm@1.11.24_typeorm-aurora-data-api-driver@3.0.1__@aws-sdk+client-rds-data@3.806.0_ws@8.18.2_bufferutil@4.0.9",
+    "npm:langchain@~0.3.24": "0.3.24_@langchain+core@0.3.55__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_handlebars@4.7.8_zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_peggy@5.0.2_typeorm@0.3.23__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_pg@8.15.6_pg-native@3.4.5_pg-query-stream@4.9.6__pg@8.15.6___pg-native@3.4.5__pg-native@3.4.5_redis@5.0.1__@redis+client@5.0.1_sql.js@1.13.0_sqlite3@5.1.7_node-gyp@11.2.0_ts-node@10.9.2__@types+node@22.15.17__typescript@5.8.3_@types+node@22.15.17_typescript@5.8.3_@swc+core@1.11.24_@swc+helpers@0.5.17_@swc+wasm@1.11.24_typeorm-aurora-data-api-driver@3.0.1__@aws-sdk+client-rds-data@3.806.0_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
     "npm:lucide-react@0.488": "0.488.0_react@19.1.0",
     "npm:mongodb-client-encryption@^6.4.0": "6.4.0",
     "npm:mongodb@^6.16.0": "6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4",
@@ -127,8 +127,9 @@
     "npm:typescript-eslint@^8.29.1": "8.32.0_eslint@9.26.0_typescript@5.8.3_@typescript-eslint+parser@8.32.0__eslint@9.26.0__typescript@5.8.3",
     "npm:typescript@5.8.3": "5.8.3",
     "npm:typescript@^5.8.3": "5.8.3",
+    "npm:utf-8-validate@^6.0.5": "6.0.5",
     "npm:vaul@^1.1.2": "1.1.2_react@19.1.0_react-dom@19.1.0__react@19.1.0_@types+react@19.1.3_@types+react-dom@19.1.3__@types+react@19.1.3",
-    "npm:ws@^8.18.2": "8.18.2_bufferutil@4.0.9",
+    "npm:ws@^8.18.2": "8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
     "npm:yaml@^2.7.1": "2.7.1",
     "npm:zod-to-json-schema@^3.24.5": "3.24.5_zod@3.24.4",
     "npm:zod@^3.24.2": "3.24.4"
@@ -2047,6 +2048,16 @@
         "zod-to-json-schema"
       ]
     },
+    "@langchain/anthropic@0.3.20_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-er/mdxdSs8BlQeH5GQtvEIBxf2slge3gsF7CW88S23xfASn6bnjAisQGQwRmvD+X0do7G526W7lNP93u6dMJ0A==",
+      "dependencies": [
+        "@anthropic-ai/sdk",
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "fast-xml-parser@4.5.3",
+        "zod",
+        "zod-to-json-schema"
+      ]
+    },
     "@langchain/aws@0.1.9_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4": {
       "integrity": "sha512-bF6LJmF16o6wTV6PTFjCnkSMr2GT228k14aBNuw1OpbTOKyr0UdDrD+0k5CBcTFg/YOrzUv0ybJp96fcJMpHIw==",
       "dependencies": [
@@ -2083,6 +2094,18 @@
         "zod-to-json-schema"
       ]
     },
+    "@langchain/aws@0.1.9_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-bF6LJmF16o6wTV6PTFjCnkSMr2GT228k14aBNuw1OpbTOKyr0UdDrD+0k5CBcTFg/YOrzUv0ybJp96fcJMpHIw==",
+      "dependencies": [
+        "@aws-sdk/client-bedrock-agent-runtime",
+        "@aws-sdk/client-bedrock-runtime",
+        "@aws-sdk/client-kendra",
+        "@aws-sdk/credential-provider-node",
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "zod",
+        "zod-to-json-schema"
+      ]
+    },
     "@langchain/cerebras@0.0.1_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4": {
       "integrity": "sha512-ycI5yooLaCXrsamfGr6SGY+KnswvDYhSakFHT6LIwssvue3N1KlXYRZjrzm5xSMRdT+CVf9u6dOnv99GCWO7xQ==",
       "dependencies": [
@@ -2113,6 +2136,16 @@
         "zod-to-json-schema"
       ]
     },
+    "@langchain/cerebras@0.0.1_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-ycI5yooLaCXrsamfGr6SGY+KnswvDYhSakFHT6LIwssvue3N1KlXYRZjrzm5xSMRdT+CVf9u6dOnv99GCWO7xQ==",
+      "dependencies": [
+        "@cerebras/cerebras_cloud_sdk",
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "uuid@10.0.0",
+        "zod",
+        "zod-to-json-schema"
+      ]
+    },
     "@langchain/cohere@0.3.3_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4": {
       "integrity": "sha512-WwhKrNxG5UnRIg1YTP4V5qy+73uzpSSgU4+OpdcJOmTt2pefOP+9TYIIrlNgDYta3bYRv5XxSxZfEvDChGt6JQ==",
       "dependencies": [
@@ -2137,6 +2170,16 @@
       "integrity": "sha512-WwhKrNxG5UnRIg1YTP4V5qy+73uzpSSgU4+OpdcJOmTt2pefOP+9TYIIrlNgDYta3bYRv5XxSxZfEvDChGt6JQ==",
       "dependencies": [
         "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
+        "cohere-ai",
+        "uuid@10.0.0",
+        "zod",
+        "zod-to-json-schema"
+      ]
+    },
+    "@langchain/cohere@0.3.3_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-WwhKrNxG5UnRIg1YTP4V5qy+73uzpSSgU4+OpdcJOmTt2pefOP+9TYIIrlNgDYta3bYRv5XxSxZfEvDChGt6JQ==",
+      "dependencies": [
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
         "cohere-ai",
         "uuid@10.0.0",
         "zod",
@@ -2186,6 +2229,23 @@
         "decamelize",
         "js-tiktoken",
         "langsmith@0.3.28_openai@4.98.0__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
+        "mustache",
+        "p-queue",
+        "p-retry",
+        "uuid@10.0.0",
+        "zod",
+        "zod-to-json-schema"
+      ]
+    },
+    "@langchain/core@0.3.55_openai@4.98.0__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-SojY2ugpT6t9eYfFB9Ysvyhhyh+KJTGXs50hdHUE9tAEQWp3WAwoxe4djwJnOZ6fSpWYdpFt2UT2ksHVDy2vXA==",
+      "dependencies": [
+        "@cfworker/json-schema",
+        "ansi-styles@5.2.0",
+        "camelcase@6.3.0",
+        "decamelize",
+        "js-tiktoken",
+        "langsmith@0.3.28_openai@4.98.0__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
         "mustache",
         "p-queue",
         "p-retry",
@@ -2279,6 +2339,40 @@
         "zod-to-json-schema"
       ]
     },
+    "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-SojY2ugpT6t9eYfFB9Ysvyhhyh+KJTGXs50hdHUE9tAEQWp3WAwoxe4djwJnOZ6fSpWYdpFt2UT2ksHVDy2vXA==",
+      "dependencies": [
+        "@cfworker/json-schema",
+        "ansi-styles@5.2.0",
+        "camelcase@6.3.0",
+        "decamelize",
+        "js-tiktoken",
+        "langsmith@0.3.28_openai@4.98.0__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "mustache",
+        "p-queue",
+        "p-retry",
+        "uuid@10.0.0",
+        "zod",
+        "zod-to-json-schema"
+      ]
+    },
+    "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5_openai@4.98.0__zod@3.24.4__ws@8.18.2__bufferutil@4.0.9__utf-8-validate@6.0.5": {
+      "integrity": "sha512-SojY2ugpT6t9eYfFB9Ysvyhhyh+KJTGXs50hdHUE9tAEQWp3WAwoxe4djwJnOZ6fSpWYdpFt2UT2ksHVDy2vXA==",
+      "dependencies": [
+        "@cfworker/json-schema",
+        "ansi-styles@5.2.0",
+        "camelcase@6.3.0",
+        "decamelize",
+        "js-tiktoken",
+        "langsmith@0.3.28_openai@4.98.0__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "mustache",
+        "p-queue",
+        "p-retry",
+        "uuid@10.0.0",
+        "zod",
+        "zod-to-json-schema"
+      ]
+    },
     "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_openai@4.98.0__zod@3.24.4__ws@8.18.2": {
       "integrity": "sha512-SojY2ugpT6t9eYfFB9Ysvyhhyh+KJTGXs50hdHUE9tAEQWp3WAwoxe4djwJnOZ6fSpWYdpFt2UT2ksHVDy2vXA==",
       "dependencies": [
@@ -2320,6 +2414,14 @@
         "zod"
       ]
     },
+    "@langchain/deepseek@0.0.1_@langchain+core@0.3.55__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-jgrbitvV4p7Kqo/Fyni9coCliNXUrJ2XChdR8eHvQg3RL+w13DIQjJn2mrkCrb7v6Is1rI7It2x3yIbADL71Yg==",
+      "dependencies": [
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/openai@0.4.9_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_openai@4.98.0__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "zod"
+      ]
+    },
     "@langchain/google-common@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4": {
       "integrity": "sha512-3qIFdPOQgxnGeXg/L66uNwv/eP+AolMYW0H3uMS+rK7SN2LhllYa2ZKxGLu1MvXCYbDcC8c6KOCED6v0rwyF4w==",
       "dependencies": [
@@ -2340,6 +2442,14 @@
       "integrity": "sha512-3qIFdPOQgxnGeXg/L66uNwv/eP+AolMYW0H3uMS+rK7SN2LhllYa2ZKxGLu1MvXCYbDcC8c6KOCED6v0rwyF4w==",
       "dependencies": [
         "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
+        "uuid@10.0.0",
+        "zod-to-json-schema"
+      ]
+    },
+    "@langchain/google-common@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-3qIFdPOQgxnGeXg/L66uNwv/eP+AolMYW0H3uMS+rK7SN2LhllYa2ZKxGLu1MvXCYbDcC8c6KOCED6v0rwyF4w==",
+      "dependencies": [
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
         "uuid@10.0.0",
         "zod-to-json-schema"
       ]
@@ -2365,6 +2475,14 @@
       "dependencies": [
         "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
         "@langchain/google-common@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
+        "google-auth-library"
+      ]
+    },
+    "@langchain/google-gauth@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-R9CSRigNDOhG3+AkNJurrLgJ2rtT32nnwuKBtmWCtGG29UtLwcGdGVvg+tQvwldT9bZo43C+0bwrd79T38gurQ==",
+      "dependencies": [
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/google-common@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
         "google-auth-library"
       ]
     },
@@ -2395,6 +2513,15 @@
         "zod-to-json-schema"
       ]
     },
+    "@langchain/google-genai@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-Iq/CntGgOPvWkbNEEcc2nmZIUddSMEQ+yTFSZyxfEy2GCYSoIdlou5wzQiLRg4aFHHqpnXWgpgl/3evlK427bQ==",
+      "dependencies": [
+        "@google/generative-ai",
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "uuid@11.1.0",
+        "zod-to-json-schema"
+      ]
+    },
     "@langchain/google-vertexai-web@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4": {
       "integrity": "sha512-Aukp/I6koK3T2Zq7r7qASiQ40C8t6q+Y97Ar8CjkYrYwkDbD9sxzoH+5qGWhLt63fuA4qZXP3EpSXqeeKF8cDQ==",
       "dependencies": [
@@ -2414,6 +2541,13 @@
       "dependencies": [
         "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
         "@langchain/google-webauth@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9"
+      ]
+    },
+    "@langchain/google-vertexai-web@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-Aukp/I6koK3T2Zq7r7qASiQ40C8t6q+Y97Ar8CjkYrYwkDbD9sxzoH+5qGWhLt63fuA4qZXP3EpSXqeeKF8cDQ==",
+      "dependencies": [
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/google-webauth@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5"
       ]
     },
     "@langchain/google-vertexai@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4": {
@@ -2437,6 +2571,13 @@
         "@langchain/google-gauth@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9"
       ]
     },
+    "@langchain/google-vertexai@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-DD/5BcPP/jnCo3/OOcuyAr8LGV/HnfZns4JzNprq4IBqWlBNWHqanVs9ypdh9S5sGwC/PUpp/wj6CoXlmXl4ag==",
+      "dependencies": [
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/google-gauth@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5"
+      ]
+    },
     "@langchain/google-webauth@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4": {
       "integrity": "sha512-4/jjv1sV1MTXJplwKsk/3SORxU9uHE/DNZNEbH02emp0HYl8VjPzlGDiP7mLD7Mmu4nVkhCAvKp6bys6LX/U9Q==",
       "dependencies": [
@@ -2458,6 +2599,14 @@
       "dependencies": [
         "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
         "@langchain/google-common@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
+        "web-auth-library"
+      ]
+    },
+    "@langchain/google-webauth@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-4/jjv1sV1MTXJplwKsk/3SORxU9uHE/DNZNEbH02emp0HYl8VjPzlGDiP7mLD7Mmu4nVkhCAvKp6bys6LX/U9Q==",
+      "dependencies": [
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/google-common@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
         "web-auth-library"
       ]
     },
@@ -2488,6 +2637,15 @@
         "zod-to-json-schema"
       ]
     },
+    "@langchain/groq@0.2.2_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-kvLhDrNimamQBXlP4LFb/x9Y3tuObHhgmbC3ponLGWgL/Vu6q+UGOAUCJIC0DnOUTYXpgklHRgQKw484HJx+mw==",
+      "dependencies": [
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "groq-sdk",
+        "zod",
+        "zod-to-json-schema"
+      ]
+    },
     "@langchain/langgraph-checkpoint@0.0.17_@langchain+core@0.3.55__zod@3.24.4": {
       "integrity": "sha512-6b3CuVVYx+7x0uWLG+7YXz9j2iBa+tn2AXvkLxzEvaAsLE6Sij++8PPbS2BZzC+S/FPJdWsz6I5bsrqL0BYrCA==",
       "dependencies": [
@@ -2506,6 +2664,13 @@
       "integrity": "sha512-6b3CuVVYx+7x0uWLG+7YXz9j2iBa+tn2AXvkLxzEvaAsLE6Sij++8PPbS2BZzC+S/FPJdWsz6I5bsrqL0BYrCA==",
       "dependencies": [
         "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
+        "uuid@10.0.0"
+      ]
+    },
+    "@langchain/langgraph-checkpoint@0.0.17_@langchain+core@0.3.55__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-6b3CuVVYx+7x0uWLG+7YXz9j2iBa+tn2AXvkLxzEvaAsLE6Sij++8PPbS2BZzC+S/FPJdWsz6I5bsrqL0BYrCA==",
+      "dependencies": [
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
         "uuid@10.0.0"
       ]
     },
@@ -2535,6 +2700,17 @@
       "integrity": "sha512-IUN0m4BYkGWdviFd4EaWDcQgxNq8z+1LIwXajCSt9B+Cb/pz0ZNpIPdu5hAIsf6a0RWu5yRUhzL1L40t7vu3Zg==",
       "dependencies": [
         "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
+        "@types/json-schema",
+        "p-queue",
+        "p-retry",
+        "react@19.1.0",
+        "uuid@9.0.1"
+      ]
+    },
+    "@langchain/langgraph-sdk@0.0.74_@langchain+core@0.3.55__zod@3.24.4_react@19.1.0_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-IUN0m4BYkGWdviFd4EaWDcQgxNq8z+1LIwXajCSt9B+Cb/pz0ZNpIPdu5hAIsf6a0RWu5yRUhzL1L40t7vu3Zg==",
+      "dependencies": [
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
         "@types/json-schema",
         "p-queue",
         "p-retry",
@@ -2575,6 +2751,17 @@
         "zod-to-json-schema"
       ]
     },
+    "@langchain/langgraph@0.2.71_@langchain+core@0.3.55__zod@3.24.4_zod-to-json-schema@3.24.5__zod@3.24.4_react@19.1.0_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-++p6NuU6aQX1aSrB+IDeXbnUCydb72HKiiQPgsGluWs1ZP61VTYydlEU6KPHHHp3JwROBzIbQHXY/G/ygHIrFg==",
+      "dependencies": [
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/langgraph-checkpoint@0.0.17_@langchain+core@0.3.55__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/langgraph-sdk@0.0.74_@langchain+core@0.3.55__zod@3.24.4_react@19.1.0_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "uuid@10.0.0",
+        "zod",
+        "zod-to-json-schema"
+      ]
+    },
     "@langchain/mistralai@0.2.0_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4": {
       "integrity": "sha512-VdfbKZopAuSXf/vlXbriGWLK3c7j5s47DoB3S31xpprY2BMSKZZiX9vE9TsgxMfAPuIDPIYcfgU7p1upvTYt8g==",
       "dependencies": [
@@ -2599,6 +2786,16 @@
       "integrity": "sha512-VdfbKZopAuSXf/vlXbriGWLK3c7j5s47DoB3S31xpprY2BMSKZZiX9vE9TsgxMfAPuIDPIYcfgU7p1upvTYt8g==",
       "dependencies": [
         "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
+        "@mistralai/mistralai",
+        "uuid@10.0.0",
+        "zod",
+        "zod-to-json-schema"
+      ]
+    },
+    "@langchain/mistralai@0.2.0_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-VdfbKZopAuSXf/vlXbriGWLK3c7j5s47DoB3S31xpprY2BMSKZZiX9vE9TsgxMfAPuIDPIYcfgU7p1upvTYt8g==",
+      "dependencies": [
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
         "@mistralai/mistralai",
         "uuid@10.0.0",
         "zod",
@@ -2635,6 +2832,16 @@
         "zod-to-json-schema"
       ]
     },
+    "@langchain/ollama@0.2.0_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-jLlYFqt+nbhaJKLakk7lRTWHZJ7wHeJLM6yuv4jToQ8zPzpL//372+MjggDoW0mnw8ofysg1T2C6mEJspKJtiA==",
+      "dependencies": [
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "ollama",
+        "uuid@10.0.0",
+        "zod",
+        "zod-to-json-schema"
+      ]
+    },
     "@langchain/openai@0.4.9_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_openai@4.98.0__zod@3.24.4": {
       "integrity": "sha512-NAsaionRHNdqaMjVLPkFCyjUDze+OqRHghA1Cn4fPoAafz+FXcl9c7LlEl9Xo0FH6/8yiCl7Rw2t780C/SBVxQ==",
       "dependencies": [
@@ -2661,6 +2868,16 @@
         "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_openai@4.98.0__zod@3.24.4__ws@8.18.2__bufferutil@4.0.9",
         "js-tiktoken",
         "openai@4.98.0_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
+        "zod",
+        "zod-to-json-schema"
+      ]
+    },
+    "@langchain/openai@0.4.9_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_openai@4.98.0__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-NAsaionRHNdqaMjVLPkFCyjUDze+OqRHghA1Cn4fPoAafz+FXcl9c7LlEl9Xo0FH6/8yiCl7Rw2t780C/SBVxQ==",
+      "dependencies": [
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5_openai@4.98.0__zod@3.24.4__ws@8.18.2__bufferutil@4.0.9__utf-8-validate@6.0.5",
+        "js-tiktoken",
+        "openai@4.98.0_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
         "zod",
         "zod-to-json-schema"
       ]
@@ -2695,6 +2912,16 @@
         "zod-to-json-schema"
       ]
     },
+    "@langchain/openai@0.5.10_@langchain+core@0.3.55__openai@4.98.0___zod@3.24.4__zod@3.24.4_zod@3.24.4_openai@4.98.0__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-hBQIWjcVxGS7tgVvgBBmrZ5jSaJ8nu9g6V64/Tx6KGjkW7VdGmUvqCO+koiQCOZVL7PBJkHWAvDsbghPYXiZEA==",
+      "dependencies": [
+        "@langchain/core@0.3.55_openai@4.98.0__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "js-tiktoken",
+        "openai@4.98.0_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "zod",
+        "zod-to-json-schema"
+      ]
+    },
     "@langchain/openai@0.5.10_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_openai@4.98.0__zod@3.24.4": {
       "integrity": "sha512-hBQIWjcVxGS7tgVvgBBmrZ5jSaJ8nu9g6V64/Tx6KGjkW7VdGmUvqCO+koiQCOZVL7PBJkHWAvDsbghPYXiZEA==",
       "dependencies": [
@@ -2725,6 +2952,16 @@
         "zod-to-json-schema"
       ]
     },
+    "@langchain/openai@0.5.10_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_openai@4.98.0__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-hBQIWjcVxGS7tgVvgBBmrZ5jSaJ8nu9g6V64/Tx6KGjkW7VdGmUvqCO+koiQCOZVL7PBJkHWAvDsbghPYXiZEA==",
+      "dependencies": [
+        "@langchain/core@0.3.55_openai@4.98.0__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "js-tiktoken",
+        "openai@4.98.0_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "zod",
+        "zod-to-json-schema"
+      ]
+    },
     "@langchain/textsplitters@0.1.0_@langchain+core@0.3.55__zod@3.24.4": {
       "integrity": "sha512-djI4uw9rlkAb5iMhtLED+xJebDdAG935AdP4eRTB02R7OB/act55Bj9wsskhZsvuyQRpO4O1wQOp85s6T6GWmw==",
       "dependencies": [
@@ -2743,6 +2980,13 @@
       "integrity": "sha512-djI4uw9rlkAb5iMhtLED+xJebDdAG935AdP4eRTB02R7OB/act55Bj9wsskhZsvuyQRpO4O1wQOp85s6T6GWmw==",
       "dependencies": [
         "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
+        "js-tiktoken"
+      ]
+    },
+    "@langchain/textsplitters@0.1.0_@langchain+core@0.3.55__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-djI4uw9rlkAb5iMhtLED+xJebDdAG935AdP4eRTB02R7OB/act55Bj9wsskhZsvuyQRpO4O1wQOp85s6T6GWmw==",
+      "dependencies": [
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
         "js-tiktoken"
       ]
     },
@@ -2767,6 +3011,14 @@
       "dependencies": [
         "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
         "@langchain/openai@0.4.9_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_openai@4.98.0__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
+        "zod"
+      ]
+    },
+    "@langchain/xai@0.0.2_@langchain+core@0.3.55__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-wVOs7SfJs4VWk/oiHJomaoaZ+r9nQhPqbEXlQ2D8L0d54PxYhb1ILR9rub9LT1RpqazSX8HG4A8+hX4R01qkSg==",
+      "dependencies": [
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/openai@0.4.9_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_openai@4.98.0__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
         "zod"
       ]
     },
@@ -9295,6 +9547,41 @@
         "zod-to-json-schema"
       ]
     },
+    "langchain@0.3.24_@langchain+core@0.3.55__zod@3.24.4_@langchain+ollama@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_handlebars@4.7.8_zod@3.24.4_@langchain+anthropic@0.3.20__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+aws@0.1.9__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cerebras@0.0.1__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+cohere@0.3.3__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+deepseek@0.0.1__@langchain+core@0.3.55___zod@3.24.4_@langchain+google-genai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+google-vertexai-web@0.2.8__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+groq@0.2.2__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+mistralai@0.2.0__@langchain+core@0.3.55___zod@3.24.4__zod@3.24.4_@langchain+xai@0.0.2__@langchain+core@0.3.55___zod@3.24.4_axios@1.9.0_cheerio@1.0.0_peggy@5.0.2_typeorm@0.3.23__reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_pg@8.15.6_pg-native@3.4.5_pg-query-stream@4.9.6__pg@8.15.6___pg-native@3.4.5__pg-native@3.4.5_redis@5.0.1__@redis+client@5.0.1_sql.js@1.13.0_sqlite3@5.1.7_node-gyp@11.2.0_ts-node@10.9.2__@types+node@22.15.17__typescript@5.8.3_@types+node@22.15.17_typescript@5.8.3_@swc+core@1.11.24_@swc+helpers@0.5.17_@swc+wasm@1.11.24_typeorm-aurora-data-api-driver@3.0.1__@aws-sdk+client-rds-data@3.806.0_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-BTjiYkUCpWFAmufK8J5zMqc5aUs4eEnAXPWtPe2+R4ZPP+U7bXJSBHAcrB40rQ3VeTdRgMvgDjekOOgCMWut6Q==",
+      "dependencies": [
+        "@langchain/anthropic@0.3.20_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/aws@0.1.9_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/cerebras@0.0.1_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/cohere@0.3.3_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/core@0.3.55_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/deepseek@0.0.1_@langchain+core@0.3.55__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/google-genai@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/google-vertexai-web@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/google-vertexai@0.2.8_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/groq@0.2.2_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/mistralai@0.2.0_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/ollama@0.2.0_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/openai@0.5.10_@langchain+core@0.3.55__zod@3.24.4_zod@3.24.4_openai@4.98.0__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/textsplitters@0.1.0_@langchain+core@0.3.55__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "@langchain/xai@0.0.2_@langchain+core@0.3.55__zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "axios",
+        "cheerio",
+        "handlebars",
+        "js-tiktoken",
+        "js-yaml@4.1.0",
+        "jsonpointer",
+        "langsmith@0.3.28_openai@4.98.0__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
+        "openapi-types",
+        "p-retry",
+        "peggy",
+        "typeorm@0.3.23_reflect-metadata@0.2.2_@google-cloud+spanner@7.21.0__@opentelemetry+api@1.9.0_@sap+hana-client@2.24.24_better-sqlite3@11.10.0_hdb-pool@0.1.6_ioredis@5.6.1_mongodb@6.16.0_@mongodb-js+zstd@2.0.1_kerberos@2.2.2_mongodb-client-encryption@6.4.0_snappy@7.2.2_socks@2.8.4_mssql@11.0.1_mysql2@3.14.1_oracledb@6.8.0_pg@8.15.6_pg-native@3.4.5_pg-query-stream@4.9.6__pg@8.15.6___pg-native@3.4.5__pg-native@3.4.5_redis@5.0.1__@redis+client@5.0.1_sql.js@1.13.0_sqlite3@5.1.7_node-gyp@11.2.0_ts-node@10.9.2__@types+node@22.15.17__typescript@5.8.3_@types+node@22.15.17_typescript@5.8.3_@swc+core@1.11.24_@swc+helpers@0.5.17_@swc+wasm@1.11.24_typeorm-aurora-data-api-driver@3.0.1__@aws-sdk+client-rds-data@3.806.0",
+        "uuid@10.0.0",
+        "yaml",
+        "zod",
+        "zod-to-json-schema"
+      ]
+    },
     "langsmith@0.3.28_openai@4.98.0__zod@3.24.4_zod@3.24.4": {
       "integrity": "sha512-Vq8n0zJ9MhDMhwkOhmOEb/rl/8jpm0LnAF4dE5TEXMdLmhJ784gcrWOghnFh7Qs5B4DY2Bdz3OKxIevkGKn5xg==",
       "dependencies": [
@@ -9328,6 +9615,19 @@
         "chalk",
         "console-table-printer",
         "openai@4.98.0_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9",
+        "p-queue",
+        "p-retry",
+        "semver@7.7.1",
+        "uuid@10.0.0"
+      ]
+    },
+    "langsmith@0.3.28_openai@4.98.0__zod@3.24.4_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-Vq8n0zJ9MhDMhwkOhmOEb/rl/8jpm0LnAF4dE5TEXMdLmhJ784gcrWOghnFh7Qs5B4DY2Bdz3OKxIevkGKn5xg==",
+      "dependencies": [
+        "@types/uuid@10.0.0",
+        "chalk",
+        "console-table-printer",
+        "openai@4.98.0_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
         "p-queue",
         "p-retry",
         "semver@7.7.1",
@@ -10028,6 +10328,20 @@
         "formdata-node@4.4.1",
         "node-fetch",
         "ws@8.18.2_bufferutil@4.0.9",
+        "zod"
+      ]
+    },
+    "openai@4.98.0_zod@3.24.4_ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-TmDKur1WjxxMPQAtLG5sgBSCJmX7ynTsGmewKzoDwl1fRxtbLOsiR0FA/AOAAtYUmP6azal+MYQuOENfdU+7yg==",
+      "dependencies": [
+        "@types/node-fetch",
+        "@types/node@18.19.100",
+        "abort-controller",
+        "agentkeepalive",
+        "form-data-encoder@1.7.2",
+        "formdata-node@4.4.1",
+        "node-fetch",
+        "ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5",
         "zod"
       ]
     },
@@ -12575,6 +12889,12 @@
         "react@19.1.0"
       ]
     },
+    "utf-8-validate@6.0.5": {
+      "integrity": "sha512-EYZR+OpIXp9Y1eG1iueg8KRsY8TuT8VNgnanZ0uA3STqhHQTLwbl+WX76/9X5OY12yQubymBpaBSmMPkSTQcKA==",
+      "dependencies": [
+        "node-gyp-build"
+      ]
+    },
     "util-deprecate@1.0.2": {
       "integrity": "sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw=="
     },
@@ -12781,6 +13101,13 @@
         "bufferutil"
       ]
     },
+    "ws@8.18.2_bufferutil@4.0.9_utf-8-validate@6.0.5": {
+      "integrity": "sha512-DMricUmwGZUVr++AEAe2uiVM7UoO9MAVZMDu05UQOaUII0lp+zOzLLU4Xqh/JvTqklB1T4uELaaPBKyjE1r4fQ==",
+      "dependencies": [
+        "bufferutil",
+        "utf-8-validate"
+      ]
+    },
     "xtend@4.0.2": {
       "integrity": "sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ=="
     },
@@ -12841,7 +13168,7 @@
   },
   "workspace": {
     "dependencies": [
-      "npm:@timonteutelink/code-templator-lib@0.0.35",
+      "npm:@repo/code-templator-lib@0.0.36",
       "npm:@timonteutelink/template-types-lib@0.0.35",
       "npm:commander@13",
       "npm:fs-extra@11",
@@ -12865,7 +13192,7 @@
       "apps/cli": {
         "packageJson": {
           "dependencies": [
-            "npm:@timonteutelink/code-templator-lib@^0.0.35",
+            "npm:@repo/code-templator-lib@^0.0.36",
             "npm:commander@^13.1.0",
             "npm:pino@^9.6.0",
             "npm:yaml@^2.7.1"
@@ -13007,6 +13334,7 @@
             "npm:typeorm-aurora-data-api-driver@^3.0.1",
             "npm:typeorm@~0.3.23",
             "npm:typescript@5.8.3",
+            "npm:utf-8-validate@^6.0.5",
             "npm:ws@^8.18.2",
             "npm:yaml@^2.7.1",
             "npm:zod-to-json-schema@^3.24.5",

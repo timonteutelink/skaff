@@ -35,6 +35,7 @@ localFlake:
           javascript = {
             enable = true;
             pnpm.enable = true;
+            bun.enable = true;
             npm.enable = true;
           };
           typescript.enable = true;

@@ -1,4 +1,4 @@
-import { Result } from "@timonteutelink/code-templator-lib/lib/types";
+import { Result } from "@repo/code-templator-lib/lib/types";
 import { clsx, type ClassValue } from "clsx";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
