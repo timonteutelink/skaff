@@ -21,7 +21,6 @@
   "packageManager": "pnpm@10.8.0",
   "workspaces": [
     "apps/cli",
-    "packages/template-types-lib",
     "packages/typescript-config",
     "packages/eslint-config"
   ]

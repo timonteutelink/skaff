@@ -42,14 +42,36 @@ export type TemplateConfigWithFileInfo = {
   >;
 } & TemplateConfigFileInfo;
 
-async function readTsConfig() {
-  const module = await import("@repo/typescript-config/base.json", {
-    with: { type: "json" },
-  });
-  const tsConfig = module.default;
-  if (!tsConfig) throw new Error("Failed to load tsconfig.json");
-  return tsConfig;
+async function readTsConfig(): Promise<any> {
+  return {
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "compilerOptions": {
+      "declaration": true,
+      "declarationMap": true,
+      "esModuleInterop": true,
+      "incremental": false,
+      "isolatedModules": true,
+      "lib": ["es2022", "DOM", "DOM.Iterable"],
+      "module": "NodeNext",
+      "moduleDetection": "force",
+      "moduleResolution": "NodeNext",
+      "noUncheckedIndexedAccess": true,
+      "resolveJsonModule": true,
+      "skipLibCheck": true,
+      "strict": true,
+      "target": "ES2022"
+    }
+  }
 }
+
+// async function readTsConfig() {
+//   const module = await import("@repo/typescript-config/base.json", {
+//     with: { type: "json" },
+//   });
+//   const tsConfig = module.default;
+//   if (!tsConfig) throw new Error("Failed to load tsconfig.json");
+//   return tsConfig;
+// }
 
 async function typeCheckFile(filePath: string): Promise<void> {
   const basePath = process.cwd();

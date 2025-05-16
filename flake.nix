@@ -1,4 +1,9 @@
 {
+  # "packages/template-types-lib",
+  # "apps/web",
+  # "packages/notebook",
+  # "packages/code-templator-lib",
+  # "packages/tailwind-config"
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     devenv.url = "github:cachix/devenv";

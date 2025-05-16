@@ -185,9 +185,15 @@
   };
   "@timonteutelink/code-templator-lib" = {
     out_path = "@timonteutelink/code-templator-lib";
-    name = "@timonteutelink/code-templator-lib@0.0.40";
-    url = "https://registry.npmjs.org/@timonteutelink/code-templator-lib/-/code-templator-lib-0.0.40.tgz";
-    hash = "sha512-4CI96F8RgHHX4i2Sso7ZotxLYeAJHjZYms1KFNvO+haxHcJ07+bkit2Bif4Wr89TPx9fBl41UjoEtzpVWA+iQw==";
+    name = "@timonteutelink/code-templator-lib@0.0.41";
+    url = "https://registry.npmjs.org/@timonteutelink/code-templator-lib/-/code-templator-lib-0.0.41.tgz";
+    hash = "sha512-TTjIr5GgYA3r1gNxsigHO79bOSgYH3G3MJQRnJ1D+Nj3l7exYzQXzWhtx4/jECIyp1jmSevTzk0uoffYXo6crA==";
+  };
+  "@timonteutelink/template-types-lib" = {
+    out_path = "@timonteutelink/template-types-lib";
+    name = "@timonteutelink/template-types-lib@0.0.35";
+    url = "https://registry.npmjs.org/@timonteutelink/template-types-lib/-/template-types-lib-0.0.35.tgz";
+    hash = "sha512-1XX3gZB4KYC+988cCCqtjdBFVcLwg/J1jHXLhgp2wVVV+EyzQ+MyUEQp0//rhCXtIfpDi5guv3lRpezVBM5BHQ==";
   };
   "@types/estree" = {
     out_path = "@types/estree";

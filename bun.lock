@@ -17,7 +17,7 @@
         "code-templator-cli": "./code-templator",
       },
       "dependencies": {
-        "@timonteutelink/code-templator-lib": "0.0.40",
+        "@timonteutelink/code-templator-lib": "0.0.41",
         "commander": "^13.1.0",
         "pino": "^9.6.0",
         "yaml": "^2.7.1",
@@ -41,22 +41,6 @@
         "eslint-plugin-turbo": "^2.5.0",
         "globals": "^16.0.0",
         "typescript": "^5.8.3",
-        "typescript-eslint": "^8.29.1",
-      },
-    },
-    "packages/template-types-lib": {
-      "name": "@timonteutelink/template-types-lib",
-      "version": "0.0.35",
-      "dependencies": {
-        "handlebars": "^4.7.8",
-        "zod": "^3.24.2",
-      },
-      "devDependencies": {
-        "@eslint/js": "^9.24.0",
-        "eslint": "^9.24.0",
-        "eslint-config-prettier": "^10.1.2",
-        "eslint-plugin-only-warn": "^1.1.0",
-        "typescript": "5.8.3",
         "typescript-eslint": "^8.29.1",
       },
     },
@@ -120,9 +104,9 @@
 
     "@repo/typescript-config": ["@repo/typescript-config@workspace:packages/typescript-config"],
 
-    "@timonteutelink/code-templator-lib": ["@timonteutelink/code-templator-lib@0.0.40", "", { "dependencies": { "@langchain/langgraph": "^0.2.67", "@langchain/openai": "^0.5.10", "@timonteutelink/template-types-lib": "0.0.35", "fs-extra": "^11.3.0", "glob": "^11.0.1", "handlebars": "^4.7.8", "langchain": "^0.3.24", "pino": "^9.6.0", "yaml": "^2.7.1", "zod": "^3.24.2", "zod-to-json-schema": "^3.24.5" } }, "sha512-4CI96F8RgHHX4i2Sso7ZotxLYeAJHjZYms1KFNvO+haxHcJ07+bkit2Bif4Wr89TPx9fBl41UjoEtzpVWA+iQw=="],
+    "@timonteutelink/code-templator-lib": ["@timonteutelink/code-templator-lib@0.0.41", "", { "dependencies": { "@langchain/langgraph": "^0.2.67", "@langchain/openai": "^0.5.10", "@timonteutelink/template-types-lib": "0.0.35", "fs-extra": "^11.3.0", "glob": "^11.0.1", "handlebars": "^4.7.8", "langchain": "^0.3.24", "pino": "^9.6.0", "yaml": "^2.7.1", "zod": "^3.24.2", "zod-to-json-schema": "^3.24.5" } }, "sha512-TTjIr5GgYA3r1gNxsigHO79bOSgYH3G3MJQRnJ1D+Nj3l7exYzQXzWhtx4/jECIyp1jmSevTzk0uoffYXo6crA=="],
 
-    "@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@workspace:packages/template-types-lib"],
+    "@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.35", "", { "dependencies": { "handlebars": "^4.7.8", "zod": "^3.24.2" } }, "sha512-1XX3gZB4KYC+988cCCqtjdBFVcLwg/J1jHXLhgp2wVVV+EyzQ+MyUEQp0//rhCXtIfpDi5guv3lRpezVBM5BHQ=="],
 
     "@types/estree": ["@types/estree@1.0.7", "", {}, "sha512-w28IoSUCJpidD/TGviZwwMJckNESJZXFu7NBZ5YJ4mEUnNraUn9Pm8HSZm/jDF1pDWYKspWE7oVphigUPRakIQ=="],
 
