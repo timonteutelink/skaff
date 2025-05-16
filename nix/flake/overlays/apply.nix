@@ -6,7 +6,6 @@ localFlake:
         inherit system;
         overlays = [
           inputs.timon-modules.overlays.scripts
-          inputs.nix-deno.overlays.default
         ];
         config.allowUnfree = true;
       };

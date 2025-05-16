@@ -40,4 +40,7 @@ yarn-error.log*
 .DS_Store
 *.pem
 
+bun.lock.clean
+
 code-templator
+

@@ -29,6 +29,7 @@ localFlake:
 
         packages = with pkgs; [
           jupyter
+          inputs.bun2nix.packages.${system}.default
         ];
 
         languages = {

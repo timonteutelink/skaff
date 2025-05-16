@@ -1,4 +1,4 @@
-import { logger, ROOT_TEMPLATE_REPOSITORY } from "@repo/code-templator-lib";
+import { logger, ROOT_TEMPLATE_REPOSITORY } from "@timonteutelink/code-templator-lib";
 import { Command } from "commander";
 import { addGlobalFormatOption, withFormatting } from "./cli-utils";
 import process from "node:process";

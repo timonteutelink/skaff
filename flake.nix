@@ -3,7 +3,8 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     devenv.url = "github:cachix/devenv";
     flake-parts.url = "github:hercules-ci/flake-parts";
-    nix-deno.url = "github:identinet/nix-deno";
+    bun2nix.url = "github:baileyluTCD/bun2nix";
+    bun2nix.inputs.nixpkgs.follows = "nixpkgs";
 
     timon-modules = {
       url = "git+ssh://git@github.com/timonteutelink/nix-modules";

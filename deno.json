@@ -3,12 +3,8 @@
     "path": "./deno.lock",
     "frozen": false
   },
-  "workspace": [
-    "./apps/cli"
-  ],
   "nodeModulesDir": "auto",
   "unstable": [
     "sloppy-imports"
-  ],
-  "importMap": "./apps/cli/import_map.json"
+  ]
 }
