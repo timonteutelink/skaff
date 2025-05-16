@@ -1,6 +1,6 @@
 {
   "name": "@timonteutelink/code-templator-lib",
-  "version": "0.0.42",
+  "version": "0.0.43",
   "exports": {
     ".": "./dist/index.js"
   },
@@ -30,6 +30,7 @@
     "@langchain/langgraph": "^0.2.67",
     "@langchain/openai": "^0.5.10",
     "@timonteutelink/template-types-lib": "0.0.35",
+    "esbuild": "^0.25.2",
     "fs-extra": "^11.3.0",
     "glob": "^11.0.1",
     "handlebars": "^4.7.8",
