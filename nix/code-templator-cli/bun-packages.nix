@@ -335,9 +335,9 @@
   };
   "@timonteutelink/code-templator-lib" = {
     out_path = "@timonteutelink/code-templator-lib";
-    name = "@timonteutelink/code-templator-lib@0.0.43";
-    url = "https://registry.npmjs.org/@timonteutelink/code-templator-lib/-/code-templator-lib-0.0.43.tgz";
-    hash = "sha512-vfjKryXT4QgpPVtNK5m9lL6SD3JLWEQEA9G3wv2enJc70MZr7ZRLvyKyJIVFTH/hKdsmm8gpihQwKqooC6mtiA==";
+    name = "@timonteutelink/code-templator-lib@0.0.44";
+    url = "https://registry.npmjs.org/@timonteutelink/code-templator-lib/-/code-templator-lib-0.0.44.tgz";
+    hash = "sha512-PH/22aB/q8S9kv/xNIvsEga5SGKGhfWFVmTPzbLGhpneQsSNed4jCa+JOSfu/pt4MwPPqy/TVZSyLvCijaUsZA==";
   };
   "@timonteutelink/template-types-lib" = {
     out_path = "@timonteutelink/template-types-lib";

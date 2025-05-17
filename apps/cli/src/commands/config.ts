@@ -2,6 +2,7 @@ import { logger } from "@timonteutelink/code-templator-lib";
 import { Command } from "commander";
 import { withFormatting } from "../cli-utils";
 
+
 export function registerConfigCommand(program: Command) {
   const cmd = program
     .command("config [key]")

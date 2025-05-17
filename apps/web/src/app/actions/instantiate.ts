@@ -5,7 +5,6 @@ import {
   generateProjectFromTemplateSettings,
   instantiateProject,
 } from "@timonteutelink/code-templator-lib/services/project-service";
-import { PROJECT_SEARCH_PATHS } from "@timonteutelink/code-templator-lib/lib/env";
 import {
   CreateProjectResult,
   NewTemplateDiffResult,

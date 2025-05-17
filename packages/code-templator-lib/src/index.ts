@@ -1,2 +1,2 @@
 export { getRootTemplateRepository, getProjectRepository } from './repositories';
-export { logger } from './lib/logger';
+export * from './lib';

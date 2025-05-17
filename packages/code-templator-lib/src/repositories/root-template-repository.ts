@@ -5,7 +5,6 @@ import path from "node:path";
 import { cloneRevisionToCache } from "../services/git-service";
 import { logger } from "../lib/logger";
 import { logError } from "../lib/utils";
-import { getConfig } from "../lib/env";
 
 // TODO: findTemplate and loadRevision should only load that specific template not load all templates
 

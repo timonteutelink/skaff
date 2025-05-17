@@ -7,7 +7,7 @@ import { logError } from "../lib/utils";
 import { Template } from "../models/template";
 import { pathInCache } from "./cache-service";
 import { npmInstall } from "./npm-service";
-import { getConfig } from "../lib/env";
+import { getConfig } from "../lib";
 
 const asyncExecFile = promisify(execFile);
 const asyncExec = promisify(exec);

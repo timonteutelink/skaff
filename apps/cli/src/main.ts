@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { addGlobalFormatOption } from "./cli-utils";
 import process from "node:process";
 import { registerTemplateCommand } from "./commands/template";
+import { registerConfigCommand } from "./commands/config";
 
 const program = new Command();
 
@@ -12,6 +13,7 @@ program
 
 addGlobalFormatOption(program);
 
+registerConfigCommand(program);
 registerTemplateCommand(program);
 
 // program

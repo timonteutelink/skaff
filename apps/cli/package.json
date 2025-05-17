@@ -9,7 +9,7 @@
     "buildprod": "bun run build.ts && bun build ./dist/main.js ./dist/*.js --compile --outfile ./bin/code-templator"
   },
   "dependencies": {
-    "@timonteutelink/code-templator-lib": "0.0.44",
+    "@timonteutelink/code-templator-lib": "0.0.45",
     "commander": "^13.1.0",
     "pino": "^9.6.0",
     "yaml": "^2.7.1"

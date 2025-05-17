@@ -1,4 +1,4 @@
-import { getConfig } from "../lib/env";
+import { getConfig } from "../lib";
 import { ProjectRepository } from "./project-repository";
 import { RootTemplateRepository } from "./root-template-repository";
 
