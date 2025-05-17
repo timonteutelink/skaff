@@ -13168,7 +13168,7 @@
   },
   "workspace": {
     "dependencies": [
-      "npm:@repo/code-templator-lib@0.0.36",
+      "npm:@timonteutelink/code-templator-lib@0.0.36",
       "npm:@timonteutelink/template-types-lib@0.0.35",
       "npm:commander@13",
       "npm:fs-extra@11",
@@ -13192,7 +13192,7 @@
       "apps/cli": {
         "packageJson": {
           "dependencies": [
-            "npm:@repo/code-templator-lib@^0.0.36",
+            "npm:@timonteutelink/code-templator-lib@^0.0.36",
             "npm:commander@^13.1.0",
             "npm:pino@^9.6.0",
             "npm:yaml@^2.7.1"

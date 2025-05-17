@@ -6,16 +6,17 @@
     "code-templator-cli": "./code-templator"
   },
   "scripts": {
-    "buildprod": "bun build --compile --outfile=./dist/code-templator ./src/main.ts"
+    "buildprod": "bun run build.ts && bun build ./dist/main.js ./dist/*.js --compile --outfile ./bin/code-templator"
   },
   "dependencies": {
-    "@timonteutelink/code-templator-lib": "0.0.43",
+    "@timonteutelink/code-templator-lib": "0.0.44",
     "commander": "^13.1.0",
     "pino": "^9.6.0",
     "yaml": "^2.7.1"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*"
+    "@repo/typescript-config": "workspace:*",
+    "bun-plugin-pino": "^1.4.0"
   }
 }

@@ -9,8 +9,7 @@ import { addAllAndDiff, applyDiffToGitRepo, diffDirectories, isConflictAfterAppl
 import { generateProjectFromExistingProject, generateProjectFromTemplateSettings, getParsedUserSettingsWithParentSettings } from "./project-service";
 import { logger } from "../lib/logger";
 import { anyOrCallbackToAny, logError } from "../lib/utils";
-import { ROOT_TEMPLATE_REPOSITORY } from "../repositories/root-template-repository";
-import { PROJECT_REPOSITORY } from "../repositories/project-repository";
+import { getProjectRepository, getRootTemplateRepository } from "../repositories";
 
 async function modifyAutoInstantiatedTemplatesInProjectSettings(
   projectSettings: ProjectSettings,
@@ -233,7 +232,7 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
       templateSettings: newTemplateSettings.data,
     });
 
-    const rootTemplate = await ROOT_TEMPLATE_REPOSITORY.loadRevision(
+    const rootTemplate = await (await getRootTemplateRepository()).loadRevision(
       projectSettings.rootTemplateName,
       currentTemplateToAddChildren.findRootTemplate().commitHash!,
     );
@@ -330,7 +329,7 @@ export async function generateModifyTemplateDiff(
     instantiatedTemplateIndex
     ]!;
 
-  const template = await ROOT_TEMPLATE_REPOSITORY.loadRevision(
+  const template = await (await getRootTemplateRepository()).loadRevision(
     instantiatedTemplate.templateName,
     project.instantiatedProjectSettings.instantiatedTemplates[0]!.templateCommitHash!
   );
@@ -387,7 +386,7 @@ async function diffNewTempProjects(
 ): Promise<Result<NewTemplateDiffResult>> {
   const projectName = oldProjectSettings.projectName;
 
-  const project = await PROJECT_REPOSITORY.findProject(projectName);
+  const project = await (await getProjectRepository()).findProject(projectName);
   if ("error" in project) {
     return project;
   }
@@ -511,7 +510,7 @@ export async function generateNewTemplateDiff(
     return { error: "No instantiated root template commit hash found in project settings" };
   }
   const rootTemplate =
-    await ROOT_TEMPLATE_REPOSITORY.loadRevision(rootTemplateName, instantiatedRootTemplate);
+    await (await getRootTemplateRepository()).loadRevision(rootTemplateName, instantiatedRootTemplate);
 
   if ("error" in rootTemplate) {
     return rootTemplate;
@@ -565,7 +564,7 @@ export async function generateNewTemplateDiff(
 export async function resolveConflictsAndRetrieveAppliedDiff(
   projectName: string,
 ): Promise<Result<ParsedFile[]>> {
-  const project = await PROJECT_REPOSITORY.findProject(projectName);
+  const project = await (await getProjectRepository()).findProject(projectName);
   if ("error" in project) {
     return project;
   }
@@ -588,7 +587,7 @@ export async function applyDiffToProject(
   projectName: string,
   diffHash: string,
 ): Promise<Result<ParsedFile[] | { resolveBeforeContinuing: true }>> {
-  const project = await PROJECT_REPOSITORY.findProject(projectName);
+  const project = await (await getProjectRepository()).findProject(projectName);
 
   if ("error" in project) {
     return project;
@@ -716,7 +715,7 @@ export async function generateUpdateTemplateDiff(
     return { error: "No instantiated root template found" };
   }
 
-  const template = await ROOT_TEMPLATE_REPOSITORY.loadRevision(
+  const template = await (await getRootTemplateRepository()).loadRevision(
     rootInstantiatedTemplate.templateName,
     newTemplateRevisionHash,
   );

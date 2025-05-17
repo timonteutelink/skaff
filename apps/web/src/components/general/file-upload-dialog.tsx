@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label"
 import { useDropzone } from "react-dropzone"
 import { X, FileJson } from "lucide-react"
 import { cn, toastNullError } from "@/lib/utils"
-import { Result } from "@repo/code-templator-lib/lib/types"
+import { Result } from "@timonteutelink/code-templator-lib/lib/types"
 
 export type JsonFile = { name: string; text: string }
 

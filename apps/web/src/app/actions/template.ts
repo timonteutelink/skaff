@@ -1,9 +1,9 @@
 "use server";
-import { DefaultTemplateResult, Result, TemplateDTO } from "@repo/code-templator-lib/lib/types";
-import { logError } from "@repo/code-templator-lib/lib/utils";
-import { PROJECT_REPOSITORY } from "@repo/code-templator-lib/repositories/project-repository";
-import { ROOT_TEMPLATE_REPOSITORY } from "@repo/code-templator-lib/repositories/root-template-repository";
-import { eraseCache, getCacheDir } from "@repo/code-templator-lib/services/cache-service";
+import { DefaultTemplateResult, Result, TemplateDTO } from "@timonteutelink/code-templator-lib/lib/types";
+import { logError } from "@timonteutelink/code-templator-lib/lib/utils";
+import { PROJECT_REPOSITORY } from "@timonteutelink/code-templator-lib/repositories/project-repository";
+import { ROOT_TEMPLATE_REPOSITORY } from "@timonteutelink/code-templator-lib/repositories/root-template-repository";
+import { eraseCache, getCacheDir } from "@timonteutelink/code-templator-lib/services/cache-service";
 
 export async function runEraseCache(): Promise<Result<DefaultTemplateResult[]>> {
   const eraseResult = await eraseCache();

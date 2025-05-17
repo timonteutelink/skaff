@@ -10,7 +10,7 @@ import {
 import { makeDir } from "./file-service";
 import { deepSortObject } from "../utils/shared-utils";
 import { logError } from "../lib/utils";
-import { ROOT_TEMPLATE_REPOSITORY } from "../repositories/root-template-repository";
+import { getRootTemplateRepository } from "../repositories";
 
 export async function writeNewProjectSettings(
   absoluteProjectPath: string,
@@ -144,7 +144,7 @@ export async function loadProjectSettings(
     };
   }
 
-  const rootTemplate = await ROOT_TEMPLATE_REPOSITORY.loadRevision(
+  const rootTemplate = await (await getRootTemplateRepository()).loadRevision(
     finalProjectSettings.data.rootTemplateName,
     instantiatedRootTemplateCommitHash,
   );

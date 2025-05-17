@@ -1,5 +1,5 @@
 "use client";
-import { ParsedFile } from "@repo/code-templator-lib/lib/types";
+import { ParsedFile } from "@timonteutelink/code-templator-lib/lib/types";
 import { useEffect, useMemo, useState } from "react";
 import { FileTree } from "./file-tree";
 import { DiffVisualizer } from "./diff-visualizer";

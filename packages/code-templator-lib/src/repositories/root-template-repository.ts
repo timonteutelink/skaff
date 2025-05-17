@@ -1,12 +1,11 @@
-
 import * as fs from "node:fs/promises";
 import { Template } from "../models/template";
-import { TEMPLATE_DIR_PATHS } from "../lib/env";
 import { Result } from "../lib/types";
 import path from "node:path";
 import { cloneRevisionToCache } from "../services/git-service";
 import { logger } from "../lib/logger";
 import { logError } from "../lib/utils";
+import { getConfig } from "../lib/env";
 
 // TODO: findTemplate and loadRevision should only load that specific template not load all templates
 
@@ -174,6 +173,3 @@ export class RootTemplateRepository {
 	}
 }
 
-export const ROOT_TEMPLATE_REPOSITORY = new RootTemplateRepository(
-	TEMPLATE_DIR_PATHS,
-);

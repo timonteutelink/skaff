@@ -2,12 +2,12 @@ import { exec, execFile } from "node:child_process";
 import * as fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
-import { GENERATE_DIFF_SCRIPT_PATH } from "../lib/env";
 import { DiffHunk, GitStatus, ParsedFile, Result } from "../lib/types";
 import { logError } from "../lib/utils";
 import { Template } from "../models/template";
 import { pathInCache } from "./cache-service";
 import { npmInstall } from "./npm-service";
+import { getConfig } from "../lib/env";
 
 const asyncExecFile = promisify(execFile);
 const asyncExec = promisify(exec);
@@ -327,7 +327,7 @@ export async function diffDirectories(
   absoluteNewProjectPath: string,
 ): Promise<Result<string>> {
   try {
-    const { stdout } = await asyncExecFile(GENERATE_DIFF_SCRIPT_PATH, [
+    const { stdout } = await asyncExecFile((await getConfig()).GENERATE_DIFF_SCRIPT_PATH, [
       absoluteBaseProjectPath,
       absoluteNewProjectPath,
     ]);

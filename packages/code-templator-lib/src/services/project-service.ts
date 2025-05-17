@@ -2,23 +2,21 @@ import {
   TemplateSettingsType,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
+import path from "node:path";
 import { AnyZodObject, z } from "zod";
-import { Project } from "../models/project";
-import { Template } from "../models/template";
+import { logger } from "../lib/logger";
 import {
-  CreateProjectResult,
   ProjectCreationResult,
   ProjectSettings,
   Result
 } from "../lib/types";
+import { Project } from "../models/project";
+import { Template } from "../models/template";
+import { getProjectRepository, getRootTemplateRepository } from "../repositories";
 import {
   parseGitDiff
 } from "./git-service";
 import { TemplateGeneratorService } from "./template-generator-service";
-import { logger } from "../lib/logger";
-import { ROOT_TEMPLATE_REPOSITORY } from "../repositories/root-template-repository";
-import { PROJECT_REPOSITORY } from "../repositories/project-repository";
-import path from "node:path";
 
 export function getParsedUserSettingsWithParentSettings(
   userSettings: UserTemplateSettings,
@@ -71,7 +69,7 @@ export async function instantiateProject(
   newProjectName: string,
   userTemplateSettings: UserTemplateSettings,
 ): Promise<Result<ProjectCreationResult>> {
-  const template = await ROOT_TEMPLATE_REPOSITORY.findDefaultTemplate(rootTemplateName);
+  const template = await (await getRootTemplateRepository()).findDefaultTemplate(rootTemplateName);
 
   if ("error" in template) {
     return template;
@@ -92,13 +90,13 @@ export async function instantiateProject(
     return instantiationResult;
   }
 
-  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
+  const reloadResult = await (await getProjectRepository()).reloadProjects();
 
   if ("error" in reloadResult) {
     return reloadResult;
   }
 
-  const project = await PROJECT_REPOSITORY.findProject(newProjectName);
+  const project = await (await getProjectRepository()).findProject(newProjectName);
 
   if ("error" in project) {
     return project;
@@ -147,7 +145,7 @@ export async function generateProjectFromTemplateSettings(
     return { error: "No instantiated root template commit hash found in project settings" };
   }
 
-  const rootTemplate = await ROOT_TEMPLATE_REPOSITORY.loadRevision(
+  const rootTemplate = await (await getRootTemplateRepository()).loadRevision(
     projectSettings.rootTemplateName,
     instantiatedRootTemplate,
   );
@@ -183,7 +181,7 @@ export async function generateProjectFromTemplateSettings(
     return { data: projectCreationResult.data.resultPath };
   }
 
-  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
+  const reloadResult = await (await getProjectRepository()).reloadProjects();
 
   if ("error" in reloadResult) {
     return reloadResult;
@@ -191,7 +189,7 @@ export async function generateProjectFromTemplateSettings(
 
   const newProjectName = path.basename(projectCreationResult.data.resultPath)
 
-  const project = await PROJECT_REPOSITORY.findProject(newProjectName);
+  const project = await (await getProjectRepository()).findProject(newProjectName);
 
   if ("error" in project) {
     return project;

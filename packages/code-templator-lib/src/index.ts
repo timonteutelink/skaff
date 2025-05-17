@@ -1,2 +1,2 @@
-export {ROOT_TEMPLATE_REPOSITORY} from './repositories/root-template-repository';
-export {logger} from './lib/logger';
+export { getRootTemplateRepository, getProjectRepository } from './repositories';
+export { logger } from './lib/logger';

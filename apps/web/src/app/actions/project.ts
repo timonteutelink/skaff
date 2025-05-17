@@ -1,9 +1,8 @@
 "use server";
-import { PROJECT_SEARCH_PATHS } from "@repo/code-templator-lib/lib/env";
-import { ProjectDTO, Result } from "@repo/code-templator-lib/lib/types";
-import { logger } from "@repo/code-templator-lib/lib/logger";
-import { PROJECT_REPOSITORY } from "@repo/code-templator-lib/repositories/project-repository";
-import { logError } from "@repo/code-templator-lib/lib/utils";
+import { ProjectDTO, Result } from "@timonteutelink/code-templator-lib/lib/types";
+import { logger } from "@timonteutelink/code-templator-lib/lib/logger";
+import { PROJECT_REPOSITORY } from "@timonteutelink/code-templator-lib/repositories/project-repository";
+import { logError } from "@timonteutelink/code-templator-lib/lib/utils";
 
 export async function retrieveProjectSearchPaths(): Promise<
   { id: string; path: string }[]

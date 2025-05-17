@@ -2,15 +2,16 @@ import { promisify } from "node:util";
 import { Result } from "../lib/types";
 import { execFile } from "node:child_process";
 import { logError } from "../lib/utils";
-import { NPM_PATH } from "../lib/env";
+import { getConfig } from "../lib/env";
 
 const asyncExecFile = promisify(execFile);
 
 export async function npmInstall(
   dirPath: string,
 ): Promise<Result<void>> {
+  const npmPath = (await getConfig()).NPM_PATH;
   try {
-    await asyncExecFile(NPM_PATH, [
+    await asyncExecFile(npmPath, [
       "i",
       "--prefer-offline",
       "--prefer-frozen-lockfile",
@@ -19,9 +20,9 @@ export async function npmInstall(
     return { data: undefined };
   } catch (error) {
     logError({
-      shortMessage: `Error npm installing using: ${NPM_PATH}`,
+      shortMessage: `Error npm installing using: ${npmPath}`,
       error,
     });
-    return { error: `Error npm installing using: ${NPM_PATH}` };
+    return { error: `Error npm installing using: ${npmPath}` };
   }
 }

@@ -6,6 +6,156 @@
     url = "https://registry.npmjs.org/@cfworker/json-schema/-/json-schema-4.1.1.tgz";
     hash = "sha512-gAmrUZSGtKc3AiBL71iNWxDsyUC5uMaKKGdvzYsBoTW/xi42JQHl7eKV2OYzCUqvc+D2RCcf7EXY2iCyFIk6og==";
   };
+  "@esbuild/aix-ppc64" = {
+    out_path = "@esbuild/aix-ppc64";
+    name = "@esbuild/aix-ppc64@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/aix-ppc64/-/aix-ppc64-0.25.4.tgz";
+    hash = "sha512-1VCICWypeQKhVbE9oW/sJaAmjLxhVqacdkvPLEjwlttjfwENRSClS8EjBz0KzRyFSCPDIkuXW34Je/vk7zdB7Q==";
+  };
+  "@esbuild/android-arm" = {
+    out_path = "@esbuild/android-arm";
+    name = "@esbuild/android-arm@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.25.4.tgz";
+    hash = "sha512-QNdQEps7DfFwE3hXiU4BZeOV68HHzYwGd0Nthhd3uCkkEKK7/R6MTgM0P7H7FAs5pU/DIWsviMmEGxEoxIZ+ZQ==";
+  };
+  "@esbuild/android-arm64" = {
+    out_path = "@esbuild/android-arm64";
+    name = "@esbuild/android-arm64@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/android-arm64/-/android-arm64-0.25.4.tgz";
+    hash = "sha512-bBy69pgfhMGtCnwpC/x5QhfxAz/cBgQ9enbtwjf6V9lnPI/hMyT9iWpR1arm0l3kttTr4L0KSLpKmLp/ilKS9A==";
+  };
+  "@esbuild/android-x64" = {
+    out_path = "@esbuild/android-x64";
+    name = "@esbuild/android-x64@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/android-x64/-/android-x64-0.25.4.tgz";
+    hash = "sha512-TVhdVtQIFuVpIIR282btcGC2oGQoSfZfmBdTip2anCaVYcqWlZXGcdcKIUklfX2wj0JklNYgz39OBqh2cqXvcQ==";
+  };
+  "@esbuild/darwin-arm64" = {
+    out_path = "@esbuild/darwin-arm64";
+    name = "@esbuild/darwin-arm64@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.25.4.tgz";
+    hash = "sha512-Y1giCfM4nlHDWEfSckMzeWNdQS31BQGs9/rouw6Ub91tkK79aIMTH3q9xHvzH8d0wDru5Ci0kWB8b3up/nl16g==";
+  };
+  "@esbuild/darwin-x64" = {
+    out_path = "@esbuild/darwin-x64";
+    name = "@esbuild/darwin-x64@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/darwin-x64/-/darwin-x64-0.25.4.tgz";
+    hash = "sha512-CJsry8ZGM5VFVeyUYB3cdKpd/H69PYez4eJh1W/t38vzutdjEjtP7hB6eLKBoOdxcAlCtEYHzQ/PJ/oU9I4u0A==";
+  };
+  "@esbuild/freebsd-arm64" = {
+    out_path = "@esbuild/freebsd-arm64";
+    name = "@esbuild/freebsd-arm64@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/freebsd-arm64/-/freebsd-arm64-0.25.4.tgz";
+    hash = "sha512-yYq+39NlTRzU2XmoPW4l5Ifpl9fqSk0nAJYM/V/WUGPEFfek1epLHJIkTQM6bBs1swApjO5nWgvr843g6TjxuQ==";
+  };
+  "@esbuild/freebsd-x64" = {
+    out_path = "@esbuild/freebsd-x64";
+    name = "@esbuild/freebsd-x64@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/freebsd-x64/-/freebsd-x64-0.25.4.tgz";
+    hash = "sha512-0FgvOJ6UUMflsHSPLzdfDnnBBVoCDtBTVyn/MrWloUNvq/5SFmh13l3dvgRPkDihRxb77Y17MbqbCAa2strMQQ==";
+  };
+  "@esbuild/linux-arm" = {
+    out_path = "@esbuild/linux-arm";
+    name = "@esbuild/linux-arm@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/linux-arm/-/linux-arm-0.25.4.tgz";
+    hash = "sha512-kro4c0P85GMfFYqW4TWOpvmF8rFShbWGnrLqlzp4X1TNWjRY3JMYUfDCtOxPKOIY8B0WC8HN51hGP4I4hz4AaQ==";
+  };
+  "@esbuild/linux-arm64" = {
+    out_path = "@esbuild/linux-arm64";
+    name = "@esbuild/linux-arm64@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/linux-arm64/-/linux-arm64-0.25.4.tgz";
+    hash = "sha512-+89UsQTfXdmjIvZS6nUnOOLoXnkUTB9hR5QAeLrQdzOSWZvNSAXAtcRDHWtqAUtAmv7ZM1WPOOeSxDzzzMogiQ==";
+  };
+  "@esbuild/linux-ia32" = {
+    out_path = "@esbuild/linux-ia32";
+    name = "@esbuild/linux-ia32@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/linux-ia32/-/linux-ia32-0.25.4.tgz";
+    hash = "sha512-yTEjoapy8UP3rv8dB0ip3AfMpRbyhSN3+hY8mo/i4QXFeDxmiYbEKp3ZRjBKcOP862Ua4b1PDfwlvbuwY7hIGQ==";
+  };
+  "@esbuild/linux-loong64" = {
+    out_path = "@esbuild/linux-loong64";
+    name = "@esbuild/linux-loong64@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/linux-loong64/-/linux-loong64-0.25.4.tgz";
+    hash = "sha512-NeqqYkrcGzFwi6CGRGNMOjWGGSYOpqwCjS9fvaUlX5s3zwOtn1qwg1s2iE2svBe4Q/YOG1q6875lcAoQK/F4VA==";
+  };
+  "@esbuild/linux-mips64el" = {
+    out_path = "@esbuild/linux-mips64el";
+    name = "@esbuild/linux-mips64el@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/linux-mips64el/-/linux-mips64el-0.25.4.tgz";
+    hash = "sha512-IcvTlF9dtLrfL/M8WgNI/qJYBENP3ekgsHbYUIzEzq5XJzzVEV/fXY9WFPfEEXmu3ck2qJP8LG/p3Q8f7Zc2Xg==";
+  };
+  "@esbuild/linux-ppc64" = {
+    out_path = "@esbuild/linux-ppc64";
+    name = "@esbuild/linux-ppc64@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/linux-ppc64/-/linux-ppc64-0.25.4.tgz";
+    hash = "sha512-HOy0aLTJTVtoTeGZh4HSXaO6M95qu4k5lJcH4gxv56iaycfz1S8GO/5Jh6X4Y1YiI0h7cRyLi+HixMR+88swag==";
+  };
+  "@esbuild/linux-riscv64" = {
+    out_path = "@esbuild/linux-riscv64";
+    name = "@esbuild/linux-riscv64@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/linux-riscv64/-/linux-riscv64-0.25.4.tgz";
+    hash = "sha512-i8JUDAufpz9jOzo4yIShCTcXzS07vEgWzyX3NH2G7LEFVgrLEhjwL3ajFE4fZI3I4ZgiM7JH3GQ7ReObROvSUA==";
+  };
+  "@esbuild/linux-s390x" = {
+    out_path = "@esbuild/linux-s390x";
+    name = "@esbuild/linux-s390x@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/linux-s390x/-/linux-s390x-0.25.4.tgz";
+    hash = "sha512-jFnu+6UbLlzIjPQpWCNh5QtrcNfMLjgIavnwPQAfoGx4q17ocOU9MsQ2QVvFxwQoWpZT8DvTLooTvmOQXkO51g==";
+  };
+  "@esbuild/linux-x64" = {
+    out_path = "@esbuild/linux-x64";
+    name = "@esbuild/linux-x64@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.25.4.tgz";
+    hash = "sha512-6e0cvXwzOnVWJHq+mskP8DNSrKBr1bULBvnFLpc1KY+d+irZSgZ02TGse5FsafKS5jg2e4pbvK6TPXaF/A6+CA==";
+  };
+  "@esbuild/netbsd-arm64" = {
+    out_path = "@esbuild/netbsd-arm64";
+    name = "@esbuild/netbsd-arm64@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/netbsd-arm64/-/netbsd-arm64-0.25.4.tgz";
+    hash = "sha512-vUnkBYxZW4hL/ie91hSqaSNjulOnYXE1VSLusnvHg2u3jewJBz3YzB9+oCw8DABeVqZGg94t9tyZFoHma8gWZQ==";
+  };
+  "@esbuild/netbsd-x64" = {
+    out_path = "@esbuild/netbsd-x64";
+    name = "@esbuild/netbsd-x64@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/netbsd-x64/-/netbsd-x64-0.25.4.tgz";
+    hash = "sha512-XAg8pIQn5CzhOB8odIcAm42QsOfa98SBeKUdo4xa8OvX8LbMZqEtgeWE9P/Wxt7MlG2QqvjGths+nq48TrUiKw==";
+  };
+  "@esbuild/openbsd-arm64" = {
+    out_path = "@esbuild/openbsd-arm64";
+    name = "@esbuild/openbsd-arm64@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/openbsd-arm64/-/openbsd-arm64-0.25.4.tgz";
+    hash = "sha512-Ct2WcFEANlFDtp1nVAXSNBPDxyU+j7+tId//iHXU2f/lN5AmO4zLyhDcpR5Cz1r08mVxzt3Jpyt4PmXQ1O6+7A==";
+  };
+  "@esbuild/openbsd-x64" = {
+    out_path = "@esbuild/openbsd-x64";
+    name = "@esbuild/openbsd-x64@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/openbsd-x64/-/openbsd-x64-0.25.4.tgz";
+    hash = "sha512-xAGGhyOQ9Otm1Xu8NT1ifGLnA6M3sJxZ6ixylb+vIUVzvvd6GOALpwQrYrtlPouMqd/vSbgehz6HaVk4+7Afhw==";
+  };
+  "@esbuild/sunos-x64" = {
+    out_path = "@esbuild/sunos-x64";
+    name = "@esbuild/sunos-x64@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/sunos-x64/-/sunos-x64-0.25.4.tgz";
+    hash = "sha512-Mw+tzy4pp6wZEK0+Lwr76pWLjrtjmJyUB23tHKqEDP74R3q95luY/bXqXZeYl4NYlvwOqoRKlInQialgCKy67Q==";
+  };
+  "@esbuild/win32-arm64" = {
+    out_path = "@esbuild/win32-arm64";
+    name = "@esbuild/win32-arm64@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/win32-arm64/-/win32-arm64-0.25.4.tgz";
+    hash = "sha512-AVUP428VQTSddguz9dO9ngb+E5aScyg7nOeJDrF1HPYu555gmza3bDGMPhmVXL8svDSoqPCsCPjb265yG/kLKQ==";
+  };
+  "@esbuild/win32-ia32" = {
+    out_path = "@esbuild/win32-ia32";
+    name = "@esbuild/win32-ia32@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/win32-ia32/-/win32-ia32-0.25.4.tgz";
+    hash = "sha512-i1sW+1i+oWvQzSgfRcxxG2k4I9n3O9NRqy8U+uugaT2Dy7kLO9Y7wI72haOahxceMX8hZAzgGou1FhndRldxRg==";
+  };
+  "@esbuild/win32-x64" = {
+    out_path = "@esbuild/win32-x64";
+    name = "@esbuild/win32-x64@0.25.4";
+    url = "https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.25.4.tgz";
+    hash = "sha512-nOT2vZNw6hJ+z43oP1SPea/G/6AbN6X+bGNhNuq8NtRHy4wsMhw765IKLNmnjek7GvjWBYQ8Q5VBoYTFg9y1UQ==";
+  };
   "@eslint-community/eslint-utils" = {
     out_path = "@eslint-community/eslint-utils";
     name = "@eslint-community/eslint-utils@4.7.0";
@@ -185,9 +335,9 @@
   };
   "@timonteutelink/code-templator-lib" = {
     out_path = "@timonteutelink/code-templator-lib";
-    name = "@timonteutelink/code-templator-lib@0.0.42";
-    url = "https://registry.npmjs.org/@timonteutelink/code-templator-lib/-/code-templator-lib-0.0.42.tgz";
-    hash = "sha512-lkdANlJhkiLuJ6T1Ja31RhvZtRssnrzrNbvZZwf7g0uYVEuykAfwqyQLdRhBJ3Wcbm+8EZhIpoBfISNzcNYSIQ==";
+    name = "@timonteutelink/code-templator-lib@0.0.43";
+    url = "https://registry.npmjs.org/@timonteutelink/code-templator-lib/-/code-templator-lib-0.0.43.tgz";
+    hash = "sha512-vfjKryXT4QgpPVtNK5m9lL6SD3JLWEQEA9G3wv2enJc70MZr7ZRLvyKyJIVFTH/hKdsmm8gpihQwKqooC6mtiA==";
   };
   "@timonteutelink/template-types-lib" = {
     out_path = "@timonteutelink/template-types-lib";
@@ -459,6 +609,12 @@
     url = "https://registry.npmjs.org/braces/-/braces-3.0.3.tgz";
     hash = "sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==";
   };
+  "bun-plugin-pino" = {
+    out_path = "bun-plugin-pino";
+    name = "bun-plugin-pino@1.4.0";
+    url = "https://registry.npmjs.org/bun-plugin-pino/-/bun-plugin-pino-1.4.0.tgz";
+    hash = "sha512-Ue+ZZTwrifKZkyau9yvLL689eRnBo6FsAK1C4QC8gAPKJMmj/U/9By+UgDsxas6OsTWArl0QqkWommdK/pzrCA==";
+  };
   "call-bind" = {
     out_path = "call-bind";
     name = "call-bind@1.0.8";
@@ -668,6 +824,15 @@
     name = "es-to-primitive@1.3.0";
     url = "https://registry.npmjs.org/es-to-primitive/-/es-to-primitive-1.3.0.tgz";
     hash = "sha512-w+5mJ3GuFL+NjVtJlvydShqE1eN3h3PbI7/5LAsYJP/2qtuMXjfL2LpHSRqo4b4eSF5K/DH1JXKUAHSB2UW50g==";
+  };
+  "esbuild" = {
+    out_path = "esbuild";
+    binaries = {
+      "esbuild" = "../esbuild/bin/esbuild";
+    };
+    name = "esbuild@0.25.4";
+    url = "https://registry.npmjs.org/esbuild/-/esbuild-0.25.4.tgz";
+    hash = "sha512-8pgjLUcUjcgDg+2Q4NYXnPbo/vncAY4UmyaCm0jZevERqCHZIaWwdJHkf8XQtu4AxSKCdvrUbT0XUr1IdZzI8Q==";
   };
   "escape-string-regexp" = {
     out_path = "escape-string-regexp";

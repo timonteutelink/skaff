@@ -42,6 +42,9 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
+      bun-plugin-pino:
+        specifier: ^1.4.0
+        version: 1.4.0(typescript@5.8.3)
 
   apps/web:
     dependencies:
@@ -3193,6 +3196,11 @@ packages:
   bufferutil@4.0.9:
     resolution: {integrity: sha512-WDtdLmJvAuNNPzByAYpRo2rF1Mmradw6gvWsQKf63476DDXmomT9zUiGypLcG4ibIM67vhAj8jJRdbmEws2Aqw==}
     engines: {node: '>=6.14.2'}
+
+  bun-plugin-pino@1.4.0:
+    resolution: {integrity: sha512-Ue+ZZTwrifKZkyau9yvLL689eRnBo6FsAK1C4QC8gAPKJMmj/U/9By+UgDsxas6OsTWArl0QqkWommdK/pzrCA==}
+    peerDependencies:
+      typescript: ^5.0.0
 
   bundle-name@4.1.0:
     resolution: {integrity: sha512-tjwM5exMg6BGRI+kNmTntNsvdZS1X8BFYS6tnJ2hdH0kVxM6/eVZ2xy+FqStSWvYmtfFMDLIxurorHwDKfDz5Q==}
@@ -10446,6 +10454,10 @@ snapshots:
     dependencies:
       node-gyp-build: 4.8.4
     optional: true
+
+  bun-plugin-pino@1.4.0(typescript@5.8.3):
+    dependencies:
+      typescript: 5.8.3
 
   bundle-name@4.1.0:
     dependencies:

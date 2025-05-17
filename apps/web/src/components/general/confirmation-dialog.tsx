@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { useCallback, useState } from "react"
-import { Result } from "@repo/code-templator-lib/lib/types"
+import { Result } from "@timonteutelink/code-templator-lib/lib/types"
 import { toast } from "sonner"
 import { toastNullError } from "@/lib/utils"
 

@@ -4,7 +4,7 @@ import CommitButton from "@/components/general/git/commit-dialog";
 import { DiffVisualizerPage } from "@/components/general/git/diff-visualizer-page";
 import { Button } from "@/components/ui/button";
 import { toastNullError } from "@/lib/utils";
-import type { ParsedFile, Result } from "@repo/code-templator-lib/lib/types";
+import type { ParsedFile, Result } from "@timonteutelink/code-templator-lib/lib/types";
 import { ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";

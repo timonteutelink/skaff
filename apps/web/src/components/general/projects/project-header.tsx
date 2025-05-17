@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toastNullError } from "@/lib/utils";
-import { ParsedFile, ProjectDTO, Result, TemplateDTO } from "@repo/code-templator-lib/lib/types";
+import { ParsedFile, ProjectDTO, Result, TemplateDTO } from "@timonteutelink/code-templator-lib/lib/types";
 import { FileDiffIcon, GitBranchIcon, GitCommitIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";

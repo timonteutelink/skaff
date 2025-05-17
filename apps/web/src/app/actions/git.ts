@@ -5,12 +5,12 @@ import {
   commitAll,
   parseGitDiff,
   switchBranch,
-} from "@repo/code-templator-lib/services/git-service";
-import { diffProjectFromTemplate } from "@repo/code-templator-lib/services/project-diff-service";
-import { ParsedFile, Result } from "@repo/code-templator-lib/lib/types";
-import { logger } from "@repo/code-templator-lib/lib/logger";
-import { PROJECT_REPOSITORY } from "@repo/code-templator-lib/repositories/project-repository";
-import { logError } from "@repo/code-templator-lib/lib/utils";
+} from "@timonteutelink/code-templator-lib/services/git-service";
+import { diffProjectFromTemplate } from "@timonteutelink/code-templator-lib/services/project-diff-service";
+import { ParsedFile, Result } from "@timonteutelink/code-templator-lib/lib/types";
+import { logger } from "@timonteutelink/code-templator-lib/lib/logger";
+import { PROJECT_REPOSITORY } from "@timonteutelink/code-templator-lib/repositories/project-repository";
+import { logError } from "@timonteutelink/code-templator-lib/lib/utils";
 
 export async function commitChanges(
   projectName: string,

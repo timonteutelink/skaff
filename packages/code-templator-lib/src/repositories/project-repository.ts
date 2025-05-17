@@ -1,18 +1,16 @@
 import * as fs from "node:fs/promises";
-import { PROJECT_SEARCH_PATHS } from "../lib/env";
-import { Project } from "../models/project";
 import path from "node:path";
-import { Result } from "../lib/types";
 import { logger } from "../lib/logger";
-import { logError } from "../lib/utils";
+import { Result } from "../lib/types";
+import { Project } from "../models/project";
 
 export class ProjectRepository {
 	private loading: boolean = false;
 	private searchPaths: string[] = [];
 	public projects: Project[] = [];
 
-	constructor(searchPaths: { id: string; path: string }[]) {
-		this.searchPaths = searchPaths.map((searchPath) => searchPath.path);
+	constructor(searchPaths: string[]) {
+		this.searchPaths = searchPaths;
 	}
 
 	private async loadProjects(): Promise<Result<void>> {
@@ -94,4 +92,3 @@ export class ProjectRepository {
 	}
 }
 
-export const PROJECT_REPOSITORY = new ProjectRepository(PROJECT_SEARCH_PATHS);
