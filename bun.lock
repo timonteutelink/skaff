@@ -17,7 +17,7 @@
         "code-templator-cli": "./code-templator",
       },
       "dependencies": {
-        "@timonteutelink/code-templator-lib": "0.0.44",
+        "@timonteutelink/code-templator-lib": "0.0.45",
         "commander": "^13.1.0",
         "pino": "^9.6.0",
         "yaml": "^2.7.1",
@@ -137,7 +137,7 @@
 
     "@langchain/langgraph-checkpoint": ["@langchain/langgraph-checkpoint@0.0.17", "", { "dependencies": { "uuid": "^10.0.0" }, "peerDependencies": { "@langchain/core": ">=0.2.31 <0.4.0" } }, "sha512-6b3CuVVYx+7x0uWLG+7YXz9j2iBa+tn2AXvkLxzEvaAsLE6Sij++8PPbS2BZzC+S/FPJdWsz6I5bsrqL0BYrCA=="],
 
-    "@langchain/langgraph-sdk": ["@langchain/langgraph-sdk@0.0.75", "", { "dependencies": { "@types/json-schema": "^7.0.15", "p-queue": "^6.6.2", "p-retry": "4", "uuid": "^9.0.0" }, "peerDependencies": { "@langchain/core": ">=0.2.31 <0.4.0", "react": "^18 || ^19" }, "optionalPeers": ["@langchain/core", "react"] }, "sha512-pu9QNJPwN7t1EY4+vQad88T+n7GcrslgKTbro7Zyl1QzoA3QqQ0+UpcWgEbdTZcLhoPYVGqMh8CxL6UHyY5MzQ=="],
+    "@langchain/langgraph-sdk": ["@langchain/langgraph-sdk@0.0.76", "", { "dependencies": { "@types/json-schema": "^7.0.15", "p-queue": "^6.6.2", "p-retry": "4", "uuid": "^9.0.0" }, "peerDependencies": { "@langchain/core": ">=0.2.31 <0.4.0", "react": "^18 || ^19" }, "optionalPeers": ["@langchain/core", "react"] }, "sha512-TWAjCVTgIZ9dLRclWhupO+TCtVi5hqGh/tKja54qkZGnIappjMGZMZpor3yi3qHnnIn5UEHl+f59mZsJJKM/Sg=="],
 
     "@langchain/openai": ["@langchain/openai@0.5.10", "", { "dependencies": { "js-tiktoken": "^1.0.12", "openai": "^4.96.0", "zod": "^3.22.4", "zod-to-json-schema": "^3.22.3" }, "peerDependencies": { "@langchain/core": ">=0.3.48 <0.4.0" } }, "sha512-hBQIWjcVxGS7tgVvgBBmrZ5jSaJ8nu9g6V64/Tx6KGjkW7VdGmUvqCO+koiQCOZVL7PBJkHWAvDsbghPYXiZEA=="],
 
@@ -155,7 +155,7 @@
 
     "@repo/typescript-config": ["@repo/typescript-config@workspace:packages/typescript-config"],
 
-    "@timonteutelink/code-templator-lib": ["@timonteutelink/code-templator-lib@0.0.44", "", { "dependencies": { "@langchain/langgraph": "^0.2.67", "@langchain/openai": "^0.5.10", "@timonteutelink/template-types-lib": "0.0.35", "esbuild": "^0.25.2", "fs-extra": "^11.3.0", "glob": "^11.0.1", "handlebars": "^4.7.8", "langchain": "^0.3.24", "pino": "^9.6.0", "yaml": "^2.7.1", "zod": "^3.24.2", "zod-to-json-schema": "^3.24.5" } }, "sha512-PH/22aB/q8S9kv/xNIvsEga5SGKGhfWFVmTPzbLGhpneQsSNed4jCa+JOSfu/pt4MwPPqy/TVZSyLvCijaUsZA=="],
+    "@timonteutelink/code-templator-lib": ["@timonteutelink/code-templator-lib@0.0.45", "", { "dependencies": { "@langchain/langgraph": "^0.2.67", "@langchain/openai": "^0.5.10", "@timonteutelink/template-types-lib": "0.0.35", "esbuild": "^0.25.2", "fs-extra": "^11.3.0", "glob": "^11.0.1", "handlebars": "^4.7.8", "langchain": "^0.3.24", "pino": "^9.6.0", "yaml": "^2.7.1", "zod": "^3.24.2", "zod-to-json-schema": "^3.24.5" } }, "sha512-QRv59h1n0o+qGn8EIZ8PLam3SmQj7oWsPhNYUxGrWd7N+sb0sdCMlMHttOivkNiua0S7nymMxTR3RwOqWt2ihQ=="],
 
     "@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.35", "", { "dependencies": { "handlebars": "^4.7.8", "zod": "^3.24.2" } }, "sha512-1XX3gZB4KYC+988cCCqtjdBFVcLwg/J1jHXLhgp2wVVV+EyzQ+MyUEQp0//rhCXtIfpDi5guv3lRpezVBM5BHQ=="],
 

@@ -1,4 +1,4 @@
-import { logger } from "@timonteutelink/code-templator-lib";
+import { getConfig, logger } from "@timonteutelink/code-templator-lib";
 import { Command } from "commander";
 import { withFormatting } from "../cli-utils";
 

@@ -284,9 +284,9 @@
   };
   "@langchain/langgraph-sdk" = {
     out_path = "@langchain/langgraph-sdk";
-    name = "@langchain/langgraph-sdk@0.0.75";
-    url = "https://registry.npmjs.org/@langchain/langgraph-sdk/-/langgraph-sdk-0.0.75.tgz";
-    hash = "sha512-pu9QNJPwN7t1EY4+vQad88T+n7GcrslgKTbro7Zyl1QzoA3QqQ0+UpcWgEbdTZcLhoPYVGqMh8CxL6UHyY5MzQ==";
+    name = "@langchain/langgraph-sdk@0.0.76";
+    url = "https://registry.npmjs.org/@langchain/langgraph-sdk/-/langgraph-sdk-0.0.76.tgz";
+    hash = "sha512-TWAjCVTgIZ9dLRclWhupO+TCtVi5hqGh/tKja54qkZGnIappjMGZMZpor3yi3qHnnIn5UEHl+f59mZsJJKM/Sg==";
   };
   "@langchain/langgraph-sdk/uuid" = {
     out_path = "@langchain/langgraph-sdk/node_modules/uuid";
@@ -335,9 +335,9 @@
   };
   "@timonteutelink/code-templator-lib" = {
     out_path = "@timonteutelink/code-templator-lib";
-    name = "@timonteutelink/code-templator-lib@0.0.44";
-    url = "https://registry.npmjs.org/@timonteutelink/code-templator-lib/-/code-templator-lib-0.0.44.tgz";
-    hash = "sha512-PH/22aB/q8S9kv/xNIvsEga5SGKGhfWFVmTPzbLGhpneQsSNed4jCa+JOSfu/pt4MwPPqy/TVZSyLvCijaUsZA==";
+    name = "@timonteutelink/code-templator-lib@0.0.45";
+    url = "https://registry.npmjs.org/@timonteutelink/code-templator-lib/-/code-templator-lib-0.0.45.tgz";
+    hash = "sha512-QRv59h1n0o+qGn8EIZ8PLam3SmQj7oWsPhNYUxGrWd7N+sb0sdCMlMHttOivkNiua0S7nymMxTR3RwOqWt2ihQ==";
   };
   "@timonteutelink/template-types-lib" = {
     out_path = "@timonteutelink/template-types-lib";
