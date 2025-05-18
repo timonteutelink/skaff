@@ -17,7 +17,7 @@
         "code-templator-cli": "./code-templator",
       },
       "dependencies": {
-        "@timonteutelink/code-templator-lib": "0.0.46",
+        "@timonteutelink/code-templator-lib": "0.0.47",
         "commander": "^13.1.0",
         "pino": "^9.6.0",
         "yaml": "^2.7.1",
@@ -155,7 +155,7 @@
 
     "@repo/typescript-config": ["@repo/typescript-config@workspace:packages/typescript-config"],
 
-    "@timonteutelink/code-templator-lib": ["@timonteutelink/code-templator-lib@0.0.46", "", { "dependencies": { "@langchain/langgraph": "^0.2.67", "@langchain/openai": "^0.5.10", "@timonteutelink/template-types-lib": "0.0.35", "esbuild": "^0.25.2", "fs-extra": "^11.3.0", "glob": "^11.0.1", "handlebars": "^4.7.8", "langchain": "^0.3.24", "pino": "^9.6.0", "yaml": "^2.7.1", "zod": "^3.24.2", "zod-to-json-schema": "^3.24.5" } }, "sha512-SgEMcxoEq9/S5mSk2VumsLUURBgF24QLyMhZmQXGo+FFYDmpAWtO8Kug/ssPJE15+cm6ZSfAN/BV72UL6upWxA=="],
+    "@timonteutelink/code-templator-lib": ["@timonteutelink/code-templator-lib@0.0.47", "", { "dependencies": { "@langchain/langgraph": "^0.2.67", "@langchain/openai": "^0.5.10", "@timonteutelink/template-types-lib": "0.0.35", "esbuild": "^0.25.2", "fs-extra": "^11.3.0", "glob": "^11.0.1", "handlebars": "^4.7.8", "langchain": "^0.3.24", "pino": "^9.6.0", "yaml": "^2.7.1", "zod": "^3.24.2", "zod-to-json-schema": "^3.24.5" } }, "sha512-SUURPFgtvf/cBDhr5Lyzh2nUS4JNFZ/tuluQiFmKsefR1Fej+vgpYpixp+aXOPIz9bt2saeDeE2VnVwH4wj7Fw=="],
 
     "@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.35", "", { "dependencies": { "handlebars": "^4.7.8", "zod": "^3.24.2" } }, "sha512-1XX3gZB4KYC+988cCCqtjdBFVcLwg/J1jHXLhgp2wVVV+EyzQ+MyUEQp0//rhCXtIfpDi5guv3lRpezVBM5BHQ=="],
 
