@@ -2,28 +2,56 @@ import { promises as fs } from "fs";
 import * as os from "os";
 import * as path from "path";
 
-export interface Settings {
-  TEMPLATE_DIR_PATHS: string[];
-  PROJECT_SEARCH_PATHS: string[];
-  GENERATE_DIFF_SCRIPT_PATH: string;
-  NPM_PATH: string;
-  [key: string]: unknown;
-}
+const SETTINGS_DEFINITIONS = [
+  {
+    key: "TEMPLATE_DIR_PATHS",
+    envVar: "TEMPLATE_DIRS",
+    type: "string[]",
+    default: [
+      path.resolve(os.homedir(), "projects", "timon", "example-templates-dir"),
+    ],
+  },
+  {
+    key: "PROJECT_SEARCH_PATHS",
+    envVar: "PROJECT_PATHS",
+    type: "string[]",
+    default: [path.resolve(os.homedir(), "projects")],
+  },
+  {
+    key: "GENERATE_DIFF_SCRIPT_PATH",
+    envVar: "DIFF_SCRIPT_PATH",
+    type: "string",
+    default: path.resolve(
+      os.homedir(),
+      "projects",
+      "timon",
+      "code-templator",
+      "scripts",
+      "generate-diff-patch.sh",
+    ),
+  },
+  {
+    key: "NPM_PATH",
+    envVar: "NPM_CMD",
+    type: "string",
+    default: "npm",
+  },
+] as const;
+
+type Def = (typeof SETTINGS_DEFINITIONS)[number];
+
+export type Settings = {
+  [P in Def as P["key"]]: P["type"] extends "string[]" ? string[] : string;
+};
 
 const APP_NAME = "code-templator";
 
-/**
- * Returns the path to the settings file, using XDG_CONFIG_HOME or ~/.config.
- */
 function getSettingsFilePath(): string {
-  const configHome = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config");
+  const configHome =
+    process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config");
   return path.join(configHome, APP_NAME, "settings.json");
 }
 
-/**
- * Ensures that the settings file and its directory exist.
- * Creates an empty JSON file if missing.
- */
 async function ensureSettingsFile(): Promise<void> {
   const file = getSettingsFilePath();
   await fs.mkdir(path.dirname(file), { recursive: true });
@@ -34,9 +62,6 @@ async function ensureSettingsFile(): Promise<void> {
   }
 }
 
-/**
- * Loads the raw settings from disk (may be empty/partial).
- */
 async function loadFileSettings(): Promise<Partial<Settings>> {
   await ensureSettingsFile();
   const file = getSettingsFilePath();
@@ -44,104 +69,103 @@ async function loadFileSettings(): Promise<Partial<Settings>> {
   try {
     return JSON.parse(raw);
   } catch {
+    // reset on parse error
     await fs.writeFile(file, JSON.stringify({}, null, 2), "utf-8");
     return {};
   }
 }
 
-/**
- * Expands home (~) and resolves any path to an absolute path.
- */
 function expandPath(input: string): string {
-  const withHome = input.startsWith("~")
+  const expanded = input.startsWith("~")
     ? path.join(os.homedir(), input.slice(1))
     : input;
-  return path.resolve(withHome);
+  return path.resolve(expanded);
 }
 
-/**
- * Parses a colon-delimited environment variable into a list of absolute paths.
- */
-function parseEnvList(envKey: string): string[] | undefined {
-  const raw = process.env[envKey];
+function parseList(raw: string): string[] {
+  // split on path.delimiter or commas
   return raw
-    ? raw.split(path.delimiter).map(expandPath)
-    : undefined;
+    .split(new RegExp(`[${path.delimiter},]`))
+    .map((s) => expandPath(s.trim()))
+    .filter(Boolean);
 }
 
-/**
- * Loads settings from environment variables (if set).
- */
 function loadEnvSettings(): Partial<Settings> {
-  const env: Partial<Settings> = {};
+  const envSettings: Partial<Settings> = {};
 
-  const templateDirs = parseEnvList("TEMPLATE_DIR_PATHS");
-  if (templateDirs) env.TEMPLATE_DIR_PATHS = templateDirs;
-
-  const projectPaths = parseEnvList("PROJECT_SEARCH_PATHS");
-  if (projectPaths) env.PROJECT_SEARCH_PATHS = projectPaths;
-
-  if (process.env.GENERATE_DIFF_SCRIPT_PATH) {
-    env.GENERATE_DIFF_SCRIPT_PATH = expandPath(
-      process.env.GENERATE_DIFF_SCRIPT_PATH
-    );
+  for (const def of SETTINGS_DEFINITIONS) {
+    const raw = process.env[def.envVar];
+    if (raw !== undefined) {
+      if (def.type === "string[]") {
+        (envSettings as any)[def.key] = parseList(raw);
+      } else {
+        (envSettings as any)[def.key] = expandPath(raw);
+      }
+    }
   }
 
-  if (process.env.NPM_PATH) {
-    env.NPM_PATH = expandPath(process.env.NPM_PATH);
-  }
-
-  return env;
+  return envSettings;
 }
 
-/**
- * Returns the merged configuration: file settings < defaults < environment.
- */
 export async function getConfig(): Promise<Settings> {
   const fileSettings = await loadFileSettings();
   const envSettings = loadEnvSettings();
 
-  const defaults: Settings = {
-    TEMPLATE_DIR_PATHS: [path.resolve(os.homedir(), "projects", "timon", "example-templates-dir")],
-    PROJECT_SEARCH_PATHS: [path.resolve(os.homedir(), "projects")],
-    GENERATE_DIFF_SCRIPT_PATH: path.resolve(
-      os.homedir(), "projects", "timon", "code-templator", "scripts", "generate-diff-patch.sh"
-    ),
-    NPM_PATH: "npm",
-  };
+  const config = {} as Settings;
+  for (const def of SETTINGS_DEFINITIONS) {
+    const fileVal = fileSettings[def.key as keyof Settings] as
+      | string
+      | string[]
+      | undefined;
+    const defaultVal = def.default as string | string[];
 
-  return {
-    TEMPLATE_DIR_PATHS:
-      envSettings.TEMPLATE_DIR_PATHS ??
-      (fileSettings.TEMPLATE_DIR_PATHS as string[]) ??
-      defaults.TEMPLATE_DIR_PATHS,
-    PROJECT_SEARCH_PATHS:
-      envSettings.PROJECT_SEARCH_PATHS ??
-      (fileSettings.PROJECT_SEARCH_PATHS as string[]) ??
-      defaults.PROJECT_SEARCH_PATHS,
-    GENERATE_DIFF_SCRIPT_PATH:
-      envSettings.GENERATE_DIFF_SCRIPT_PATH ??
-      (fileSettings.GENERATE_DIFF_SCRIPT_PATH as string) ??
-      defaults.GENERATE_DIFF_SCRIPT_PATH,
-    NPM_PATH:
-      envSettings.NPM_PATH ??
-      (fileSettings.NPM_PATH as string) ??
-      defaults.NPM_PATH,
-  };
+    (config as any)[def.key] =
+      envSettings[def.key as keyof Settings] ?? fileVal ?? defaultVal;
+  }
+
+  return config;
 }
 
 /**
- * Writes a single setting key to disk (merging into existing settings JSON).
+ * Persist a single key to disk. Overwrites that key in settings.json.
  */
-export async function setConfig<
-  K extends keyof Settings
->(key: K, value: Settings[K]): Promise<void> {
+export async function setConfig<K extends Def["key"]>(
+  key: K,
+  value: Settings[K],
+): Promise<void> {
   const fileSettings = await loadFileSettings();
   fileSettings[key] = value;
   await fs.writeFile(
     getSettingsFilePath(),
     JSON.stringify(fileSettings, null, 2),
-    "utf-8"
+    "utf-8",
   );
 }
 
+/**
+ * Add items to an array setting and save.
+ */
+export async function addConfigItems(
+  key: Extract<Def, { type: "string[]" }>["key"],
+  items: string[],
+): Promise<void> {
+  const cfg = await getConfig();
+  const existing = cfg[key] as string[];
+  const additions = items.map(expandPath);
+  const merged = Array.from(new Set([...existing, ...additions]));
+  await setConfig(key, merged as Settings[typeof key]);
+}
+
+/**
+ * Remove items from an array setting and save.
+ */
+export async function removeConfigItems(
+  key: Extract<Def, { type: "string[]" }>["key"],
+  items: string[],
+): Promise<void> {
+  const cfg = await getConfig();
+  const existing = cfg[key] as string[];
+  const toRemove = items.map(expandPath);
+  const filtered = existing.filter((item) => !toRemove.includes(item));
+  await setConfig(key, filtered as Settings[typeof key]);
+}

@@ -1,11 +1,20 @@
 "use server";
-import { DefaultTemplateResult, Result, TemplateDTO } from "@timonteutelink/code-templator-lib/lib/types";
+import {
+  DefaultTemplateResult,
+  Result,
+  TemplateDTO,
+} from "@timonteutelink/code-templator-lib/lib/types";
 import { logError } from "@timonteutelink/code-templator-lib/lib/utils";
 import { PROJECT_REPOSITORY } from "@timonteutelink/code-templator-lib/repositories/project-repository";
 import { ROOT_TEMPLATE_REPOSITORY } from "@timonteutelink/code-templator-lib/repositories/root-template-repository";
-import { eraseCache, getCacheDir } from "@timonteutelink/code-templator-lib/services/cache-service";
+import {
+  eraseCache,
+  getCacheDir,
+} from "@timonteutelink/code-templator-lib/services/cache-service";
 
-export async function runEraseCache(): Promise<Result<DefaultTemplateResult[]>> {
+export async function runEraseCache(): Promise<
+  Result<DefaultTemplateResult[]>
+> {
   const eraseResult = await eraseCache();
   if ("error" in eraseResult) {
     return { error: eraseResult.error };
@@ -25,7 +34,9 @@ export async function runEraseCache(): Promise<Result<DefaultTemplateResult[]>> 
   return { data: allNewTemplates.data };
 }
 
-export async function reloadTemplates(): Promise<Result<DefaultTemplateResult[]>> {
+export async function reloadTemplates(): Promise<
+  Result<DefaultTemplateResult[]>
+> {
   const result = await ROOT_TEMPLATE_REPOSITORY.reloadTemplates();
 
   if ("error" in result) {
@@ -41,7 +52,9 @@ export async function reloadTemplates(): Promise<Result<DefaultTemplateResult[]>
   return { data: allNewTemplates.data };
 }
 
-export async function retrieveDefaultTemplates(): Promise<Result<DefaultTemplateResult[]>> {
+export async function retrieveDefaultTemplates(): Promise<
+  Result<DefaultTemplateResult[]>
+> {
   const templates = await ROOT_TEMPLATE_REPOSITORY.getAllTemplates();
 
   if ("error" in templates) {
@@ -54,19 +67,28 @@ export async function retrieveDefaultTemplates(): Promise<Result<DefaultTemplate
     return { error: cacheDir.error };
   }
 
-  const result: DefaultTemplateResult[] = templates.data.filter((template) => template.isDefault)?.map((template) => ({
-    revisions: [template.findRootTemplate().commitHash!],
-    template: template.mapToDTO(),
-  })) || [];
+  const result: DefaultTemplateResult[] =
+    templates.data
+      .filter((template) => template.isDefault)
+      ?.map((template) => ({
+        revisions: [template.findRootTemplate().commitHash!],
+        template: template.mapToDTO(),
+      })) || [];
 
   for (const template of templates.data) {
     if (template.isDefault) {
       continue;
     }
 
-    const currentDefaultTemplate = result.find((t) => t.template.config.templateConfig.name === template.config.templateConfig.name);
+    const currentDefaultTemplate = result.find(
+      (t) =>
+        t.template.config.templateConfig.name ===
+        template.config.templateConfig.name,
+    );
     if (currentDefaultTemplate) {
-      currentDefaultTemplate.revisions.push(template.findRootTemplate().commitHash!);
+      currentDefaultTemplate.revisions.push(
+        template.findRootTemplate().commitHash!,
+      );
     }
   }
 
@@ -76,7 +98,8 @@ export async function retrieveDefaultTemplates(): Promise<Result<DefaultTemplate
 export async function retrieveDefaultTemplate(
   templateName: string,
 ): Promise<Result<DefaultTemplateResult | null>> {
-  const templates = await ROOT_TEMPLATE_REPOSITORY.findAllTemplateRevisions(templateName);
+  const templates =
+    await ROOT_TEMPLATE_REPOSITORY.findAllTemplateRevisions(templateName);
   if ("error" in templates) {
     return { error: templates.error };
   }
@@ -98,7 +121,9 @@ export async function retrieveDefaultTemplate(
 
   const templateDto = template.mapToDTO();
 
-  const revisions = templates.data.map((template) => template.findRootTemplate().commitHash!);
+  const revisions = templates.data.map(
+    (template) => template.findRootTemplate().commitHash!,
+  );
 
   return {
     data: {
@@ -111,7 +136,8 @@ export async function retrieveDefaultTemplate(
 export async function retrieveAllTemplateRevisions(
   templateName: string,
 ): Promise<Result<TemplateDTO[] | null>> {
-  const revisions = await ROOT_TEMPLATE_REPOSITORY.findAllTemplateRevisions(templateName);
+  const revisions =
+    await ROOT_TEMPLATE_REPOSITORY.findAllTemplateRevisions(templateName);
 
   if ("error" in revisions) {
     return { error: revisions.error };
@@ -141,15 +167,23 @@ export async function retrieveTemplateRevisionForProject(
     return { data: null };
   }
 
-  const rootTemplateName = project.data.instantiatedProjectSettings.rootTemplateName;
-  const commitHash = project.data.instantiatedProjectSettings.instantiatedTemplates[0]?.templateCommitHash;
+  const rootTemplateName =
+    project.data.instantiatedProjectSettings.rootTemplateName;
+  const commitHash =
+    project.data.instantiatedProjectSettings.instantiatedTemplates[0]
+      ?.templateCommitHash;
 
   if (!commitHash) {
-    logError({ shortMessage: `No commit hash found for project ${projectName}` })
+    logError({
+      shortMessage: `No commit hash found for project ${projectName}`,
+    });
     return { error: `No commit hash found for project ${projectName}` };
   }
 
-  const revision = await ROOT_TEMPLATE_REPOSITORY.loadRevision(rootTemplateName, commitHash);
+  const revision = await ROOT_TEMPLATE_REPOSITORY.loadRevision(
+    rootTemplateName,
+    commitHash,
+  );
 
   if ("error" in revision) {
     return { error: revision.error };

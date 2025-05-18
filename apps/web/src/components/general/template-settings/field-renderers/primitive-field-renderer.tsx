@@ -1,16 +1,28 @@
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Badge } from "@/components/ui/badge"
-import { InfoIcon } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { renderInputByType } from "../input-renderers"
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Badge } from "@/components/ui/badge";
+import { InfoIcon } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { renderInputByType } from "../input-renderers";
 
 interface PrimitiveFieldRendererProps {
-  fieldPath: string
-  property: any
-  isRequired: boolean
-  isReadOnly: boolean
-  form: any
-  label?: string
+  fieldPath: string;
+  property: any;
+  isRequired: boolean;
+  isReadOnly: boolean;
+  form: any;
+  label?: string;
 }
 
 export function PrimitiveFieldRenderer({
@@ -48,7 +60,10 @@ export function PrimitiveFieldRenderer({
             )}
 
             {property.deprecated && (
-              <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300 text-xs">
+              <Badge
+                variant="outline"
+                className="bg-yellow-100 text-yellow-800 border-yellow-300 text-xs"
+              >
                 Deprecated
               </Badge>
             )}
@@ -65,7 +80,9 @@ export function PrimitiveFieldRenderer({
           {property.examples && property.examples.length > 0 && (
             <FormDescription className="text-xs">
               Example:{" "}
-              {Array.isArray(property.examples) ? property.examples[0]?.toString() : property.examples.toString()}
+              {Array.isArray(property.examples)
+                ? property.examples[0]?.toString()
+                : property.examples.toString()}
             </FormDescription>
           )}
 
@@ -73,5 +90,5 @@ export function PrimitiveFieldRenderer({
         </FormItem>
       )}
     />
-  )
+  );
 }

@@ -12,7 +12,10 @@ import {
   retrieveDiffUpdateProjectNewTemplateRevision,
 } from "@/app/actions/instantiate";
 import { retrieveProject } from "@/app/actions/project";
-import { retrieveDefaultTemplate, retrieveTemplateRevisionForProject } from "@/app/actions/template";
+import {
+  retrieveDefaultTemplate,
+  retrieveTemplateRevisionForProject,
+} from "@/app/actions/template";
 import CommitButton from "@/components/general/git/commit-dialog";
 import { DiffVisualizerPage } from "@/components/general/git/diff-visualizer-page";
 import { TemplateSettingsForm } from "@/components/general/template-settings/template-settings-form";
@@ -24,13 +27,16 @@ import {
   ParsedFile,
   ProjectDTO,
   Result,
-  TemplateDTO
+  TemplateDTO,
 } from "@timonteutelink/code-templator-lib/lib/types";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toastNullError } from "@/lib/utils";
-import { FileUploadDialog, JsonFile } from "@/components/general/file-upload-dialog";
+import {
+  FileUploadDialog,
+  JsonFile,
+} from "@/components/general/file-upload-dialog";
 import { ConfirmationDialog } from "@/components/general/confirmation-dialog";
 
 // TODO: when updating to a new template version we should reiterate all settings of all templates for possible changes. Or we fully automate go directly to diff but require the template to setup sensible defaults for possible new options.
@@ -70,20 +76,21 @@ const TemplateInstantiationPage: React.FC = () => {
     null,
   );
   const [appliedDiff, setAppliedDiff] = useState<ParsedFile[] | null>(null);
-  const [storedFormData, setStoredFormData] = useState<UserTemplateSettings | null>(null);
+  const [storedFormData, setStoredFormData] =
+    useState<UserTemplateSettings | null>(null);
 
   useEffect(() => {
     if (!projectNameParam) {
       toastNullError({
         shortMessage: "Project name not provided in search params.",
-      })
+      });
       router.push("/projects");
       return;
     }
     if (!newRevisionHashParam && !templateNameParam) {
       toastNullError({
         shortMessage: "Template name not provided in search params.",
-      })
+      });
       router.push("/projects");
       return;
     }
@@ -100,24 +107,32 @@ const TemplateInstantiationPage: React.FC = () => {
         !newRevisionHashParam)
     ) {
       toastNullError({
-        shortMessage: "Cannot only provide one of selectedDirectoryId or parentTemplateInstanceId or existingTemplateInstanceId or newRevisionHash.",
-      })
+        shortMessage:
+          "Cannot only provide one of selectedDirectoryId or parentTemplateInstanceId or existingTemplateInstanceId or newRevisionHash.",
+      });
       router.push("/projects");
       return;
     }
     const retrieveStuff = async () => {
-      const [projectResult, revisionResult] = await Promise.all([retrieveProject(projectNameParam), selectedDirectoryIdParam ? retrieveDefaultTemplate(templateNameParam!) : retrieveTemplateRevisionForProject(projectNameParam)]);
+      const [projectResult, revisionResult] = await Promise.all([
+        retrieveProject(projectNameParam),
+        selectedDirectoryIdParam
+          ? retrieveDefaultTemplate(templateNameParam!)
+          : retrieveTemplateRevisionForProject(projectNameParam),
+      ]);
 
       const revision = toastNullError({
-        result: revisionResult as Result<DefaultTemplateResult | TemplateDTO | null>,
+        result: revisionResult as Result<
+          DefaultTemplateResult | TemplateDTO | null
+        >,
         shortMessage: "Error retrieving template.",
         nullErrorMessage: `Template not found for project: ${projectNameParam}`,
         nullRedirectPath: "/projects",
         router,
-      })
+      });
 
       if (!revision) {
-        return
+        return;
       }
 
       if ("template" in revision) {
@@ -125,7 +140,7 @@ const TemplateInstantiationPage: React.FC = () => {
         if (!template) {
           toastNullError({
             shortMessage: "Template not found in revision data.",
-          })
+          });
           return;
         }
         setRootTemplate(template);
@@ -137,12 +152,12 @@ const TemplateInstantiationPage: React.FC = () => {
       const project = toastNullError({
         result: projectResult,
         shortMessage: "Error retrieving project.",
-      })
+      });
       if (!project) {
         if (!selectedDirectoryIdParam) {
           toastNullError({
             shortMessage: `Project not found: ${projectNameParam}`,
-          })
+          });
           router.push("/projects");
         }
         return;
@@ -150,28 +165,29 @@ const TemplateInstantiationPage: React.FC = () => {
       if (project.settings.instantiatedTemplates.length === 0) {
         toastNullError({
           shortMessage: "No instantiated templates found in project.",
-        })
+        });
         router.push("/projects");
         return;
       }
 
-      setProject(project)
+      setProject(project);
 
       if (!newRevisionHashParam) {
         return;
       }
-      const newRevisionResult = await retrieveDiffUpdateProjectNewTemplateRevision(
-        projectNameParam,
-        newRevisionHashParam,
-      );
+      const newRevisionResult =
+        await retrieveDiffUpdateProjectNewTemplateRevision(
+          projectNameParam,
+          newRevisionHashParam,
+        );
       const newRevision = toastNullError({
         result: newRevisionResult,
         shortMessage: "Error retrieving template.",
-      })
+      });
       if (!newRevision) {
-        return
+        return;
       }
-      setDiffToApply(newRevision)
+      setDiffToApply(newRevision);
     };
     retrieveStuff();
   }, [
@@ -201,7 +217,7 @@ const TemplateInstantiationPage: React.FC = () => {
       ) {
         toastNullError({
           shortMessage: "Project name or template name not found.",
-        })
+        });
         return;
       }
 
@@ -217,10 +233,10 @@ const TemplateInstantiationPage: React.FC = () => {
         const newProject = toastNullError({
           result: newProjectResult,
           shortMessage: "Error creating project.",
-        })
+        });
 
         if (!newProject) {
-          return
+          return;
         }
 
         setAppliedDiff(newProject.diff);
@@ -228,14 +244,14 @@ const TemplateInstantiationPage: React.FC = () => {
         if (!project) {
           toastNullError({
             shortMessage: "Project not found.",
-          })
+          });
           return;
         }
 
         if (project.settings.projectName !== projectNameParam) {
           toastNullError({
             shortMessage: "Project name does not match.",
-          })
+          });
           return;
         }
 
@@ -243,10 +259,10 @@ const TemplateInstantiationPage: React.FC = () => {
           result: subTemplate,
           shortMessage: "Error finding sub-template.",
           nullErrorMessage: "Sub-template not found.",
-        })
+        });
 
         if (!subTemplateValue) {
-          return
+          return;
         }
 
         if (
@@ -254,26 +270,28 @@ const TemplateInstantiationPage: React.FC = () => {
           rootTemplate.config.templateConfig.name
         ) {
           toastNullError({
-            shortMessage: "Root template cannot be instantiated as a sub-template.",
-          })
+            shortMessage:
+              "Root template cannot be instantiated as a sub-template.",
+          });
           return;
         }
 
-        const templateInstantiationResult = await prepareTemplateInstantiationDiff(
-          rootTemplate.config.templateConfig.name,
-          subTemplateValue.config.templateConfig.name,
-          parentTemplateInstanceIdParam!,
-          projectNameParam,
-          data,
-        );
+        const templateInstantiationResult =
+          await prepareTemplateInstantiationDiff(
+            rootTemplate.config.templateConfig.name,
+            subTemplateValue.config.templateConfig.name,
+            parentTemplateInstanceIdParam!,
+            projectNameParam,
+            data,
+          );
 
         const result = toastNullError({
           result: templateInstantiationResult,
           shortMessage: "Error instantiating template.",
-        })
+        });
 
         if (!result) {
-          return
+          return;
         }
 
         setDiffToApply(result);
@@ -281,14 +299,14 @@ const TemplateInstantiationPage: React.FC = () => {
         if (!project) {
           toastNullError({
             shortMessage: `Project not found: ${projectNameParam}`,
-          })
+          });
           return;
         }
 
         if (project.settings.projectName !== projectNameParam) {
           toastNullError({
             shortMessage: "Project name does not match.",
-          })
+          });
           return;
         }
 
@@ -296,30 +314,32 @@ const TemplateInstantiationPage: React.FC = () => {
           result: subTemplate,
           shortMessage: "Error finding sub-template.",
           nullErrorMessage: "Sub-template not found.",
-        })
+        });
         if (!subTemplateValue) {
-          return
+          return;
         }
 
-        const templateModificationResult = await prepareTemplateModificationDiff(
-          data,
-          projectNameParam,
-          existingTemplateInstanceIdParam,
-        );
+        const templateModificationResult =
+          await prepareTemplateModificationDiff(
+            data,
+            projectNameParam,
+            existingTemplateInstanceIdParam,
+          );
 
         const templateModification = toastNullError({
           result: templateModificationResult,
           shortMessage: "Error instantiating template.",
-        })
+        });
         if (!templateModification) {
-          return
+          return;
         }
 
         setDiffToApply(templateModification);
       } else {
         toastNullError({
-          shortMessage: "No parent template instance ID or selected directory ID provided.",
-        })
+          shortMessage:
+            "No parent template instance ID or selected directory ID provided.",
+        });
         return;
       }
     },
@@ -340,13 +360,13 @@ const TemplateInstantiationPage: React.FC = () => {
       if (!projectNameParam || !commitMessage) {
         toastNullError({
           shortMessage: "Project name or commit message not found.",
-        })
+        });
         return;
       }
       if (!commitMessage) {
         toastNullError({
           shortMessage: "Commit message is required.",
-        })
+        });
         return;
       }
 
@@ -355,74 +375,93 @@ const TemplateInstantiationPage: React.FC = () => {
       const commit = toastNullError({
         result: commitResult,
         shortMessage: "Error committing changes.",
-      })
+      });
 
       if (commit === false) {
-        return
+        return;
       }
       router.push(`/projects/project/?projectName=${projectNameParam}`);
     },
     [router, projectNameParam],
   );
 
-  const handleUploadProjectSettings = useCallback(async (jsons: JsonFile[]): Promise<Result<void>> => {
-    if (!templateNameParam || !selectedDirectoryIdParam || !projectNameParam) {
-      toastNullError({
-        shortMessage: "Not creating a project. 'template' or 'selectedDirectoryId' or 'projectName' is missing."
-      })
-      return { data: undefined };
-    }
-    const projectSettingsJson = jsons[0]!;
-
-    try {
-      const parsedProjectSettings = JSON.parse(projectSettingsJson.text);
-
-      if (parsedProjectSettings.rootTemplateName !== templateNameParam) {
+  const handleUploadProjectSettings = useCallback(
+    async (jsons: JsonFile[]): Promise<Result<void>> => {
+      if (
+        !templateNameParam ||
+        !selectedDirectoryIdParam ||
+        !projectNameParam
+      ) {
         toastNullError({
-          shortMessage: "The template selected in the previous step does not match the root template in the uploaded project settings"
-        })
-        return { error: "The template selected in the previous step does not match the root template in the uploaded project settings" }
+          shortMessage:
+            "Not creating a project. 'template' or 'selectedDirectoryId' or 'projectName' is missing.",
+        });
+        return { data: undefined };
       }
-    } catch (error) {
-      toastNullError({
-        error,
-        shortMessage: "Error occured parsing the loaded project settings json"
-      })
-      return { error: "Error occured parsing the loaded project settings json" }
-    }
+      const projectSettingsJson = jsons[0]!;
 
-    const newProjectResult = await generateProjectFromProjectSettings(projectSettingsJson.text, selectedDirectoryIdParam, projectNameParam);
+      try {
+        const parsedProjectSettings = JSON.parse(projectSettingsJson.text);
 
-    const newProject = toastNullError({
-      result: newProjectResult,
-      shortMessage: "Error creating project.",
-    })
+        if (parsedProjectSettings.rootTemplateName !== templateNameParam) {
+          toastNullError({
+            shortMessage:
+              "The template selected in the previous step does not match the root template in the uploaded project settings",
+          });
+          return {
+            error:
+              "The template selected in the previous step does not match the root template in the uploaded project settings",
+          };
+        }
+      } catch (error) {
+        toastNullError({
+          error,
+          shortMessage:
+            "Error occured parsing the loaded project settings json",
+        });
+        return {
+          error: "Error occured parsing the loaded project settings json",
+        };
+      }
 
-    if (!newProject) {
-      return { error: "Project creating failed" };
-    }
+      const newProjectResult = await generateProjectFromProjectSettings(
+        projectSettingsJson.text,
+        selectedDirectoryIdParam,
+        projectNameParam,
+      );
 
-    setAppliedDiff(newProject.diff);
-    return { data: undefined };
-  }, [projectNameParam, selectedDirectoryIdParam, templateNameParam])
+      const newProject = toastNullError({
+        result: newProjectResult,
+        shortMessage: "Error creating project.",
+      });
+
+      if (!newProject) {
+        return { error: "Project creating failed" };
+      }
+
+      setAppliedDiff(newProject.diff);
+      return { data: undefined };
+    },
+    [projectNameParam, selectedDirectoryIdParam, templateNameParam],
+  );
 
   const handleSubmitDiffToApply = useCallback(async () => {
     if (!projectNameParam) {
       toastNullError({
         shortMessage: "Project name not found.",
-      })
+      });
       return;
     }
     if (!diffToApply) {
       toastNullError({
         shortMessage: "Diff to apply is null.",
-      })
+      });
       return;
     }
     if (selectedDirectoryIdParam) {
       toastNullError({
         shortMessage: "Diff to apply should not be shown.",
-      })
+      });
       return;
     }
 
@@ -434,10 +473,10 @@ const TemplateInstantiationPage: React.FC = () => {
     const applyDiff = toastNullError({
       result: applyDiffResult,
       shortMessage: "Error applying diff.",
-    })
+    });
 
     if (!applyDiff) {
-      return
+      return;
     }
 
     let diff: ParsedFile[];
@@ -454,13 +493,13 @@ const TemplateInstantiationPage: React.FC = () => {
       const resolved = toastNullError({
         result: resolveResult,
         shortMessage: "Error resolving conflicts.",
-      })
+      });
 
       if (!resolved) {
-        return
+        return;
       }
 
-      diff = resolved
+      diff = resolved;
     } else {
       diff = applyDiff as ParsedFile[];
     }
@@ -472,7 +511,7 @@ const TemplateInstantiationPage: React.FC = () => {
     if (!projectNameParam) {
       toastNullError({
         shortMessage: "Project name not found.",
-      })
+      });
       return;
     }
 
@@ -483,9 +522,9 @@ const TemplateInstantiationPage: React.FC = () => {
       const cancel = toastNullError({
         result: result,
         shortMessage: "Error deleting project.",
-      })
+      });
       if (cancel === false) {
-        return
+        return;
       }
     } else {
       const restoreResult =
@@ -493,9 +532,9 @@ const TemplateInstantiationPage: React.FC = () => {
       const restored = toastNullError({
         result: restoreResult,
         shortMessage: "Error restoring changes.",
-      })
+      });
       if (restored === false) {
-        return
+        return;
       }
     }
 
@@ -507,10 +546,7 @@ const TemplateInstantiationPage: React.FC = () => {
   }, []);
 
   const templateSettingsDefaultValues: Record<string, any> = useMemo(() => {
-    if (
-      storedFormData &&
-      Object.keys(storedFormData).length > 0
-    ) {
+    if (storedFormData && Object.keys(storedFormData).length > 0) {
       return storedFormData;
     }
 
@@ -546,7 +582,10 @@ const TemplateInstantiationPage: React.FC = () => {
 
   if (
     !rootTemplate ||
-    (!project && (parentTemplateInstanceIdParam || existingTemplateInstanceIdParam || newRevisionHashParam))
+    (!project &&
+      (parentTemplateInstanceIdParam ||
+        existingTemplateInstanceIdParam ||
+        newRevisionHashParam))
   ) {
     return (
       <div className="container mx-auto py-10">
@@ -570,7 +609,10 @@ const TemplateInstantiationPage: React.FC = () => {
               actionText={"Delete"}
               dialogTitle={"Delete Project"}
               dialogDescription={"Go back and delete current project."}
-              onConfirm={async () => { handleBackFromAppliedDiff(); return { data: undefined } }}
+              onConfirm={async () => {
+                handleBackFromAppliedDiff();
+                return { data: undefined };
+              }}
             />
           ) : (
             <Button variant="outline" onClick={handleBackFromAppliedDiff}>
@@ -579,7 +621,7 @@ const TemplateInstantiationPage: React.FC = () => {
           )}
           <CommitButton
             onCommit={handleConfirmAppliedDiff}
-            onCancel={() => { }}
+            onCancel={() => {}}
           />
         </div>
       </div>
@@ -642,20 +684,21 @@ const TemplateInstantiationPage: React.FC = () => {
             Back
           </Button>
         </div>
-
       </div>
     );
   }
 
   return (
     <div className="w-full h-full">
-      {selectedDirectoryIdParam ? (<div className="w-full h-16 bg-gray-50 border-b border-b-gray-300 flex items-center justify-end px-4">
-        <FileUploadDialog
-          onUpload={handleUploadProjectSettings}
-          onCancel={async () => ({ data: undefined })}
-          buttonText={"Create from project settings"}
-        />
-      </div>) : null}
+      {selectedDirectoryIdParam ? (
+        <div className="w-full h-16 bg-gray-50 border-b border-b-gray-300 flex items-center justify-end px-4">
+          <FileUploadDialog
+            onUpload={handleUploadProjectSettings}
+            onCancel={async () => ({ data: undefined })}
+            buttonText={"Create from project settings"}
+          />
+        </div>
+      ) : null}
       <TemplateSettingsForm
         projectName={projectNameParam}
         selectedTemplate={templateNameParam}
@@ -665,7 +708,9 @@ const TemplateInstantiationPage: React.FC = () => {
         formDefaultValues={templateSettingsDefaultValues}
         action={handleSubmitSettings}
         cancel={() => {
-          router.push(`/projects/${projectNameParam && !selectedDirectoryIdParam ? `project/?projectName=${projectNameParam}` : ''}`);
+          router.push(
+            `/projects/${projectNameParam && !selectedDirectoryIdParam ? `project/?projectName=${projectNameParam}` : ""}`,
+          );
         }}
       />
     </div>

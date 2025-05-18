@@ -1,5 +1,9 @@
 "use client";
-import { runEraseCache, reloadTemplates, retrieveDefaultTemplates } from "@/app/actions/template";
+import {
+  runEraseCache,
+  reloadTemplates,
+  retrieveDefaultTemplates,
+} from "@/app/actions/template";
 import { ConfirmationDialog } from "@/components/general/confirmation-dialog";
 import TablePage, { FieldInfo } from "@/components/general/table-page";
 import { toastNullError } from "@/lib/utils";
@@ -20,7 +24,7 @@ const columnMapping: FieldInfo<DefaultTemplateResult>[] = [
   {
     name: "Revisions",
     data: (item) => item.revisions.length,
-  }
+  },
 ];
 
 export default function TemplatesListPage() {
@@ -47,7 +51,7 @@ export default function TemplatesListPage() {
       shortMessage: "Error reloading templates",
     });
     if (!toastResult) {
-      if ('error' in result) {
+      if ("error" in result) {
         return { error: result.error };
       } else {
         return { error: "Unknown error" };
@@ -65,7 +69,7 @@ export default function TemplatesListPage() {
       shortMessage: "Error clearing cache",
     });
     if (!toastResult) {
-      if ('error' in result) {
+      if ("error" in result) {
         return { error: result.error };
       } else {
         return { error: "Unknown error" };
@@ -76,22 +80,27 @@ export default function TemplatesListPage() {
     return { data: undefined };
   }, []);
 
-  const templateButtons = useMemo(() => (<>
-    <ConfirmationDialog
-      buttonText="Reload Templates"
-      actionText="Reload"
-      dialogTitle="Reload Templates"
-      dialogDescription="Are you sure you want to reload all templates?"
-      onConfirm={handleReload}
-    />
-    <ConfirmationDialog
-      buttonText="Clear Cache"
-      actionText="Clear"
-      dialogTitle="Clear Cache"
-      dialogDescription="Are you sure you want to clear the cache? This action cannot be undone."
-      onConfirm={handleClearCache}
-    />
-  </>), [handleReload, handleClearCache]);
+  const templateButtons = useMemo(
+    () => (
+      <>
+        <ConfirmationDialog
+          buttonText="Reload Templates"
+          actionText="Reload"
+          dialogTitle="Reload Templates"
+          dialogDescription="Are you sure you want to reload all templates?"
+          onConfirm={handleReload}
+        />
+        <ConfirmationDialog
+          buttonText="Clear Cache"
+          actionText="Clear"
+          dialogTitle="Clear Cache"
+          dialogDescription="Are you sure you want to clear the cache? This action cannot be undone."
+          onConfirm={handleClearCache}
+        />
+      </>
+    ),
+    [handleReload, handleClearCache],
+  );
 
   return (
     <TablePage<DefaultTemplateResult>

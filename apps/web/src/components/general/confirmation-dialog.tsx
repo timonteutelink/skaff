@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,47 +9,54 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { useCallback, useState } from "react"
-import { Result } from "@timonteutelink/code-templator-lib/lib/types"
-import { toast } from "sonner"
-import { toastNullError } from "@/lib/utils"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useCallback, useState } from "react";
+import { Result } from "@timonteutelink/code-templator-lib/lib/types";
+import { toast } from "sonner";
+import { toastNullError } from "@/lib/utils";
 
 interface ConfirmationDialogProps {
-  buttonText: string
+  buttonText: string;
 
-  actionText: string
+  actionText: string;
 
-  dialogTitle: string
-  dialogDescription: string
+  dialogTitle: string;
+  dialogDescription: string;
 
-  onConfirm: () => Promise<Result<void>>
-  onCancel?: () => Promise<Result<void>>
+  onConfirm: () => Promise<Result<void>>;
+  onCancel?: () => Promise<Result<void>>;
 }
 
-export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({ buttonText, actionText, dialogTitle, dialogDescription, onConfirm, onCancel }) => {
-  const [open, setOpen] = useState(false)
+export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
+  buttonText,
+  actionText,
+  dialogTitle,
+  dialogDescription,
+  onConfirm,
+  onCancel,
+}) => {
+  const [open, setOpen] = useState(false);
 
   const handleConfirmAction = useCallback(async () => {
-    const result = await onConfirm()
+    const result = await onConfirm();
     if ("error" in result) {
-      return
+      return;
     }
-    setOpen(false)
-  }, [onConfirm])
+    setOpen(false);
+  }, [onConfirm]);
 
   const handleCancel = useCallback(async () => {
     if (!onCancel) {
-      setOpen(false)
-      return
+      setOpen(false);
+      return;
     }
-    const cancelResult = await onCancel()
+    const cancelResult = await onCancel();
     if ("error" in cancelResult) {
-      return
+      return;
     }
-    setOpen(false)
-  }, [onCancel])
+    setOpen(false);
+  }, [onCancel]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -65,12 +72,15 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({ buttonTe
           <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={handleConfirmAction} className="ml-2">
+          <Button
+            variant="destructive"
+            onClick={handleConfirmAction}
+            className="ml-2"
+          >
             {actionText}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
-}
-
+  );
+};

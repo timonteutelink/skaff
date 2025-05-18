@@ -46,7 +46,7 @@ export type TemplateConfig = z.infer<typeof templateConfigSchema>;
  */
 export type SideEffectFunction<
   TFullSettingsType extends
-  TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
+    TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
 > = (
   templateSettings: TFullSettingsType,
   oldFileContents?: string,
@@ -54,7 +54,7 @@ export type SideEffectFunction<
 
 export type SideEffect<
   TFullSettingsType extends
-  TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
+    TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
 > = {
   apply: SideEffectFunction<TFullSettingsType>;
   /**
@@ -81,9 +81,9 @@ export type RedirectFile = {
  * If multiple rules match the first will be used
  */
 export type AllowOverwrite = {
-  srcRegex: RegExp,
-  mode: 'overwrite' | 'overwrite-warn' | 'ignore' | 'ignore-warn' | 'error'
-}
+  srcRegex: RegExp;
+  mode: "overwrite" | "overwrite-warn" | "ignore" | "ignore-warn" | "error";
+};
 
 /**
  * Template that disables this template if it exists in the project.
@@ -101,14 +101,14 @@ export type TemplateDisablingThis = {
    * Objects that if the template contains all key value pairs as in this object then this template will be disabled.
    */
   specificSettings?: UserTemplateSettings[];
-}
+};
 
 /**
  * Auto instantiate subtemplates.
  */
 export type AutoInstantiatedSubtemplate<
   TFullSettingsType extends
-  TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
+    TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
 > = {
   /**
    * The path to the subtemplate.
@@ -121,7 +121,7 @@ export type AutoInstantiatedSubtemplate<
    * Function to map the user settings to the subtemplate settings.
    * This function is called with the user settings and should return the subtemplate settings.
    */
-  mapSettings: AnyOrCallback<TFullSettingsType, UserTemplateSettings>;// TODO if this can be done nicely between a template and its children then we can allow the parent template to define the settings from the child in here. Then the type can also be used to extend the fullparentsettings type for the children down below. And the template dir can become fully typed. But we should first think how other git repos are handled(templates referencing other templates.) Before we allow parents to access types of children and all those references.
+  mapSettings: AnyOrCallback<TFullSettingsType, UserTemplateSettings>; // TODO if this can be done nicely between a template and its children then we can allow the parent template to define the settings from the child in here. Then the type can also be used to extend the fullparentsettings type for the children down below. And the template dir can become fully typed. But we should first think how other git repos are handled(templates referencing other templates.) Before we allow parents to access types of children and all those references.
 
   /**
    * Array of children templates to also autoinstiate with this one.
@@ -131,13 +131,13 @@ export type AutoInstantiatedSubtemplate<
 
 export type TemplateCommand<
   TFullSettingsType extends
-  TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
+    TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
 > = {
   title: string;
   description: string;
   path?: string;
   command: StringOrCallback<TFullSettingsType>;
-}
+};
 
 export type AiContext = {
   description: string;
@@ -152,7 +152,7 @@ export type LLMTools = {
 //TODO: Ai settings will go in the tool env vars.
 export type AiCallbackFunction<
   TFullSettingsType extends
-  TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
+    TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
 > = (
   llmTools: LLMTools,
   templateSettings: TFullSettingsType,
@@ -160,7 +160,7 @@ export type AiCallbackFunction<
 
 export type AiAutoGenerateSettings<
   TFullSettingsType extends
-  TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
+    TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
 > = {
   expectedKeys: AnyOrCallback<TFullSettingsType, string[]>;
   callback: AiCallbackFunction<TFullSettingsType>;
@@ -168,7 +168,7 @@ export type AiAutoGenerateSettings<
 
 export type AiUserConversationSettings<
   TFullSettingsType extends
-  TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
+    TemplateSettingsType<z.AnyZodObject> = TemplateSettingsType<z.AnyZodObject>,
 > = {
   expectedKeys: AnyOrCallback<TFullSettingsType, string[]>;
 
@@ -216,7 +216,10 @@ export interface TemplateConfigModule<
   /**
    * Side effects to be applied when generating the template.
    */
-  sideEffects?: AnyOrCallback<TFullSettingsType, SideEffect<TFullSettingsType>[]>;
+  sideEffects?: AnyOrCallback<
+    TFullSettingsType,
+    SideEffect<TFullSettingsType>[]
+  >;
 
   /**
    * Redirects of files or directories to another location based from project root.
@@ -231,7 +234,10 @@ export interface TemplateConfigModule<
   /**
    * Auto instantiate subtemplates.
    */
-  autoInstantiatedSubtemplates?: AnyOrCallback<TFullSettingsType, AutoInstantiatedSubtemplate<TFullSettingsType>[]>;
+  autoInstantiatedSubtemplates?: AnyOrCallback<
+    TFullSettingsType,
+    AutoInstantiatedSubtemplate<TFullSettingsType>[]
+  >;
 
   /**
    * Assertions. Function must return true otherwise the template generation will fail.
@@ -241,7 +247,10 @@ export interface TemplateConfigModule<
   /**
    * A list of helper functions provided to handlebars before rendering the template.
    */
-  handlebarHelpers?: AnyOrCallback<TFullSettingsType, Record<string, HelperDelegate>>;
+  handlebarHelpers?: AnyOrCallback<
+    TFullSettingsType,
+    Record<string, HelperDelegate>
+  >;
 
   /**
    * A list of commands the user might want to run inside the project. Related to this template. Executed using bash.

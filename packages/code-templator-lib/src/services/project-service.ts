@@ -5,17 +5,14 @@ import {
 import path from "node:path";
 import { AnyZodObject, z } from "zod";
 import { logger } from "../lib/logger";
-import {
-  ProjectCreationResult,
-  ProjectSettings,
-  Result
-} from "../lib/types";
+import { ProjectCreationResult, ProjectSettings, Result } from "../lib/types";
 import { Project } from "../models/project";
 import { Template } from "../models/template";
-import { getProjectRepository, getRootTemplateRepository } from "../repositories";
 import {
-  parseGitDiff
-} from "./git-service";
+  getProjectRepository,
+  getRootTemplateRepository,
+} from "../repositories";
+import { parseGitDiff } from "./git-service";
 import { TemplateGeneratorService } from "./template-generator-service";
 
 export function getParsedUserSettingsWithParentSettings(
@@ -29,9 +26,7 @@ export function getParsedUserSettingsWithParentSettings(
       userSettings,
     );
   if (!parsedUserSettings?.success) {
-    logger.error(
-      `Failed to parse user settings: ${parsedUserSettings?.error}`,
-    );
+    logger.error(`Failed to parse user settings: ${parsedUserSettings?.error}`);
     return {
       error: `Failed to parse user settings: ${parsedUserSettings?.error}`,
     };
@@ -69,7 +64,9 @@ export async function instantiateProject(
   newProjectName: string,
   userTemplateSettings: UserTemplateSettings,
 ): Promise<Result<ProjectCreationResult>> {
-  const template = await (await getRootTemplateRepository()).findDefaultTemplate(rootTemplateName);
+  const template = await (
+    await getRootTemplateRepository()
+  ).findDefaultTemplate(rootTemplateName);
 
   if ("error" in template) {
     return template;
@@ -96,7 +93,9 @@ export async function instantiateProject(
     return reloadResult;
   }
 
-  const project = await (await getProjectRepository()).findProject(newProjectName);
+  const project = await (
+    await getProjectRepository()
+  ).findProject(newProjectName);
 
   if ("error" in project) {
     return project;
@@ -114,7 +113,7 @@ export async function instantiateProject(
   const projectDTO = project.data.mapToDTO();
 
   if ("error" in projectDTO) {
-    return projectDTO
+    return projectDTO;
   }
 
   return { data: { newProject: projectDTO.data, diff: processedDiff } };
@@ -136,22 +135,27 @@ export async function generateProjectFromExistingProject(
 export async function generateProjectFromTemplateSettings(
   projectSettings: ProjectSettings,
   newProjectPath: string,
-  git?: boolean
+  git?: boolean,
 ): Promise<Result<ProjectCreationResult | string>> {
-  const instantiatedRootTemplate = projectSettings.instantiatedTemplates[0]?.templateCommitHash;
+  const instantiatedRootTemplate =
+    projectSettings.instantiatedTemplates[0]?.templateCommitHash;
 
   if (!instantiatedRootTemplate) {
-    logger.error(`No instantiated root template commit hash found in project settings`);
-    return { error: "No instantiated root template commit hash found in project settings" };
+    logger.error(
+      `No instantiated root template commit hash found in project settings`,
+    );
+    return {
+      error:
+        "No instantiated root template commit hash found in project settings",
+    };
   }
 
-  const rootTemplate = await (await getRootTemplateRepository()).loadRevision(
-    projectSettings.rootTemplateName,
-    instantiatedRootTemplate,
-  );
+  const rootTemplate = await (
+    await getRootTemplateRepository()
+  ).loadRevision(projectSettings.rootTemplateName, instantiatedRootTemplate);
 
   if ("error" in rootTemplate) {
-    return rootTemplate
+    return rootTemplate;
   }
 
   if (!rootTemplate.data) {
@@ -171,7 +175,8 @@ export async function generateProjectFromTemplateSettings(
     projectSettings,
   );
 
-  const projectCreationResult = await newProjectGenerator.instantiateFullProjectFromSettings();
+  const projectCreationResult =
+    await newProjectGenerator.instantiateFullProjectFromSettings();
 
   if ("error" in projectCreationResult) {
     return projectCreationResult;
@@ -187,9 +192,11 @@ export async function generateProjectFromTemplateSettings(
     return reloadResult;
   }
 
-  const newProjectName = path.basename(projectCreationResult.data.resultPath)
+  const newProjectName = path.basename(projectCreationResult.data.resultPath);
 
-  const project = await (await getProjectRepository()).findProject(newProjectName);
+  const project = await (
+    await getProjectRepository()
+  ).findProject(newProjectName);
 
   if ("error" in project) {
     return project;
@@ -207,10 +214,8 @@ export async function generateProjectFromTemplateSettings(
   const projectDTO = project.data.mapToDTO();
 
   if ("error" in projectDTO) {
-    return projectDTO
+    return projectDTO;
   }
 
   return { data: { newProject: projectDTO.data, diff: processedDiff } };
-
 }
-

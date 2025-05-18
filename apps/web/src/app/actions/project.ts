@@ -1,5 +1,8 @@
 "use server";
-import { ProjectDTO, Result } from "@timonteutelink/code-templator-lib/lib/types";
+import {
+  ProjectDTO,
+  Result,
+} from "@timonteutelink/code-templator-lib/lib/types";
 import { logger } from "@timonteutelink/code-templator-lib/lib/logger";
 import { PROJECT_REPOSITORY } from "@timonteutelink/code-templator-lib/repositories/project-repository";
 import { logError } from "@timonteutelink/code-templator-lib/lib/utils";
@@ -7,6 +10,7 @@ import { logError } from "@timonteutelink/code-templator-lib/lib/utils";
 export async function retrieveProjectSearchPaths(): Promise<
   { id: string; path: string }[]
 > {
+  const config = await getConfig();
   return PROJECT_SEARCH_PATHS;
 }
 
@@ -79,7 +83,7 @@ export async function runProjectCommand(
   }
 
   if (!project.data) {
-    logError({ shortMessage: `Project ${projectName} not found` })
+    logError({ shortMessage: `Project ${projectName} not found` });
     return { error: `Project ${projectName} not found` };
   }
 

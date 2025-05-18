@@ -9,9 +9,7 @@ export default function SidebarLayout({
   return (
     <SidebarProvider>
       <MainSidebar />
-      <SidebarInset>
-        {children}
-      </SidebarInset>
+      <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
   );
 }

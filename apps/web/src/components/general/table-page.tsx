@@ -12,7 +12,13 @@ import { PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { JSX } from "react";
 
-export type ListFieldDataType = string | number | boolean | null | undefined | JSX.Element;
+export type ListFieldDataType =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | JSX.Element;
 
 export interface FieldInfo<T extends Record<string, any>> {
   name: string;
@@ -80,7 +86,9 @@ export default function TablePage<T extends Record<string, any>>({
               {columnMapping.map((field) => (
                 <TableCell
                   key={`${index}-${field.name}`}
-                  className={field.name === columnMapping[0]?.name ? "font-medium" : ""}
+                  className={
+                    field.name === columnMapping[0]?.name ? "font-medium" : ""
+                  }
                 >
                   {field.data(item)}
                 </TableCell>

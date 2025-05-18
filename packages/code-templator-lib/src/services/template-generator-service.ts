@@ -9,15 +9,13 @@ import {
 import fs from "fs-extra";
 import { readFile } from "node:fs/promises";
 import { glob } from "glob";
-import Handlebars, { HelperDelegate, HelperOptions } from 'handlebars';
+import Handlebars, { HelperDelegate, HelperOptions } from "handlebars";
 import * as path from "node:path";
 import z from "zod";
 import { Template } from "../models/template";
-import {
-  isSubset,
-} from "../utils/shared-utils";
+import { isSubset } from "../utils/shared-utils";
 import { makeDir } from "./file-service";
-import { addAllAndDiff, commitAll, createGitRepo } from "./git-service";
+import { addAllAndRetrieveDiff, commitAll, createGitRepo } from "./git-service";
 import { getParsedUserSettingsWithParentSettings } from "./project-service";
 import {
   writeNewProjectSettings,
@@ -25,33 +23,32 @@ import {
 } from "./project-settings-service";
 import { CreateProjectResult, ProjectSettings, Result } from "../lib/types";
 import { logger } from "../lib/logger";
-import { anyOrCallbackToAny, logError, stringOrCallbackToString } from "../lib/utils";
+import {
+  anyOrCallbackToAny,
+  logError,
+  stringOrCallbackToString,
+} from "../lib/utils";
 
 const eqHelper = (a: any, b: any, options?: HelperOptions) => {
   // block form: options.fn is a function
-  if (options && typeof options.fn === 'function') {
+  if (options && typeof options.fn === "function") {
     return a === b ? options.fn(this) : options.inverse(this);
   }
   // inline/subexpression form: just return the boolean
   return a === b;
-}
+};
 
-Handlebars.registerHelper(
-  'eq',
-  eqHelper
-);
+Handlebars.registerHelper("eq", eqHelper);
 
 const snakeCaseHelper = (str: string) => {
-  return str?.replace("-", "_")
-    .replace(/([a-z])([A-Z])/g, '$1_$2')
-    .replace(/\s+/g, '_')
+  return str
+    ?.replace("-", "_")
+    .replace(/([a-z])([A-Z])/g, "$1_$2")
+    .replace(/\s+/g, "_")
     .toLowerCase();
-}
+};
 
-Handlebars.registerHelper(
-  'snakeCase',
-  snakeCaseHelper
-);
+Handlebars.registerHelper("snakeCase", snakeCaseHelper);
 
 export interface GeneratorOptions {
   /**
@@ -164,7 +161,10 @@ export class TemplateGeneratorService {
       return { error: "No template is currently being generated." };
     }
     const fullSettings = this.currentlyGeneratingTemplateFullSettings;
-    const redirects = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.redirects, fullSettings);
+    const redirects = anyOrCallbackToAny(
+      this.currentlyGeneratingTemplate.config.redirects,
+      fullSettings,
+    );
     if ("error" in redirects) {
       return redirects;
     }
@@ -175,7 +175,6 @@ export class TemplateGeneratorService {
     return { data: redirects.data };
   }
 
-
   private getOverwrites(): Result<AllowOverwrite[]> {
     if (
       !this.currentlyGeneratingTemplate ||
@@ -184,7 +183,10 @@ export class TemplateGeneratorService {
       return { error: "No template is currently being generated." };
     }
     const fullSettings = this.currentlyGeneratingTemplateFullSettings;
-    const overwrites = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.allowedOverwrites, fullSettings);
+    const overwrites = anyOrCallbackToAny(
+      this.currentlyGeneratingTemplate.config.allowedOverwrites,
+      fullSettings,
+    );
     if ("error" in overwrites) {
       return overwrites;
     }
@@ -195,7 +197,9 @@ export class TemplateGeneratorService {
     return { data: overwrites.data };
   }
 
-  private getTemplatesToAutoInstantiate(): Result<AutoInstantiatedSubtemplate[]> {
+  private getTemplatesToAutoInstantiate(): Result<
+    AutoInstantiatedSubtemplate[]
+  > {
     if (
       !this.currentlyGeneratingTemplate ||
       !this.currentlyGeneratingTemplateFullSettings
@@ -203,7 +207,10 @@ export class TemplateGeneratorService {
       return { error: "No template is currently being generated." };
     }
     const fullSettings = this.currentlyGeneratingTemplateFullSettings;
-    const templatesToAutoInstantiate = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.autoInstantiatedSubtemplates, fullSettings);
+    const templatesToAutoInstantiate = anyOrCallbackToAny(
+      this.currentlyGeneratingTemplate.config.autoInstantiatedSubtemplates,
+      fullSettings,
+    );
     if ("error" in templatesToAutoInstantiate) {
       return templatesToAutoInstantiate;
     }
@@ -222,7 +229,10 @@ export class TemplateGeneratorService {
       return { error: "No template is currently being generated." };
     }
     const fullSettings = this.currentlyGeneratingTemplateFullSettings;
-    const handlebarHelpers = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.handlebarHelpers, fullSettings);
+    const handlebarHelpers = anyOrCallbackToAny(
+      this.currentlyGeneratingTemplate.config.handlebarHelpers,
+      fullSettings,
+    );
     if ("error" in handlebarHelpers) {
       return handlebarHelpers;
     }
@@ -259,22 +269,25 @@ export class TemplateGeneratorService {
         logError({
           shortMessage: `Error loading partial file ${filePath}`,
           error,
-        })
+        });
         return { error: `Error loading partial file ${filePath}: ${error}` };
       }
     }
     return { data: loadedPartials };
   }
 
-  private async registerAllPartials(unregister?: boolean): Promise<Result<void>> {
+  private async registerAllPartials(
+    unregister?: boolean,
+  ): Promise<Result<void>> {
     if (!this.currentlyGeneratingTemplate) {
       logger.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
     }
 
-    const templatePartials = await this.currentlyGeneratingTemplate.findAllPartials();
+    const templatePartials =
+      await this.currentlyGeneratingTemplate.findAllPartials();
 
-    if ('error' in templatePartials) {
+    if ("error" in templatePartials) {
       return templatePartials;
     }
 
@@ -282,7 +295,7 @@ export class TemplateGeneratorService {
       for (const [name] of Object.entries(templatePartials.data)) {
         Handlebars.unregisterPartial(name);
       }
-      return { data: undefined }
+      return { data: undefined };
     }
 
     const partialFiles = await this.loadPartialFiles(templatePartials.data);
@@ -363,23 +376,27 @@ export class TemplateGeneratorService {
         try {
           const destStats = await fs.stat(destPath);
           if (destStats.isFile()) {
-            const allowedOverwrite = overwrites.data.find((overwrite) => overwrite.srcRegex.test(entry));
-            if (!allowedOverwrite || allowedOverwrite.mode === 'error') {
+            const allowedOverwrite = overwrites.data.find((overwrite) =>
+              overwrite.srcRegex.test(entry),
+            );
+            if (!allowedOverwrite || allowedOverwrite.mode === "error") {
               logger.error(`File: ${entry} at ${destPath} already exists.`);
               this.registerHandlebarHelpers(handlebarHelpers.data, true);
               this.registerAllPartials(true);
-              return { error: `File: ${entry} at ${destPath} already exists.` }
+              return { error: `File: ${entry} at ${destPath} already exists.` };
             }
 
-            if (allowedOverwrite.mode.endsWith('warn')) {
-              logger.warn(`File: ${entry} at ${destPath} already exists. ${allowedOverwrite.mode.startsWith('ignore') ? 'Ignoring' : 'Overwriting'} it.`)
+            if (allowedOverwrite.mode.endsWith("warn")) {
+              logger.warn(
+                `File: ${entry} at ${destPath} already exists. ${allowedOverwrite.mode.startsWith("ignore") ? "Ignoring" : "Overwriting"} it.`,
+              );
             }
 
-            if (allowedOverwrite.mode.startsWith('ignore')) {
+            if (allowedOverwrite.mode.startsWith("ignore")) {
               continue;
             }
           }
-        } catch { }
+        } catch {}
 
         const content = await readFile(srcPath, { encoding: "utf-8" });
         const compiled = Handlebars.compile(content);
@@ -395,7 +412,7 @@ export class TemplateGeneratorService {
         logError({
           shortMessage: `Error processing file ${srcPath}`,
           error,
-        })
+        });
         this.registerHandlebarHelpers(handlebarHelpers.data, true);
         this.registerAllPartials(true);
         return {
@@ -404,7 +421,7 @@ export class TemplateGeneratorService {
       }
     }
 
-    this.registerHandlebarHelpers(handlebarHelpers.data, true)
+    this.registerHandlebarHelpers(handlebarHelpers.data, true);
     this.registerAllPartials(true);
 
     return { data: undefined };
@@ -423,7 +440,10 @@ export class TemplateGeneratorService {
     }
 
     const fullSettings = this.currentlyGeneratingTemplateFullSettings;
-    const sideEffects = anyOrCallbackToAny(this.currentlyGeneratingTemplate.config.sideEffects, fullSettings);
+    const sideEffects = anyOrCallbackToAny(
+      this.currentlyGeneratingTemplate.config.sideEffects,
+      fullSettings,
+    );
     if ("error" in sideEffects) {
       return sideEffects;
     }
@@ -478,7 +498,7 @@ export class TemplateGeneratorService {
       logError({
         shortMessage: `Failed to apply side effect function`,
         error,
-      })
+      });
       return { error: `Failed to apply side effect: ${error}` };
     }
 
@@ -493,7 +513,7 @@ export class TemplateGeneratorService {
       logError({
         shortMessage: `Failed to write file`,
         error,
-      })
+      });
       return { error: `Failed to write file: ${error}` };
     }
 
@@ -532,7 +552,10 @@ export class TemplateGeneratorService {
     }
 
     for (const templateToAutoInstantiate of templatesToAutoInstantiate || []) {
-      const newTemplateSettings = anyOrCallbackToAny(templateToAutoInstantiate.mapSettings, fullParentSettings);
+      const newTemplateSettings = anyOrCallbackToAny(
+        templateToAutoInstantiate.mapSettings,
+        fullParentSettings,
+      );
 
       if ("error" in newTemplateSettings) {
         return newTemplateSettings;
@@ -544,7 +567,8 @@ export class TemplateGeneratorService {
         newTemplateSettings,
       );
 
-      const nameOfTemplateToAutoInstantiate = templateToAutoInstantiate.subTemplateName;
+      const nameOfTemplateToAutoInstantiate =
+        templateToAutoInstantiate.subTemplateName;
 
       const templateToInstantiate =
         this.currentlyGeneratingTemplate.findSubTemplate(
@@ -560,7 +584,11 @@ export class TemplateGeneratorService {
         };
       }
 
-      if (!templateToInstantiate.parentTemplate || templateToInstantiate.parentTemplate.config.templateConfig.name !== this.currentlyGeneratingTemplate.config.templateConfig.name) {
+      if (
+        !templateToInstantiate.parentTemplate ||
+        templateToInstantiate.parentTemplate.config.templateConfig.name !==
+          this.currentlyGeneratingTemplate.config.templateConfig.name
+      ) {
         logger.error(
           `Subtemplate ${templateToAutoInstantiate.subTemplateName} is not a child of template ${this.currentlyGeneratingTemplate.config.templateConfig.name}`,
         );
@@ -600,7 +628,8 @@ export class TemplateGeneratorService {
         return instantiateTemplateResult;
       }
 
-      const childrenTemplatesToAutoInstantiate = templateToAutoInstantiate.children;
+      const childrenTemplatesToAutoInstantiate =
+        templateToAutoInstantiate.children;
 
       if (childrenTemplatesToAutoInstantiate) {
         const autoInstantiationResult = await this.autoInstantiateSubTemplates(
@@ -830,9 +859,19 @@ export class TemplateGeneratorService {
     for (const instantiatedTemplate of this.destinationProjectSettings
       .instantiatedTemplates) {
       if (
-        templatesThatDisableThisTemplate.data?.filter(templateThatDisableThis => !templateThatDisableThis.specificSettings || isSubset(templateThatDisableThis.specificSettings, instantiatedTemplate.templateSettings)).map(templateThatDisableThis => templateThatDisableThis.templateName).includes(
-          instantiatedTemplate.templateName,
-        )
+        templatesThatDisableThisTemplate.data
+          ?.filter(
+            (templateThatDisableThis) =>
+              !templateThatDisableThis.specificSettings ||
+              isSubset(
+                templateThatDisableThis.specificSettings,
+                instantiatedTemplate.templateSettings,
+              ),
+          )
+          .map(
+            (templateThatDisableThis) => templateThatDisableThis.templateName,
+          )
+          .includes(instantiatedTemplate.templateName)
       ) {
         logger.error(
           `Template ${templateName} cannot be instantiated because ${instantiatedTemplate.templateName} is already instantiated.`,
@@ -897,7 +936,7 @@ export class TemplateGeneratorService {
       logError({
         shortMessage: `Failed to instantiate template`,
         error,
-      })
+      });
       return { error: `Failed to instantiate template: ${error}` };
     }
 
@@ -949,7 +988,10 @@ export class TemplateGeneratorService {
       };
     }
 
-    const result = await this.setTemplateGenerationValues(userSettings, template);
+    const result = await this.setTemplateGenerationValues(
+      userSettings,
+      template,
+    );
 
     if ("error" in result) {
       return result;
@@ -1027,12 +1069,12 @@ export class TemplateGeneratorService {
       logError({
         shortMessage: `Failed to instantiate new project`,
         error,
-      })
+      });
       return { error: `Failed to instantiate new project: ${error}` };
     }
 
     if (!this.options.dontDoGit) {
-      const diffResult = await addAllAndDiff(
+      const diffResult = await addAllAndRetrieveDiff(
         this.options.absoluteDestinationPath,
       );
 
@@ -1116,7 +1158,7 @@ export class TemplateGeneratorService {
       }
 
       if (!this.options.dontDoGit) {
-        const diffResult = await addAllAndDiff(
+        const diffResult = await addAllAndRetrieveDiff(
           this.options.absoluteDestinationPath,
         );
 
@@ -1139,7 +1181,7 @@ export class TemplateGeneratorService {
       logError({
         shortMessage: `Failed to instantiate full project from settings`,
         error,
-      })
+      });
       return {
         error: `Failed to instantiate full project from settings: ${error}`,
       };

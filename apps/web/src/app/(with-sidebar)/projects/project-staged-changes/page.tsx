@@ -4,7 +4,10 @@ import CommitButton from "@/components/general/git/commit-dialog";
 import { DiffVisualizerPage } from "@/components/general/git/diff-visualizer-page";
 import { Button } from "@/components/ui/button";
 import { toastNullError } from "@/lib/utils";
-import type { ParsedFile, Result } from "@timonteutelink/code-templator-lib/lib/types";
+import type {
+  ParsedFile,
+  Result,
+} from "@timonteutelink/code-templator-lib/lib/types";
 import { ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -52,7 +55,10 @@ export default function ProjectStagedChangesPage() {
       try {
         const result = await commitChanges(projectNameParam, message);
 
-        const toastResult = toastNullError({ result, shortMessage: "Error committing changes" });
+        const toastResult = toastNullError({
+          result,
+          shortMessage: "Error committing changes",
+        });
         if (!toastResult) {
           return;
         }
@@ -62,8 +68,7 @@ export default function ProjectStagedChangesPage() {
         toastNullError({
           error,
           shortMessage: "Error committing changes",
-        })
-
+        });
       } finally {
         setIsLoading(false);
       }
@@ -71,7 +76,7 @@ export default function ProjectStagedChangesPage() {
     [projectNameParam, router],
   );
 
-  const handleCancel = useCallback(() => { }, []);
+  const handleCancel = useCallback(() => {}, []);
 
   const handleBack = useCallback(() => {
     if (projectNameParam) {

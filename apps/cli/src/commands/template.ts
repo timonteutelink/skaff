@@ -1,4 +1,7 @@
-import { logger, getRootTemplateRepository } from "@timonteutelink/code-templator-lib";
+import {
+  logger,
+  getRootTemplateRepository,
+} from "@timonteutelink/code-templator-lib";
 import { Command } from "commander";
 import { withFormatting } from "../cli-utils";
 
@@ -32,9 +35,12 @@ export function registerTemplateCommand(program: Command) {
           process.exit(1);
         }
 
-        let templateDtos = res.data.map(t => t.mapToDTO());
+        let templateDtos = res.data.map((t) => t.mapToDTO());
 
-        if (tplName) templateDtos = templateDtos.filter(t => t.config.templateConfig.name === tplName);
+        if (tplName)
+          templateDtos = templateDtos.filter(
+            (t) => t.config.templateConfig.name === tplName,
+          );
 
         if (templateDtos.length === 0) {
           logger.error("No templates found with the given name");
@@ -42,9 +48,13 @@ export function registerTemplateCommand(program: Command) {
         }
 
         if (revision) {
-          const foundTemplateRevision = templateDtos.find(t => t.currentCommitHash === revision);
+          const foundTemplateRevision = templateDtos.find(
+            (t) => t.currentCommitHash === revision,
+          );
           if (!foundTemplateRevision) {
-            const revisionResult = await (await getRootTemplateRepository()).loadRevision(tplName!, revision);
+            const revisionResult = await (
+              await getRootTemplateRepository()
+            ).loadRevision(tplName!, revision);
             if ("error" in revisionResult) {
               logger.error(revisionResult.error);
               process.exit(1);
@@ -59,13 +69,13 @@ export function registerTemplateCommand(program: Command) {
           }
         }
 
-        const payload = templateDtos.map(t => ({
+        const payload = templateDtos.map((t) => ({
           name: t.config.templateConfig.name,
           description: t.config.templateConfig.description,
           revision: t.currentCommitHash,
         }));
 
         return payload.length === 1 ? payload[0] : payload;
-      })
+      }),
     );
 }

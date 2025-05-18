@@ -2,7 +2,10 @@
 
 import { switchProjectBranch } from "@/app/actions/git";
 import { retrieveProject } from "@/app/actions/project";
-import { retrieveDefaultTemplate, retrieveTemplateRevisionForProject } from "@/app/actions/template";
+import {
+  retrieveDefaultTemplate,
+  retrieveTemplateRevisionForProject,
+} from "@/app/actions/template";
 import { ProjectDetailsPanel } from "@/components/general/projects/project-details-panel";
 import { ProjectHeader } from "@/components/general/projects/project-header";
 import { ProjectTree } from "@/components/general/projects/project-tree";
@@ -11,7 +14,7 @@ import { toastNullError } from "@/lib/utils";
 import type {
   InstantiatedTemplate,
   ProjectDTO,
-  TemplateDTO
+  TemplateDTO,
 } from "@timonteutelink/code-templator-lib/lib/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -26,10 +29,7 @@ const isTemplateDisabled = (
   const matchSettings = (
     instanceSettings: Record<string, unknown>,
     required: Record<string, unknown>,
-  ) =>
-    Object.entries(required).every(
-      ([k, v]) => instanceSettings[k] === v,
-    );
+  ) => Object.entries(required).every(([k, v]) => instanceSettings[k] === v);
 
   return rules.some((rule) =>
     instances.some((inst) => {
@@ -134,8 +134,8 @@ const buildProjectTree = (
     if (parentDef && parentDef.subTemplates) {
       Object.keys(parentDef.subTemplates).forEach((category) => {
         const candidateTemplates = parentDef.subTemplates[category]!;
-        const childTemplateNodes: ChildTemplateNode[] = candidateTemplates.map(
-          (candidate) => {
+        const childTemplateNodes: ChildTemplateNode[] = candidateTemplates
+          .map((candidate) => {
             const candidateId = candidate.config.templateConfig.name;
             const childInstances = (childrenByParent[inst.id] || []).filter(
               (child) => child.templateName === candidateId,
@@ -172,8 +172,8 @@ const buildProjectTree = (
               templateDefinition: candidate,
               children: finalChildren,
             } as ChildTemplateNode;
-          },
-        ).filter(res => res !== null);
+          })
+          .filter((res) => res !== null);
 
         // Create the subCategory node with the candidate childTemplate nodes.
         const subCategoryNode: SubCategoryNode = {
@@ -210,8 +210,8 @@ export default function ProjectTemplateTreePage() {
     [searchParams],
   );
   const [project, setProject] = useState<ProjectDTO>();
-  const [rootTemplate, setRootTemplate] = useState<TemplateDTO>();// Specific revision for this project.
-  const [defaultTemplate, setDefaultTemplate] = useState<TemplateDTO>();// Default revision
+  const [rootTemplate, setRootTemplate] = useState<TemplateDTO>(); // Specific revision for this project.
+  const [defaultTemplate, setDefaultTemplate] = useState<TemplateDTO>(); // Default revision
   const [projectTree, setProjectTree] = useState<ProjectTreeNode[]>([]);
   const [selectedNode, setSelectedNode] = useState<ProjectTreeNode | null>(
     null,
@@ -222,13 +222,16 @@ export default function ProjectTemplateTreePage() {
     if (!projectNameParam) {
       toastNullError({
         shortMessage: "No project name provided in search params.",
-      })
+      });
       router.push("/projects");
       return;
     }
 
     const retrieveStuff = async () => {
-      const [projectResult, revisionResult] = await Promise.all([retrieveProject(projectNameParam), retrieveTemplateRevisionForProject(projectNameParam)]);
+      const [projectResult, revisionResult] = await Promise.all([
+        retrieveProject(projectNameParam),
+        retrieveTemplateRevisionForProject(projectNameParam),
+      ]);
 
       const project = toastNullError({
         result: projectResult,
@@ -269,17 +272,19 @@ export default function ProjectTemplateTreePage() {
 
   useEffect(() => {
     if (rootTemplate) {
-      retrieveDefaultTemplate(rootTemplate.config.templateConfig.name).then((defaultTemplateResult) => {
-        const defaultTemplate = toastNullError({
-          result: defaultTemplateResult,
-          shortMessage: "Error retrieving default template.",
-          nullErrorMessage: `Default template not found for ${rootTemplate.config.templateConfig.name}.`,
-        });
-        if (!defaultTemplate) {
-          return;
-        }
-        setDefaultTemplate(defaultTemplate.template);
-      });
+      retrieveDefaultTemplate(rootTemplate.config.templateConfig.name).then(
+        (defaultTemplateResult) => {
+          const defaultTemplate = toastNullError({
+            result: defaultTemplateResult,
+            shortMessage: "Error retrieving default template.",
+            nullErrorMessage: `Default template not found for ${rootTemplate.config.templateConfig.name}.`,
+          });
+          if (!defaultTemplate) {
+            return;
+          }
+          setDefaultTemplate(defaultTemplate.template);
+        },
+      );
     }
   }, [rootTemplate]);
 
@@ -336,7 +341,11 @@ export default function ProjectTemplateTreePage() {
   return (
     <div className="flex flex-col h-screen">
       {projectNameParam && (
-        <ProjectHeader project={project} onBranchChange={handleBranchChange} defaultTemplate={defaultTemplate} />
+        <ProjectHeader
+          project={project}
+          onBranchChange={handleBranchChange}
+          defaultTemplate={defaultTemplate}
+        />
       )}
 
       <div className="flex flex-1 overflow-hidden">

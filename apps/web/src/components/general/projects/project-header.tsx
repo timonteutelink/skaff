@@ -9,7 +9,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toastNullError } from "@/lib/utils";
-import { ParsedFile, ProjectDTO, Result, TemplateDTO } from "@timonteutelink/code-templator-lib/lib/types";
+import {
+  ParsedFile,
+  ProjectDTO,
+  Result,
+  TemplateDTO,
+} from "@timonteutelink/code-templator-lib/lib/types";
 import { FileDiffIcon, GitBranchIcon, GitCommitIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -20,7 +25,11 @@ interface ProjectHeaderProps {
   defaultTemplate: TemplateDTO;
 }
 
-export function ProjectHeader({ project, defaultTemplate, onBranchChange }: ProjectHeaderProps) {
+export function ProjectHeader({
+  project,
+  defaultTemplate,
+  onBranchChange,
+}: ProjectHeaderProps) {
   const router = useRouter();
 
   const [isDiffClean, setIsDiffClean] = useState<boolean>(true);
@@ -31,7 +40,7 @@ export function ProjectHeader({ project, defaultTemplate, onBranchChange }: Proj
         const parsedFiles = toastNullError({
           result,
           shortMessage: "Error retrieving project diff",
-        })
+        });
 
         if (parsedFiles === false) {
           setIsDiffClean(true);
@@ -101,7 +110,7 @@ export function ProjectHeader({ project, defaultTemplate, onBranchChange }: Proj
                 onClick={() => onBranchChange(branch)}
                 className={
                   branch === project.gitStatus.currentBranch ||
-                    !project.gitStatus.isClean
+                  !project.gitStatus.isClean
                     ? "bg-muted"
                     : ""
                 }
@@ -146,7 +155,7 @@ export function ProjectHeader({ project, defaultTemplate, onBranchChange }: Proj
           disabled={!project.outdatedTemplate}
           onClick={() =>
             router.push(
-              `/projects/instantiate-template/?projectName=${project.settings.projectName}&newRevisionHash=${defaultTemplate.currentCommitHash}`
+              `/projects/instantiate-template/?projectName=${project.settings.projectName}&newRevisionHash=${defaultTemplate.currentCommitHash}`,
             )
           }
         >

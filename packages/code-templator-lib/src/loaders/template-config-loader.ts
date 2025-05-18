@@ -16,8 +16,17 @@ import {
 import { getEsbuild } from "../utils/get-esbuild";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 
-type TemplateConfigModule<TFullSettingsType extends TemplateSettingsType<TSettingsType, UserTemplateSettings>, TSettingsType extends zodNS.AnyZodObject> = templateTypesLibNS.TemplateConfigModule<TFullSettingsType, TSettingsType>;
-type TemplateSettingsType<TSettingsSchema extends zodNS.AnyZodObject, TParentSettings extends UserTemplateSettings = {}> = templateTypesLibNS.TemplateSettingsType<TSettingsSchema, TParentSettings>;
+type TemplateConfigModule<
+  TFullSettingsType extends TemplateSettingsType<
+    TSettingsType,
+    UserTemplateSettings
+  >,
+  TSettingsType extends zodNS.AnyZodObject,
+> = templateTypesLibNS.TemplateConfigModule<TFullSettingsType, TSettingsType>;
+type TemplateSettingsType<
+  TSettingsSchema extends zodNS.AnyZodObject,
+  TParentSettings extends UserTemplateSettings = {},
+> = templateTypesLibNS.TemplateSettingsType<TSettingsSchema, TParentSettings>;
 
 const { templateConfigSchema } = templateTypesLibNS;
 
@@ -44,24 +53,24 @@ export type TemplateConfigWithFileInfo = {
 
 async function readTsConfig(): Promise<any> {
   return {
-    "$schema": "https://json.schemastore.org/tsconfig",
-    "compilerOptions": {
-      "declaration": true,
-      "declarationMap": true,
-      "esModuleInterop": true,
-      "incremental": false,
-      "isolatedModules": true,
-      "lib": ["es2022", "DOM", "DOM.Iterable"],
-      "module": "NodeNext",
-      "moduleDetection": "force",
-      "moduleResolution": "NodeNext",
-      "noUncheckedIndexedAccess": true,
-      "resolveJsonModule": true,
-      "skipLibCheck": true,
-      "strict": true,
-      "target": "ES2022"
-    }
-  }
+    $schema: "https://json.schemastore.org/tsconfig",
+    compilerOptions: {
+      declaration: true,
+      declarationMap: true,
+      esModuleInterop: true,
+      incremental: false,
+      isolatedModules: true,
+      lib: ["es2022", "DOM", "DOM.Iterable"],
+      module: "NodeNext",
+      moduleDetection: "force",
+      moduleResolution: "NodeNext",
+      noUncheckedIndexedAccess: true,
+      resolveJsonModule: true,
+      skipLibCheck: true,
+      strict: true,
+      target: "ES2022",
+    },
+  };
 }
 
 // async function readTsConfig() {
@@ -139,7 +148,9 @@ async function findTemplateConfigFiles(
     const refJson = path.join(full, "templateRef.json");
     if ((await fs.stat(refJson).catch(() => null))?.isFile()) {
       try {
-        const rel = Object.values(JSON.parse(await fs.readFile(refJson, "utf8")))[0];
+        const rel = Object.values(
+          JSON.parse(await fs.readFile(refJson, "utf8")),
+        )[0];
         if (typeof rel === "string") {
           const refDir = path.join(full, rel);
           const refCfg = path.join(refDir, "templateConfig.ts");
@@ -197,7 +208,9 @@ export async function loadAllTemplateConfigs(
     throw new Error(`No templateConfig.ts files found under ${rootDir}`);
   }
 
-  const concat = await Promise.all(files.map((f) => fs.readFile(f.configPath, "utf8")));
+  const concat = await Promise.all(
+    files.map((f) => fs.readFile(f.configPath, "utf8")),
+  );
   const hash = getHash(concat.join(""));
 
   const cached = await retrieveFromCache("template-config", hash, "cjs");
@@ -234,7 +247,12 @@ export async function loadAllTemplateConfigs(
 
   const esbuild = await getEsbuild();
   const { outputFiles } = await esbuild.build({
-    stdin: { contents: indexTs, resolveDir: rootDir, sourcefile: "index.ts", loader: "ts" },
+    stdin: {
+      contents: indexTs,
+      resolveDir: rootDir,
+      sourcefile: "index.ts",
+      loader: "ts",
+    },
     bundle: true,
     format: "cjs",
     platform: "neutral",
@@ -243,7 +261,7 @@ export async function loadAllTemplateConfigs(
     write: false,
     minify: true,
   });
-  if ("stop" in esbuild) await esbuild.stop().catch(() => { });
+  if ("stop" in esbuild) await esbuild.stop().catch(() => {});
   const bundle = outputFiles[0]?.text;
   if (!bundle) throw new Error("esbuild produced no output");
 
@@ -256,12 +274,15 @@ export async function loadAllTemplateConfigs(
 
   for (const key of Object.keys(configs)) {
     const mod = configs[key]!;
-    const parsed = templateConfigSchema.safeParse(mod.templateConfig.templateConfig);
+    const parsed = templateConfigSchema.safeParse(
+      mod.templateConfig.templateConfig,
+    );
     if (!parsed.success) {
-      throw new Error(`Invalid template configuration in ${key}: ${parsed.error}`);
+      throw new Error(
+        `Invalid template configuration in ${key}: ${parsed.error}`,
+      );
     }
     mod.templateConfig.templateConfig = parsed.data;
   }
   return configs;
 }
-

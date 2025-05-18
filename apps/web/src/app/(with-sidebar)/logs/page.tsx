@@ -1,21 +1,32 @@
-"use client"
+"use client";
 
-import { useCallback, useEffect, useRef, useState } from "react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Copy, Download, RefreshCw } from "lucide-react"
-import { fetchLogs, getAvailableLogDates } from "@/app/actions/logs"
-import { toastNullError } from "@/lib/utils"
-import { toast } from "sonner"
-import { Level, LogJSON, Source, ALL_LEVELS, LEVEL_NAMES } from "@/lib/types"
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Copy, Download, RefreshCw } from "lucide-react";
+import { fetchLogs, getAvailableLogDates } from "@/app/actions/logs";
+import { toastNullError } from "@/lib/utils";
+import { toast } from "sonner";
+import { Level, LogJSON, Source, ALL_LEVELS, LEVEL_NAMES } from "@/lib/types";
 
 const LEVEL_COLORS: Record<Level, string> = {
   trace: "bg-slate-500",
@@ -24,55 +35,65 @@ const LEVEL_COLORS: Record<Level, string> = {
   warn: "bg-amber-500",
   error: "bg-red-500",
   fatal: "bg-rose-600",
-}
+};
 
 export default function LogsPage() {
   /* --------------------------------- filters -------------------------------- */
-  const [levels, setLevels] = useState<Level[]>(["info", "warn", "error", "fatal"])
-  const [sources, setSources] = useState<Source[]>(["backend", "frontend"])
-  const [query, setQuery] = useState("")
-  const [fromDate, setFromDate] = useState("")
-  const [toDate, setToDate] = useState("")
-  const [pretty, setPretty] = useState(false)
-  const [autoRefresh, setAutoRefresh] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [selectedDate, setSelectedDate] = useState<string>(() => new Date().toISOString().slice(0, 10))
-  const [availableDates, setAvailableDates] = useState<string[]>([])
+  const [levels, setLevels] = useState<Level[]>([
+    "info",
+    "warn",
+    "error",
+    "fatal",
+  ]);
+  const [sources, setSources] = useState<Source[]>(["backend", "frontend"]);
+  const [query, setQuery] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [pretty, setPretty] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>(() =>
+    new Date().toISOString().slice(0, 10),
+  );
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
 
   /* ----------------------------------- data ---------------------------------- */
-  const [logs, setLogs] = useState<LogJSON[]>([])
-  const [rawLogs, setRawLogs] = useState<string>("")
-  const [selectedLog, setSelectedLog] = useState<LogJSON | null>(null)
+  const [logs, setLogs] = useState<LogJSON[]>([]);
+  const [rawLogs, setRawLogs] = useState<string>("");
+  const [selectedLog, setSelectedLog] = useState<LogJSON | null>(null);
 
-  const [panelHeight, setPanelHeight] = useState(240) // px
-  const dragStartYRef = useRef<number>(0)
-  const startHeightRef = useRef<number>(0)
+  const [panelHeight, setPanelHeight] = useState(240); // px
+  const dragStartYRef = useRef<number>(0);
+  const startHeightRef = useRef<number>(0);
 
-  const logEndRef = useRef<HTMLDivElement>(null)
+  const logEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadDates = async () => {
       try {
-        const result = await getAvailableLogDates()
-        const dates = toastNullError({ result, shortMessage: "Failed to load log dates" })
-        if (!dates) return
-        setAvailableDates(dates)
+        const result = await getAvailableLogDates();
+        const dates = toastNullError({
+          result,
+          shortMessage: "Failed to load log dates",
+        });
+        if (!dates) return;
+        setAvailableDates(dates);
         if (!dates.includes(selectedDate)) {
-          setSelectedDate(dates[0]!)
+          setSelectedDate(dates[0]!);
         }
       } catch (error) {
-        toastNullError({ error, shortMessage: "Failed to load log dates" })
+        toastNullError({ error, shortMessage: "Failed to load log dates" });
       }
-    }
+    };
 
-    loadDates()
-  }, [selectedDate])
+    loadDates();
+  }, [selectedDate]);
 
   const loadLogs = useCallback(async () => {
     try {
-      setIsLoading(true)
-      setLogs([])
-      setRawLogs("")
+      setIsLoading(true);
+      setLogs([]);
+      setRawLogs("");
 
       const result = await fetchLogs({
         levels,
@@ -83,32 +104,35 @@ export default function LogsPage() {
         file: selectedDate,
         pretty,
         limit: 500,
-      })
+      });
 
-      const data = toastNullError({ result, shortMessage: "Failed to load logs" })
-      if (!data) return
+      const data = toastNullError({
+        result,
+        shortMessage: "Failed to load logs",
+      });
+      if (!data) return;
 
       if (typeof data === "string") {
-        setRawLogs(data)
+        setRawLogs(data);
       } else {
-        setLogs(data)
+        setLogs(data);
       }
     } catch (error) {
-      toastNullError({ error, shortMessage: "Failed to load logs" })
+      toastNullError({ error, shortMessage: "Failed to load logs" });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [levels, sources, query, fromDate, toDate, selectedDate, pretty])
+  }, [levels, sources, query, fromDate, toDate, selectedDate, pretty]);
 
   useEffect(() => {
-    loadLogs()
-  }, [loadLogs])
+    loadLogs();
+  }, [loadLogs]);
 
   useEffect(() => {
-    if (!autoRefresh) return
-    const id = setInterval(loadLogs, 5000)
-    return () => clearInterval(id)
-  }, [autoRefresh, loadLogs])
+    if (!autoRefresh) return;
+    const id = setInterval(loadLogs, 5000);
+    return () => clearInterval(id);
+  }, [autoRefresh, loadLogs]);
 
   // useEffect(() => {
   //   if (logEndRef.current && !pretty) {
@@ -116,61 +140,73 @@ export default function LogsPage() {
   //   }
   // }, [logs, pretty])
 
-  const startDrag = useCallback((e: React.MouseEvent) => {
-    dragStartYRef.current = e.clientY
-    startHeightRef.current = panelHeight
+  const startDrag = useCallback(
+    (e: React.MouseEvent) => {
+      dragStartYRef.current = e.clientY;
+      startHeightRef.current = panelHeight;
 
-    const onDrag = (ev: MouseEvent) => {
-      const delta = dragStartYRef.current - ev.clientY
-      const newHeight = Math.min(Math.max(startHeightRef.current + delta, 120), 600)
-      setPanelHeight(newHeight)
-    }
+      const onDrag = (ev: MouseEvent) => {
+        const delta = dragStartYRef.current - ev.clientY;
+        const newHeight = Math.min(
+          Math.max(startHeightRef.current + delta, 120),
+          600,
+        );
+        setPanelHeight(newHeight);
+      };
 
-    const stopDrag = () => {
-      window.removeEventListener("mousemove", onDrag)
-      window.removeEventListener("mouseup", stopDrag)
-    }
+      const stopDrag = () => {
+        window.removeEventListener("mousemove", onDrag);
+        window.removeEventListener("mouseup", stopDrag);
+      };
 
-    window.addEventListener("mousemove", onDrag)
-    window.addEventListener("mouseup", stopDrag)
-  }, [panelHeight])
+      window.addEventListener("mousemove", onDrag);
+      window.addEventListener("mouseup", stopDrag);
+    },
+    [panelHeight],
+  );
 
   const toggleLevel = useCallback((level: Level) => {
-    setLevels(prev => (prev.includes(level) ? prev.filter(l => l !== level) : [...prev, level]))
-  }, [])
+    setLevels((prev) =>
+      prev.includes(level) ? prev.filter((l) => l !== level) : [...prev, level],
+    );
+  }, []);
 
   const toggleSource = useCallback((src: Source) => {
-    setSources(prev => (prev.includes(src) ? prev.filter(s => s !== src) : [...prev, src]))
-  }, [])
+    setSources((prev) =>
+      prev.includes(src) ? prev.filter((s) => s !== src) : [...prev, src],
+    );
+  }, []);
 
   const copyToClipboard = useCallback(() => {
-    const content = pretty ? rawLogs : JSON.stringify(logs, null, 2)
+    const content = pretty ? rawLogs : JSON.stringify(logs, null, 2);
     navigator.clipboard
       .writeText(content)
       .then(() => toast.info("Logs copied to clipboard"))
-      .catch(error => toastNullError({ error, shortMessage: "Failed to copy logs" }))
-  }, [logs, rawLogs, pretty])
+      .catch((error) =>
+        toastNullError({ error, shortMessage: "Failed to copy logs" }),
+      );
+  }, [logs, rawLogs, pretty]);
 
   const downloadLogs = useCallback(() => {
-    const content = pretty ? rawLogs : JSON.stringify(logs, null, 2)
-    const blob = new Blob([content], { type: "text/plain" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `logs-${selectedDate}.${pretty ? "txt" : "json"}`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }, [logs, rawLogs, selectedDate, pretty])
+    const content = pretty ? rawLogs : JSON.stringify(logs, null, 2);
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `logs-${selectedDate}.${pretty ? "txt" : "json"}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [logs, rawLogs, selectedDate, pretty]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelectedLog(null)
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [])
+      if (e.key === "Escape") setSelectedLog(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -180,8 +216,15 @@ export default function LogsPage() {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" onClick={loadLogs} disabled={isLoading}>
-                  <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={loadLogs}
+                  disabled={isLoading}
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+                  />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Refresh logs</TooltipContent>
@@ -189,7 +232,11 @@ export default function LogsPage() {
           </TooltipProvider>
 
           <div className="flex items-center space-x-2">
-            <Switch id="auto-refresh" checked={autoRefresh} onCheckedChange={setAutoRefresh} />
+            <Switch
+              id="auto-refresh"
+              checked={autoRefresh}
+              onCheckedChange={setAutoRefresh}
+            />
             <Label htmlFor="auto-refresh">Auto-refresh</Label>
           </div>
         </div>
@@ -205,7 +252,7 @@ export default function LogsPage() {
             <div className="space-y-2">
               <Label>Log Levels</Label>
               <div className="flex flex-wrap gap-2">
-                {ALL_LEVELS.map(level => (
+                {ALL_LEVELS.map((level) => (
                   <Badge
                     key={level}
                     variant={levels.includes(level) ? "default" : "outline"}
@@ -221,7 +268,7 @@ export default function LogsPage() {
             <div className="space-y-2">
               <Label>Sources</Label>
               <div className="flex flex-col space-y-2">
-                {["backend", "frontend"].map(src => (
+                {["backend", "frontend"].map((src) => (
                   <div key={src} className="flex items-center space-x-2">
                     <Checkbox
                       id={`source-${src}`}
@@ -245,7 +292,7 @@ export default function LogsPage() {
                     id="from-date"
                     type="datetime-local"
                     value={fromDate}
-                    onChange={e => setFromDate(e.target.value)}
+                    onChange={(e) => setFromDate(e.target.value)}
                   />
                 </div>
                 <div className="space-y-1">
@@ -256,7 +303,7 @@ export default function LogsPage() {
                     id="to-date"
                     type="datetime-local"
                     value={toDate}
-                    onChange={e => setToDate(e.target.value)}
+                    onChange={(e) => setToDate(e.target.value)}
                   />
                 </div>
               </div>
@@ -269,12 +316,16 @@ export default function LogsPage() {
                 type="search"
                 placeholder="Search logs..."
                 value={query}
-                onChange={e => setQuery(e.target.value)}
+                onChange={(e) => setQuery(e.target.value)}
               />
 
               <div className="flex items-center justify-between mt-4">
                 <div className="flex items-center space-x-2">
-                  <Switch id="pretty-print" checked={pretty} onCheckedChange={setPretty} />
+                  <Switch
+                    id="pretty-print"
+                    checked={pretty}
+                    onCheckedChange={setPretty}
+                  />
                   <Label htmlFor="pretty-print">Pretty Print</Label>
                 </div>
 
@@ -284,13 +335,15 @@ export default function LogsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {availableDates.length > 0 ? (
-                      availableDates.map(date => (
+                      availableDates.map((date) => (
                         <SelectItem key={date} value={date}>
                           {date}
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value={selectedDate}>{selectedDate}</SelectItem>
+                      <SelectItem value={selectedDate}>
+                        {selectedDate}
+                      </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -330,7 +383,9 @@ export default function LogsPage() {
               >
                 {logs.length === 0 && !pretty ? (
                   <div className="flex items-center justify-center h-full text-muted-foreground">
-                    {isLoading ? "Loading logs..." : "No logs found matching your criteria"}
+                    {isLoading
+                      ? "Loading logs..."
+                      : "No logs found matching your criteria"}
                   </div>
                 ) : (
                   logs.map((log, idx) => (
@@ -345,7 +400,9 @@ export default function LogsPage() {
                       <Badge className={LEVEL_COLORS[LEVEL_NAMES[log.level]!]}>
                         {LEVEL_NAMES[log.level]!.toUpperCase()}
                       </Badge>
-                      <span className="text-muted-foreground">[{log.src || "backend"}]</span>
+                      <span className="text-muted-foreground">
+                        [{log.src || "backend"}]
+                      </span>
                       <span>{log.msg || JSON.stringify(log)}</span>
                     </div>
                   ))
@@ -373,7 +430,11 @@ export default function LogsPage() {
             />
             <div className="flex items-center justify-between px-4 border-b">
               <span className="text-sm font-medium">Log Details</span>
-              <Button variant="ghost" size="sm" onClick={() => setSelectedLog(null)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedLog(null)}
+              >
                 Close
               </Button>
             </div>
@@ -384,6 +445,5 @@ export default function LogsPage() {
         )}
       </Card>
     </div>
-  )
+  );
 }
-

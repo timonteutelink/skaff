@@ -5,7 +5,7 @@ export type Format = "json" | "ndjson" | "tsv" | "table";
 
 export function printFormatted<T extends Record<string, unknown>>(
   data: T | T[],
-  format: Format = DEFAULT_FORMAT
+  format: Format = DEFAULT_FORMAT,
 ) {
   switch (format) {
     case "json":
@@ -13,8 +13,8 @@ export function printFormatted<T extends Record<string, unknown>>(
       break;
 
     case "ndjson":
-      (Array.isArray(data) ? data : [data]).forEach(o =>
-        console.log(JSON.stringify(o))
+      (Array.isArray(data) ? data : [data]).forEach((o) =>
+        console.log(JSON.stringify(o)),
       );
       break;
 
@@ -22,14 +22,12 @@ export function printFormatted<T extends Record<string, unknown>>(
       const rows = Array.isArray(data) ? data : [data];
       const keys = Object.keys(rows[0] ?? {});
       console.log(keys.join("\t"));
-      rows.forEach(r =>
+      rows.forEach((r) =>
         console.log(
           keys
-            .map(k =>
-              String(r[k] ?? "").replace(/[\t\r\n]+/g, " ")
-            )
-            .join("\t")
-        )
+            .map((k) => String(r[k] ?? "").replace(/[\t\r\n]+/g, " "))
+            .join("\t"),
+        ),
       );
       break;
     }
@@ -44,13 +42,13 @@ export function addGlobalFormatOption(cmd: Command) {
   cmd.addOption(
     new Option("-f, --format <format>", "output format")
       .choices(["json", "ndjson", "tsv", "table"])
-      .default(DEFAULT_FORMAT)
+      .default(DEFAULT_FORMAT),
   );
 }
 
 export function withFormatting<
   A extends unknown[],
-  R extends Record<string, unknown> | Record<string, unknown>[] | void
+  R extends Record<string, unknown> | Record<string, unknown>[] | void,
 >(action: (...args: A) => Promise<R> | R) {
   return async (...args: A) => {
     const command = args[args.length - 1] as Command | undefined;
@@ -70,4 +68,3 @@ export function withFormatting<
     }
   };
 }
-

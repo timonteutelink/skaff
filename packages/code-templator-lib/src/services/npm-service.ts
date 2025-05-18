@@ -6,16 +6,14 @@ import { getConfig } from "../lib";
 
 const asyncExecFile = promisify(execFile);
 
-export async function npmInstall(
-  dirPath: string,
-): Promise<Result<void>> {
+export async function npmInstall(dirPath: string): Promise<Result<void>> {
   const npmPath = (await getConfig()).NPM_PATH;
   try {
-    await asyncExecFile(npmPath, [
-      "i",
-      "--prefer-offline",
-      "--prefer-frozen-lockfile",
-    ], { cwd: dirPath });
+    await asyncExecFile(
+      npmPath,
+      ["i", "--prefer-offline", "--prefer-frozen-lockfile"],
+      { cwd: dirPath },
+    );
 
     return { data: undefined };
   } catch (error) {

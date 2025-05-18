@@ -31,8 +31,9 @@ export function ProjectTree({
         return (
           <div
             style={style}
-            className={`flex items-center p-2 cursor-pointer hover:bg-blue-100 select-none ${isSelected ? "bg-blue-200" : ""
-              }`}
+            className={`flex items-center p-2 cursor-pointer hover:bg-blue-100 select-none ${
+              isSelected ? "bg-blue-200" : ""
+            }`}
             onClick={onClick}
           >
             {hasChildren && (

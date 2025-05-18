@@ -1,4 +1,7 @@
-import { TemplateSettingsType, UserTemplateSettings } from "@timonteutelink/template-types-lib";
+import {
+  TemplateSettingsType,
+  UserTemplateSettings,
+} from "@timonteutelink/template-types-lib";
 import path from "node:path";
 import z from "zod";
 import { GitStatus, ProjectDTO, ProjectSettings, Result } from "../lib/types";
@@ -53,7 +56,9 @@ export class Project {
           t.templateName === template.config.templateConfig.name,
       );
     if (!projectTemplateSettings) {
-      logError({ shortMessage: `Template ${template.config.templateConfig.name} with id ${instanceId} not found in project settings` })
+      logError({
+        shortMessage: `Template ${template.config.templateConfig.name} with id ${instanceId} not found in project settings`,
+      });
       return { data: instantiatedSettings };
     }
 
@@ -62,7 +67,9 @@ export class Project {
     );
 
     if (!parsedSchema.success) {
-      logError({ shortMessage: `Invalid template settings for template ${template.config.templateConfig.name}: ${parsedSchema.error}` })
+      logError({
+        shortMessage: `Invalid template settings for template ${template.config.templateConfig.name}: ${parsedSchema.error}`,
+      });
       return { error: `${parsedSchema.error}` };
     }
 
@@ -114,11 +121,14 @@ export class Project {
     templateInstanceId: string,
     commandTitle: string,
   ): Promise<Result<string>> {
-    const instantiatedTemplate = this.instantiatedProjectSettings.instantiatedTemplates.find(
-      (t) => t.id === templateInstanceId,
-    );
+    const instantiatedTemplate =
+      this.instantiatedProjectSettings.instantiatedTemplates.find(
+        (t) => t.id === templateInstanceId,
+      );
     if (!instantiatedTemplate) {
-      logError({ shortMessage: `Template with id ${templateInstanceId} not found in project settings` })
+      logError({
+        shortMessage: `Template with id ${templateInstanceId} not found in project settings`,
+      });
       return {
         error: `Template with id ${templateInstanceId} not found in project settings`,
       };
@@ -127,7 +137,9 @@ export class Project {
       instantiatedTemplate.templateName,
     );
     if (!template) {
-      logError({ shortMessage: `Template ${instantiatedTemplate.templateName} not found in project` })
+      logError({
+        shortMessage: `Template ${instantiatedTemplate.templateName} not found in project`,
+      });
       return {
         error: `Template ${instantiatedTemplate.templateName} not found in project`,
       };
@@ -138,7 +150,9 @@ export class Project {
     );
 
     if (!templateCommand) {
-      logError({ shortMessage: `Command ${commandTitle} not found in template ${template.config.templateConfig.name}` })
+      logError({
+        shortMessage: `Command ${commandTitle} not found in template ${template.config.templateConfig.name}`,
+      });
       return {
         error: `Command ${commandTitle} not found in template ${template.config.templateConfig.name}`,
       };
@@ -157,19 +171,28 @@ export class Project {
     const fullProjectSettings: TemplateSettingsType<z.AnyZodObject> = {
       project_name: this.instantiatedProjectSettings.projectName,
       fullSettings: fullSettings.data,
-    }
+    };
 
-    const commandToExecute = stringOrCallbackToString(templateCommand.command, fullProjectSettings);
+    const commandToExecute = stringOrCallbackToString(
+      templateCommand.command,
+      fullProjectSettings,
+    );
 
-    if ('error' in commandToExecute) {
+    if ("error" in commandToExecute) {
       return commandToExecute;
     }
 
-    const commandCwdPath = path.join(this.absoluteRootDir, templateCommand.path || '.');
+    const commandCwdPath = path.join(
+      this.absoluteRootDir,
+      templateCommand.path || ".",
+    );
 
-    const commandResult = await executeCommand(commandCwdPath, commandToExecute.data);
+    const commandResult = await executeCommand(
+      commandCwdPath,
+      commandToExecute.data,
+    );
 
-    if ('error' in commandResult) {
+    if ("error" in commandResult) {
       return commandResult;
     }
 
@@ -186,7 +209,7 @@ export class Project {
         rootTemplateName: this.instantiatedProjectSettings.rootTemplateName,
         settings: this.instantiatedProjectSettings,
         gitStatus: this.gitStatus,
-        outdatedTemplate: !this.rootTemplate.isDefault
+        outdatedTemplate: !this.rootTemplate.isDefault,
       },
     };
   }

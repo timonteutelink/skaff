@@ -5,7 +5,10 @@ import { logError } from "../lib/utils";
 
 const asyncExec = promisify(exec);
 
-export async function executeCommand(commandCwd: string, command: string): Promise<Result<string>> {
+export async function executeCommand(
+  commandCwd: string,
+  command: string,
+): Promise<Result<string>> {
   try {
     const { stdout } = await asyncExec(command, { cwd: commandCwd });
     return { data: stdout.trim() };
@@ -13,7 +16,7 @@ export async function executeCommand(commandCwd: string, command: string): Promi
     logError({
       shortMessage: "Error getting commit hash",
       error,
-    })
+    });
     return { error: `Error getting commit hash: ${error}` };
   }
 }

@@ -1,11 +1,22 @@
-"use client"
+"use client";
 
-import { useCallback, useState } from "react"
-import { useFieldArray } from "react-hook-form"
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useCallback, useState } from "react";
+import { useFieldArray } from "react-hook-form";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   PlusCircle,
   Trash2,
@@ -16,14 +27,19 @@ import {
   ArrowDown,
   ArrowUp,
   InfoIcon,
-} from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Badge } from "@/components/ui/badge"
-import { renderInputByType } from "../input-renderers"
-import type { ArrayFieldRendererProps } from "../types"
-import { ObjectFieldRenderer } from "./object-field-renderer"
-import { ArrayUnionItem, UnionFieldRenderer } from "./union-field-renderer"
-import { buildDiscriminatedUnionSchema } from "../schema-utils"
+} from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { renderInputByType } from "../input-renderers";
+import type { ArrayFieldRendererProps } from "../types";
+import { ObjectFieldRenderer } from "./object-field-renderer";
+import { ArrayUnionItem, UnionFieldRenderer } from "./union-field-renderer";
+import { buildDiscriminatedUnionSchema } from "../schema-utils";
 
 export function ArrayFieldRenderer({
   form,
@@ -38,46 +54,49 @@ export function ArrayFieldRenderer({
   const fieldArray = useFieldArray({
     control: form.control,
     name: fieldPath,
-  })
+  });
 
-  const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>({})
+  const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>(
+    {},
+  );
 
   const toggleItemExpansion = (index: number) => {
     setExpandedItems((prev) => ({
       ...prev,
       [index]: !prev[index],
-    }))
-  }
+    }));
+  };
 
   const moveItem = (index: number, direction: "up" | "down") => {
-    const newIndex = direction === "up" ? index - 1 : index + 1
-    if (newIndex < 0 || newIndex >= fieldArray.fields.length) return
-    fieldArray.swap(index, newIndex)
-  }
+    const newIndex = direction === "up" ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= fieldArray.fields.length) return;
+    fieldArray.swap(index, newIndex);
+  };
 
   const duplicateItem = (index: number) => {
-    const itemToDuplicate = form.getValues(`${fieldPath}.${index}`)
-    fieldArray.insert(index + 1, JSON.parse(JSON.stringify(itemToDuplicate)))
-  }
+    const itemToDuplicate = form.getValues(`${fieldPath}.${index}`);
+    fieldArray.insert(index + 1, JSON.parse(JSON.stringify(itemToDuplicate)));
+  };
 
   const onAddItem = useCallback(() => {
-    let newItem
+    let newItem;
     if (property.items.anyOf) {
-      const firstVariant = property.items.anyOf[0]
+      const firstVariant = property.items.anyOf[0];
 
-      const discrKey = Object.entries(firstVariant.properties)
-        .find(([, v]: any) => v.const !== undefined)?.[0] as string
-      const discrVal = firstVariant.properties[discrKey].const
+      const discrKey = Object.entries(firstVariant.properties).find(
+        ([, v]: any) => v.const !== undefined,
+      )?.[0] as string;
+      const discrVal = firstVariant.properties[discrKey].const;
 
-      const { defaults } = buildDiscriminatedUnionSchema(property.items)
-      newItem = { ...defaults, [discrKey]: discrVal }
+      const { defaults } = buildDiscriminatedUnionSchema(property.items);
+      newItem = { ...defaults, [discrKey]: discrVal };
     } else {
-      newItem = createDefaultItem ? createDefaultItem(property.items) : {}
+      newItem = createDefaultItem ? createDefaultItem(property.items) : {};
     }
 
-    fieldArray.append(newItem)
-    setExpandedItems((prev) => ({ ...prev, [fieldArray.fields.length]: true }))
-  }, [fieldArray, property, createDefaultItem])
+    fieldArray.append(newItem);
+    setExpandedItems((prev) => ({ ...prev, [fieldArray.fields.length]: true }));
+  }, [fieldArray, property, createDefaultItem]);
 
   return (
     <FormField
@@ -91,7 +110,9 @@ export function ArrayFieldRenderer({
               <div className="flex items-center gap-2">
                 <FormLabel className="text-base font-medium">
                   {property.title || fieldPath.split(".").pop()}
-                  {isRequired && <span className="text-destructive ml-1">*</span>}
+                  {isRequired && (
+                    <span className="text-destructive ml-1">*</span>
+                  )}
                 </FormLabel>
 
                 {property.description && (
@@ -126,7 +147,10 @@ export function ArrayFieldRenderer({
                   variant="outline"
                   size="sm"
                   onClick={onAddItem}
-                  disabled={property.maxItems !== undefined && fieldArray.fields.length >= property.maxItems}
+                  disabled={
+                    property.maxItems !== undefined &&
+                    fieldArray.fields.length >= property.maxItems
+                  }
                 >
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Add Item
@@ -143,9 +167,9 @@ export function ArrayFieldRenderer({
             ) : (
               <div className="space-y-3">
                 {fieldArray.fields.map((item, index) => {
-                  const itemPath = `${fieldPath}.${index}`
+                  const itemPath = `${fieldPath}.${index}`;
                   if (property.items.anyOf) {
-                    const isExpanded = expandedItems[index] !== false
+                    const isExpanded = expandedItems[index] !== false;
                     return (
                       <ArrayUnionItem
                         key={item.id}
@@ -167,12 +191,15 @@ export function ArrayFieldRenderer({
                           renderFormField={renderFormField}
                         />
                       </ArrayUnionItem>
-                    )
+                    );
                   }
-                  const isExpanded = expandedItems[index] !== false
+                  const isExpanded = expandedItems[index] !== false;
 
                   // For array of objects
-                  if (property.items.type === "object" && property.items.properties) {
+                  if (
+                    property.items.type === "object" &&
+                    property.items.properties
+                  ) {
                     return (
                       <ArrayObjectItem
                         key={item.id}
@@ -190,7 +217,7 @@ export function ArrayFieldRenderer({
                         requiredFields={requiredFields}
                         renderFormField={renderFormField}
                       />
-                    )
+                    );
                   }
 
                   // For array of primitives
@@ -205,15 +232,15 @@ export function ArrayFieldRenderer({
                       moveItem={moveItem}
                       fieldArray={fieldArray}
                     />
-                  )
+                  );
                 })}
               </div>
             )}
           </FormItem>
-        )
+        );
       }}
     />
-  )
+  );
 }
 
 function ArrayObjectItem({
@@ -231,7 +258,7 @@ function ArrayObjectItem({
   requiredFields,
   renderFormField,
 }: any) {
-  const itemRequiredFields = requiredFields[`${fieldPath}[]`] || []
+  const itemRequiredFields = requiredFields[`${fieldPath}[]`] || [];
 
   return (
     <Card key={item.id} className="overflow-visible border shadow-sm">
@@ -244,9 +271,15 @@ function ArrayObjectItem({
             onClick={() => toggleItemExpansion(index)}
             className="p-1 h-auto"
           >
-            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
           </Button>
-          <CardTitle className="text-sm font-medium">Item {index + 1}</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            Item {index + 1}
+          </CardTitle>
         </div>
 
         {!isReadOnly && (
@@ -282,7 +315,10 @@ function ArrayObjectItem({
                   <Copy className="h-4 w-4 mr-2" />
                   Duplicate
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => fieldArray.remove(index)} className="text-destructive">
+                <DropdownMenuItem
+                  onClick={() => fieldArray.remove(index)}
+                  className="text-destructive"
+                >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete
                 </DropdownMenuItem>
@@ -295,39 +331,59 @@ function ArrayObjectItem({
       {isExpanded && (
         <CardContent className="p-4 pt-3">
           <div className="grid gap-4 sm:grid-cols-2">
-            {Object.entries(property.items.properties).map(([propKey, propValue]: [string, any]) => {
-              const nestedPath = `${fieldPath}.${index}.${propKey}`
+            {Object.entries(property.items.properties).map(
+              ([propKey, propValue]: [string, any]) => {
+                const nestedPath = `${fieldPath}.${index}.${propKey}`;
 
-              // Handle nested objects and arrays recursively
-              if (propValue.type === "object" && propValue.properties) {
-                return (
-                  <ObjectFieldRenderer
-                    key={nestedPath}
-                    fieldPath={nestedPath}
-                    property={propValue}
-                    isRequired={itemRequiredFields.includes(propKey)}
-                    isReadOnly={isReadOnly}
-                    form={form}
-                    requiredFields={requiredFields}
-                    renderFormField={renderFormField}
-                  />
-                )
-              }
+                // Handle nested objects and arrays recursively
+                if (propValue.type === "object" && propValue.properties) {
+                  return (
+                    <ObjectFieldRenderer
+                      key={nestedPath}
+                      fieldPath={nestedPath}
+                      property={propValue}
+                      isRequired={itemRequiredFields.includes(propKey)}
+                      isReadOnly={isReadOnly}
+                      form={form}
+                      requiredFields={requiredFields}
+                      renderFormField={renderFormField}
+                    />
+                  );
+                }
 
-              if (propValue.type === "array") {
-                return renderFormField(propKey, propValue, `${fieldPath}.${index}`, itemRequiredFields)
-              }
+                if (propValue.type === "array") {
+                  return renderFormField(
+                    propKey,
+                    propValue,
+                    `${fieldPath}.${index}`,
+                    itemRequiredFields,
+                  );
+                }
 
-              return renderFormField(propKey, propValue, `${fieldPath}.${index}`, itemRequiredFields)
-            })}
+                return renderFormField(
+                  propKey,
+                  propValue,
+                  `${fieldPath}.${index}`,
+                  itemRequiredFields,
+                );
+              },
+            )}
           </div>
         </CardContent>
       )}
     </Card>
-  )
+  );
 }
 
-function ArrayPrimitiveItem({ index, fieldPath, property, isReadOnly, form, moveItem, fieldArray }: any) {
+function ArrayPrimitiveItem({
+  index,
+  fieldPath,
+  property,
+  isReadOnly,
+  form,
+  moveItem,
+  fieldArray,
+}: any) {
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1">
@@ -382,5 +438,5 @@ function ArrayPrimitiveItem({ index, fieldPath, property, isReadOnly, form, move
         </div>
       )}
     </div>
-  )
+  );
 }

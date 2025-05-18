@@ -20,7 +20,9 @@ export async function switchBranch(
     const isClean = await isGitRepoClean(repoPath);
 
     if (!isClean) {
-      logError({ shortMessage: "Cannot switch branches with uncommitted changes." })
+      logError({
+        shortMessage: "Cannot switch branches with uncommitted changes.",
+      });
       return {
         error: "Cannot switch branches with uncommitted changes.",
       };
@@ -34,7 +36,7 @@ export async function switchBranch(
     logError({
       shortMessage: "Error switching branches",
       error,
-    })
+    });
     return {
       error: `Error switching branches: ${error}`,
     };
@@ -67,8 +69,7 @@ export async function cloneRevisionToCache(
     if (stat.isDirectory()) {
       return { data: destPath.data };
     }
-  } catch {
-  }
+  } catch {}
 
   try {
     await asyncExec(`git clone ${repoDir} ${destPath.data}`);
@@ -83,11 +84,10 @@ export async function cloneRevisionToCache(
     logError({
       shortMessage: "Error cloning revision to cache",
       error,
-    })
+    });
     return { error: `Error cloning revision to cache: ${error}` };
   }
 }
-
 
 // TODO: use to see if a project needs to be updated. Will generate a diff from old template to new project. This does require the old template somehow. So maybe we need versioning instead of hash so we can also retrieve old template and new template and we can generate the diff to update. Probably we can make a precommit tool to check which templatedirs have changes and update all those version numbers and version numbers of the parent. Probably when updating we should update entire tree at once. Think about what to allow the user to update. Make sure to enforce 1 commit 1 versionchange. So do not allow unclean git templatesdir. Then instead of saving hash to template we save commitHash.
 //
@@ -104,7 +104,7 @@ export async function getCommitHash(repoPath: string): Promise<Result<string>> {
     logError({
       shortMessage: "Error getting commit hash",
       error,
-    })
+    });
     return { error: `Error getting commit hash: ${error}` };
   }
 }
@@ -125,7 +125,7 @@ export async function listBranches(
     logError({
       shortMessage: "Error listing branches",
       error,
-    })
+    });
     return { error: `Error listing branches: ${error}` };
   }
 }
@@ -142,7 +142,7 @@ export async function getCurrentBranch(
     logError({
       shortMessage: "Error getting current branch",
       error,
-    })
+    });
     return { error: `Error getting current branch: ${error}` };
   }
 }
@@ -162,7 +162,7 @@ export async function loadGitStatus(
   }
 
   if (branches.data.length === 0) {
-    logError({ shortMessage: "No branches found or error listing branches." })
+    logError({ shortMessage: "No branches found or error listing branches." });
     return { error: "No branches found or error listing branches." };
   }
 
@@ -200,12 +200,14 @@ export async function commitAll(
     logError({
       shortMessage: "Error committing changes",
       error,
-    })
+    });
     return { error: `Error committing changes: ${error}` };
   }
 }
 
-export async function addAllAndDiff(repoPath: string): Promise<Result<string>> {
+export async function addAllAndRetrieveDiff(
+  repoPath: string,
+): Promise<Result<string>> {
   try {
     await asyncExec(`cd ${repoPath} && git add .`);
     const { stdout } = await asyncExec(
@@ -216,7 +218,7 @@ export async function addAllAndDiff(repoPath: string): Promise<Result<string>> {
     logError({
       shortMessage: "Error adding files and generating diff",
       error,
-    })
+    });
     return { error: `Error adding files and generating diff: ${error}` };
   }
 }
@@ -229,7 +231,7 @@ export async function deleteRepo(repoPath: string): Promise<Result<void>> {
     logError({
       shortMessage: "Error deleting git repository",
       error,
-    })
+    });
     return { error: `Error deleting git repository: ${error}` };
   }
 }
@@ -244,7 +246,7 @@ export async function createGitRepo(repoPath: string): Promise<Result<void>> {
     logError({
       shortMessage: "Error creating git repository",
       error,
-    })
+    });
     return { error: `Error creating git repository: ${error}` };
   }
 }
@@ -261,7 +263,7 @@ export async function isGitRepoClean(
     logError({
       shortMessage: "Error checking git status",
       error,
-    })
+    });
     return { error: `Error checking git status: ${error}` };
   }
 }
@@ -277,7 +279,7 @@ export async function applyDiffToGitRepo(
     logError({
       shortMessage: "Error applying diff to git repository",
       error,
-    })
+    });
     return { error: `Error applying diff to git repository: ${error}` };
   }
 }
@@ -291,7 +293,7 @@ export async function resetAllChanges(repoPath: string): Promise<Result<void>> {
     logError({
       shortMessage: "Error resetting all changes",
       error,
-    })
+    });
     return { error: `Error restoring changes: ${error}` };
   }
 }
@@ -317,7 +319,7 @@ export async function isConflictAfterApply(
     logError({
       shortMessage: "Error checking for merge conflicts",
       error,
-    })
+    });
     return { error: `Error checking for merge conflicts: ${error}` };
   }
 }
@@ -327,10 +329,10 @@ export async function diffDirectories(
   absoluteNewProjectPath: string,
 ): Promise<Result<string>> {
   try {
-    const { stdout } = await asyncExecFile((await getConfig()).GENERATE_DIFF_SCRIPT_PATH, [
-      absoluteBaseProjectPath,
-      absoluteNewProjectPath,
-    ]);
+    const { stdout } = await asyncExecFile(
+      (await getConfig()).GENERATE_DIFF_SCRIPT_PATH,
+      [absoluteBaseProjectPath, absoluteNewProjectPath],
+    );
 
     return { data: stdout.trim() };
   } catch (error) {

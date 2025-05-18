@@ -5,27 +5,29 @@ import { RootTemplateRepository } from "./root-template-repository";
 let rootTemplateRepository: RootTemplateRepository | null = null;
 
 export async function getRootTemplateRepository(): Promise<RootTemplateRepository> {
-	if (rootTemplateRepository) {
-		return rootTemplateRepository;
-	}
+  if (rootTemplateRepository) {
+    return rootTemplateRepository;
+  }
 
-	const config = await getConfig();
+  const config = await getConfig();
 
-	rootTemplateRepository = new RootTemplateRepository(config.TEMPLATE_DIR_PATHS);
+  rootTemplateRepository = new RootTemplateRepository(
+    config.TEMPLATE_DIR_PATHS,
+  );
 
-	return rootTemplateRepository;
+  return rootTemplateRepository;
 }
 
 let projectRepository: ProjectRepository | null = null;
 
 export async function getProjectRepository(): Promise<ProjectRepository> {
-	if (projectRepository) {
-		return projectRepository;
-	}
+  if (projectRepository) {
+    return projectRepository;
+  }
 
-	const config = await getConfig();
+  const config = await getConfig();
 
-	projectRepository = new ProjectRepository(config.PROJECT_SEARCH_PATHS || []);
+  projectRepository = new ProjectRepository(config.PROJECT_SEARCH_PATHS || []);
 
-	return projectRepository;
+  return projectRepository;
 }

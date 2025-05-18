@@ -1,15 +1,42 @@
-import { AutoInstantiatedSubtemplate, TemplateSettingsType, UserTemplateSettings } from "@timonteutelink/template-types-lib";
+import {
+  AutoInstantiatedSubtemplate,
+  TemplateSettingsType,
+  UserTemplateSettings,
+} from "@timonteutelink/template-types-lib";
 import * as fs from "node:fs/promises";
 import { AnyZodObject } from "zod";
-import { NewTemplateDiffResult, ParsedFile, ProjectSettings, Result } from "../lib/types";
+import {
+  NewTemplateDiffResult,
+  ParsedFile,
+  ProjectSettings,
+  Result,
+} from "../lib/types";
 import { Project } from "../models/project";
 import { Template } from "../models/template";
-import { getHash, pathInCache, retrieveFromCache, saveToCache } from "./cache-service";
-import { addAllAndDiff, applyDiffToGitRepo, diffDirectories, isConflictAfterApply, parseGitDiff } from "./git-service";
-import { generateProjectFromExistingProject, generateProjectFromTemplateSettings, getParsedUserSettingsWithParentSettings } from "./project-service";
+import {
+  getHash,
+  pathInCache,
+  retrieveFromCache,
+  saveToCache,
+} from "./cache-service";
+import {
+  addAllAndRetrieveDiff,
+  applyDiffToGitRepo,
+  diffDirectories,
+  isConflictAfterApply,
+  parseGitDiff,
+} from "./git-service";
+import {
+  generateProjectFromExistingProject,
+  generateProjectFromTemplateSettings,
+  getParsedUserSettingsWithParentSettings,
+} from "./project-service";
 import { logger } from "../lib/logger";
 import { anyOrCallbackToAny, logError } from "../lib/utils";
-import { getProjectRepository, getRootTemplateRepository } from "../repositories";
+import {
+  getProjectRepository,
+  getRootTemplateRepository,
+} from "../repositories";
 
 async function modifyAutoInstantiatedTemplatesInProjectSettings(
   projectSettings: ProjectSettings,
@@ -27,7 +54,10 @@ async function modifyAutoInstantiatedTemplatesInProjectSettings(
     return newFullTemplateSettings;
   }
 
-  const templatesToAutoInstantiate = anyOrCallbackToAny(currentTemplateToAddChildren.config.autoInstantiatedSubtemplates, newFullTemplateSettings.data);
+  const templatesToAutoInstantiate = anyOrCallbackToAny(
+    currentTemplateToAddChildren.config.autoInstantiatedSubtemplates,
+    newFullTemplateSettings.data,
+  );
 
   if ("error" in templatesToAutoInstantiate) {
     return templatesToAutoInstantiate;
@@ -52,9 +82,8 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
   projectSettings: ProjectSettings,
   currentTemplateToAddChildren: Template,
   parentInstanceId: string,
-  fullParentTemplateSettings: TemplateSettingsType<AnyZodObject>,// TODO Force autoInstantiatedTemplate to be direct child of template. If nested use 'children' to autoinstantiate parent and child. Then also merge this modify function with the add function below if possible
+  fullParentTemplateSettings: TemplateSettingsType<AnyZodObject>, // TODO Force autoInstantiatedTemplate to be direct child of template. If nested use 'children' to autoinstantiate parent and child. Then also merge this modify function with the add function below if possible
 ): Promise<Result<ProjectSettings>> {
-
   for (const autoInstantiatedTemplate of templatesToAutoInstantiate || []) {
     const existingTemplateIndex =
       projectSettings.instantiatedTemplates.findIndex(
@@ -70,13 +99,16 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
       );
       return {
         error: `Auto instantiated template ${autoInstantiatedTemplate.subTemplateName} not found`,
-      }
+      };
     }
 
     const existingTemplate =
       projectSettings.instantiatedTemplates[existingTemplateIndex]!;
 
-    const newTemplateSettings = anyOrCallbackToAny(autoInstantiatedTemplate.mapSettings, fullParentTemplateSettings);
+    const newTemplateSettings = anyOrCallbackToAny(
+      autoInstantiatedTemplate.mapSettings,
+      fullParentTemplateSettings,
+    );
 
     if ("error" in newTemplateSettings) {
       return newTemplateSettings;
@@ -97,9 +129,8 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
       return { error: "Instantiated template not found in project settings" };
     }
 
-    const subTemplate = currentTemplateToAddChildren.findSubTemplate(
-      subTemplateName,
-    );
+    const subTemplate =
+      currentTemplateToAddChildren.findSubTemplate(subTemplateName);
 
     if (!subTemplate) {
       logger.error(
@@ -110,7 +141,11 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
       };
     }
 
-    if (!subTemplate.parentTemplate || subTemplate.parentTemplate.config.templateConfig.name !== currentTemplateToAddChildren.config.templateConfig.name) {
+    if (
+      !subTemplate.parentTemplate ||
+      subTemplate.parentTemplate.config.templateConfig.name !==
+      currentTemplateToAddChildren.config.templateConfig.name
+    ) {
       logger.error(
         `Subtemplate ${autoInstantiatedTemplate.subTemplateName} is not a child of template ${currentTemplateToAddChildren.config.templateConfig.name}`,
       );
@@ -144,7 +179,10 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
       projectSettings = result.data;
     }
 
-    const newTemplatesToAutoInstantiate = anyOrCallbackToAny(subTemplate.config.autoInstantiatedSubtemplates, newFullTemplateSettings);
+    const newTemplatesToAutoInstantiate = anyOrCallbackToAny(
+      subTemplate.config.autoInstantiatedSubtemplates,
+      newFullTemplateSettings,
+    );
 
     if ("error" in newTemplatesToAutoInstantiate) {
       return newTemplatesToAutoInstantiate;
@@ -186,7 +224,10 @@ async function addAutoInstantiatedTemplatesToProjectSettings(
     return newFullTemplateSettings;
   }
 
-  const templatesToAutoInstantiate = anyOrCallbackToAny(currentTemplateToAddChildren.config.autoInstantiatedSubtemplates, newFullTemplateSettings.data);
+  const templatesToAutoInstantiate = anyOrCallbackToAny(
+    currentTemplateToAddChildren.config.autoInstantiatedSubtemplates,
+    newFullTemplateSettings.data,
+  );
   if ("error" in templatesToAutoInstantiate) {
     return templatesToAutoInstantiate;
   }
@@ -212,7 +253,10 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
 ): Promise<Result<ProjectSettings>> {
   for (const autoInstantiatedTemplate of templatesToAutoInstantiate || []) {
     const autoInstantiatedTemplateInstanceId = crypto.randomUUID();
-    const newTemplateSettings = anyOrCallbackToAny(autoInstantiatedTemplate.mapSettings, fullParentTemplateSettings);
+    const newTemplateSettings = anyOrCallbackToAny(
+      autoInstantiatedTemplate.mapSettings,
+      fullParentTemplateSettings,
+    );
     if ("error" in newTemplateSettings) {
       return newTemplateSettings;
     }
@@ -232,7 +276,9 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
       templateSettings: newTemplateSettings.data,
     });
 
-    const rootTemplate = await (await getRootTemplateRepository()).loadRevision(
+    const rootTemplate = await (
+      await getRootTemplateRepository()
+    ).loadRevision(
       projectSettings.rootTemplateName,
       currentTemplateToAddChildren.findRootTemplate().commitHash!,
     );
@@ -242,8 +288,12 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
     }
 
     if (!rootTemplate.data) {
-      logger.error(`Root template not found: ${projectSettings.rootTemplateName}`);
-      return { error: `Root template not found: ${projectSettings.rootTemplateName}` };
+      logger.error(
+        `Root template not found: ${projectSettings.rootTemplateName}`,
+      );
+      return {
+        error: `Root template not found: ${projectSettings.rootTemplateName}`,
+      };
     }
 
     const subTemplate = rootTemplate.data.findSubTemplate(subTemplateName);
@@ -257,7 +307,11 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
       };
     }
 
-    if (!subTemplate.parentTemplate || subTemplate.parentTemplate.config.templateConfig.name !== currentTemplateToAddChildren.config.templateConfig.name) {
+    if (
+      !subTemplate.parentTemplate ||
+      subTemplate.parentTemplate.config.templateConfig.name !==
+      currentTemplateToAddChildren.config.templateConfig.name
+    ) {
       logger.error(
         `Subtemplate ${autoInstantiatedTemplate.subTemplateName} is not a child of template ${currentTemplateToAddChildren.config.templateConfig.name}`,
       );
@@ -284,7 +338,10 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
       projectSettings = result.data;
     }
 
-    const newTemplatesToAutoInstantiate = anyOrCallbackToAny(subTemplate.config.autoInstantiatedSubtemplates, newFullTemplateSettings);
+    const newTemplatesToAutoInstantiate = anyOrCallbackToAny(
+      subTemplate.config.autoInstantiatedSubtemplates,
+      newFullTemplateSettings,
+    );
     if ("error" in newTemplatesToAutoInstantiate) {
       return newTemplatesToAutoInstantiate;
     }
@@ -300,7 +357,7 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
         );
 
       if ("error" in result) {
-        return result
+        return result;
       }
 
       projectSettings = result.data;
@@ -329,9 +386,12 @@ export async function generateModifyTemplateDiff(
     instantiatedTemplateIndex
     ]!;
 
-  const template = await (await getRootTemplateRepository()).loadRevision(
+  const template = await (
+    await getRootTemplateRepository()
+  ).loadRevision(
     instantiatedTemplate.templateName,
-    project.instantiatedProjectSettings.instantiatedTemplates[0]!.templateCommitHash!
+    project.instantiatedProjectSettings.instantiatedTemplates[0]!
+      .templateCommitHash!,
   );
 
   if ("error" in template) {
@@ -443,7 +503,7 @@ async function diffNewTempProjects(
       );
 
     if ("error" in cleanProjectFromCurrentProjectSettingsResult) {
-      return cleanProjectFromCurrentProjectSettingsResult
+      return cleanProjectFromCurrentProjectSettingsResult;
     }
 
     if ("error" in cleanProjectFromNewSettingsResult) {
@@ -485,9 +545,10 @@ async function diffNewTempProjects(
     };
   } catch (error) {
     logError({
-      shortMessage: "Failed to create clean project from current project settings",
+      shortMessage:
+        "Failed to create clean project from current project settings",
       error,
-    })
+    });
     return {
       error: "Failed to create clean project from current project settings",
     };
@@ -504,13 +565,21 @@ export async function generateNewTemplateDiff(
   destinationProject: Project,
   userTemplateSettings: UserTemplateSettings,
 ): Promise<Result<NewTemplateDiffResult>> {
-  const instantiatedRootTemplate = destinationProject.instantiatedProjectSettings.instantiatedTemplates[0]?.templateCommitHash;
+  const instantiatedRootTemplate =
+    destinationProject.instantiatedProjectSettings.instantiatedTemplates[0]
+      ?.templateCommitHash;
   if (!instantiatedRootTemplate) {
-    logger.error(`No instantiated root template commit hash found in project settings`);
-    return { error: "No instantiated root template commit hash found in project settings" };
+    logger.error(
+      `No instantiated root template commit hash found in project settings`,
+    );
+    return {
+      error:
+        "No instantiated root template commit hash found in project settings",
+    };
   }
-  const rootTemplate =
-    await (await getRootTemplateRepository()).loadRevision(rootTemplateName, instantiatedRootTemplate);
+  const rootTemplate = await (
+    await getRootTemplateRepository()
+  ).loadRevision(rootTemplateName, instantiatedRootTemplate);
 
   if ("error" in rootTemplate) {
     return rootTemplate;
@@ -532,8 +601,7 @@ export async function generateNewTemplateDiff(
   const newProjectSettings: ProjectSettings = {
     ...destinationProject.instantiatedProjectSettings,
     instantiatedTemplates: [
-      ...destinationProject.instantiatedProjectSettings
-        .instantiatedTemplates,
+      ...destinationProject.instantiatedProjectSettings.instantiatedTemplates,
       {
         id: templateInstanceId,
         parentId: parentInstanceId,
@@ -574,7 +642,7 @@ export async function resolveConflictsAndRetrieveAppliedDiff(
     return { error: "Project not found" };
   }
 
-  const addAllResult = await addAllAndDiff(project.data.absoluteRootDir);
+  const addAllResult = await addAllAndRetrieveDiff(project.data.absoluteRootDir);
 
   if ("error" in addAllResult) {
     return addAllResult;
@@ -628,7 +696,7 @@ export async function applyDiffToProject(
     return { data: { resolveBeforeContinuing: true } };
   }
 
-  const addAllResult = await addAllAndDiff(project.data.absoluteRootDir);
+  const addAllResult = await addAllAndRetrieveDiff(project.data.absoluteRootDir);
 
   if ("error" in addAllResult) {
     return addAllResult;
@@ -636,10 +704,9 @@ export async function applyDiffToProject(
 
   return { data: parseGitDiff(addAllResult.data) };
 }
-export async function diffProjectFromTemplate(
+export async function diffProjectFromItsTemplate(
   project: Project,
 ): Promise<Result<ParsedFile[]>> {
-
   if (!project.gitStatus.isClean) {
     logger.error("Cannot diff project with uncommitted changes");
     return { error: "Cannot diff project with uncommitted changes" };
@@ -708,20 +775,23 @@ export async function generateUpdateTemplateDiff(
   project: Project,
   newTemplateRevisionHash: string,
 ): Promise<Result<NewTemplateDiffResult>> {
-  const rootInstantiatedTemplate = project.instantiatedProjectSettings.instantiatedTemplates[0];
+  const rootInstantiatedTemplate =
+    project.instantiatedProjectSettings.instantiatedTemplates[0];
 
   if (!rootInstantiatedTemplate) {
     logger.error(`No instantiated root template found`);
     return { error: "No instantiated root template found" };
   }
 
-  const template = await (await getRootTemplateRepository()).loadRevision(
+  const template = await (
+    await getRootTemplateRepository()
+  ).loadRevision(
     rootInstantiatedTemplate.templateName,
     newTemplateRevisionHash,
   );
 
   if ("error" in template) {
-    return template
+    return template;
   }
 
   if (!template.data) {

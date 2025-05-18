@@ -1,4 +1,7 @@
-import { TemplateConfig, TemplateDisablingThis } from "@timonteutelink/template-types-lib";
+import {
+  TemplateConfig,
+  TemplateDisablingThis,
+} from "@timonteutelink/template-types-lib";
 import z from "zod";
 
 export interface ProjectCreationResult {
@@ -8,7 +11,7 @@ export interface ProjectCreationResult {
 
 export interface DefaultTemplateResult {
   template: TemplateDTO;
-  revisions: string[]
+  revisions: string[];
 }
 export interface NewTemplateDiffResult {
   diffHash: string;
@@ -28,7 +31,7 @@ export interface TemplateDTO {
   currentCommitHash?: string; //always defined on root templates.
   isDefault: boolean;
   templatesThatDisableThis: TemplateDisablingThis[];
-  templateCommands: { title: string, description: string }[];
+  templateCommands: { title: string; description: string }[];
   refDir?: string;
 }
 

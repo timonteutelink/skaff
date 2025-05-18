@@ -1,0 +1,19 @@
+import { DefaultTemplateResult, Result } from "../../lib";
+import { getRootTemplateRepository } from "../../repositories";
+import { runEraseCache } from "../../services/cache-service";
+import { getDefaultTemplates } from "./get-default-templates";
+
+export async function eraseCache(): Promise<Result<DefaultTemplateResult[]>> {
+  const rootTemplateRepository = await getRootTemplateRepository();
+  const eraseResult = await runEraseCache();
+  if ("error" in eraseResult) {
+    return { error: eraseResult.error };
+  }
+
+  const reloadResult = await rootTemplateRepository.reloadTemplates();
+  if ("error" in reloadResult) {
+    return { error: reloadResult.error };
+  }
+
+  return await getDefaultTemplates();
+}

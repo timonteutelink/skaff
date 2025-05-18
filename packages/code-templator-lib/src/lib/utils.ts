@@ -1,4 +1,8 @@
-import { AnyOrCallback, TemplateSettingsType, UserTemplateSettings } from "@timonteutelink/template-types-lib";
+import {
+  AnyOrCallback,
+  TemplateSettingsType,
+  UserTemplateSettings,
+} from "@timonteutelink/template-types-lib";
 import { Result } from "./types";
 import { logger } from "./logger";
 import z from "zod";
@@ -13,13 +17,18 @@ export function anyOrCallbackToAny<
 ): Result<T> {
   try {
     return {
-      data: (typeof anyOrCallback === "function") ? (anyOrCallback as (userSettings: UserTemplateSettings) => T)(parsedUserSettings) : anyOrCallback,
+      data:
+        typeof anyOrCallback === "function"
+          ? (anyOrCallback as (userSettings: UserTemplateSettings) => T)(
+              parsedUserSettings,
+            )
+          : anyOrCallback,
     };
   } catch (error) {
     logError({
       shortMessage: "Error in anyOrCallbackToAny",
       error,
-    })
+    });
     return { error: `Error in anyOrCallbackToAny: ${error}` };
   }
 }
@@ -48,7 +57,8 @@ export function logError<T>({
   error,
   nullErrorMessage,
 }: LogErrorOptions<T>): T | false {
-  const log = (err: unknown, message: string) => logger[level]({ err }, message);
+  const log = (err: unknown, message: string) =>
+    logger[level]({ err }, message);
   const msg = shortMessage || "An error occurred";
 
   if (error) {
@@ -73,4 +83,3 @@ export function logError<T>({
 
   return result.data;
 }
-

@@ -86,7 +86,7 @@ export class Template {
     this.absolutePartialsDir = partialsDir
       ? path.resolve(baseDir, partialsDir)
       : undefined;
-    this.relativePartialsDir = partialsDir
+    this.relativePartialsDir = partialsDir;
 
     this.relativeRefDir = refDir;
 
@@ -142,7 +142,7 @@ export class Template {
       logError({
         error,
         shortMessage: "Failed to load template configurations",
-      })
+      });
       return { error: `Failed to load template configurations: ${error}` };
     }
     const templatesMap: Record<string, Template> = {};
@@ -259,7 +259,7 @@ export class Template {
       (template) => !template.parentTemplate,
     );
     if (rootTemplates.length === 0) {
-      logError({ shortMessage: `No root templates found.` })
+      logError({ shortMessage: `No root templates found.` });
       return { error: "No root templates found" };
     }
 
@@ -375,10 +375,11 @@ export class Template {
       refDir: this.relativeRefDir,
       currentCommitHash: this.commitHash,
       templatesThatDisableThis: this.config.templatesThatDisableThis || [],
-      templateCommands: this.config.commands?.map((command) => ({
-        title: command.title,
-        description: command.description,
-      })) || [],
+      templateCommands:
+        this.config.commands?.map((command) => ({
+          title: command.title,
+          description: command.description,
+        })) || [],
       isDefault: this.isDefault,
     };
   }
@@ -431,7 +432,11 @@ export class Template {
     const partials: Record<string, string> = {};
     if (this.absolutePartialsDir) {
       try {
-        const entries = await glob(`**/*`, { cwd: this.absolutePartialsDir, dot: false, nodir: true });
+        const entries = await glob(`**/*`, {
+          cwd: this.absolutePartialsDir,
+          dot: false,
+          nodir: true,
+        });
         for (const entry of entries) {
           const key = entry.split(".")[0]!;
           const value = path.join(this.absolutePartialsDir, entry);
@@ -442,7 +447,9 @@ export class Template {
           error,
           shortMessage: `Failed to read partials directory at ${this.absolutePartialsDir}`,
         });
-        return { error: `Failed to read partials directory at ${this.absolutePartialsDir}: ${error}` };
+        return {
+          error: `Failed to read partials directory at ${this.absolutePartialsDir}: ${error}`,
+        };
       }
     }
 

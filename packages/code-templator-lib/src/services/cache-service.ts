@@ -17,7 +17,7 @@ export function getHash(stringToHash: string): string {
 }
 
 export function getCacheDirPath(): string {
-  return path.join(tmpdir(), "code-templator-cache")
+  return path.join(tmpdir(), "code-templator-cache");
 }
 
 export async function getCacheDir(): Promise<Result<string>> {
@@ -90,12 +90,12 @@ export async function retrieveFromCache(
     logError({
       shortMessage: "Failed to read cache file",
       error,
-    })
+    });
     return { error: `Failed to read cache file: ${error}` };
   }
 }
 
-export async function eraseCache(): Promise<Result<void>> {
+export async function runEraseCache(): Promise<Result<void>> {
   const cacheDir = await getCacheDir();
   if ("error" in cacheDir) {
     return cacheDir;
@@ -108,7 +108,7 @@ export async function eraseCache(): Promise<Result<void>> {
     logError({
       shortMessage: "Failed to erase cache",
       error,
-    })
+    });
     return { error: `Failed to erase cache: ${error}` };
   }
 

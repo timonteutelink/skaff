@@ -108,7 +108,7 @@ export default function TemplatesListPage() {
       if (!templates) {
         return;
       }
-      setTemplates(templates.map(t => t.template) || []);
+      setTemplates(templates.map((t) => t.template) || []);
     });
     retrieveProjectSearchPaths().then((paths) => {
       setProjectSearchPaths(paths);

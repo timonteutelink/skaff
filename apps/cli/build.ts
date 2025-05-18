@@ -7,4 +7,3 @@ await Bun.build({
   format: "esm",
   plugins: [bunPluginPino()],
 });
-

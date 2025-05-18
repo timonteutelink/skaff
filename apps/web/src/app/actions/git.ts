@@ -7,7 +7,10 @@ import {
   switchBranch,
 } from "@timonteutelink/code-templator-lib/services/git-service";
 import { diffProjectFromTemplate } from "@timonteutelink/code-templator-lib/services/project-diff-service";
-import { ParsedFile, Result } from "@timonteutelink/code-templator-lib/lib/types";
+import {
+  ParsedFile,
+  Result,
+} from "@timonteutelink/code-templator-lib/lib/types";
 import { logger } from "@timonteutelink/code-templator-lib/lib/logger";
 import { PROJECT_REPOSITORY } from "@timonteutelink/code-templator-lib/repositories/project-repository";
 import { logError } from "@timonteutelink/code-templator-lib/lib/utils";
@@ -27,12 +30,12 @@ export async function commitChanges(
   }
 
   if (!project.data) {
-    logError({ shortMessage: `Project ${projectName} not found` })
+    logError({ shortMessage: `Project ${projectName} not found` });
     return { error: `Project ${projectName} not found` };
   }
 
   if (project.data.gitStatus.isClean) {
-    logError({ shortMessage: "No changes to commit" })
+    logError({ shortMessage: "No changes to commit" });
     return { error: "No changes to commit" };
   }
 
@@ -66,19 +69,21 @@ export async function switchProjectBranch(
   }
 
   if (!project.data) {
-    logError({ shortMessage: `Project ${projectName} not found` })
+    logError({ shortMessage: `Project ${projectName} not found` });
     return { error: `Project ${projectName} not found` };
   }
 
   const branchExists = project.data.gitStatus.branches.includes(branch);
 
   if (!branchExists) {
-    logError({ shortMessage: `Branch ${branch} does not exist` })
+    logError({ shortMessage: `Branch ${branch} does not exist` });
     return { error: `Branch ${branch} does not exist` };
   }
 
   if (!project.data.gitStatus.isClean) {
-    logError({ shortMessage: "Cannot switch branches with uncommitted changes" })
+    logError({
+      shortMessage: "Cannot switch branches with uncommitted changes",
+    });
     return { error: "Cannot switch branches with uncommitted changes" };
   }
 
@@ -111,7 +116,7 @@ export async function addAllAndRetrieveCurrentDiff(
   }
 
   if (!project.data) {
-    logError({ shortMessage: `Project ${projectName} not found` })
+    logError({ shortMessage: `Project ${projectName} not found` });
     return { error: `Project ${projectName} not found` };
   }
 
@@ -146,7 +151,7 @@ export async function diffProjectFromItsTemplate(
   }
 
   if (!project.data) {
-    logError({ shortMessage: `Project ${projectName} not found` })
+    logError({ shortMessage: `Project ${projectName} not found` });
     return { error: `Project ${projectName} not found` };
   }
   return diffProjectFromTemplate(project.data);

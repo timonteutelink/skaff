@@ -10,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Same strings as pino Level type
-type ToastLevel = 'info' | 'error' | 'warn';
+type ToastLevel = "info" | "error" | "warn";
 
 export function showToast(message: string, level: ToastLevel) {
   if (level === "error") {
@@ -31,10 +31,20 @@ type ToastErrorOptions<T> = {
   nullRedirectPath?: string;
   router?: ReturnType<typeof useRouter>;
   redirectType?: "push" | "replace";
-}
+};
 
-export function toastNullError<T>({ result, error, level = "error", shortMessage, nullErrorMessage, nullRedirectPath, router, redirectType = "push" }: ToastErrorOptions<T>): T | false {
-  const log = (err: unknown, message: string) => logger[level]({ err }, message);
+export function toastNullError<T>({
+  result,
+  error,
+  level = "error",
+  shortMessage,
+  nullErrorMessage,
+  nullRedirectPath,
+  router,
+  redirectType = "push",
+}: ToastErrorOptions<T>): T | false {
+  const log = (err: unknown, message: string) =>
+    logger[level]({ err }, message);
   const toastErrorMessage = shortMessage || "An error occurred";
 
   if (error) {
@@ -55,8 +65,14 @@ export function toastNullError<T>({ result, error, level = "error", shortMessage
     return false;
   }
 
-  if ((nullErrorMessage || (nullRedirectPath && router)) && result.data === null) {
-    log(new Error(nullErrorMessage || toastErrorMessage), nullErrorMessage || toastErrorMessage);
+  if (
+    (nullErrorMessage || (nullRedirectPath && router)) &&
+    result.data === null
+  ) {
+    log(
+      new Error(nullErrorMessage || toastErrorMessage),
+      nullErrorMessage || toastErrorMessage,
+    );
     showToast(nullErrorMessage || toastErrorMessage, level);
     if (router && nullRedirectPath) {
       router[redirectType](nullRedirectPath);

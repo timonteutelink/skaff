@@ -1,14 +1,28 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { ChevronDown, ChevronUp, InfoIcon } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Badge } from "@/components/ui/badge"
-import type { FieldRendererProps } from "../types"
+import { useState } from "react";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ChevronDown, ChevronUp, InfoIcon } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import type { FieldRendererProps } from "../types";
 
 export function ObjectFieldRenderer({
   fieldPath,
@@ -19,9 +33,9 @@ export function ObjectFieldRenderer({
   requiredFields,
   renderFormField,
 }: FieldRendererProps) {
-  const [isOpen, setIsOpen] = useState(true)
-  const objectRequiredFields = requiredFields[fieldPath] || []
-  const isNested = fieldPath.includes(".")
+  const [isOpen, setIsOpen] = useState(true);
+  const objectRequiredFields = requiredFields[fieldPath] || [];
+  const isNested = fieldPath.includes(".");
 
   return (
     <FormField
@@ -30,12 +44,18 @@ export function ObjectFieldRenderer({
       name={fieldPath}
       render={({ field }) => (
         <FormItem className={isNested ? "col-span-full" : "col-span-full"}>
-          <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
+          <Collapsible
+            open={isOpen}
+            onOpenChange={setIsOpen}
+            className="w-full"
+          >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <FormLabel className="text-base font-medium">
                   {property.title || fieldPath.split(".").pop()}
-                  {isRequired && <span className="text-destructive ml-1">*</span>}
+                  {isRequired && (
+                    <span className="text-destructive ml-1">*</span>
+                  )}
                 </FormLabel>
 
                 {property.description && (
@@ -52,7 +72,10 @@ export function ObjectFieldRenderer({
                 )}
 
                 {property.deprecated && (
-                  <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300 text-xs">
+                  <Badge
+                    variant="outline"
+                    className="bg-yellow-100 text-yellow-800 border-yellow-300 text-xs"
+                  >
                     Deprecated
                   </Badge>
                 )}
@@ -60,7 +83,11 @@ export function ObjectFieldRenderer({
 
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" size="sm" className="p-1 h-auto">
-                  {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  {isOpen ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
                 </Button>
               </CollapsibleTrigger>
             </div>
@@ -68,9 +95,16 @@ export function ObjectFieldRenderer({
             <CollapsibleContent>
               <Card className="overflow-visible shadow-sm">
                 <CardContent className="p-4 grid gap-4 sm:grid-cols-2">
-                  {Object.entries(property.properties).map(([propKey, propValue]: [string, any]) => {
-                    return renderFormField(propKey, propValue, fieldPath, objectRequiredFields)
-                  })}
+                  {Object.entries(property.properties).map(
+                    ([propKey, propValue]: [string, any]) => {
+                      return renderFormField(
+                        propKey,
+                        propValue,
+                        fieldPath,
+                        objectRequiredFields,
+                      );
+                    },
+                  )}
                 </CardContent>
               </Card>
             </CollapsibleContent>
@@ -79,5 +113,5 @@ export function ObjectFieldRenderer({
         </FormItem>
       )}
     />
-  )
+  );
 }

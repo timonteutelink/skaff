@@ -2,12 +2,20 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import type { ProjectTreeNode } from "./types";
-import { ProjectDTO, TemplateDTO } from "@timonteutelink/code-templator-lib/lib/types";
+import {
+  ProjectDTO,
+  TemplateDTO,
+} from "@timonteutelink/code-templator-lib/lib/types";
 import { findTemplate } from "@timonteutelink/code-templator-lib/utils/shared-utils";
 import { useCallback, useMemo } from "react";
 import { toastNullError } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
 import { runProjectCommand } from "@/app/actions/project";
 
@@ -28,7 +36,11 @@ export function ProjectDetailsPanel({
   const selectedNodeTemplate = useMemo(
     () =>
       selectedNode?.type === "instantiated"
-        ? toastNullError({ result: findTemplate(rootTemplate, selectedNode.name), shortMessage: "An error occurred trying to find the template.", nullErrorMessage: "No template was found" }) || null
+        ? toastNullError({
+            result: findTemplate(rootTemplate, selectedNode.name),
+            shortMessage: "An error occurred trying to find the template.",
+            nullErrorMessage: "No template was found",
+          }) || null
         : null,
     [selectedNode, rootTemplate],
   );
@@ -41,21 +53,31 @@ export function ProjectDetailsPanel({
     [project, selectedNode],
   );
 
-  const handleExecuteCommand = useCallback(async (command: { title: string; description: string }) => {
-    if (!selectedNode) {
-      toastNullError({
-        shortMessage: "No selected node",
-      })
-      return;
-    }
-    //TODO first show popup with command to run then actually run it.
-    const result = await runProjectCommand(project.name, selectedNode.id, command.title)
-    const commandOutput = toastNullError({ result, shortMessage: "Error executing command" });
-    if (commandOutput) {
-      console.log("Command output:", commandOutput);
-      alert(`Command executed successfully: ${commandOutput}`);
-    }
-  }, [project, selectedNode]);
+  const handleExecuteCommand = useCallback(
+    async (command: { title: string; description: string }) => {
+      if (!selectedNode) {
+        toastNullError({
+          shortMessage: "No selected node",
+        });
+        return;
+      }
+      //TODO first show popup with command to run then actually run it.
+      const result = await runProjectCommand(
+        project.name,
+        selectedNode.id,
+        command.title,
+      );
+      const commandOutput = toastNullError({
+        result,
+        shortMessage: "Error executing command",
+      });
+      if (commandOutput) {
+        console.log("Command output:", commandOutput);
+        alert(`Command executed successfully: ${commandOutput}`);
+      }
+    },
+    [project, selectedNode],
+  );
 
   if (!selectedNode) {
     return (
@@ -77,13 +99,15 @@ export function ProjectDetailsPanel({
             <h2 className="text-2xl font-bold">
               {selectedNodeTemplate?.config.templateConfig.name} Instance
             </h2>
-            {templateCommitHash ? (defaultTemplate.currentCommitHash === templateCommitHash ? (
-              <Badge className="ml-4 bg-green-100 text-green-800">
-                Up-to-date
-              </Badge>
-            ) : (
-              <Badge className="ml-4 bg-red-100 text-red-800">Outdated</Badge>
-            )) : null}
+            {templateCommitHash ? (
+              defaultTemplate.currentCommitHash === templateCommitHash ? (
+                <Badge className="ml-4 bg-green-100 text-green-800">
+                  Up-to-date
+                </Badge>
+              ) : (
+                <Badge className="ml-4 bg-red-100 text-red-800">Outdated</Badge>
+              )
+            ) : null}
           </div>
           <div className="flex items-center gap-2">
             {!selectedInstantiatedTemplate.automaticallyInstantiatedByParent ? (
@@ -92,8 +116,8 @@ export function ProjectDetailsPanel({
                 onClick={() => {
                   router.push(
                     `/projects/instantiate-template/?projectName=${project.name}` +
-                    `&existingTemplateInstanceId=${id}` +
-                    `&template=${selectedInstantiatedTemplate.templateName}`,
+                      `&existingTemplateInstanceId=${id}` +
+                      `&template=${selectedInstantiatedTemplate.templateName}`,
                   );
                 }}
               >
@@ -127,7 +151,6 @@ export function ProjectDetailsPanel({
               </DropdownMenu>
             ) : null}
           </div>
-
         </div>
 
         {/* Details grid */}
@@ -253,8 +276,8 @@ export function ProjectDetailsPanel({
           onClick={() => {
             router.push(
               `/projects/instantiate-template/?projectName=${project.name}` +
-              `&template=${candidate.config.templateConfig.name}` +
-              `&parentTemplateInstanceId=${selectedNode.parentId}`,
+                `&template=${candidate.config.templateConfig.name}` +
+                `&parentTemplateInstanceId=${selectedNode.parentId}`,
             );
           }}
         >

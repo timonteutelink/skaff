@@ -1,6 +1,15 @@
 "use server";
-import { deleteRepo, resetAllChanges } from "@timonteutelink/code-templator-lib/services/git-service";
-import { applyDiffToProject, generateModifyTemplateDiff, generateNewTemplateDiff, generateUpdateTemplateDiff, resolveConflictsAndRetrieveAppliedDiff } from "@timonteutelink/code-templator-lib/services/project-diff-service";
+import {
+  deleteRepo,
+  resetAllChanges,
+} from "@timonteutelink/code-templator-lib/services/git-service";
+import {
+  applyDiffToProject,
+  generateModifyTemplateDiff,
+  generateNewTemplateDiff,
+  generateUpdateTemplateDiff,
+  resolveConflictsAndRetrieveAppliedDiff,
+} from "@timonteutelink/code-templator-lib/services/project-diff-service";
 import {
   generateProjectFromTemplateSettings,
   instantiateProject,
@@ -38,7 +47,9 @@ export async function createNewProject(
   )?.path;
 
   if (!parentDirPath) {
-    logError({ shortMessage: `Invalid project directory path ID: ${projectDirPathId}` })
+    logError({
+      shortMessage: `Invalid project directory path ID: ${projectDirPathId}`,
+    });
     return { error: `Invalid project directory path ID: ${projectDirPathId}` };
   }
 
@@ -73,7 +84,7 @@ export async function prepareTemplateModificationDiff(
   }
 
   if (!project.data) {
-    logError({ shortMessage: `Project ${destinationProjectName} not found` })
+    logError({ shortMessage: `Project ${destinationProjectName} not found` });
     return { error: `Project ${destinationProjectName} not found` };
   }
 
@@ -111,7 +122,9 @@ export async function prepareTemplateInstantiationDiff(
   }
 
   if (!destinationProject.data) {
-    logError({ shortMessage: `Destination project ${destinationProjectName} not found` })
+    logError({
+      shortMessage: `Destination project ${destinationProjectName} not found`,
+    });
     return { error: `Destination project ${destinationProjectName} not found` };
   }
 
@@ -162,7 +175,7 @@ export async function restoreAllChangesToCleanProject(
   }
 
   if (!project.data) {
-    logError({ shortMessage: `Project ${projectName} not found` })
+    logError({ shortMessage: `Project ${projectName} not found` });
     return { error: `Project ${projectName} not found` };
   }
 
@@ -208,7 +221,7 @@ export async function cancelProjectCreation(
   }
 
   if (!project.data) {
-    logError({ shortMessage: `Project ${projectName} not found` })
+    logError({ shortMessage: `Project ${projectName} not found` });
     return { error: `Project ${projectName} not found` };
   }
 
@@ -240,8 +253,12 @@ export async function generateNewProjectFromExisting(
   )?.path;
 
   if (!parentDirPath) {
-    logError({ shortMessage: `Invalid project directory path ID: ${newProjectDestinationDirPathId}` })
-    return { error: `Invalid project directory path ID: ${newProjectDestinationDirPathId}` };
+    logError({
+      shortMessage: `Invalid project directory path ID: ${newProjectDestinationDirPathId}`,
+    });
+    return {
+      error: `Invalid project directory path ID: ${newProjectDestinationDirPathId}`,
+    };
   }
 
   const project = await PROJECT_REPOSITORY.findProject(currentProjectName);
@@ -251,7 +268,7 @@ export async function generateNewProjectFromExisting(
   }
 
   if (!project.data) {
-    logError({ shortMessage: `Project ${currentProjectName} not found` })
+    logError({ shortMessage: `Project ${currentProjectName} not found` });
     return { error: `Project ${currentProjectName} not found` };
   }
 
@@ -285,7 +302,7 @@ export async function retrieveDiffUpdateProjectNewTemplateRevision(
   }
 
   if (!project.data) {
-    logError({ shortMessage: `Project ${projectName} not found` })
+    logError({ shortMessage: `Project ${projectName} not found` });
     return { error: `Project ${projectName} not found` };
   }
 
@@ -301,19 +318,23 @@ export async function retrieveDiffUpdateProjectNewTemplateRevision(
   return { data: result.data };
 }
 
-
-export async function generateProjectFromProjectSettings(projectSettingsJson: string, projectDirPathId: string, newProjectDirName: string): Promise<Result<ProjectCreationResult>> {
+export async function generateProjectFromProjectSettings(
+  projectSettingsJson: string,
+  projectDirPathId: string,
+  newProjectDirName: string,
+): Promise<Result<ProjectCreationResult>> {
   let parsedProjectSettings: ProjectSettings | undefined;
   try {
-    parsedProjectSettings = ProjectSettingsSchema.parse(JSON.parse(projectSettingsJson));
+    parsedProjectSettings = ProjectSettingsSchema.parse(
+      JSON.parse(projectSettingsJson),
+    );
   } catch (error) {
     logError({
       error,
-      shortMessage: "Failed to parse project settings."
-    })
+      shortMessage: "Failed to parse project settings.",
+    });
     return { error: `Failed to parse project settings.` };
   }
-
 
   parsedProjectSettings.projectName = newProjectDirName;
 
@@ -327,11 +348,17 @@ export async function generateProjectFromProjectSettings(projectSettingsJson: st
   )?.path;
 
   if (!parentDirPath) {
-    logError({ shortMessage: `Invalid project directory path ID: ${projectDirPathId}` })
+    logError({
+      shortMessage: `Invalid project directory path ID: ${projectDirPathId}`,
+    });
     return { error: `Invalid project directory path ID: ${projectDirPathId}` };
   }
 
-  const result = await generateProjectFromTemplateSettings(parsedProjectSettings, path.join(parentDirPath, newProjectDirName), true);
+  const result = await generateProjectFromTemplateSettings(
+    parsedProjectSettings,
+    path.join(parentDirPath, newProjectDirName),
+    true,
+  );
 
   if ("error" in result) {
     return { error: result.error };

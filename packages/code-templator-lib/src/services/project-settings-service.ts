@@ -18,7 +18,9 @@ export async function writeNewProjectSettings(
   overwrite?: boolean,
 ): Promise<Result<void>> {
   if (!projectSettings.instantiatedTemplates[0]) {
-    logError({ shortMessage: "No instantiated templates found in project settings" })
+    logError({
+      shortMessage: "No instantiated templates found in project settings",
+    });
     return { error: "No instantiated templates found in project settings" };
   }
   const newProjectSettings: ProjectSettings = {
@@ -45,7 +47,9 @@ async function writeProjectSettings(
   if (!overwrite) {
     try {
       await fs.access(projectSettingsPath);
-      logError({ shortMessage: `Project settings file already exists at ${projectSettingsPath}` })
+      logError({
+        shortMessage: `Project settings file already exists at ${projectSettingsPath}`,
+      });
       return {
         error: `Project settings file already exists at ${projectSettingsPath}`,
       };
@@ -66,7 +70,7 @@ async function writeProjectSettings(
     logError({
       shortMessage: "Failed to write templateSettings.json",
       error,
-    })
+    });
     return { error: `Failed to write templateSettings.json: ${error}` };
   }
   return { data: undefined };
@@ -118,7 +122,7 @@ export async function loadProjectSettings(
     logError({
       shortMessage: "Failed to read templateSettings.json",
       error,
-    })
+    });
     return {
       error: `Failed to read templateSettings.json: ${error}`,
     };
@@ -128,23 +132,30 @@ export async function loadProjectSettings(
     parsedProjectSettings,
   );
   if (!finalProjectSettings.success) {
-    logError({ shortMessage: `Invalid templateSettings.json: ${finalProjectSettings.error}` })
+    logError({
+      shortMessage: `Invalid templateSettings.json: ${finalProjectSettings.error}`,
+    });
     return {
       error: `Invalid templateSettings.json: ${finalProjectSettings.error}`,
     };
   }
 
   // TODO here we would also load other reference template repos. For now all templates of a root template need to be in same repo.
-  const instantiatedRootTemplateCommitHash = finalProjectSettings.data.instantiatedTemplates[0]?.templateCommitHash
+  const instantiatedRootTemplateCommitHash =
+    finalProjectSettings.data.instantiatedTemplates[0]?.templateCommitHash;
 
   if (!instantiatedRootTemplateCommitHash) {
-    logError({ shortMessage: `No instantiated root template commit hash found in project settings` })
+    logError({
+      shortMessage: `No instantiated root template commit hash found in project settings`,
+    });
     return {
       error: `No instantiated root template commit hash found in project settings`,
     };
   }
 
-  const rootTemplate = await (await getRootTemplateRepository()).loadRevision(
+  const rootTemplate = await (
+    await getRootTemplateRepository()
+  ).loadRevision(
     finalProjectSettings.data.rootTemplateName,
     instantiatedRootTemplateCommitHash,
   );
@@ -153,7 +164,9 @@ export async function loadProjectSettings(
   }
 
   if (!rootTemplate.data) {
-    logError({ shortMessage: `Root template ${finalProjectSettings.data.rootTemplateName} not found` })
+    logError({
+      shortMessage: `Root template ${finalProjectSettings.data.rootTemplateName} not found`,
+    });
     return {
       error: `Root template ${finalProjectSettings.data.rootTemplateName} not found`,
     };
@@ -165,7 +178,9 @@ export async function loadProjectSettings(
       subTemplateSettings.templateName,
     );
     if (!subTemplate) {
-      logError({ shortMessage: `Sub template ${subTemplateSettings.templateName} not found in root template ${finalProjectSettings.data.rootTemplateName}` })
+      logError({
+        shortMessage: `Sub template ${subTemplateSettings.templateName} not found in root template ${finalProjectSettings.data.rootTemplateName}`,
+      });
       return {
         error: `Template ${subTemplateSettings.templateName} not found in root template ${finalProjectSettings.data.rootTemplateName}`,
       };
@@ -176,7 +191,9 @@ export async function loadProjectSettings(
         subTemplateSettings.templateSettings,
       );
     if (!subTemplateSettingsSchema.success) {
-      logError({ shortMessage: `Invalid templateSettings.json for template ${subTemplateSettings.templateName}: ${subTemplateSettingsSchema.error}` })
+      logError({
+        shortMessage: `Invalid templateSettings.json for template ${subTemplateSettings.templateName}: ${subTemplateSettingsSchema.error}`,
+      });
       return {
         error: `Invalid templateSettings.json for template ${subTemplateSettings.templateName}: ${subTemplateSettingsSchema.error}`,
       };
