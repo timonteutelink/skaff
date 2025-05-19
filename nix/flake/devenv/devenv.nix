@@ -17,7 +17,7 @@ localFlake:
           LD_LIBRARY_PATH = "${pkgs.stdenv.cc.cc.lib}/lib";
 
           TEMPLATE_DIR_PATHS = "~/projects/timon/example-templates-dir/:~/projects/btc/mcp-templates/:~/projects/timon/timon-templates/";
-          PROJECT_SEARCH_PATHS = "~/projects/btc/:~/projects/timon/templated/:~/projects/kosmoy/templated/";
+          PROJECT_SEARCH_PATHS = "~/projects/btc/:~/projects/timon/templated/:~/projects/kosmoy/";
 
           # ESBUILD_BINARY_PATH="/home/tteutelink/projects/timon/code-templator/node_modules/.bin/esbuild";
           GENERATE_DIFF_SCRIPT_PATH = "~/projects/timon/code-templator/scripts/generate-diff-patch.sh";

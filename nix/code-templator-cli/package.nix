@@ -21,7 +21,6 @@
 
   installPhase = ''
     mkdir -p $out/bin
-    ls -la dist
     cp bin/code-templator $out/bin/
     chmod +x $out/bin/code-templator
   '';

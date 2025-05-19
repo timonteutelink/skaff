@@ -60,7 +60,8 @@ async function readTsConfig(): Promise<any> {
       esModuleInterop: true,
       incremental: false,
       isolatedModules: true,
-      lib: ["es2022", "DOM", "DOM.Iterable"],
+      lib: ["es2022"],
+      types: ["node"],
       module: "NodeNext",
       moduleDetection: "force",
       moduleResolution: "NodeNext",
@@ -261,7 +262,7 @@ export async function loadAllTemplateConfigs(
     write: false,
     minify: true,
   });
-  if ("stop" in esbuild) await esbuild.stop().catch(() => {});
+  if ("stop" in esbuild) await esbuild.stop().catch(() => { });
   const bundle = outputFiles[0]?.text;
   if (!bundle) throw new Error("esbuild produced no output");
 
