@@ -34,10 +34,12 @@ export function registerInstantiationCommand(program: Command) {
    * PROJECT-LEVEL COMMANDS
    * ---------------------------------------------------------- */
   // NEW
-  instCmd
+  const projCmd = instCmd
     .command("project")
     .description("Project-level operations")
-    // new
+
+  // new
+  projCmd
     .command("new")
     .description("Create a new project from a template")
     .argument("<projectName>")
@@ -60,13 +62,13 @@ export function registerInstantiationCommand(program: Command) {
           logger.error(res.error);
           process.exit(1);
         }
-        return res.data;
+        console.log(res.data);
       })
     );
 
   // clone
-  instCmd
-    .command("project clone")
+  projCmd
+    .command("clone")
     .description("Generate a new project from an existing one")
     .argument("<currentProjectName>")
     .argument("<newProjectName>")
@@ -87,8 +89,8 @@ export function registerInstantiationCommand(program: Command) {
     );
 
   // from-settings
-  instCmd
-    .command("project from-settings")
+  projCmd
+    .command("from-settings")
     .description("Generate a project entirely from a ProjectSettings JSON")
     .argument("<settingsFileOrJson>")
     .argument("<newProjectDirName>")
@@ -106,13 +108,13 @@ export function registerInstantiationCommand(program: Command) {
           logger.error(res.error);
           process.exit(1);
         }
-        return res.data;
+        console.log(res.data);
       })
     );
 
   // delete
-  instCmd
-    .command("project delete")
+  projCmd
+    .command("delete")
     .description("Delete a project (removes its git repo)")
     .argument("<projectName>")
     .action(
@@ -126,8 +128,8 @@ export function registerInstantiationCommand(program: Command) {
     );
 
   // restore
-  instCmd
-    .command("project restore")
+  projCmd
+    .command("restore")
     .description("Restore (git reset) all uncommitted changes in a project")
     .argument("<projectName>")
     .action(
@@ -159,7 +161,7 @@ export function registerInstantiationCommand(program: Command) {
           logger.error(res.error);
           process.exit(1);
         }
-        return res.data;
+        console.log(res.data);
       })
     );
 
@@ -284,7 +286,7 @@ export function registerInstantiationCommand(program: Command) {
           logger.error(res.error);
           process.exit(1);
         }
-        return res.data;
+        console.log(res.data);
       })
     );
 }
