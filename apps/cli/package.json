@@ -2,14 +2,11 @@
   "name": "code-templator-cli",
   "version": "0.1.0",
   "private": true,
-  "bin": {
-    "code-templator-cli": "./code-templator"
-  },
   "scripts": {
     "buildprod": "bun run build.ts && bun build ./dist/main.js ./dist/*.js --compile --outfile ./bin/code-templator"
   },
   "dependencies": {
-    "@timonteutelink/code-templator-lib": "0.0.51",
+    "@timonteutelink/code-templator-lib": "0.0.52",
     "commander": "^13.1.0",
     "pino": "^9.6.0",
     "yaml": "^2.7.1",

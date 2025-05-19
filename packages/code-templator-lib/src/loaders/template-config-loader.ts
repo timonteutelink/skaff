@@ -55,8 +55,11 @@ async function readTsConfig(): Promise<any> {
   return {
     "$schema": "https://json.schemastore.org/tsconfig",
     "compilerOptions": {
+      "target": "ES2022",
+
       "module": "NodeNext",
       "moduleResolution": "NodeNext",
+
       "types": ["node"],
 
       "strict": true,
