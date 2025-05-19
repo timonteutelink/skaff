@@ -12,7 +12,9 @@
     "@timonteutelink/code-templator-lib": "0.0.48",
     "commander": "^13.1.0",
     "pino": "^9.6.0",
-    "yaml": "^2.7.1"
+    "yaml": "^2.7.1",
+    "typescript": "^5.8.3",
+    "@types/node": "^22.14.1"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

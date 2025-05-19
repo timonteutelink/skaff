@@ -24,14 +24,20 @@ importers:
   apps/cli:
     dependencies:
       '@timonteutelink/code-templator-lib':
-        specifier: 0.0.47
-        version: 0.0.47(1c49702b2f27a531b887d4c40bbd5c46)
+        specifier: 0.0.48
+        version: 0.0.48(1c49702b2f27a531b887d4c40bbd5c46)
+      '@types/node':
+        specifier: ^22.14.1
+        version: 22.14.1
       commander:
         specifier: ^13.1.0
         version: 13.1.0
       pino:
         specifier: ^9.6.0
         version: 9.6.0
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
       yaml:
         specifier: ^2.7.1
         version: 2.7.1
@@ -133,8 +139,8 @@ importers:
         specifier: ^4.1.3
         version: 4.1.3
       '@timonteutelink/code-templator-lib':
-        specifier: 0.0.47
-        version: 0.0.47(1c49702b2f27a531b887d4c40bbd5c46)
+        specifier: 0.0.48
+        version: 0.0.48(1c49702b2f27a531b887d4c40bbd5c46)
       '@timonteutelink/template-types-lib':
         specifier: 0.0.35
         version: 0.0.35
@@ -274,6 +280,9 @@ importers:
       '@timonteutelink/template-types-lib':
         specifier: 0.0.35
         version: 0.0.35
+      '@types/node':
+        specifier: ^22.14.1
+        version: 22.14.1
       esbuild:
         specifier: ^0.25.2
         version: 0.25.2
@@ -292,6 +301,9 @@ importers:
       pino:
         specifier: ^9.6.0
         version: 9.6.0
+      typescript:
+        specifier: 5.8.3
+        version: 5.8.3
       yaml:
         specifier: ^2.7.1
         version: 2.7.1
@@ -311,9 +323,6 @@ importers:
       '@types/fs-extra':
         specifier: ^11.0.4
         version: 11.0.4
-      '@types/node':
-        specifier: ^22.14.1
-        version: 22.14.1
       eslint:
         specifier: ^9.24.0
         version: 9.24.0(jiti@2.4.2)
@@ -323,9 +332,6 @@ importers:
       pino-pretty:
         specifier: ^13.0.0
         version: 13.0.0
-      typescript:
-        specifier: 5.8.3
-        version: 5.8.3
 
   packages/eslint-config:
     devDependencies:
@@ -2731,8 +2737,8 @@ packages:
   '@tediousjs/connection-string@0.5.0':
     resolution: {integrity: sha512-7qSgZbincDDDFyRweCIEvZULFAw5iz/DeunhvuxpL31nfntX3P4Yd4HkHBRg9H8CdqY1e5WFN1PZIz/REL9MVQ==}
 
-  '@timonteutelink/code-templator-lib@0.0.47':
-    resolution: {integrity: sha512-SUURPFgtvf/cBDhr5Lyzh2nUS4JNFZ/tuluQiFmKsefR1Fej+vgpYpixp+aXOPIz9bt2saeDeE2VnVwH4wj7Fw==}
+  '@timonteutelink/code-templator-lib@0.0.48':
+    resolution: {integrity: sha512-0ctzs5kbgqcbOarujU2YXT7nsEIZz7qpbhX8aPaHLBgGKIMArLLIS2Z8yMkCsci9+phZAQMDRGQEdJvpEqaGDQ==}
 
   '@timonteutelink/template-types-lib@0.0.35':
     resolution: {integrity: sha512-1XX3gZB4KYC+988cCCqtjdBFVcLwg/J1jHXLhgp2wVVV+EyzQ+MyUEQp0//rhCXtIfpDi5guv3lRpezVBM5BHQ==}
@@ -9816,7 +9822,7 @@ snapshots:
   '@tediousjs/connection-string@0.5.0':
     optional: true
 
-  '@timonteutelink/code-templator-lib@0.0.47(1c49702b2f27a531b887d4c40bbd5c46)':
+  '@timonteutelink/code-templator-lib@0.0.48(1c49702b2f27a531b887d4c40bbd5c46)':
     dependencies:
       '@langchain/langgraph': 0.2.67(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(ws@8.18.2(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.24.2)))(react@19.1.0)(zod-to-json-schema@3.24.5(zod@3.24.2))
       '@langchain/openai': 0.5.10(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(ws@8.18.2(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.24.2)))(encoding@0.1.13)(ws@8.18.2(bufferutil@4.0.9)(utf-8-validate@6.0.5))

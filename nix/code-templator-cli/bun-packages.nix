@@ -335,9 +335,9 @@
   };
   "@timonteutelink/code-templator-lib" = {
     out_path = "@timonteutelink/code-templator-lib";
-    name = "@timonteutelink/code-templator-lib@0.0.47";
-    url = "https://registry.npmjs.org/@timonteutelink/code-templator-lib/-/code-templator-lib-0.0.47.tgz";
-    hash = "sha512-SUURPFgtvf/cBDhr5Lyzh2nUS4JNFZ/tuluQiFmKsefR1Fej+vgpYpixp+aXOPIz9bt2saeDeE2VnVwH4wj7Fw==";
+    name = "@timonteutelink/code-templator-lib@0.0.48";
+    url = "https://registry.npmjs.org/@timonteutelink/code-templator-lib/-/code-templator-lib-0.0.48.tgz";
+    hash = "sha512-0ctzs5kbgqcbOarujU2YXT7nsEIZz7qpbhX8aPaHLBgGKIMArLLIS2Z8yMkCsci9+phZAQMDRGQEdJvpEqaGDQ==";
   };
   "@timonteutelink/template-types-lib" = {
     out_path = "@timonteutelink/template-types-lib";
@@ -359,15 +359,27 @@
   };
   "@types/node" = {
     out_path = "@types/node";
-    name = "@types/node@18.19.100";
-    url = "https://registry.npmjs.org/@types/node/-/node-18.19.100.tgz";
-    hash = "sha512-ojmMP8SZBKprc3qGrGk8Ujpo80AXkrP7G2tOT4VWr5jlr5DHjsJF+emXJz+Wm0glmy4Js62oKMdZZ6B9Y+tEcA==";
+    name = "@types/node@22.15.19";
+    url = "https://registry.npmjs.org/@types/node/-/node-22.15.19.tgz";
+    hash = "sha512-3vMNr4TzNQyjHcRZadojpRaD9Ofr6LsonZAoQ+HMUa/9ORTPoxVIw0e0mpqWpdjj8xybyCM+oKOUH2vwFu/oEw==";
   };
   "@types/node-fetch" = {
     out_path = "@types/node-fetch";
     name = "@types/node-fetch@2.6.12";
     url = "https://registry.npmjs.org/@types/node-fetch/-/node-fetch-2.6.12.tgz";
     hash = "sha512-8nneRWKCg3rMtF69nLQJnOYUcbafYeFSjqkw3jCRLsqkWFlHaoQrr5mXmofFGOx3DKn7UfmBMyov8ySvLRVldA==";
+  };
+  "@types/node-fetch/@types/node" = {
+    out_path = "@types/node-fetch/node_modules/@types/node_modules/node";
+    name = "@types/node@18.19.100";
+    url = "https://registry.npmjs.org/@types/node/-/node-18.19.100.tgz";
+    hash = "sha512-ojmMP8SZBKprc3qGrGk8Ujpo80AXkrP7G2tOT4VWr5jlr5DHjsJF+emXJz+Wm0glmy4Js62oKMdZZ6B9Y+tEcA==";
+  };
+  "@types/node-fetch/@types/node/undici-types" = {
+    out_path = "@types/node-fetch/node_modules/@types/node_modules/node/node_modules/undici-types";
+    name = "undici-types@5.26.5";
+    url = "https://registry.npmjs.org/undici-types/-/undici-types-5.26.5.tgz";
+    hash = "sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==";
   };
   "@types/retry" = {
     out_path = "@types/retry";
@@ -1653,6 +1665,18 @@
     url = "https://registry.npmjs.org/openai/-/openai-4.100.0.tgz";
     hash = "sha512-9soq/wukv3utxcuD7TWFqKdKp0INWdeyhUCvxwrne5KwnxaCp4eHL4GdT/tMFhYolxgNhxFzg5GFwM331Z5CZg==";
   };
+  "openai/@types/node" = {
+    out_path = "openai/@types/node_modules/node";
+    name = "@types/node@18.19.100";
+    url = "https://registry.npmjs.org/@types/node/-/node-18.19.100.tgz";
+    hash = "sha512-ojmMP8SZBKprc3qGrGk8Ujpo80AXkrP7G2tOT4VWr5jlr5DHjsJF+emXJz+Wm0glmy4Js62oKMdZZ6B9Y+tEcA==";
+  };
+  "openai/@types/node/undici-types" = {
+    out_path = "openai/@types/node_modules/node/node_modules/undici-types";
+    name = "undici-types@5.26.5";
+    url = "https://registry.npmjs.org/undici-types/-/undici-types-5.26.5.tgz";
+    hash = "sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==";
+  };
   "openapi-types" = {
     out_path = "openapi-types";
     name = "openapi-types@12.1.3";
@@ -2229,9 +2253,9 @@
   };
   "undici-types" = {
     out_path = "undici-types";
-    name = "undici-types@5.26.5";
-    url = "https://registry.npmjs.org/undici-types/-/undici-types-5.26.5.tgz";
-    hash = "sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==";
+    name = "undici-types@6.21.0";
+    url = "https://registry.npmjs.org/undici-types/-/undici-types-6.21.0.tgz";
+    hash = "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==";
   };
   "universalify" = {
     out_path = "universalify";
