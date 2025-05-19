@@ -61,8 +61,7 @@ async function readTsConfig(): Promise<any> {
 
       "strict": true,
       // "skipLibCheck": true         // speeds up builds; safe for CLIs
-    },
-    "include": ["src/**/*"]        // or whatever your sources live in
+    }
   }
 }
 
