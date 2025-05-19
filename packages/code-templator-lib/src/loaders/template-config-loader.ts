@@ -53,25 +53,17 @@ export type TemplateConfigWithFileInfo = {
 
 async function readTsConfig(): Promise<any> {
   return {
-    $schema: "https://json.schemastore.org/tsconfig",
-    compilerOptions: {
-      declaration: true,
-      declarationMap: true,
-      esModuleInterop: true,
-      incremental: false,
-      isolatedModules: true,
-      lib: ["es2022"],
-      types: ["node"],
-      module: "NodeNext",
-      moduleDetection: "force",
-      moduleResolution: "NodeNext",
-      noUncheckedIndexedAccess: true,
-      resolveJsonModule: true,
-      skipLibCheck: true,
-      strict: true,
-      target: "ES2022",
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "compilerOptions": {
+      "module": "NodeNext",
+      "moduleResolution": "NodeNext",
+      "types": ["node"],
+
+      "strict": true,
+      // "skipLibCheck": true         // speeds up builds; safe for CLIs
     },
-  };
+    "include": ["src/**/*"]        // or whatever your sources live in
+  }
 }
 
 // async function readTsConfig() {

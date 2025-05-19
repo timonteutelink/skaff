@@ -17,17 +17,17 @@
         "code-templator-cli": "./code-templator",
       },
       "dependencies": {
-        "@timonteutelink/code-templator-lib": "0.0.48",
+        "@timonteutelink/code-templator-lib": "0.0.49",
+        "@types/node": "^22.14.1",
         "commander": "^13.1.0",
         "pino": "^9.6.0",
+        "typescript": "^5.8.3",
         "yaml": "^2.7.1",
       },
       "devDependencies": {
         "@repo/eslint-config": "workspace:*",
         "@repo/typescript-config": "workspace:*",
-        "@types/node": "^22.14.1",
         "bun-plugin-pino": "^1.4.0",
-        "typescript": "^5.8.3",
       },
     },
     "packages/eslint-config": {
@@ -157,7 +157,7 @@
 
     "@repo/typescript-config": ["@repo/typescript-config@workspace:packages/typescript-config"],
 
-    "@timonteutelink/code-templator-lib": ["@timonteutelink/code-templator-lib@0.0.48", "", { "dependencies": { "@langchain/langgraph": "^0.2.67", "@langchain/openai": "^0.5.10", "@timonteutelink/template-types-lib": "0.0.35", "esbuild": "^0.25.2", "fs-extra": "^11.3.0", "glob": "^11.0.1", "handlebars": "^4.7.8", "langchain": "^0.3.24", "pino": "^9.6.0", "yaml": "^2.7.1", "zod": "^3.24.2", "zod-to-json-schema": "^3.24.5" } }, "sha512-0ctzs5kbgqcbOarujU2YXT7nsEIZz7qpbhX8aPaHLBgGKIMArLLIS2Z8yMkCsci9+phZAQMDRGQEdJvpEqaGDQ=="],
+    "@timonteutelink/code-templator-lib": ["@timonteutelink/code-templator-lib@0.0.49", "", { "dependencies": { "@langchain/langgraph": "^0.2.67", "@langchain/openai": "^0.5.10", "@timonteutelink/template-types-lib": "0.0.35", "@types/node": "^22.14.1", "esbuild": "^0.25.2", "fs-extra": "^11.3.0", "glob": "^11.0.1", "handlebars": "^4.7.8", "langchain": "^0.3.24", "pino": "^9.6.0", "typescript": "5.8.3", "yaml": "^2.7.1", "zod": "^3.24.2", "zod-to-json-schema": "^3.24.5" } }, "sha512-Z1ZxcdBlgWvjmYiNn5BFZmYG8A2pzfHto/g8HDT2P1vKS7o1JV4P+00jftBK/n2fm2p/+Ld9nsWAhSlxFLWtLg=="],
 
     "@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.35", "", { "dependencies": { "handlebars": "^4.7.8", "zod": "^3.24.2" } }, "sha512-1XX3gZB4KYC+988cCCqtjdBFVcLwg/J1jHXLhgp2wVVV+EyzQ+MyUEQp0//rhCXtIfpDi5guv3lRpezVBM5BHQ=="],
 
