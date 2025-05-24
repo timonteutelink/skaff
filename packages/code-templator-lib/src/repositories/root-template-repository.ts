@@ -16,6 +16,7 @@ export class RootTemplateRepository {
   public templates: Template[] = [];
 
   constructor(templatePaths: string[]) {
+    console.log("RootTemplateRepository initialized with paths:", templatePaths);
     this.templatePaths = templatePaths;
   }
 

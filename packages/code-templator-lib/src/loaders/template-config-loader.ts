@@ -13,7 +13,7 @@ import {
   retrieveFromCache,
   saveToCache,
 } from "../services/cache-service";
-import { getEsbuild } from "../utils/get-esbuild";
+import { initEsbuild } from "../utils/get-esbuild";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 
 type TemplateConfigModule<
@@ -53,9 +53,9 @@ export type TemplateConfigWithFileInfo = {
 
 async function readTsConfig(): Promise<any> {
   return {
-    "$schema": "https://json.schemastore.org/tsconfig",
     "compilerOptions": {
       "target": "ES2022",
+      "lib": ["ES2022"],
 
       "module": "NodeNext",
       "moduleResolution": "NodeNext",
@@ -63,7 +63,7 @@ async function readTsConfig(): Promise<any> {
       "types": ["node"],
 
       "strict": true,
-      // "skipLibCheck": true         // speeds up builds; safe for CLIs
+      "skipLibCheck": true         // speeds up builds; safe for CLIs
     }
   }
 }
@@ -78,11 +78,19 @@ async function readTsConfig(): Promise<any> {
 // }
 
 async function typeCheckFile(filePath: string): Promise<void> {
-  const basePath = process.cwd();
+  const templateDir = path.dirname(filePath);
+
+  const typeRoots = [
+    path.resolve(templateDir, '../../node_modules/@types'),
+  ];
+
   const tsConfig = await readTsConfig();
   const { options, errors } = ts.convertCompilerOptionsFromJson(
-    { ...tsConfig.compilerOptions, baseUrl: basePath },
-    basePath,
+    {
+      ...tsConfig.compilerOptions,
+      typeRoots,
+    },
+    templateDir,
   );
 
   if (errors.length) {
@@ -170,29 +178,26 @@ async function findTemplateConfigFiles(
 async function evaluateBundledCode(
   code: string,
 ): Promise<Record<string, TemplateConfigWithFileInfo>> {
-  const { Script, createContext } = await import(
-    /* webpackIgnore: true */ "node:vm"
-  );
+  const { Script, createContext } = await import(/* webpackIgnore: true */ "node:vm");
 
   function safeRequire(id: string) {
     if (id in SANDBOX_LIBS) return SANDBOX_LIBS[id];
-
     const rootId = id.split("/", 1)[0]!;
     if (rootId in SANDBOX_LIBS) return SANDBOX_LIBS[rootId];
     throw new Error(`Blocked import: ${id}`);
   }
 
-  const wrapped = `(function (exports, require, module, __filename, __dirname) { ${code}\n});`;
-
-  const context = createContext({});
-
-  const script = new Script(wrapped, { filename: "template-bundle.cjs" });
-  const module = { exports: {} };
-  const func = script.runInContext(context);
-
-  func(module.exports, safeRequire, module, "", "");
-
-  return (module.exports as any).configs;
+  const contextModule = { exports: {} };
+  const context = createContext({
+    exports: contextModule.exports,
+    require: safeRequire,
+    module: contextModule,
+    __filename: "",
+    __dirname: "",
+  });
+  const script = new Script(code + "(exports, require, module, __filename, __dirname);", { filename: "template-bundle.cjs" });
+  script.runInContext(context);
+  return (contextModule.exports as any).configs;
 }
 
 export async function loadAllTemplateConfigs(
@@ -240,7 +245,7 @@ export async function loadAllTemplateConfigs(
     await fs.unlink(tmp);
   }
 
-  const esbuild = await getEsbuild();
+  const esbuild = await initEsbuild();
   const { outputFiles } = await esbuild.build({
     stdin: {
       contents: indexTs,
@@ -255,8 +260,14 @@ export async function loadAllTemplateConfigs(
     external: Object.keys(SANDBOX_LIBS),
     write: false,
     minify: true,
+    banner: {
+      js: `;(function(exports, require, module, __filename, __dirname) {`
+    },
+    footer: {
+      js: `\n})`
+    },
   });
-  if ("stop" in esbuild) await esbuild.stop().catch(() => { });
+  if ("stop" in esbuild) await esbuild.stop();
   const bundle = outputFiles[0]?.text;
   if (!bundle) throw new Error("esbuild produced no output");
 

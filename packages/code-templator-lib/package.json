@@ -19,14 +19,15 @@
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@types/bun": "^1.2.14",
     "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.14.1",
     "eslint": "^9.24.0",
     "jest": "^29.7.0",
-    "pino-pretty": "^13.0.0"
+    "pino-pretty": "^13.0.0",
+    "typescript": "5.8.3"
   },
   "dependencies": {
-    "@types/node": "^22.14.1",
-    "typescript": "5.8.3",
     "@langchain/langgraph": "^0.2.67",
     "@langchain/openai": "^0.5.10",
     "@timonteutelink/template-types-lib": "0.0.35",

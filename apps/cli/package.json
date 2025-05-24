@@ -3,15 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "buildprod": "bun run build.ts && bun build ./dist/main.js ./dist/*.js --compile --outfile ./bin/code-templator"
+    "buildprod": "bun run build.ts && bun build --compile ./dist/main.js ./dist/*.js --outfile ./bin/code-templator"
   },
   "dependencies": {
-    "@timonteutelink/code-templator-lib": "0.0.52",
+    "@timonteutelink/code-templator-lib": "workspace:*",
+    "@types/node": "^22.15.19",
     "commander": "^13.1.0",
+    "esbuild": "^0.25.4",
     "pino": "^9.6.0",
-    "yaml": "^2.7.1",
     "typescript": "^5.8.3",
-    "@types/node": "^22.14.1"
+    "yaml": "^2.7.1"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

@@ -1,49 +1,32 @@
-import { Command } from "commander";
 import {
-  logger,
+  eraseCache,
   getDefaultTemplate,
   getDefaultTemplates,
   getLoadedRevisions,
   loadProjectTemplateRevision,
-  eraseCache,
+  logger,
   reloadTemplates,
 } from "@timonteutelink/code-templator-lib";
+import { Command } from "commander";
 
 import {
-  addGlobalFormatOption,
-  withFormatting,
+  withFormatting
 } from "../cli-utils";
 
-/**
- * Register the **template** command‑group.
- *
- * Only the high‑level actions exported from
- * `@timonteutelink/code-templator-lib` are used – no direct repository access.
- */
 export function registerTemplateCommand(program: Command) {
-  /**
-   * Root `template` command.
-   */
   const templateCmd = program
     .command("template")
     .description("Interact with code‑templator templates");
 
-  /* Add global --format option (json | ndjson | tsv | table) */
-  addGlobalFormatOption(templateCmd);
-
-  /**
-   * ------------------------------------------------------------
-   * template defaults
-   * ------------------------------------------------------------
-   * List every default template (name, description, revision).
-   */
   templateCmd
     .command("defaults")
     .description("List all default root templates")
     .action(
       withFormatting(async () => {
+        console.log("Loading default templates...");
         const res = await getDefaultTemplates();
         if ("error" in res) {
+          console.log(res.error);
           logger.error(res.error);
           process.exit(1);
         }
@@ -56,12 +39,6 @@ export function registerTemplateCommand(program: Command) {
       }),
     );
 
-  /**
-   * ------------------------------------------------------------
-   * template default <name>
-   * ------------------------------------------------------------
-   * Show the current default revision of a single template.
-   */
   templateCmd
     .command("default")
     .description("Show the default revision of a template")
@@ -87,12 +64,6 @@ export function registerTemplateCommand(program: Command) {
       }),
     );
 
-  /**
-   * ------------------------------------------------------------
-   * template revisions <name>
-   * ------------------------------------------------------------
-   * List all revisions that are *currently loaded* for a template.
-   */
   templateCmd
     .command("revisions")
     .description("List loaded revisions for a template")
@@ -117,12 +88,6 @@ export function registerTemplateCommand(program: Command) {
       }),
     );
 
-  /**
-   * ------------------------------------------------------------
-   * template show <name> <revision>
-   * ------------------------------------------------------------
-   * Show details for a *loaded* revision (no repository calls).
-   */
   templateCmd
     .command("show")
     .description("Display details for a loaded template revision")
@@ -156,12 +121,6 @@ export function registerTemplateCommand(program: Command) {
       }),
     );
 
-  /**
-   * ------------------------------------------------------------
-   * template reload
-   * ------------------------------------------------------------
-   * Reload templates and show the refreshed defaults.
-   */
   templateCmd
     .command("reload")
     .description("Reload templates from disk and show defaults afterwards")
@@ -181,12 +140,6 @@ export function registerTemplateCommand(program: Command) {
       }),
     );
 
-  /**
-   * ------------------------------------------------------------
-   * template erase-cache
-   * ------------------------------------------------------------
-   * Clear the cache and reload templates in one go.
-   */
   templateCmd
     .command("erase-cache")
     .description("Erase the template cache, then reload")
@@ -206,12 +159,6 @@ export function registerTemplateCommand(program: Command) {
       }),
     );
 
-  /**
-   * ------------------------------------------------------------
-   * template project-revision <projectName>
-   * ------------------------------------------------------------
-   * Show which template revision was used to create a project.
-   */
   templateCmd
     .command("project-revision")
     .description(

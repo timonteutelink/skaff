@@ -139,6 +139,7 @@ export class Template {
     try {
       configs = await loadAllTemplateConfigs(absoluteRootDir);
     } catch (error) {
+      console.log(error);
       logError({
         error,
         shortMessage: "Failed to load template configurations",
