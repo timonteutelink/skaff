@@ -2,17 +2,17 @@
   "name": "@timonteutelink/code-templator-lib",
   "version": "0.0.52",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./browser": "./dist/browser.js"
   },
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "bunx tsc@latest -p tsconfig.json",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
-    "publish": "pnpm publish --access public",
     "test": "jest",
     "test:watch": "jest --watch"
   },

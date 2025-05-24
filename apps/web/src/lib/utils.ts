@@ -1,4 +1,4 @@
-import { Result } from "@timonteutelink/code-templator-lib/lib/types";
+import { Result, TemplateDTO } from "@timonteutelink/code-templator-lib";
 import { clsx, type ClassValue } from "clsx";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
@@ -82,3 +82,4 @@ export function toastNullError<T>({
 
   return result.data;
 }
+

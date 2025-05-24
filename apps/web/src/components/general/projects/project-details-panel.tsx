@@ -5,8 +5,8 @@ import type { ProjectTreeNode } from "./types";
 import {
   ProjectDTO,
   TemplateDTO,
-} from "@timonteutelink/code-templator-lib/lib/types";
-import { findTemplate } from "@timonteutelink/code-templator-lib/utils/shared-utils";
+  findTemplate
+} from "@timonteutelink/code-templator-lib/browser";
 import { useCallback, useMemo } from "react";
 import { toastNullError } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -37,10 +37,10 @@ export function ProjectDetailsPanel({
     () =>
       selectedNode?.type === "instantiated"
         ? toastNullError({
-            result: findTemplate(rootTemplate, selectedNode.name),
-            shortMessage: "An error occurred trying to find the template.",
-            nullErrorMessage: "No template was found",
-          }) || null
+          result: findTemplate(rootTemplate, selectedNode.name),
+          shortMessage: "An error occurred trying to find the template.",
+          nullErrorMessage: "No template was found",
+        }) || null
         : null,
     [selectedNode, rootTemplate],
   );
@@ -116,8 +116,8 @@ export function ProjectDetailsPanel({
                 onClick={() => {
                   router.push(
                     `/projects/instantiate-template/?projectName=${project.name}` +
-                      `&existingTemplateInstanceId=${id}` +
-                      `&template=${selectedInstantiatedTemplate.templateName}`,
+                    `&existingTemplateInstanceId=${id}` +
+                    `&template=${selectedInstantiatedTemplate.templateName}`,
                   );
                 }}
               >
@@ -276,8 +276,8 @@ export function ProjectDetailsPanel({
           onClick={() => {
             router.push(
               `/projects/instantiate-template/?projectName=${project.name}` +
-                `&template=${candidate.config.templateConfig.name}` +
-                `&parentTemplateInstanceId=${selectedNode.parentId}`,
+              `&template=${candidate.config.templateConfig.name}` +
+              `&parentTemplateInstanceId=${selectedNode.parentId}`,
             );
           }}
         >

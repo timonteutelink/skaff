@@ -15,6 +15,7 @@ import {
 } from "../services/cache-service";
 import { initEsbuild } from "../utils/get-esbuild";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
+import { existsSync } from "node:fs";
 
 type TemplateConfigModule<
   TFullSettingsType extends TemplateSettingsType<
@@ -77,11 +78,27 @@ async function readTsConfig(): Promise<any> {
 //   return tsConfig;
 // }
 
+function findTypesDirectory(startDir: string): string | null {
+  let currentDir = startDir;
+
+  while (currentDir !== path.parse(currentDir).root) {
+    const typesPath = path.join(currentDir, 'node_modules', '@types');
+    if (existsSync(typesPath)) {
+      return typesPath;
+    }
+    currentDir = path.dirname(currentDir);
+  }
+
+  // Fallback to the current working directory if @types exists there
+  const fallbackPath = path.join(process.cwd(), 'node_modules', '@types');
+  return existsSync(fallbackPath) ? fallbackPath : null;
+}
+
 async function typeCheckFile(filePath: string): Promise<void> {
   const templateDir = path.dirname(filePath);
 
   const typeRoots = [
-    path.resolve(templateDir, '../../node_modules/@types'),
+    findTypesDirectory(templateDir) || path.join(process.cwd(), 'node_modules', '@types'),
   ];
 
   const tsConfig = await readTsConfig();
@@ -246,6 +263,9 @@ export async function loadAllTemplateConfigs(
   }
 
   const esbuild = await initEsbuild();
+  if (!esbuild) {
+    throw new Error("Failed to initialize esbuild");
+  }
   const { outputFiles } = await esbuild.build({
     stdin: {
       contents: indexTs,

@@ -20,7 +20,6 @@ import CommitButton from "@/components/general/git/commit-dialog";
 import { DiffVisualizerPage } from "@/components/general/git/diff-visualizer-page";
 import { TemplateSettingsForm } from "@/components/general/template-settings/template-settings-form";
 import { Button } from "@/components/ui/button";
-import { findTemplate } from "@timonteutelink/code-templator-lib/utils/shared-utils";
 import {
   DefaultTemplateResult,
   NewTemplateDiffResult,
@@ -28,7 +27,8 @@ import {
   ProjectDTO,
   Result,
   TemplateDTO,
-} from "@timonteutelink/code-templator-lib/lib/types";
+  findTemplate,
+} from "@timonteutelink/code-templator-lib/browser";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -621,7 +621,7 @@ const TemplateInstantiationPage: React.FC = () => {
           )}
           <CommitButton
             onCommit={handleConfirmAppliedDiff}
-            onCancel={() => {}}
+            onCancel={() => { }}
           />
         </div>
       </div>

@@ -39,7 +39,7 @@ import {
   projectNameRegex,
   type ProjectDTO,
   type TemplateDTO,
-} from "@timonteutelink/code-templator-lib/lib/types";
+} from "@timonteutelink/code-templator-lib/browser";
 import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";

@@ -1,5 +1,6 @@
 "use client";
-import { addAllAndRetrieveCurrentDiff, commitChanges } from "@/app/actions/git";
+import { commitChanges } from "@/app/actions/git";
+import { resolveConflictsAndDiff } from "@/app/actions/instantiate";
 import CommitButton from "@/components/general/git/commit-dialog";
 import { DiffVisualizerPage } from "@/components/general/git/diff-visualizer-page";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { toastNullError } from "@/lib/utils";
 import type {
   ParsedFile,
   Result,
-} from "@timonteutelink/code-templator-lib/lib/types";
+} from "@timonteutelink/code-templator-lib/browser";
 import { ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -31,7 +32,7 @@ export default function ProjectStagedChangesPage() {
       return;
     }
 
-    addAllAndRetrieveCurrentDiff(projectNameParam).then(
+    resolveConflictsAndDiff(projectNameParam).then(
       (data: Result<ParsedFile[] | null>) => {
         const toastResult = toastNullError({
           result: data,
@@ -76,7 +77,7 @@ export default function ProjectStagedChangesPage() {
     [projectNameParam, router],
   );
 
-  const handleCancel = useCallback(() => {}, []);
+  const handleCancel = useCallback(() => { }, []);
 
   const handleBack = useCallback(() => {
     if (projectNameParam) {

@@ -14,7 +14,7 @@ import {
   ProjectDTO,
   Result,
   TemplateDTO,
-} from "@timonteutelink/code-templator-lib/lib/types";
+} from "@timonteutelink/code-templator-lib/browser";
 import { FileDiffIcon, GitBranchIcon, GitCommitIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -110,7 +110,7 @@ export function ProjectHeader({
                 onClick={() => onBranchChange(branch)}
                 className={
                   branch === project.gitStatus.currentBranch ||
-                  !project.gitStatus.isClean
+                    !project.gitStatus.isClean
                     ? "bg-muted"
                     : ""
                 }

@@ -1,70 +1,22 @@
 "use server";
-import {
-  ProjectDTO,
-  Result,
-} from "@timonteutelink/code-templator-lib/lib/types";
-import { logger } from "@timonteutelink/code-templator-lib/lib/logger";
-import { PROJECT_REPOSITORY } from "@timonteutelink/code-templator-lib/repositories/project-repository";
-import { logError } from "@timonteutelink/code-templator-lib/lib/utils";
+
+import * as tempLib from "@timonteutelink/code-templator-lib";
+import { ProjectDTO, Result } from "@timonteutelink/code-templator-lib";
 
 export async function retrieveProjectSearchPaths(): Promise<
   { id: string; path: string }[]
 > {
-  const config = await getConfig();
-  return PROJECT_SEARCH_PATHS;
+  return tempLib.getSearchPaths();
 }
 
 export async function retrieveProjects(): Promise<Result<ProjectDTO[]>> {
-  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
-  if ("error" in reloadResult) {
-    return { error: reloadResult.error };
-  }
-  const projects = await PROJECT_REPOSITORY.getProjects();
-
-  if ("error" in projects) {
-    return { error: projects.error };
-  }
-
-  const projectDtos: ProjectDTO[] = [];
-
-  for (const project of projects.data) {
-    const projectDto = project.mapToDTO();
-
-    if ("error" in projectDto) {
-      return { error: projectDto.error };
-    }
-
-    projectDtos.push(projectDto.data);
-  }
-
-  return { data: projectDtos };
+  return tempLib.getProjects();
 }
 
 export async function retrieveProject(
   projectName: string,
 ): Promise<Result<ProjectDTO | null>> {
-  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
-  if ("error" in reloadResult) {
-    return { error: reloadResult.error };
-  }
-  const project = await PROJECT_REPOSITORY.findProject(projectName);
-
-  if ("error" in project) {
-    return { error: project.error };
-  }
-
-  if (!project.data) {
-    logger.warn(`Project ${projectName} not found`);
-    return { data: null };
-  }
-
-  const projectDto = project.data.mapToDTO();
-
-  if ("error" in projectDto) {
-    return { error: projectDto.error };
-  }
-
-  return { data: projectDto.data };
+  return tempLib.getProject(projectName);
 }
 
 export async function runProjectCommand(
@@ -72,29 +24,9 @@ export async function runProjectCommand(
   templateInstanceId: string,
   commandTitle: string,
 ): Promise<Result<string>> {
-  const reloadResult = await PROJECT_REPOSITORY.reloadProjects();
-  if ("error" in reloadResult) {
-    return { error: reloadResult.error };
-  }
-  const project = await PROJECT_REPOSITORY.findProject(projectName);
-
-  if ("error" in project) {
-    return { error: project.error };
-  }
-
-  if (!project.data) {
-    logError({ shortMessage: `Project ${projectName} not found` });
-    return { error: `Project ${projectName} not found` };
-  }
-
-  const result = await project.data.executeTemplateCommand(
+  return tempLib.runProjectCommand(
+    projectName,
     templateInstanceId,
     commandTitle,
   );
-
-  if ("error" in result) {
-    return { error: result.error };
-  }
-
-  return { data: result.data };
 }

@@ -4,7 +4,7 @@ import { Tree } from "@/components/general/tree";
 import type {
   Result,
   TemplateDTO,
-} from "@timonteutelink/code-templator-lib/lib/types";
+} from "@timonteutelink/code-templator-lib/browser";
 import { useRouter, useSearchParams } from "next/navigation";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -212,7 +212,7 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ node }) => {
 /* =============================================================================
    TemplatePage
    ============================================================================= */
-const TemplatePage: React.FC = () => {
+export default function TemplatePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const templateName = useMemo(
@@ -348,5 +348,3 @@ const TemplatePage: React.FC = () => {
     </div>
   );
 };
-
-export default TemplatePage;

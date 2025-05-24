@@ -1,7 +1,7 @@
 import type {
   InstantiatedTemplate,
   TemplateDTO,
-} from "@timonteutelink/code-templator-lib/lib/types";
+} from "@timonteutelink/code-templator-lib";
 
 /* =============================================================================
 	 Tree Node Types

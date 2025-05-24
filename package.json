@@ -20,9 +20,14 @@
   },
   "packageManager": "pnpm@10.8.0",
   "workspaces": [
-    "apps/cli",
+    "apps/web",
+    "packages/tailwind-config",
     "packages/typescript-config",
     "packages/eslint-config",
     "packages/code-templator-lib"
-  ]
+  ],
+  "resolutions": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  }
 }

@@ -1,3 +1,4 @@
+"use client";
 import { useCallback } from "react";
 import { Tree as ArbTree, NodeApi } from "react-arborist";
 
@@ -55,9 +56,8 @@ export function Tree<T extends { id: string; children?: T[] }>({
         const defaultLabel = (
           <div
             style={props.style}
-            className={`flex items-center p-2 cursor-pointer hover:bg-blue-100 select-none ${
-              isSelected ? "bg-blue-200" : ""
-            } break-words`}
+            className={`flex items-center p-2 cursor-pointer hover:bg-blue-100 select-none ${isSelected ? "bg-blue-200" : ""
+              } break-words`}
             onClick={onClick}
           >
             {hasChildren && (
@@ -79,14 +79,14 @@ export function Tree<T extends { id: string; children?: T[] }>({
 
         return renderLabel
           ? renderLabel(
-              node.data,
-              isSelected,
-              () => node.toggle(),
-              node.isOpen,
-              !!hasChildren,
-              props.style,
-              onClick,
-            )
+            node.data,
+            isSelected,
+            () => node.toggle(),
+            node.isOpen,
+            !!hasChildren,
+            props.style,
+            onClick,
+          )
           : defaultLabel;
       }}
     </ArbTree>
