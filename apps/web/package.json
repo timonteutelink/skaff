@@ -5,10 +5,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000",
-    "build": "bunx tsc@latest --noEmit && next build",
+    "build": "tsc --noEmit && next build",
     "start": "next start",
     "lint": "next lint --max-warnings 0",
-    "check-types": "bunx tsc@latest --noEmit"
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
