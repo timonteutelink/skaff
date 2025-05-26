@@ -5,89 +5,97 @@ import { Result } from "../lib/types";
 import { Project } from "../models/project";
 
 export class ProjectRepository {
-  private loading: boolean = false;
-  private searchPaths: string[] = [];
-  public projects: Project[] = [];
+  private projectsCache: Map<string, Project> = new Map();
 
-  constructor(searchPaths: string[]) {
-    this.searchPaths = searchPaths;
+  constructor() { }
+
+  private async loadProjectFromPath(projectPath: string): Promise<Result<Project>> {
+    try {
+      const settingsPath = path.join(projectPath, "templateSettings.json");
+      const [dirStat, settingsStat] = await Promise.all([
+        fs.stat(projectPath),
+        fs.stat(settingsPath),
+      ]);
+
+      if (!dirStat.isDirectory() || !settingsStat.isFile()) {
+        return { error: "Invalid project directory or missing settings file." };
+      }
+
+      const projectResult = await Project.create(projectPath);
+      if ("error" in projectResult) {
+        return { error: projectResult.error };
+      }
+
+      return { data: projectResult.data };
+    } catch (error) {
+      logger.debug({ error }, `Failed to load project from path ${projectPath}`);
+      return { error: "Failed to load project due to an error." };
+    }
   }
 
-  private async loadProjects(): Promise<Result<void>> {
-    if (this.loading) {
-      return { error: "Projects are already loading" };
+  async loadProject(
+    projectPath: string,
+    cached: boolean = false,
+  ): Promise<Result<Project>> {
+    if (cached && this.projectsCache.has(projectPath)) {
+      return { data: this.projectsCache.get(projectPath)! };
     }
-    this.loading = true;
-    this.projects = [];
-    for (const searchPath of this.searchPaths) {
-      let dirs: string[] = [];
-      try {
-        dirs = await fs.readdir(searchPath);
-      } catch (error) {
-        logger.warn(
-          { error },
-          `Failed to read project directories at ${searchPath}`,
-        );
-        continue;
-      }
-      for (const dir of dirs) {
-        const absDir = path.join(searchPath, dir);
-        const projectSettingsPath = path.join(absDir, "templateSettings.json");
 
-        try {
-          const stat = await fs.stat(absDir);
-          const projectSettingsStat = await fs.stat(projectSettingsPath);
-
-          if (stat.isDirectory() && projectSettingsStat.isFile()) {
-            const project = await Project.create(absDir);
-            if ("error" in project) {
-              continue;
-            }
-            this.projects.push(project.data);
-          }
-        } catch (error) {
-          continue;
-        }
-      }
+    const result = await this.loadProjectFromPath(projectPath);
+    if ("data" in result) {
+      this.projectsCache.set(projectPath, result.data);
     }
-    this.loading = false;
-    return { data: undefined };
+    return result;
   }
 
-  async reloadProjects(): Promise<Result<void>> {
-    this.projects = [];
-    return await this.loadProjects();
-  }
+  async findProjectByName(
+    searchPath: string,
+    projectName: string,
+    cached: boolean = false,
+  ): Promise<Result<Project | null>> {
+    const projectPath = path.join(searchPath, projectName);
 
-  async getProjects(): Promise<Result<Project[]>> {
-    if (!this.projects.length) {
-      const result = await this.loadProjects();
-      if ("error" in result) {
-        return result;
-      }
-      if (!this.projects.length) {
-        return { data: [] };
-      }
-    }
-    return { data: this.projects };
-  }
-
-  async findProject(projectName: string): Promise<Result<Project | null>> {
-    if (!this.projects.length) {
-      const result = await this.loadProjects();
-      if ("error" in result) {
-        return result;
-      }
-      if (!this.projects.length) {
-        return { data: null };
-      }
+    if (cached && this.projectsCache.has(projectPath)) {
+      return { data: this.projectsCache.get(projectPath)! };
     }
 
-    for (const project of this.projects) {
-      if (project.instantiatedProjectSettings.projectName === projectName) {
-        return { data: project };
-      }
+    const result = await this.loadProjectFromPath(projectPath);
+    if ("data" in result) {
+      this.projectsCache.set(projectPath, result.data);
+      return { data: result.data };
     }
+
     return { data: null };
   }
+
+  async findProjects(searchPath: string): Promise<Result<Project[]>> {
+    try {
+      const entries = await fs.readdir(searchPath, { withFileTypes: true });
+      const projects: Project[] = [];
+
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const projectPath = path.join(searchPath, entry.name);
+          const projectResult = await this.loadProjectFromPath(projectPath);
+          if ("data" in projectResult) {
+            projects.push(projectResult.data);
+          }
+        }
+      }
+
+      return { data: projects };
+    } catch (error) {
+      logger.warn({ error }, `Failed to find projects in path ${searchPath}`);
+      return { error: "Failed to find projects due to an error." };
+    }
+  }
+
+  async clearCache(projectPath?: string): Promise<void> {
+    if (projectPath) {
+      this.projectsCache.delete(projectPath);
+    } else {
+      this.projectsCache.clear();
+    }
+  }
 }
+

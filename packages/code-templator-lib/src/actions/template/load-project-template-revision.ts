@@ -1,52 +1,30 @@
-import { Result, TemplateDTO } from "../../lib";
+import { Result } from "../../lib";
 import { logError } from "../../lib/utils";
+import { Project, Template } from "../../models";
 import {
-  getProjectRepository,
-  getRootTemplateRepository,
+  getRootTemplateRepository
 } from "../../repositories";
 
 export async function loadProjectTemplateRevision(
-  projectName: string,
-): Promise<Result<TemplateDTO | null>> {
-  const projectRepository = await getProjectRepository();
+  project: Project,
+): Promise<Result<Template | null>> {
   const rootTemplateRepository = await getRootTemplateRepository();
-  const reloadResult = await projectRepository.reloadProjects();
-  if ("error" in reloadResult) {
-    return { error: reloadResult.error };
-  }
-  const project = await projectRepository.findProject(projectName);
-  if ("error" in project) {
-    return { error: project.error };
-  }
-  if (!project.data) {
-    return { data: null };
-  }
 
   const rootTemplateName =
-    project.data.instantiatedProjectSettings.rootTemplateName;
+    project.instantiatedProjectSettings.rootTemplateName;
   const commitHash =
-    project.data.instantiatedProjectSettings.instantiatedTemplates[0]
+    project.instantiatedProjectSettings.instantiatedTemplates[0]
       ?.templateCommitHash;
 
   if (!commitHash) {
     logError({
-      shortMessage: `No commit hash found for project ${projectName}`,
+      shortMessage: `No commit hash found for project ${project.instantiatedProjectSettings.projectName}`,
     });
-    return { error: `No commit hash found for project ${projectName}` };
+    return { error: `No commit hash found for project ${project.instantiatedProjectSettings.projectName}` };
   }
 
-  const revision = await rootTemplateRepository.loadRevision(
+  return await rootTemplateRepository.loadRevision(
     rootTemplateName,
     commitHash,
   );
-
-  if ("error" in revision) {
-    return { error: revision.error };
-  }
-  if (!revision.data) {
-    return { data: null };
-  }
-  const templateDto = revision.data.mapToDTO();
-
-  return { data: templateDto };
 }

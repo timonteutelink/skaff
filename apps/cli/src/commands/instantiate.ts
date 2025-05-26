@@ -2,10 +2,12 @@ import {
   addAllAndDiff,
   applyDiff,
   deleteProject,
+  findTemplate,
   generateNewProject,
   generateNewProjectFromExisting,
   generateNewProjectFromSettings,
-  logger,
+  getDefaultTemplate,
+  getProjectFromPath,
   prepareInstantiationDiff,
   prepareModificationDiff,
   prepareUpdateDiff,
@@ -14,11 +16,41 @@ import {
 import { Command } from "commander";
 import fs from "node:fs";
 import {
+  getCurrentProject,
   withFormatting
 } from "../cli-utils";
+import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
+import { promptForSchema } from "../zod-schema-prompt";
 
-function readSettings(arg?: string) {
-  if (!arg) return {};
+async function promptUserTemplateSettings(
+  rootTemplateName: string,
+  templateName: string
+): Promise<UserTemplateSettings> {
+  const rootTemplate = await getDefaultTemplate(rootTemplateName);
+  if ('error' in rootTemplate) {
+    console.error(rootTemplate.error);
+    process.exit(1);
+  }
+  if (!rootTemplate.data) {
+    console.error(`No template found with name "${rootTemplateName}"`);
+    process.exit(1);
+  }
+  const templateSettingsSchema = rootTemplate.data.template.config.templateSettingsSchema;
+  const promptResult = await promptForSchema(templateSettingsSchema);
+
+  if (Object.keys(promptResult).length === 0) {
+    console.error("No settings provided. Exiting.");
+    process.exit(1);
+  }
+
+  return promptResult as UserTemplateSettings;
+}
+
+async function readUserTemplateSettings(rootTemplateName: string, templateName: string, arg?: string): Promise<UserTemplateSettings> {
+  if (!arg) {
+    return promptUserTemplateSettings(rootTemplateName, templateName);
+  }
+
   if (fs.existsSync(arg)) {
     return JSON.parse(fs.readFileSync(arg, "utf8"));
   }
@@ -44,22 +76,26 @@ export function registerInstantiationCommand(program: Command) {
     .description("Create a new project from a template")
     .argument("<projectName>")
     .argument("<templateName>")
-    .requiredOption("-d, --dir <dirId>", "Parent directory path ID")
     .option(
       "-s, --settings <jsonOrFile>",
-      "Inline JSON or path to JSON file with template settings"
+      "Inline JSON or path to JSON file with template settings. If not provided will be asked interactively."
     )
     .action(
       withFormatting(async (projectName, templateName, opts) => {
-        const settings = readSettings(opts.settings);
+        const settings = await readUserTemplateSettings(
+          templateName,
+          templateName,
+          opts.settings
+        );
+
         const res = await generateNewProject(
           projectName,
           templateName,
-          opts.dir,
+          process.cwd(),
           settings
         );
         if ("error" in res) {
-          logger.error(res.error);
+          console.error(res.error);
           process.exit(1);
         }
         console.log(res.data);
@@ -70,20 +106,33 @@ export function registerInstantiationCommand(program: Command) {
   projCmd
     .command("clone")
     .description("Generate a new project from an existing one")
-    .argument("<currentProjectName>")
+    .argument("<oldProjectPath>")
     .argument("<newProjectName>")
-    .requiredOption("-d, --dir <dirId>", "Destination dir path ID")
     .action(
-      withFormatting(async (curr, next, opts) => {
-        const res = await generateNewProjectFromExisting(
-          curr,
-          opts.dir,
-          next
-        );
-        if ("error" in res) {
-          logger.error(res.error);
+      withFormatting(async (oldProjectPath, newProjectName) => {
+        const oldProject = await getProjectFromPath(oldProjectPath);
+
+        if ("error" in oldProject) {
+          console.error(oldProject.error);
           process.exit(1);
         }
+
+        if (!oldProject.data) {
+          console.error("No project found at the specified path.");
+          process.exit(1);
+        }
+
+        const res = await generateNewProjectFromExisting(
+          oldProject.data,
+          process.cwd(),
+          newProjectName
+        );
+
+        if ("error" in res) {
+          console.error(res.error);
+          process.exit(1);
+        }
+
         return { path: res.data };
       })
     );
@@ -93,19 +142,19 @@ export function registerInstantiationCommand(program: Command) {
     .command("from-settings")
     .description("Generate a project entirely from a ProjectSettings JSON")
     .argument("<settingsFileOrJson>")
-    .argument("<newProjectDirName>")
-    .requiredOption("-d, --dir <dirId>")
+    .argument("<newProjectName>")
     .action(
-      withFormatting(async (jsonOrFile, dirName, opts) => {
+      withFormatting(async (jsonOrFile, newProjectName) => {
         const res = await generateNewProjectFromSettings(
           fs.existsSync(jsonOrFile)
             ? fs.readFileSync(jsonOrFile, "utf8")
             : jsonOrFile,
-          opts.dir,
-          dirName
+          process.cwd(),
+          newProjectName
         );
+
         if ("error" in res) {
-          logger.error(res.error);
+          console.error(res.error);
           process.exit(1);
         }
         console.log(res.data);
@@ -116,12 +165,21 @@ export function registerInstantiationCommand(program: Command) {
   projCmd
     .command("delete")
     .description("Delete a project (removes its git repo)")
-    .argument("<projectName>")
+    .argument("<projectPath>")
     .action(
-      withFormatting(async (proj) => {
-        const res = await deleteProject(proj);
+      withFormatting(async (projectPath) => {
+        const proj = await getProjectFromPath(projectPath);
+        if ("error" in proj) {
+          console.error(proj.error);
+          process.exit(1);
+        }
+        if (!proj.data) {
+          console.error("No project found at the specified path.");
+          process.exit(1);
+        }
+        const res = await deleteProject(proj.data);
         if ("error" in res) {
-          logger.error(res.error);
+          console.error(res.error);
           process.exit(1);
         }
       })
@@ -131,12 +189,20 @@ export function registerInstantiationCommand(program: Command) {
   projCmd
     .command("restore")
     .description("Restore (git reset) all uncommitted changes in a project")
-    .argument("<projectName>")
     .action(
-      withFormatting(async (proj) => {
-        const res = await restoreAllChanges(proj);
+      withFormatting(async () => {
+        const currentProject = await getCurrentProject();
+        if ("error" in currentProject) {
+          console.error(currentProject.error);
+          process.exit(1);
+        }
+        if (!currentProject.data) {
+          console.error("No project found in the current directory.");
+          process.exit(1);
+        }
+        const res = await restoreAllChanges(currentProject.data);
         if ("error" in res) {
-          logger.error(res.error);
+          console.error(res.error);
           process.exit(1);
         }
       })
@@ -153,18 +219,27 @@ export function registerInstantiationCommand(program: Command) {
   diffCmd
     .command("stage")
     .description("Stage all changes in a project and show the diff")
-    .argument("<projectName>")
     .action(
-      withFormatting(async (proj) => {
-        const res = await addAllAndDiff(proj);
+      withFormatting(async () => {
+        const proj = await getCurrentProject();
+        if ("error" in proj) {
+          console.error(proj.error);
+          process.exit(1);
+        }
+        if (!proj.data) {
+          console.error("No project found in the current directory.");
+          process.exit(1);
+        }
+        const res = await addAllAndDiff(proj.data);
         if ("error" in res) {
-          logger.error(res.error);
+          console.error(res.error);
           process.exit(1);
         }
         console.log(res.data);
       })
     );
 
+  // BIG TODO
   // prepare-instantiation
   diffCmd
     .command("prepare-instantiation")
@@ -172,7 +247,6 @@ export function registerInstantiationCommand(program: Command) {
     .argument("<rootTemplateName>")
     .argument("<templateName>")
     .argument("<parentInstanceId>")
-    .argument("<destinationProjectName>")
     .option("-s, --settings <jsonOrFile>")
     .option("-a, --apply", "Apply immediately after generation")
     .action(
@@ -181,24 +255,39 @@ export function registerInstantiationCommand(program: Command) {
           rootTpl,
           tplName,
           parentId,
-          proj,
           opts: { settings?: string; apply?: boolean }
         ) => {
+          const proj = await getCurrentProject();
+          if ("error" in proj) {
+            console.error(proj.error);
+            process.exit(1);
+          }
+          if (!proj.data) {
+            console.error("No project found in the current directory.");
+            process.exit(1);
+          }
+
+          const settings = await readUserTemplateSettings(
+            rootTpl,
+            tplName,
+            opts.settings
+          );
+
           const res = await prepareInstantiationDiff(
             rootTpl,
             tplName,
             parentId,
-            proj,
-            readSettings(opts.settings)
+            proj.data,
+            settings
           );
           if ("error" in res) {
-            logger.error(res.error);
+            console.error(res.error);
             process.exit(1);
           }
           if (opts.apply) {
-            const applied = await applyDiff(proj, res.data.diffHash);
+            const applied = await applyDiff(proj.data, res.data.diffHash);
             if ("error" in applied) {
-              logger.error(applied.error);
+              console.error(applied.error);
               process.exit(1);
             }
             return { applied: true, files: applied.data };
@@ -212,30 +301,55 @@ export function registerInstantiationCommand(program: Command) {
   diffCmd
     .command("prepare-modification")
     .description("Prepare a diff for modifying an existing template instance")
-    .argument("<destinationProjectName>")
     .argument("<templateInstanceId>")
     .option("-s, --settings <jsonOrFile>")
     .option("-a, --apply")
     .action(
       withFormatting(
         async (
-          proj,
           instanceId,
           opts: { settings?: string; apply?: boolean }
         ) => {
+          const proj = await getCurrentProject();
+          if ("error" in proj) {
+            console.error(proj.error);
+            process.exit(1);
+          }
+          if (!proj.data) {
+            console.error("No project found in the current directory.");
+            process.exit(1);
+          }
+
+          const instantiatedTemplate = proj.data.instantiatedProjectSettings.instantiatedTemplates.find(
+            (inst) => inst.id === instanceId
+          );
+
+          if (!instantiatedTemplate) {
+            console.error(
+              `No instantiated template found with ID "${instanceId}"`
+            );
+            process.exit(1);
+          }
+
+          const settings = await readUserTemplateSettings(
+            proj.data.rootTemplate.config.templateConfig.name,
+            instantiatedTemplate.templateName,
+            opts.settings
+          );
+
           const res = await prepareModificationDiff(
-            readSettings(opts.settings),
-            proj,
+            settings,
+            proj.data,
             instanceId
           );
           if ("error" in res) {
-            logger.error(res.error);
+            console.error(res.error);
             process.exit(1);
           }
           if (opts.apply) {
-            const applied = await applyDiff(proj, res.data.diffHash);
+            const applied = await applyDiff(proj.data, res.data.diffHash);
             if ("error" in applied) {
-              logger.error(applied.error);
+              console.error(applied.error);
               process.exit(1);
             }
             return { applied: true, files: applied.data };
@@ -249,21 +363,29 @@ export function registerInstantiationCommand(program: Command) {
   diffCmd
     .command("prepare-update")
     .description("Prepare a project-wide template update diff")
-    .argument("<projectName>")
     .argument("<newRevisionHash>")
     .option("-a, --apply")
     .action(
       withFormatting(
-        async (proj, revHash, opts: { apply?: boolean }) => {
-          const res = await prepareUpdateDiff(proj, revHash);
+        async (revHash, opts: { apply?: boolean }) => {
+          const proj = await getCurrentProject();
+          if ("error" in proj) {
+            console.error(proj.error);
+            process.exit(1);
+          }
+          if (!proj.data) {
+            console.error("No project found in the current directory.");
+            process.exit(1);
+          }
+          const res = await prepareUpdateDiff(proj.data, revHash);
           if ("error" in res) {
-            logger.error(res.error);
+            console.error(res.error);
             process.exit(1);
           }
           if (opts.apply) {
-            const applied = await applyDiff(proj, res.data.diffHash);
+            const applied = await applyDiff(proj.data, res.data.diffHash);
             if ("error" in applied) {
-              logger.error(applied.error);
+              console.error(applied.error);
               process.exit(1);
             }
             return { applied: true, files: applied.data };
@@ -277,13 +399,21 @@ export function registerInstantiationCommand(program: Command) {
   diffCmd
     .command("apply")
     .description("Apply a previously prepared diff by its hash")
-    .argument("<projectName>")
     .argument("<diffHash>")
     .action(
-      withFormatting(async (proj, diffHash) => {
-        const res = await applyDiff(proj, diffHash);
+      withFormatting(async (diffHash) => {
+        const proj = await getCurrentProject();
+        if ("error" in proj) {
+          console.error(proj.error);
+          process.exit(1);
+        }
+        if (!proj.data) {
+          console.error("No project found in the current directory.");
+          process.exit(1);
+        }
+        const res = await applyDiff(proj.data, diffHash);
         if ("error" in res) {
-          logger.error(res.error);
+          console.error(res.error);
           process.exit(1);
         }
         console.log(res.data);

@@ -1,9 +1,13 @@
-import { DefaultTemplateResult, Result } from "../../lib";
+import { Result } from "../../lib";
+import { Template } from "../../models";
 import { getRootTemplateRepository } from "../../repositories";
 import { getCacheDir } from "../../services/cache-service";
 
 export async function getDefaultTemplates(): Promise<
-  Result<DefaultTemplateResult[]>
+  Result<{
+    template: Template,
+    revisions: string[];
+  }[]>
 > {
   const rootTemplateRepository = await getRootTemplateRepository();
   const templates = await rootTemplateRepository.getAllTemplates();
@@ -18,12 +22,15 @@ export async function getDefaultTemplates(): Promise<
     return { error: cacheDir.error };
   }
 
-  const result: DefaultTemplateResult[] =
+  const result: {
+    template: Template;
+    revisions: string[];
+  }[] =
     templates.data
       .filter((template) => template.isDefault)
       ?.map((template) => ({
         revisions: [template.findRootTemplate().commitHash!],
-        template: template.mapToDTO(),
+        template: template,
       })) || [];
 
   for (const template of templates.data) {

@@ -2940,9 +2940,9 @@
   };
   "globals" = {
     out_path = "globals";
-    name = "globals@16.1.0";
-    url = "https://registry.npmjs.org/globals/-/globals-16.1.0.tgz";
-    hash = "sha512-aibexHNbb/jiUSObBgpHLj+sIuUmJnYcgXBlrfsiDZ9rt4aF2TFRbyLgZ2iFQuVZ1K5Mx3FVkbKRSgKrbK3K2g==";
+    name = "globals@16.2.0";
+    url = "https://registry.npmjs.org/globals/-/globals-16.2.0.tgz";
+    hash = "sha512-O+7l9tPdHCU320IigZZPj5zmRCFG9xHmx9cU8FqU2Rp+JN714seHV+2S9+JslCpY4gJwU2vOGox0wzgae/MCEg==";
   };
   "globalthis" = {
     out_path = "globalthis";

@@ -1,4 +1,7 @@
+import { getProjectFromPath, Project, Result } from "@timonteutelink/code-templator-lib";
 import { Command, Option } from "commander";
+import { promises as fs } from 'fs';
+import * as path from 'path';
 
 export const DEFAULT_FORMAT = "table" as const;
 export type Format = "json" | "ndjson" | "tsv" | "table";
@@ -67,4 +70,36 @@ export function withFormatting<
       printFormatted(result, format);
     }
   };
+}
+
+
+export async function findProjectDirPath(startDir?: string): Promise<string | null> {
+  let currentDir = startDir ? path.resolve(startDir) : process.cwd();
+
+  while (true) {
+    const targetPath = path.join(currentDir, 'templateSettings.json');
+
+    try {
+      await fs.access(targetPath);
+      return currentDir;
+    } catch (err) {
+    }
+
+    const parentDir = path.dirname(currentDir);
+    if (parentDir === currentDir) {
+      break;
+    }
+    currentDir = parentDir;
+  }
+
+  return null;
+}
+
+export async function getCurrentProject(): Promise<Result<Project | null>> {
+  const projectDir = await findProjectDirPath();
+  if (!projectDir) {
+    return { error: "No project found in the current directory or its parents." };
+  }
+
+  return await getProjectFromPath(projectDir);
 }

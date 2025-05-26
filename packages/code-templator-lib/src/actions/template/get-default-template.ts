@@ -1,10 +1,14 @@
-import { DefaultTemplateResult, Result } from "../../lib";
+import { Result } from "../../lib";
+import { Template } from "../../models";
 import { getRootTemplateRepository } from "../../repositories";
 import { getCacheDir } from "../../services/cache-service";
 
 export async function getDefaultTemplate(
   templateName: string,
-): Promise<Result<DefaultTemplateResult | null>> {
+): Promise<Result<{
+  template: Template,
+  revisions: string[];
+} | null>> {
   const rootTemplateRepository = await getRootTemplateRepository();
   const templates =
     await rootTemplateRepository.findAllTemplateRevisions(templateName);
@@ -27,15 +31,13 @@ export async function getDefaultTemplate(
     return { data: null };
   }
 
-  const templateDto = template.mapToDTO();
-
   const revisions = templates.data.map(
     (template) => template.findRootTemplate().commitHash!,
   );
 
   return {
     data: {
-      template: templateDto,
+      template,
       revisions,
     },
   };

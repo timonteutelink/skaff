@@ -1,12 +1,11 @@
-import { Command, Option } from "commander";
 import {
   addAllAndCommit,
-  switchProjectBranch,
   diffProjectFromTemplate,
-  logger,
+  switchProjectBranch
 } from "@timonteutelink/code-templator-lib";
+import { Command, Option } from "commander";
 
-import { withFormatting } from "../cli-utils";
+import { getCurrentProject, withFormatting } from "../cli-utils";
 
 /**
  * Registers every `git`‑related CLI command.
@@ -35,18 +34,29 @@ export function registerGitCommand(program: Command) {
   gitCmd
     .command("commit")
     .description("Stage all changes and create a commit for a project")
-    .argument("<projectName>", "Project name")
     .requiredOption("-m, --message <msg>", "Commit message")
     .action(
       withFormatting(
-        async (projectName: string, opts: { message: string }) => {
-          const res = await addAllAndCommit(projectName, opts.message);
+        async (opts: { message: string }) => {
+          const project = await getCurrentProject();
+
+          if ('error' in project) {
+            console.error(project.error);
+            process.exit(1);
+          }
+
+          if (!project.data) {
+            console.error("No project is currently selected.");
+            process.exit(1);
+          }
+
+          const res = await addAllAndCommit(project.data, opts.message);
           if ("error" in res) {
-            logger.error(res.error);
+            console.error(res.error);
             process.exit(1);
           }
           return {
-            project: projectName,
+            project: project.data.instantiatedProjectSettings.projectName,
             committed: true,
             message: opts.message,
           };
@@ -63,17 +73,28 @@ export function registerGitCommand(program: Command) {
     .description(
       "Switch the Git branch of a project (requires a clean working tree)"
     )
-    .argument("<projectName>", "Project name")
     .argument("<branch>", "Target branch name")
     .action(
-      withFormatting(async (projectName: string, branch: string) => {
-        const res = await switchProjectBranch(projectName, branch);
+      withFormatting(async (branch: string) => {
+        const project = await getCurrentProject();
+
+        if ('error' in project) {
+          console.error(project.error);
+          process.exit(1);
+        }
+
+        if (!project.data) {
+          console.error("No project is currently selected.");
+          process.exit(1);
+        }
+
+        const res = await switchProjectBranch(project.data, branch);
         if ("error" in res) {
-          logger.error(res.error);
+          console.error(res.error);
           process.exit(1);
         }
         return {
-          project: projectName,
+          project: project.data.instantiatedProjectSettings.projectName,
           branchSwitchedTo: branch,
         };
       })
@@ -88,17 +109,26 @@ export function registerGitCommand(program: Command) {
     .description(
       "Show the diff between a project and the template revision it was instantiated from"
     )
-    .argument("<projectName>", "Project name")
     .addOption(
       new Option("-f, --format <format>", "Output format")
         .choices(["json", "ndjson", "tsv", "table"])
         .default("table")
     )
     .action(
-      withFormatting(async (projectName: string) => {
-        const res = await diffProjectFromTemplate(projectName);
+      withFormatting(async () => {
+        const project = await getCurrentProject();
+        if ('error' in project) {
+          console.error(project.error);
+          process.exit(1);
+        }
+        if (!project.data) {
+          console.error("No project is currently selected.");
+          process.exit(1);
+        }
+
+        const res = await diffProjectFromTemplate(project.data);
         if ("error" in res) {
-          logger.error(res.error);
+          console.error(res.error);
           process.exit(1);
         }
         return res.data.map((file) => ({

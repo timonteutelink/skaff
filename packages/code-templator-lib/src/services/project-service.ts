@@ -14,6 +14,7 @@ import {
 } from "../repositories";
 import { parseGitDiff } from "./git-service";
 import { TemplateGeneratorService } from "./template-generator-service";
+import { getConfig } from "../lib";
 
 export function getParsedUserSettingsWithParentSettings(
   userSettings: UserTemplateSettings,
@@ -58,15 +59,16 @@ export function getParsedUserSettingsWithParentSettings(
   return { data: newUserSettings };
 }
 
+
 export async function instantiateProject(
   rootTemplateName: string,
   parentDirPath: string,
   newProjectName: string,
   userTemplateSettings: UserTemplateSettings,
 ): Promise<Result<ProjectCreationResult>> {
-  const template = await (
-    await getRootTemplateRepository()
-  ).findDefaultTemplate(rootTemplateName);
+  const projectRepository = await getProjectRepository();
+  const rootTemplateRepository = await getRootTemplateRepository();
+  const template = await rootTemplateRepository.findDefaultTemplate(rootTemplateName);
 
   if ("error" in template) {
     return template;
@@ -87,15 +89,7 @@ export async function instantiateProject(
     return instantiationResult;
   }
 
-  const reloadResult = await (await getProjectRepository()).reloadProjects();
-
-  if ("error" in reloadResult) {
-    return reloadResult;
-  }
-
-  const project = await (
-    await getProjectRepository()
-  ).findProject(newProjectName);
+  const project = await projectRepository.findProjectByName(parentDirPath, newProjectName);
 
   if ("error" in project) {
     return project;
@@ -137,6 +131,8 @@ export async function generateProjectFromTemplateSettings(
   newProjectPath: string,
   git?: boolean,
 ): Promise<Result<ProjectCreationResult | string>> {
+  const projectRepository = await getProjectRepository();
+  const rootTemplateRepository = await getRootTemplateRepository();
   const instantiatedRootTemplate =
     projectSettings.instantiatedTemplates[0]?.templateCommitHash;
 
@@ -150,9 +146,7 @@ export async function generateProjectFromTemplateSettings(
     };
   }
 
-  const rootTemplate = await (
-    await getRootTemplateRepository()
-  ).loadRevision(projectSettings.rootTemplateName, instantiatedRootTemplate);
+  const rootTemplate = await rootTemplateRepository.loadRevision(projectSettings.rootTemplateName, instantiatedRootTemplate);
 
   if ("error" in rootTemplate) {
     return rootTemplate;
@@ -186,17 +180,10 @@ export async function generateProjectFromTemplateSettings(
     return { data: projectCreationResult.data.resultPath };
   }
 
-  const reloadResult = await (await getProjectRepository()).reloadProjects();
-
-  if ("error" in reloadResult) {
-    return reloadResult;
-  }
-
   const newProjectName = path.basename(projectCreationResult.data.resultPath);
+  const newProjectParentDir = path.dirname(projectCreationResult.data.resultPath);
 
-  const project = await (
-    await getProjectRepository()
-  ).findProject(newProjectName);
+  const project = await projectRepository.findProjectByName(newProjectParentDir, newProjectName);
 
   if ("error" in project) {
     return project;

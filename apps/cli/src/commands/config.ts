@@ -6,7 +6,6 @@ import {
   addConfigItems,
   removeConfigItems,
   Settings,
-  logger,
 } from "@timonteutelink/code-templator-lib";
 
 const ARRAY_KEYS = ["TEMPLATE_DIR_PATHS", "PROJECT_SEARCH_PATHS"] as const;
@@ -26,7 +25,7 @@ export function registerConfigCommand(program: Command) {
       const cfg = await getConfig();
       if (key) {
         if (!(key in cfg)) {
-          logger.error(
+          console.error(
             `Unknown key '${key}'. Valid keys: ${Object.keys(cfg).join(", ")}`,
           );
           process.exit(1);
@@ -43,7 +42,7 @@ export function registerConfigCommand(program: Command) {
     .description("Set a scalar setting (for array keys, use 'add' or 'remove')")
     .action(async (key: string, value: string) => {
       if (ARRAY_KEYS.includes(key as ArrayKey)) {
-        logger.error(
+        console.error(
           `'${key}' is an array setting—use 'config add' or 'config remove'`,
         );
         process.exit(1);
@@ -58,7 +57,7 @@ export function registerConfigCommand(program: Command) {
     .description("Add one or more values to an array setting")
     .action(async (key: string, items: string[]) => {
       if (!ARRAY_KEYS.includes(key as ArrayKey)) {
-        logger.error(
+        console.error(
           `'${key}' is not a list setting. Valid list keys: ${ARRAY_KEYS.join(
             ", ",
           )}`,
@@ -75,7 +74,7 @@ export function registerConfigCommand(program: Command) {
     .description("Remove one or more values from an array setting")
     .action(async (key: string, items: string[]) => {
       if (!ARRAY_KEYS.includes(key as ArrayKey)) {
-        logger.error(
+        console.error(
           `'${key}' is not a list setting. Valid list keys: ${ARRAY_KEYS.join(
             ", ",
           )}`,

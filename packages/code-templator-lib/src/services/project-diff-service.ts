@@ -5,14 +5,19 @@ import {
 } from "@timonteutelink/template-types-lib";
 import * as fs from "node:fs/promises";
 import { AnyZodObject } from "zod";
+import { logger } from "../lib/logger";
 import {
   NewTemplateDiffResult,
   ParsedFile,
   ProjectSettings,
   Result,
 } from "../lib/types";
+import { anyOrCallbackToAny, logError } from "../lib/utils";
 import { Project } from "../models/project";
 import { Template } from "../models/template";
+import {
+  getRootTemplateRepository
+} from "../repositories";
 import {
   getHash,
   pathInCache,
@@ -31,12 +36,6 @@ import {
   generateProjectFromTemplateSettings,
   getParsedUserSettingsWithParentSettings,
 } from "./project-service";
-import { logger } from "../lib/logger";
-import { anyOrCallbackToAny, logError } from "../lib/utils";
-import {
-  getProjectRepository,
-  getRootTemplateRepository,
-} from "../repositories";
 
 async function modifyAutoInstantiatedTemplatesInProjectSettings(
   projectSettings: ProjectSettings,
@@ -251,6 +250,7 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
   parentInstanceId: string,
   fullParentTemplateSettings: TemplateSettingsType<AnyZodObject>,
 ): Promise<Result<ProjectSettings>> {
+  const rootTemplateRepository = await getRootTemplateRepository();
   for (const autoInstantiatedTemplate of templatesToAutoInstantiate || []) {
     const autoInstantiatedTemplateInstanceId = crypto.randomUUID();
     const newTemplateSettings = anyOrCallbackToAny(
@@ -276,9 +276,7 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
       templateSettings: newTemplateSettings.data,
     });
 
-    const rootTemplate = await (
-      await getRootTemplateRepository()
-    ).loadRevision(
+    const rootTemplate = await rootTemplateRepository.loadRevision(
       projectSettings.rootTemplateName,
       currentTemplateToAddChildren.findRootTemplate().commitHash!,
     );
@@ -371,6 +369,7 @@ export async function generateModifyTemplateDiff(
   project: Project,
   instantiatedTemplateId: string,
 ): Promise<Result<NewTemplateDiffResult>> {
+  const rootTemplateRepository = await getRootTemplateRepository();
   const instantiatedTemplateIndex =
     project.instantiatedProjectSettings.instantiatedTemplates.findIndex(
       (template) => template.id === instantiatedTemplateId,
@@ -386,9 +385,7 @@ export async function generateModifyTemplateDiff(
     instantiatedTemplateIndex
     ]!;
 
-  const template = await (
-    await getRootTemplateRepository()
-  ).loadRevision(
+  const template = await rootTemplateRepository.loadRevision(
     instantiatedTemplate.templateName,
     project.instantiatedProjectSettings.instantiatedTemplates[0]!
       .templateCommitHash!,
@@ -444,17 +441,6 @@ async function diffNewTempProjects(
   oldProjectSettings: ProjectSettings,
   newProjectSettings: ProjectSettings,
 ): Promise<Result<NewTemplateDiffResult>> {
-  const projectName = oldProjectSettings.projectName;
-
-  const project = await (await getProjectRepository()).findProject(projectName);
-  if ("error" in project) {
-    return project;
-  }
-  if (!project.data) {
-    logger.error(`Project ${projectName} not found`);
-    return { error: `Project ${projectName} not found` };
-  }
-
   const oldProjectSettingsHash = getHash(JSON.stringify(oldProjectSettings));
   const newProjectSettingsHash = getHash(JSON.stringify(newProjectSettings));
   const diffCacheKey = `${oldProjectSettingsHash}-${newProjectSettingsHash}`;
@@ -477,8 +463,8 @@ async function diffNewTempProjects(
     };
   }
 
-  const tempOldProjectName = `${projectName}-${crypto.randomUUID()}`;
-  const tempNewProjectName = `${projectName}-${crypto.randomUUID()}`;
+  const tempOldProjectName = `${oldProjectSettings.projectName}-${crypto.randomUUID()}`;
+  const tempNewProjectName = `${oldProjectSettings.projectName}-${crypto.randomUUID()}`;
 
   const tempOldProjectPath = await pathInCache(tempOldProjectName);
   const tempNewProjectPath = await pathInCache(tempNewProjectName);
@@ -492,7 +478,7 @@ async function diffNewTempProjects(
   try {
     const cleanProjectFromCurrentProjectSettingsResult =
       await generateProjectFromTemplateSettings(
-        project.data.instantiatedProjectSettings,
+        oldProjectSettings,
         tempOldProjectPath.data,
       );
 
@@ -630,19 +616,9 @@ export async function generateNewTemplateDiff(
 }
 
 export async function resolveConflictsAndRetrieveAppliedDiff(
-  projectName: string,
+  project: Project,
 ): Promise<Result<ParsedFile[]>> {
-  const project = await (await getProjectRepository()).findProject(projectName);
-  if ("error" in project) {
-    return project;
-  }
-
-  if (!project.data) {
-    logger.error(`Project ${projectName} not found`);
-    return { error: "Project not found" };
-  }
-
-  const addAllResult = await addAllAndRetrieveDiff(project.data.absoluteRootDir);
+  const addAllResult = await addAllAndRetrieveDiff(project.absoluteRootDir);
 
   if ("error" in addAllResult) {
     return addAllResult;
@@ -652,20 +628,9 @@ export async function resolveConflictsAndRetrieveAppliedDiff(
 }
 
 export async function applyDiffToProject(
-  projectName: string,
+  project: Project,
   diffHash: string,
 ): Promise<Result<ParsedFile[] | { resolveBeforeContinuing: true }>> {
-  const project = await (await getProjectRepository()).findProject(projectName);
-
-  if ("error" in project) {
-    return project;
-  }
-
-  if (!project.data) {
-    logger.error(`Project ${projectName} not found`);
-    return { error: "Project not found" };
-  }
-
   const diff = await retrieveFromCache("new-template-diff", diffHash, "patch");
 
   if ("error" in diff) {
@@ -678,7 +643,7 @@ export async function applyDiffToProject(
   }
 
   const applyResult = await applyDiffToGitRepo(
-    project.data.absoluteRootDir,
+    project.absoluteRootDir,
     diff.data.path,
   );
 
@@ -688,7 +653,7 @@ export async function applyDiffToProject(
   }
 
   // TODO: check if there are any merge conflicts and notify user. Then user will press button("Conflicts Resolved") to add all after he has manually resolved the conflicts. Otherwise here we automatically add all and diff.
-  const isConflict = await isConflictAfterApply(project.data.absoluteRootDir);
+  const isConflict = await isConflictAfterApply(project.absoluteRootDir);
   if ("error" in isConflict) {
     return isConflict;
   }
@@ -696,7 +661,7 @@ export async function applyDiffToProject(
     return { data: { resolveBeforeContinuing: true } };
   }
 
-  const addAllResult = await addAllAndRetrieveDiff(project.data.absoluteRootDir);
+  const addAllResult = await addAllAndRetrieveDiff(project.absoluteRootDir);
 
   if ("error" in addAllResult) {
     return addAllResult;

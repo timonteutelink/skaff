@@ -1,40 +1,111 @@
 "use server";
 
+import { findProject } from "@/lib/server-utils";
 import * as tempLib from "@timonteutelink/code-templator-lib";
 import { DefaultTemplateResult, Result, TemplateDTO } from "@timonteutelink/code-templator-lib";
 
 export async function runEraseCache(): Promise<
   Result<DefaultTemplateResult[]>
 > {
-  return tempLib.eraseCache();
+  const result = await tempLib.eraseCache();
+  if ('error' in result) {
+    return { error: result.error };
+  }
+  return {
+    data: result.data.map((template) => ({
+      revisions: template.revisions,
+      template: template.template.mapToDTO(),
+    })),
+  };
 }
 
 export async function reloadTemplates(): Promise<
   Result<DefaultTemplateResult[]>
 > {
-  return tempLib.reloadTemplates();
+  const result = await tempLib.reloadTemplates();
+  if ('error' in result) {
+    return { error: result.error };
+  }
+  return {
+    data: result.data.map((template) => ({
+      revisions: template.revisions,
+      template: template.template.mapToDTO(),
+    })),
+  };
 }
 
 export async function retrieveDefaultTemplates(): Promise<
   Result<DefaultTemplateResult[]>
 > {
-  return tempLib.getDefaultTemplates();
+  const result = await tempLib.getDefaultTemplates();
+  if ('error' in result) {
+    return { error: result.error };
+  }
+  return {
+    data: result.data.map((template) => ({
+      revisions: template.revisions,
+      template: template.template.mapToDTO(),
+    })),
+  };
 }
 
 export async function retrieveDefaultTemplate(
   templateName: string,
 ): Promise<Result<DefaultTemplateResult | null>> {
-  return tempLib.getDefaultTemplate(templateName);
+  const result = await tempLib.getDefaultTemplate(templateName);
+  if ('error' in result) {
+    return { error: result.error };
+  }
+  if (!result.data) {
+    return { data: null };
+  }
+  return {
+    data: {
+      ...result.data,
+      template: result.data.template.mapToDTO(),
+    },
+  };
 }
 
 export async function retrieveAllTemplateRevisions(
   templateName: string,
 ): Promise<Result<TemplateDTO[] | null>> {
-  return tempLib.getLoadedRevisions(templateName);
+  const result = await tempLib.getLoadedRevisions(templateName);
+  if ('error' in result) {
+    return { error: result.error };
+  }
+  if (!result.data) {
+    return { data: null };
+  }
+  return {
+    data: result.data.map((template) => template.mapToDTO()),
+  };
 }
 
 export async function retrieveTemplateRevisionForProject(
   projectName: string,
 ): Promise<Result<TemplateDTO | null>> {
-  return tempLib.loadProjectTemplateRevision(projectName);
+  const project = await findProject(projectName);
+
+  if ('error' in project) {
+    return { error: project.error };
+  }
+
+  if (!project.data) {
+    return { error: `Project ${projectName} not found.` };
+  }
+
+  const result = await tempLib.loadProjectTemplateRevision(project.data);
+
+  if ('error' in result) {
+    return { error: result.error };
+  }
+
+  if (!result.data) {
+    return { data: null };
+  }
+
+  return {
+    data: result.data.mapToDTO(),
+  };
 }

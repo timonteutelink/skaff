@@ -25,9 +25,7 @@ export async function getProjectRepository(): Promise<ProjectRepository> {
     return projectRepository;
   }
 
-  const config = await getConfig();
-
-  projectRepository = new ProjectRepository(config.PROJECT_SEARCH_PATHS || []);
+  projectRepository = new ProjectRepository();
 
   return projectRepository;
 }

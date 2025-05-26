@@ -1,13 +1,9 @@
 import {
-  getProject,
   getProjects,
-  getSearchPaths,
-  logger,
-  runProjectCommand,
 } from "@timonteutelink/code-templator-lib";
 import { Command } from "commander";
 
-import { withFormatting } from "../cli-utils";
+import { getCurrentProject, withFormatting } from "../cli-utils";
 
 /**
  * Registers every `project`‑related CLI command.
@@ -41,26 +37,26 @@ export function registerProjectCommand(program: Command) {
    */
   projectCmd
     .command("ls")
-    .description("List projects. Add --project to filter by name")
+    .description("List projects in current dir. Add --project to filter by name")
     .option("-p, --project <name>", "Filter by project name")
     .action(
       withFormatting(async (opts: { project?: string }) => {
-        const res = await getProjects();
+        const res = await getProjects(process.cwd());
         if ("error" in res) {
-          logger.error(res.error);
+          console.error(res.error);
           process.exit(1);
         }
 
         let projects = res.data;
         if (opts.project) {
-          projects = projects.filter((p) => p.name === opts.project);
+          projects = projects.filter((p) => p.instantiatedProjectSettings.projectName === opts.project);
           if (projects.length === 0) {
-            logger.error("No projects found with the given name");
+            console.error("No projects found with the given name");
             process.exit(1);
           }
         }
 
-        return projects.map((p) => ({
+        return projects.map(p => p.mapToDTO()).filter(p => 'data' in p).map(p => p.data).map((p) => ({
           name: p.name,
           path: p.absPath,
           template: p.rootTemplateName,
@@ -77,21 +73,25 @@ export function registerProjectCommand(program: Command) {
    */
   projectCmd
     .command("show")
-    .description("Display details for a single project")
-    .argument("<projectName>", "Project name")
+    .description("Display details for this project")
     .action(
-      withFormatting(async (projectName: string) => {
-        const res = await getProject(projectName);
+      withFormatting(async () => {
+        const res = await getCurrentProject();
         if ("error" in res) {
-          logger.error(res.error);
+          console.error(res.error);
           process.exit(1);
         }
         if (!res.data) {
-          logger.error("Project not found");
+          console.error("Project not found");
           process.exit(1);
         }
 
-        const p = res.data;
+        const pRes = res.data.mapToDTO();
+        if ("error" in pRes) {
+          console.error(pRes.error);
+          process.exit(1);
+        }
+        const p = pRes.data;
         return {
           name: p.name,
           path: p.absPath,
@@ -105,19 +105,6 @@ export function registerProjectCommand(program: Command) {
       }),
     );
 
-  /**
-   * PROJECT SEARCH‑PATHS
-   * ------------------------------------------------------------
-   */
-  projectCmd
-    .command("search-paths")
-    .description("Show directories that are scanned for projects")
-    .action(
-      withFormatting(async () => {
-        const paths = await getSearchPaths();
-        return paths;
-      }),
-    );
 
   /**
    * PROJECT RUN <projectName> -i <instance> -c <command>
@@ -126,7 +113,6 @@ export function registerProjectCommand(program: Command) {
   projectCmd
     .command("run")
     .description("Execute a template command inside a project")
-    .argument("<projectName>", "Project name")
     .requiredOption(
       "-i, --instance <id>",
       "Template instance id (use 'root' for the root template)",
@@ -138,48 +124,29 @@ export function registerProjectCommand(program: Command) {
     .action(
       withFormatting(
         async (
-          projectName: string,
           opts: { instance: string; command: string },
         ) => {
-          const res = await runProjectCommand(
-            projectName,
+          const proj = await getCurrentProject();
+          if ("error" in proj) {
+            console.error(proj.error);
+            process.exit(1);
+          }
+          if (!proj.data) {
+            console.error("No project found in the current directory");
+            process.exit(1);
+          }
+          const res = await proj.data.executeTemplateCommand(
             opts.instance,
             opts.command,
           );
           if ("error" in res) {
-            logger.error(res.error);
+            console.error(res.error);
             process.exit(1);
           }
 
           return { output: res.data };
         },
       ),
-    );
-
-  /**
-   * PROJECT RELOAD
-   * ------------------------------------------------------------
-   */
-  projectCmd
-    .command("reload")
-    .description("Reload projects from disk and show updated list")
-    .action(
-      withFormatting(async () => {
-        const res = await getProjects();
-        if ("error" in res) {
-          logger.error(res.error);
-          process.exit(1);
-        }
-
-        return res.data.map((p) => ({
-          name: p.name,
-          path: p.absPath,
-          template: p.rootTemplateName,
-          branch: p.gitStatus.currentBranch,
-          clean: p.gitStatus.isClean,
-          outdatedTemplate: p.outdatedTemplate,
-        }));
-      }),
     );
 }
 
