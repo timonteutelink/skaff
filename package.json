@@ -2,11 +2,9 @@
   "name": "code-templator",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
+    "buildNixWeb": "nix-web && bun i && git add -A && nix build .#code-templator-web",
+    "buildNixCli": "nix-cli && bun i && git add -A && nix build .#code-templator-cli",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types",
     "postinstall": "./scripts/bun2nix.sh"
   },
   "devDependencies": {
@@ -23,8 +21,7 @@
     "apps/web",
     "packages/tailwind-config",
     "packages/typescript-config",
-    "packages/eslint-config",
-    "packages/code-templator-lib"
+    "packages/eslint-config"
   ],
   "resolutions": {
     "react": "19.1.0",
