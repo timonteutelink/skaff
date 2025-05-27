@@ -23,7 +23,8 @@
     "apps/web",
     "packages/tailwind-config",
     "packages/typescript-config",
-    "packages/eslint-config"
+    "packages/eslint-config",
+    "packages/code-templator-lib"
   ],
   "resolutions": {
     "react": "19.1.0",
