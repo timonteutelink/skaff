@@ -39,7 +39,7 @@
     "@radix-ui/react-toggle-group": "^1.1.10",
     "@radix-ui/react-tooltip": "^1.2.7",
     "@tailwindcss/postcss": "^4.1.7",
-    "@timonteutelink/code-templator-lib": "workspace:*",
+    "@timonteutelink/code-templator-lib": "0.0.54",
     "@timonteutelink/template-types-lib": "0.0.35",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

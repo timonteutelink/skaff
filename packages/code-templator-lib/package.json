@@ -1,6 +1,6 @@
 {
   "name": "@timonteutelink/code-templator-lib",
-  "version": "0.0.53",
+  "version": "0.0.54",
   "exports": {
     ".": "./dist/index.js",
     "./browser": "./dist/browser.js"
