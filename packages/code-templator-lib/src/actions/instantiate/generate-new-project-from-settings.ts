@@ -3,7 +3,8 @@ import {
   ProjectCreationResult,
   ProjectSettings,
   ProjectSettingsSchema,
-  Result
+  Result,
+  ProjectCreationOptions
 } from "../../lib";
 import { logError } from "../../lib/utils";
 import { generateProjectFromTemplateSettings } from "../../services/project-service";
@@ -12,6 +13,7 @@ export async function generateNewProjectFromSettings(
   projectSettingsJson: string,
   newProjectDirPath: string,
   newProjectDirName: string,
+  projectCreationOptions?: ProjectCreationOptions,
 ): Promise<Result<ProjectCreationResult>> {
   let parsedProjectSettings: ProjectSettings | undefined;
 
@@ -29,15 +31,9 @@ export async function generateNewProjectFromSettings(
 
   parsedProjectSettings.projectName = newProjectDirName;
 
-  const result = await generateProjectFromTemplateSettings(
+  return await generateProjectFromTemplateSettings(
     parsedProjectSettings,
     path.join(newProjectDirPath, newProjectDirName),
-    true,
+    projectCreationOptions
   );
-
-  if ("error" in result) {
-    return { error: result.error };
-  }
-
-  return { data: result.data as ProjectCreationResult };
 }

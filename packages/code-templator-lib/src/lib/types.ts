@@ -4,9 +4,14 @@ import {
 } from "@timonteutelink/template-types-lib";
 import z from "zod";
 
+export type ProjectCreationOptions = {
+  git?: boolean
+};
+
 export interface ProjectCreationResult {
+  newProjectPath: string
   newProject: ProjectDTO;
-  diff: ParsedFile[];
+  diff?: ParsedFile[];
 }
 
 export interface DefaultTemplateResult {
@@ -84,11 +89,6 @@ export interface ProjectDTO {
   settings: ProjectSettings;
 
   outdatedTemplate: boolean;
-}
-
-export interface CreateProjectResult {
-  resultPath: string;
-  diff: string;
 }
 
 export interface ParsedFile {

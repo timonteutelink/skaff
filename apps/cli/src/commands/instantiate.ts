@@ -3,7 +3,6 @@ import {
   applyDiff,
   deleteProject,
   diffProjectFromTemplate,
-  findTemplate,
   generateNewProject,
   generateNewProjectFromExisting,
   generateNewProjectFromSettings,
@@ -22,7 +21,7 @@ import {
 } from "../cli-utils";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { promptForSchema } from "../zod-schema-prompt";
-import { viewPatchWithGit } from "../utils/diff-utils";
+import { viewExistingPatchWithGit, viewParsedDiffWithGit } from "../utils/diff-utils";
 
 async function promptUserTemplateSettings(
   rootTemplateName: string,
@@ -38,7 +37,7 @@ async function promptUserTemplateSettings(
     process.exit(1);
   }
 
-  const subTemplate = await rootTemplate.data.template.findSubTemplate(templateName);
+  const subTemplate = rootTemplate.data.template.findSubTemplate(templateName);
   if (!subTemplate) {
     console.error(`No sub-template found with name "${templateName}" in root template "${rootTemplateName}"`);
     process.exit(1);
@@ -101,13 +100,15 @@ export function registerInstantiationCommand(program: Command) {
           projectName,
           templateName,
           process.cwd(),
-          settings
+          settings,
+          { git: true }
         );
         if ("error" in res) {
           console.error(res.error);
           process.exit(1);
         }
-        console.log(res.data);
+
+        await viewParsedDiffWithGit(res.data.diff!);
       })
     );
 
@@ -134,7 +135,8 @@ export function registerInstantiationCommand(program: Command) {
         const res = await generateNewProjectFromExisting(
           oldProject.data,
           process.cwd(),
-          newProjectName
+          newProjectName,
+          { git: true }
         );
 
         if ("error" in res) {
@@ -142,7 +144,7 @@ export function registerInstantiationCommand(program: Command) {
           process.exit(1);
         }
 
-        return { path: res.data };
+        await viewParsedDiffWithGit(res.data.diff!);
       })
     );
 
@@ -159,14 +161,16 @@ export function registerInstantiationCommand(program: Command) {
             ? fs.readFileSync(jsonOrFile, "utf8")
             : jsonOrFile,
           process.cwd(),
-          newProjectName
+          newProjectName,
+          { git: true }
         );
 
         if ("error" in res) {
           console.error(res.error);
           process.exit(1);
         }
-        console.log(res.data);
+
+        await viewParsedDiffWithGit(res.data.diff!);
       })
     );
 
@@ -248,7 +252,6 @@ export function registerInstantiationCommand(program: Command) {
       })
     );
 
-  // BIG TODO
   // prepare-instantiation
   diffCmd
     .command("prepare-instantiation")
@@ -433,7 +436,7 @@ export function registerInstantiationCommand(program: Command) {
         if (options.json) {
           console.log(JSON.stringify(result.data.files));
         } else {
-          await viewPatchWithGit(result.data.hash, { tool: options.tool });
+          await viewExistingPatchWithGit('project-from-template-diff', result.data.hash, { tool: options.tool });
         }
       })
     );

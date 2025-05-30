@@ -239,7 +239,7 @@ const TemplateInstantiationPage: React.FC = () => {
           return;
         }
 
-        setAppliedDiff(newProject.diff);
+        setAppliedDiff(newProject.diff || null);
       } else if (parentTemplateInstanceIdParam) {
         if (!project) {
           toastNullError({
@@ -439,7 +439,7 @@ const TemplateInstantiationPage: React.FC = () => {
         return { error: "Project creating failed" };
       }
 
-      setAppliedDiff(newProject.diff);
+      setAppliedDiff(newProject.diff || null);
       return { data: undefined };
     },
     [projectNameParam, selectedDirectoryIdParam, templateNameParam],

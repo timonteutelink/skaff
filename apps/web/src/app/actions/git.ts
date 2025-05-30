@@ -18,7 +18,7 @@ export async function commitChanges(
     return { error: `Project ${projectName} not found.` };
   }
 
-  return tempLib.addAllAndCommit(project.data, commitMessage);
+  return await tempLib.addAllAndCommit(project.data, commitMessage);
 }
 
 export async function switchProjectBranch(
@@ -35,7 +35,7 @@ export async function switchProjectBranch(
     return { error: `Project ${projectName} not found.` };
   }
 
-  return tempLib.switchProjectBranch(project.data, branch);
+  return await tempLib.switchProjectBranch(project.data, branch);
 }
 
 export async function diffProjectFromItsTemplate(
@@ -51,5 +51,10 @@ export async function diffProjectFromItsTemplate(
     return { error: `Project ${projectName} not found.` };
   }
 
-  return tempLib.diffProjectFromTemplate(project.data);
+  const result = await tempLib.diffProjectFromTemplate(project.data);
+  if ('error' in result) {
+    return { error: result.error };
+  }
+
+  return { data: result.data.files };
 }

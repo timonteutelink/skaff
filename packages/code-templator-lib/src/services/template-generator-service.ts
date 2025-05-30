@@ -7,27 +7,27 @@ import {
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import fs from "fs-extra";
-import { readFile } from "node:fs/promises";
 import { glob } from "glob";
 import Handlebars, { HelperDelegate, HelperOptions } from "handlebars";
+import { readFile } from "node:fs/promises";
 import * as path from "node:path";
 import z from "zod";
-import { Template } from "../models/template";
-import { isSubset } from "../utils/shared-utils";
-import { makeDir } from "./file-service";
-import { addAllAndRetrieveDiff, commitAll, createGitRepo } from "./git-service";
-import { getParsedUserSettingsWithParentSettings } from "./project-service";
-import {
-  writeNewProjectSettings,
-  writeNewTemplateToSettings,
-} from "./project-settings-service";
-import { CreateProjectResult, ProjectSettings, Result } from "../lib/types";
 import { logger } from "../lib/logger";
+import { ProjectSettings, Result } from "../lib/types";
 import {
   anyOrCallbackToAny,
   logError,
   stringOrCallbackToString,
 } from "../lib/utils";
+import { Template } from "../models/template";
+import { isSubset } from "../utils/shared-utils";
+import { makeDir } from "./file-service";
+import { commitAll, createGitRepo } from "./git-service";
+import { getParsedUserSettingsWithParentSettings } from "./project-service";
+import {
+  writeNewProjectSettings,
+  writeNewTemplateToSettings,
+} from "./project-settings-service";
 
 const eqHelper = (a: any, b: any, options?: HelperOptions) => {
   // block form: options.fn is a function
@@ -396,7 +396,7 @@ export class TemplateGeneratorService {
               continue;
             }
           }
-        } catch {}
+        } catch { }
 
         const content = await readFile(srcPath, { encoding: "utf-8" });
         const compiled = Handlebars.compile(content);
@@ -587,7 +587,7 @@ export class TemplateGeneratorService {
       if (
         !templateToInstantiate.parentTemplate ||
         templateToInstantiate.parentTemplate.config.templateConfig.name !==
-          this.currentlyGeneratingTemplate.config.templateConfig.name
+        this.currentlyGeneratingTemplate.config.templateConfig.name
       ) {
         logger.error(
           `Subtemplate ${templateToAutoInstantiate.subTemplateName} is not a child of template ${this.currentlyGeneratingTemplate.config.templateConfig.name}`,
@@ -949,7 +949,7 @@ export class TemplateGeneratorService {
    * @returns The absolute path of the new project.
    * @throws Error if the project cannot be created.
    */
-  public async instantiateNewProject(): Promise<Result<CreateProjectResult>> {
+  public async instantiateNewProject(): Promise<Result<string>> {
     const instantiatedTemplate =
       this.destinationProjectSettings.instantiatedTemplates[0];
     if (!instantiatedTemplate) {
@@ -1073,33 +1073,15 @@ export class TemplateGeneratorService {
       return { error: `Failed to instantiate new project: ${error}` };
     }
 
-    if (!this.options.dontDoGit) {
-      const diffResult = await addAllAndRetrieveDiff(
-        this.options.absoluteDestinationPath,
-      );
+    return { data: this.options.absoluteDestinationPath }
 
-      if ("error" in diffResult) {
-        return diffResult;
-      }
-
-      return {
-        data: {
-          resultPath: this.options.absoluteDestinationPath,
-          diff: diffResult.data,
-        },
-      };
-    }
-
-    return {
-      data: { resultPath: this.options.absoluteDestinationPath, diff: "" },
-    };
   }
 
   /**
    * Will use the projectSettings to instantiate all templates defined.
    */
   public async instantiateFullProjectFromSettings(): Promise<
-    Result<CreateProjectResult>
+    Result<string>
   > {
     if (!this.options.dontAutoInstantiate) {
       logger.error(
@@ -1157,26 +1139,7 @@ export class TemplateGeneratorService {
         }
       }
 
-      if (!this.options.dontDoGit) {
-        const diffResult = await addAllAndRetrieveDiff(
-          this.options.absoluteDestinationPath,
-        );
-
-        if ("error" in diffResult) {
-          return diffResult;
-        }
-
-        return {
-          data: {
-            resultPath: this.options.absoluteDestinationPath,
-            diff: diffResult.data,
-          },
-        };
-      }
-
-      return {
-        data: { resultPath: this.options.absoluteDestinationPath, diff: "" },
-      };
+      return { data: this.options.absoluteDestinationPath };
     } catch (error) {
       logError({
         shortMessage: `Failed to instantiate full project from settings`,

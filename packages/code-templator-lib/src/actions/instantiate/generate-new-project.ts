@@ -1,5 +1,5 @@
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
-import { ProjectCreationResult, Result } from "../../lib";
+import { ProjectCreationOptions, ProjectCreationResult, Result } from "../../lib";
 import { instantiateProject } from "../../services/project-service";
 
 export async function generateNewProject(
@@ -7,17 +7,13 @@ export async function generateNewProject(
   templateName: string,
   newProjectParentDirPath: string,
   userTemplateSettings: UserTemplateSettings,
+  projectCreationOptions?: ProjectCreationOptions
 ): Promise<Result<ProjectCreationResult>> {
-  const result = await instantiateProject(
+  return await instantiateProject(
     templateName,
     newProjectParentDirPath,
     projectName,
     userTemplateSettings,
+    projectCreationOptions
   );
-
-  if ("error" in result) {
-    return { error: result.error };
-  }
-
-  return { data: result.data };
 }

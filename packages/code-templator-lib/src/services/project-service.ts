@@ -5,16 +5,61 @@ import {
 import path from "node:path";
 import { AnyZodObject, z } from "zod";
 import { logger } from "../lib/logger";
-import { ProjectCreationResult, ProjectSettings, Result } from "../lib/types";
+import { ProjectCreationResult, ProjectSettings, Result, ProjectCreationOptions } from "../lib/types";
 import { Project } from "../models/project";
 import { Template } from "../models/template";
 import {
   getProjectRepository,
   getRootTemplateRepository,
 } from "../repositories";
-import { parseGitDiff } from "./git-service";
+import { addAllAndRetrieveDiff, parseGitDiff } from "./git-service";
 import { TemplateGeneratorService } from "./template-generator-service";
-import { getConfig } from "../lib";
+
+export async function parseProjectCreationResult(
+  projectPath: string,
+  projectCreationOptions?: ProjectCreationOptions
+): Promise<Result<ProjectCreationResult>> {
+  const projectRepository = await getProjectRepository();
+  const newProjectName = path.basename(projectPath);
+  const newProjectParentDir = path.dirname(projectPath);
+
+  const project = await projectRepository.findProjectByName(newProjectParentDir, newProjectName);
+
+  if ("error" in project) {
+    return project;
+  }
+
+  if (!project.data) {
+    logger.error(`Project ${newProjectName} not found after creation`);
+    return {
+      error: "Failed to create project, project not found after creation",
+    };
+  }
+
+
+  const projectDto = project.data.mapToDTO();
+
+  if ("error" in projectDto) {
+    return { error: projectDto.error };
+  }
+
+  if (!projectCreationOptions?.git) {
+    return { data: { newProjectPath: projectPath, newProject: projectDto.data } };
+  }
+
+  const diffResult = await addAllAndRetrieveDiff(
+    projectPath
+  );
+
+  if ("error" in diffResult) {
+    return diffResult;
+  }
+
+  const processedDiff = parseGitDiff(diffResult.data);
+
+  return { data: { newProjectPath: projectPath, newProject: projectDto.data, diff: processedDiff } };
+
+}
 
 export function getParsedUserSettingsWithParentSettings(
   userSettings: UserTemplateSettings,
@@ -65,8 +110,8 @@ export async function instantiateProject(
   parentDirPath: string,
   newProjectName: string,
   userTemplateSettings: UserTemplateSettings,
+  projectCreationOptions?: ProjectCreationOptions
 ): Promise<Result<ProjectCreationResult>> {
-  const projectRepository = await getProjectRepository();
   const rootTemplateRepository = await getRootTemplateRepository();
   const template = await rootTemplateRepository.findDefaultTemplate(rootTemplateName);
 
@@ -79,47 +124,23 @@ export async function instantiateProject(
     return { error: "Root template not found" };
   }
 
-  const instantiationResult = await template.data.instantiateNewProject(
+  return await template.data.instantiateNewProject(
     userTemplateSettings,
     parentDirPath,
     newProjectName,
+    projectCreationOptions
   );
-
-  if ("error" in instantiationResult) {
-    return instantiationResult;
-  }
-
-  const project = await projectRepository.findProjectByName(parentDirPath, newProjectName);
-
-  if ("error" in project) {
-    return project;
-  }
-
-  if (!project.data) {
-    logger.error(`Project ${newProjectName} not found after creation`);
-    return {
-      error: "Failed to create project, project not found after creation",
-    };
-  }
-
-  const processedDiff = parseGitDiff(instantiationResult.data.diff);
-
-  const projectDTO = project.data.mapToDTO();
-
-  if ("error" in projectDTO) {
-    return projectDTO;
-  }
-
-  return { data: { newProject: projectDTO.data, diff: processedDiff } };
 }
 
 export async function generateProjectFromExistingProject(
   existingProject: Project,
   newProjectPath: string,
-): Promise<Result<ProjectCreationResult | string>> {
+  ProjectCreationOptions?: ProjectCreationOptions
+): Promise<Result<ProjectCreationResult>> {
   return await generateProjectFromTemplateSettings(
     existingProject.instantiatedProjectSettings,
     newProjectPath,
+    ProjectCreationOptions
   );
 }
 
@@ -129,9 +150,8 @@ export async function generateProjectFromExistingProject(
 export async function generateProjectFromTemplateSettings(
   projectSettings: ProjectSettings,
   newProjectPath: string,
-  git?: boolean,
-): Promise<Result<ProjectCreationResult | string>> {
-  const projectRepository = await getProjectRepository();
+  projectCreationOptions?: ProjectCreationOptions,
+): Promise<Result<ProjectCreationResult>> {
   const rootTemplateRepository = await getRootTemplateRepository();
   const instantiatedRootTemplate =
     projectSettings.instantiatedTemplates[0]?.templateCommitHash;
@@ -161,7 +181,7 @@ export async function generateProjectFromTemplateSettings(
 
   const newProjectGenerator = new TemplateGeneratorService(
     {
-      dontDoGit: !git,
+      dontDoGit: !projectCreationOptions?.git,
       dontAutoInstantiate: true,
       absoluteDestinationPath: newProjectPath,
     },
@@ -176,33 +196,5 @@ export async function generateProjectFromTemplateSettings(
     return projectCreationResult;
   }
 
-  if (!git) {
-    return { data: projectCreationResult.data.resultPath };
-  }
-
-  const newProjectName = path.basename(projectCreationResult.data.resultPath);
-  const newProjectParentDir = path.dirname(projectCreationResult.data.resultPath);
-
-  const project = await projectRepository.findProjectByName(newProjectParentDir, newProjectName);
-
-  if ("error" in project) {
-    return project;
-  }
-
-  if (!project.data) {
-    logger.error(`Project ${newProjectName} not found after creation`);
-    return {
-      error: "Failed to create project, project not found after creation",
-    };
-  }
-
-  const processedDiff = parseGitDiff(projectCreationResult.data.diff);
-
-  const projectDTO = project.data.mapToDTO();
-
-  if ("error" in projectDTO) {
-    return projectDTO;
-  }
-
-  return { data: { newProject: projectDTO.data, diff: processedDiff } };
+  return await parseProjectCreationResult(projectCreationResult.data, projectCreationOptions)
 }

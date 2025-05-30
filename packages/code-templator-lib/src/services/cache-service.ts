@@ -10,7 +10,8 @@ import { logError } from "../lib/utils";
 export type CacheKey =
   | "template-config"
   | "new-template-diff"
-  | "project-from-template-diff";
+  | "project-from-template-diff"
+  | "temp-diff"
 
 export function getHash(stringToHash: string): string {
   return createHash("sha256").update(stringToHash).digest("hex");

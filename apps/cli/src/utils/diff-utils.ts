@@ -1,9 +1,9 @@
-
 import { exec } from "node:child_process";
-import { promisify } from "node:util";
-import { pathInCache } from "../../../../packages/code-templator-lib/dist/services/cache-service";
-
-const asyncExec = promisify(exec);
+import { DiffHunk, ParsedFile, pathInCache } from '@timonteutelink/code-templator-lib';
+import type { CacheKey } from "@timonteutelink/code-templator-lib";
+import nodeCrypto from "node:crypto";
+import fs from "node:fs/promises";
+import { saveToCache } from "../../../../packages/code-templator-lib/dist/services/cache-service";
 
 async function execWithInheritedStdio(command: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -21,11 +21,83 @@ async function execWithInheritedStdio(command: string): Promise<void> {
   });
 }
 
-export async function viewPatchWithGit(projectCommitHash: string, options: {
-  tool?: 'less' | 'bat' | 'delta' | 'diff-so-fancy' | 'git-split-diffs';
+export function serializeParsedFiles(files: ParsedFile[]): string {
+  const out: string[] = [];
+
+  for (const file of files) {
+    // Header -------------------------------------------------------------
+    out.push(`diff --git a/${file.path} b/${file.path}`);
+
+    // File-level status lines
+    switch (file.status) {
+      case "added":
+        out.push("new file mode 100644");
+        break;
+      case "deleted":
+        out.push("deleted file mode 100644");
+        break;
+      /* ‘modified’ needs no extra header */
+    }
+
+    // --- / +++ header lines
+    const lhs = file.status === "added" ? "/dev/null" : `a/${file.path}`;
+    const rhs = file.status === "deleted" ? "/dev/null" : `b/${file.path}`;
+    out.push(`--- ${lhs}`);
+    out.push(`+++ ${rhs}`);
+
+    // Hunks --------------------------------------------------------------
+    file.hunks.forEach((h: DiffHunk) => {
+      out.push(
+        `@@ -${h.oldStart},${h.oldLines} +${h.newStart},${h.newLines} @@`,
+      );
+      out.push(...h.lines);
+    });
+
+    // Blank line between files
+    out.push("");
+  }
+
+  return out.join("\n");
+}
+
+function hashDiffText(diffText: string): string {
+  return nodeCrypto.createHash('sha256').
+    update(diffText)
+    .digest('hex');
+}
+
+// 'less' | 'bat' | 'delta' | 'diff-so-fancy' | 'git-split-diffs';
+
+export async function viewParsedDiffWithGit(
+  parsed: ParsedFile[],
+  options: { tool?: string } = {},
+): Promise<void> {
+  const diffText = serializeParsedFiles(parsed);
+
+  const cacheId = hashDiffText(diffText);
+
+  const tempFile = await saveToCache('temp-diff', cacheId, 'patch', diffText);
+  if ('error' in tempFile) {
+    console.error('Error saving diff to cache:', tempFile.error);
+    return;
+  }
+
+  await fs.writeFile(tempFile.data, diffText, "utf8");
+
+  try {
+    await openWithTool(tempFile.data, options.tool);
+  } catch (err) {
+    console.error("Error opening diff:", err);
+    console.log("Fallback: cat", tempFile);
+    await execWithInheritedStdio(`cat "${tempFile}"`);
+  }
+}
+
+export async function viewExistingPatchWithGit(cacheKey: CacheKey, projectCommitHash: string, options: {
+  tool?: string
   output?: string;
 } = {}): Promise<void> {
-  const patchFile = await pathInCache(`patch-${projectCommitHash}.patch`);
+  const patchFile = await pathInCache(`${cacheKey}-${projectCommitHash}.patch`);
   if ('error' in patchFile) {
     console.error('Error getting patch file path:', patchFile.error);
     return;
@@ -34,7 +106,7 @@ export async function viewPatchWithGit(projectCommitHash: string, options: {
     if (options.tool) {
       await openWithTool(patchFile.data, options.tool);
     } else {
-      await openWithBestAvailableTool(patchFile.data);
+      await openWithTool(patchFile.data);
     }
   } catch (error) {
     console.error('Error opening patch file:', error);
@@ -44,9 +116,9 @@ export async function viewPatchWithGit(projectCommitHash: string, options: {
 }
 
 /**
- * Try to open with the best available tool
+ * Open with a specific tool
  */
-async function openWithBestAvailableTool(patchFile: string): Promise<void> {
+async function openWithTool(patchFile: string, tool?: string): Promise<void> {
   const tools = [
     { name: 'delta', cmd: `delta "${patchFile}"` },
     { name: 'diff-so-fancy', cmd: `diff-so-fancy < "${patchFile}"` },
@@ -56,10 +128,24 @@ async function openWithBestAvailableTool(patchFile: string): Promise<void> {
     { name: 'cat', cmd: `cat "${patchFile}"` }
   ];
 
+  if (tool) {
+    if (!(await isCommandAvailable(tool))) {
+      throw new Error(`Tool not available: ${tool}`);
+    }
+
+    const cmd = tools.find(t => t.name === tool);
+
+    if (!cmd) {
+      throw new Error(`Problem occured`);
+    }
+
+    execWithInheritedStdio(cmd.cmd);
+  }
+
   for (const tool of tools) {
     if (await isCommandAvailable(tool.name)) {
       console.log(`Opening diff with ${tool.name}...`);
-      execSync(tool.cmd, { stdio: 'inherit' });
+      execWithInheritedStdio(tool.cmd);
       return;
     }
   }
@@ -67,50 +153,9 @@ async function openWithBestAvailableTool(patchFile: string): Promise<void> {
   throw new Error('No suitable diff viewer found');
 }
 
-async function execWithInheritedStdio(command: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const child = exec(command, (error) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve();
-      }
-    });
-
-    // Inherit stdio
-    if (child.stdout) child.stdout.pipe(process.stdout);
-    if (child.stderr) child.stderr.pipe(process.stderr);
-    if (process.stdin) process.stdin.pipe(child.stdin!);
-  });
-}
-
-/**
- * Open with a specific tool
- */
-async function openWithTool(patchFile: string, tool: string): Promise<void> {
-  const commands: Record<string, string> = {
-    'less': `less -R "${patchFile}"`,
-    'bat': `bat --language=diff "${patchFile}"`,
-    'delta': `delta "${patchFile}"`,
-    'diff-so-fancy': `diff-so-fancy < "${patchFile}"`,
-    'git-split-diffs': `git-split-diffs --color=always < "${patchFile}"`
-  };
-
-  const cmd = commands[tool];
-  if (!cmd) {
-    throw new Error(`Unknown tool: ${tool}`);
-  }
-
-  if (!(await isCommandAvailable(tool))) {
-    throw new Error(`Tool not available: ${tool}`);
-  }
-
-  execSync(cmd, { stdio: 'inherit' });
-}
-
 async function isCommandAvailable(command: string): Promise<boolean> {
   try {
-    execSync(`which ${command}`, { stdio: 'ignore' });
+    execWithInheritedStdio(`which ${command}`);
     return true;
   } catch {
     return false;

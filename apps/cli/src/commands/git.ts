@@ -131,7 +131,7 @@ export function registerGitCommand(program: Command) {
           console.error(res.error);
           process.exit(1);
         }
-        return res.data.map((file) => ({
+        return res.data.files.map((file) => ({
           path: file.path,
           status: file.status,
           changes: file.hunks.length,

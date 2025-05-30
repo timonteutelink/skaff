@@ -10,7 +10,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "bunx tsc@latest -p tsconfig.json",
+    "build": "tsc -p tsconfig.json",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
     "test": "jest",

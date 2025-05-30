@@ -70,7 +70,7 @@ export async function runProjectCommand(
     return { error: `Project ${projectName} not found.` };
   }
 
-  return project.data.executeTemplateCommand(
+  return await project.data.executeTemplateCommand(
     templateInstanceId,
     commandTitle,
   );

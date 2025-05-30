@@ -16,7 +16,8 @@ import { getCacheDirPath } from "../services/cache-service";
 import { getCommitHash, isGitRepoClean } from "../services/git-service";
 import { TemplateGeneratorService } from "../services/template-generator-service";
 import {
-  CreateProjectResult,
+  ProjectCreationOptions,
+  ProjectCreationResult,
   ProjectSettings,
   Result,
   TemplateDTO,
@@ -24,6 +25,7 @@ import {
 import { Project } from "./project";
 import { logger } from "../lib/logger";
 import { logError } from "../lib/utils";
+import { parseProjectCreationResult } from "../services/project-service";
 
 export class Template {
   // The loaded configuration module.
@@ -330,7 +332,8 @@ export class Template {
     rootTemplateSettings: UserTemplateSettings,
     destinationDir: string,
     projectName: string,
-  ): Promise<Result<CreateProjectResult>> {
+    projectCreationOptions?: ProjectCreationOptions
+  ): Promise<Result<ProjectCreationResult>> {
     const newProjectSettings: ProjectSettings = {
       projectName,
       projectAuthor: "abc",
@@ -339,7 +342,7 @@ export class Template {
     };
 
     const generatorService = new TemplateGeneratorService(
-      { absoluteDestinationPath: path.join(destinationDir, projectName) },
+      { absoluteDestinationPath: path.join(destinationDir, projectName), dontDoGit: !projectCreationOptions?.git},
       this,
       newProjectSettings,
     );
@@ -350,10 +353,12 @@ export class Template {
       return addProjectResult;
     }
     const result = await generatorService.instantiateNewProject();
-    if (!("error" in result)) {
-      logger.info(`New project created at: ${result.data.resultPath}`);
+    if ("error" in result) {
+      return result;
     }
-    return result;
+
+    logger.info(`New project created at: ${result.data}`);
+    return await parseProjectCreationResult(result.data);
   }
 
   public mapToDTO(): TemplateDTO {

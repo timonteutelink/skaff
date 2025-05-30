@@ -22,7 +22,7 @@ export async function createNewProject(
     };
   }
 
-  return tempLib.generateNewProject(projectName, templateName, projectDirPath, userTemplateSettings);
+  return await tempLib.generateNewProject(projectName, templateName, projectDirPath, userTemplateSettings, { git: true });
 }
 
 export async function prepareTemplateModificationDiff(
@@ -40,7 +40,7 @@ export async function prepareTemplateModificationDiff(
     return { error: `Project ${destinationProjectName} not found.` };
   }
 
-  return tempLib.prepareModificationDiff(userTemplateSettings, destinationProject.data, templateInstanceId);
+  return await tempLib.prepareModificationDiff(userTemplateSettings, destinationProject.data, templateInstanceId);
 }
 
 export async function prepareTemplateInstantiationDiff(
@@ -60,7 +60,7 @@ export async function prepareTemplateInstantiationDiff(
     return { error: `Project ${destinationProjectName} not found.` };
   }
 
-  return tempLib.prepareInstantiationDiff(
+  return await tempLib.prepareInstantiationDiff(
     rootTemplateName,
     templateName,
     parentInstanceId,
@@ -82,7 +82,7 @@ export async function resolveConflictsAndDiff(
     return { error: `Project ${projectName} not found.` };
   }
 
-  return tempLib.addAllAndDiff(project.data);
+  return await tempLib.addAllAndDiff(project.data);
 }
 
 export async function restoreAllChangesToCleanProject(
@@ -98,7 +98,7 @@ export async function restoreAllChangesToCleanProject(
     return { error: `Project ${projectName} not found.` };
   }
 
-  return tempLib.restoreAllChanges(project.data);
+  return await tempLib.restoreAllChanges(project.data);
 }
 
 export async function applyTemplateDiffToProject(
@@ -115,7 +115,7 @@ export async function applyTemplateDiffToProject(
     return { error: `Project ${projectName} not found.` };
   }
 
-  return tempLib.applyDiff(project.data, diffHash);
+  return await tempLib.applyDiff(project.data, diffHash);
 }
 
 export async function cancelProjectCreation(
@@ -131,14 +131,14 @@ export async function cancelProjectCreation(
     return { error: `Project ${projectName} not found.` };
   }
 
-  return tempLib.deleteProject(project.data);
+  return await tempLib.deleteProject(project.data);
 }
 
 export async function generateNewProjectFromExisting(
   currentProjectName: string,
   newProjectDestinationDirPathId: string,
   newProjectName: string,
-): Promise<Result<string>> {
+): Promise<Result<ProjectCreationResult>> {
   const config = await getConfig();
   const currentProject = await findProject(currentProjectName);
 
@@ -159,10 +159,11 @@ export async function generateNewProjectFromExisting(
       error: `Invalid project directory path ID: ${newProjectDestinationDirPathId}`,
     };
   }
-  return tempLib.generateNewProjectFromExisting(
+  return await tempLib.generateNewProjectFromExisting(
     currentProject.data,
     newProjectDestinationDirPath,
     newProjectName,
+    { git: true }
   );
 }
 
@@ -180,7 +181,7 @@ export async function retrieveDiffUpdateProjectNewTemplateRevision(
     return { error: `Project ${projectName} not found.` };
   }
 
-  return tempLib.prepareUpdateDiff(
+  return await tempLib.prepareUpdateDiff(
     project.data,
     newTemplateRevisionCommitHash,
   );
@@ -202,9 +203,10 @@ export async function generateProjectFromProjectSettings(
     };
   }
 
-  return tempLib.generateNewProjectFromSettings(
+  return await tempLib.generateNewProjectFromSettings(
     projectSettingsJson,
     projectDirPath,
     newProjectDirName,
+    { git: true }
   );
 }
