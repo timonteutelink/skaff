@@ -342,7 +342,7 @@ export class Template {
     };
 
     const generatorService = new TemplateGeneratorService(
-      { absoluteDestinationPath: path.join(destinationDir, projectName), dontDoGit: !projectCreationOptions?.git},
+      { absoluteDestinationPath: path.join(destinationDir, projectName), dontDoGit: !projectCreationOptions?.git },
       this,
       newProjectSettings,
     );
@@ -358,7 +358,7 @@ export class Template {
     }
 
     logger.info(`New project created at: ${result.data}`);
-    return await parseProjectCreationResult(result.data);
+    return await parseProjectCreationResult(result.data, projectCreationOptions);
   }
 
   public mapToDTO(): TemplateDTO {

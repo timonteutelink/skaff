@@ -12,6 +12,19 @@ import { getConfig } from "../lib";
 const asyncExecFile = promisify(execFile);
 const asyncExec = promisify(exec);
 
+export async function isGitRepo(path: string): Promise<Result<boolean>> {
+  try {
+    const { stdout } = await asyncExec(`cd ${path} && git rev-parse --is-inside-work-tree`);
+    return { data: stdout.trim() === "true" };
+  } catch (error) {
+    logError({
+      shortMessage: "Error checking if path is a git repository",
+      error,
+    });
+    return { error: `Error checking if path is a git repository: ${error}` };
+  }
+}
+
 export async function switchBranch(
   repoPath: string,
   branchName: string,
@@ -69,7 +82,7 @@ export async function cloneRevisionToCache(
     if (stat.isDirectory()) {
       return { data: destPath.data };
     }
-  } catch {}
+  } catch { }
 
   try {
     await asyncExec(`git clone ${repoDir} ${destPath.data}`);
@@ -328,9 +341,10 @@ export async function diffDirectories(
   absoluteBaseProjectPath: string,
   absoluteNewProjectPath: string,
 ): Promise<Result<string>> {
+  const config = await getConfig();
   try {
     const { stdout } = await asyncExecFile(
-      (await getConfig()).GENERATE_DIFF_SCRIPT_PATH,
+      config.GENERATE_DIFF_SCRIPT_PATH,
       [absoluteBaseProjectPath, absoluteNewProjectPath],
     );
 

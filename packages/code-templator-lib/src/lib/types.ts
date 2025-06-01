@@ -84,7 +84,7 @@ export interface ProjectDTO {
   absPath: string;
   rootTemplateName: string;
 
-  gitStatus: GitStatus;
+  gitStatus?: GitStatus;
 
   settings: ProjectSettings;
 

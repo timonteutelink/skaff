@@ -57,7 +57,7 @@ export function ProjectHeader({
         <h1 className="text-3xl font-bold">{project.name}</h1>
 
         <div className="ml-4 flex items-center gap-8 text-sm">
-          {project.gitStatus.isClean ? (
+          {project.gitStatus!.isClean ? (
             <Badge className="bg-green-100 text-green-800">Git Clean</Badge>
           ) : (
             <Badge className="bg-red-100 text-red-800">
@@ -89,28 +89,28 @@ export function ProjectHeader({
 
       <div className="flex items-center gap-4">
         <DropdownMenu>
-          <DropdownMenuTrigger disabled={!project.gitStatus.isClean} asChild>
+          <DropdownMenuTrigger disabled={!project.gitStatus!.isClean} asChild>
             <Button
-              disabled={!project.gitStatus.isClean}
+              disabled={!project.gitStatus!.isClean}
               variant="outline"
-              className={`flex items-center gap-2 ${project.gitStatus.isClean ? "" : "bg-muted cursor-not-allowed"}`}
+              className={`flex items-center gap-2 ${project.gitStatus!.isClean ? "" : "bg-muted cursor-not-allowed"}`}
             >
               <GitBranchIcon className="w-4 h-4" />
-              {project.gitStatus.currentBranch}
+              {project.gitStatus!.currentBranch}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            {project.gitStatus.branches.map((branch) => (
+            {project.gitStatus!.branches.map((branch) => (
               <DropdownMenuItem
                 disabled={
-                  branch === project.gitStatus.currentBranch ||
-                  !project.gitStatus.isClean
+                  branch === project.gitStatus!.currentBranch ||
+                  !project.gitStatus!.isClean
                 }
                 key={branch}
                 onClick={() => onBranchChange(branch)}
                 className={
-                  branch === project.gitStatus.currentBranch ||
-                    !project.gitStatus.isClean
+                  branch === project.gitStatus!.currentBranch ||
+                    !project.gitStatus!.isClean
                     ? "bg-muted"
                     : ""
                 }
@@ -124,7 +124,7 @@ export function ProjectHeader({
         {/* Details / No Changes button, disabled when clean git repo */}
         <Button
           variant="outline"
-          disabled={project.gitStatus.isClean}
+          disabled={project.gitStatus!.isClean}
           onClick={() =>
             router.push(
               `/projects/project-staged-changes?projectName=${project.name}`,
@@ -132,7 +132,7 @@ export function ProjectHeader({
           }
         >
           <GitCommitIcon className="w-4 h-4 mr-2" />
-          {project.gitStatus.isClean ? "No Changes" : "Details"}
+          {project.gitStatus!.isClean ? "No Changes" : "Details"}
         </Button>
 
         {/* template diff button is disabled when project is same as newly templated project of same settings */}

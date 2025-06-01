@@ -60,8 +60,8 @@ export function registerProjectCommand(program: Command) {
           name: p.name,
           path: p.absPath,
           template: p.rootTemplateName,
-          branch: p.gitStatus.currentBranch,
-          clean: p.gitStatus.isClean,
+          branch: p.gitStatus!.currentBranch,
+          clean: p.gitStatus!.isClean,
           outdatedTemplate: p.outdatedTemplate,
         }));
       }),
@@ -96,9 +96,9 @@ export function registerProjectCommand(program: Command) {
           name: p.name,
           path: p.absPath,
           rootTemplate: p.rootTemplateName,
-          gitClean: p.gitStatus.isClean,
-          currentBranch: p.gitStatus.currentBranch,
-          currentCommit: p.gitStatus.currentCommitHash,
+          gitClean: p.gitStatus!.isClean,
+          currentBranch: p.gitStatus!.currentBranch,
+          currentCommit: p.gitStatus!.currentCommitHash,
           outdatedTemplate: p.outdatedTemplate,
           instantiatedTemplates: p.settings.instantiatedTemplates.length,
         };

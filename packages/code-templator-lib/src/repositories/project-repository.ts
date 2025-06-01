@@ -3,6 +3,7 @@ import path from "node:path";
 import { logger } from "../lib/logger";
 import { Result } from "../lib/types";
 import { Project } from "../models/project";
+import { logError } from "../lib";
 
 export class ProjectRepository {
   private projectsCache: Map<string, Project> = new Map();
@@ -54,6 +55,16 @@ export class ProjectRepository {
     cached: boolean = false,
   ): Promise<Result<Project | null>> {
     const projectPath = path.join(searchPath, projectName);
+
+    try {
+      const stat = await fs.stat(projectPath);
+      if (!stat.isDirectory()) {
+        return { data: null };
+      }
+    } catch (error) {
+      logError({ level: 'debug', error, shortMessage: `Project path ${projectPath} does not exist.` });
+      return { data: null };
+    }
 
     if (cached && this.projectsCache.has(projectPath)) {
       return { data: this.projectsCache.get(projectPath)! };

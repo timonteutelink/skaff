@@ -24,7 +24,7 @@ export async function findProject(
     return { error: `Project ${projectName} not found` };
   }
 
-  return { data: project};
+  return { data: project };
 }
 
 export async function listProjects(): Promise<Result<Project[]>> {

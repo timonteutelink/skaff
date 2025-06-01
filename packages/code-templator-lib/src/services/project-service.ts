@@ -36,7 +36,6 @@ export async function parseProjectCreationResult(
     };
   }
 
-
   const projectDto = project.data.mapToDTO();
 
   if ("error" in projectDto) {

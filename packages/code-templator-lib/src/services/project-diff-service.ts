@@ -672,6 +672,14 @@ export async function applyDiffToProject(
 export async function diffProjectFromItsTemplate(
   project: Project,
 ): Promise<Result<{ files: ParsedFile[], hash: string }>> {
+  if (!project.gitStatus) {
+    logError({
+      shortMessage: ""
+    })
+    return {
+      error: "No git status on project"
+    }
+  }
   if (!project.gitStatus.isClean) {
     logger.error("Cannot diff project with uncommitted changes");
     return { error: "Cannot diff project with uncommitted changes" };

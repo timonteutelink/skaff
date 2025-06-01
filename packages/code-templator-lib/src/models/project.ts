@@ -6,7 +6,7 @@ import path from "node:path";
 import z from "zod";
 import { GitStatus, ProjectDTO, ProjectSettings, Result } from "../lib/types";
 import { logError, stringOrCallbackToString } from "../lib/utils";
-import { loadGitStatus } from "../services/git-service";
+import { isGitRepo, loadGitStatus } from "../services/git-service";
 import { loadProjectSettings } from "../services/project-settings-service";
 import { executeCommand } from "../services/shell-service";
 import { Template } from "./template";
@@ -23,14 +23,14 @@ export class Project {
 
   public rootTemplate: Template;
 
-  public gitStatus: GitStatus;
+  public gitStatus?: GitStatus;
 
   constructor(
     absDir: string,
     absSettingsPath: string,
     projectSettings: ProjectSettings,
     rootTemplate: Template,
-    gitStatus: GitStatus,
+    gitStatus?: GitStatus,
   ) {
     this.absoluteRootDir = absDir;
     this.absoluteSettingsPath = absSettingsPath;
@@ -98,12 +98,20 @@ export class Project {
       return { error: projectSettings.error };
     }
 
-    const gitStatus = await loadGitStatus(absDir);
+    const isGitRepoResult = await isGitRepo(absDir);
 
-    if ("error" in gitStatus) {
-      return {
-        error: gitStatus.error,
-      };
+    if ("error" in isGitRepoResult) {
+      return { error: isGitRepoResult.error };
+    }
+
+    let gitStatus: GitStatus | undefined
+
+    if (isGitRepoResult.data) {
+      const gitStatusResult = await loadGitStatus(absDir);
+      if ("error" in gitStatusResult) {
+        return { error: gitStatusResult.error };
+      }
+      gitStatus = gitStatusResult.data;
     }
 
     return {
@@ -112,7 +120,7 @@ export class Project {
         projectSettingsPath,
         projectSettings.data.settings,
         projectSettings.data.rootTemplate,
-        gitStatus.data,
+        gitStatus
       ),
     };
   }

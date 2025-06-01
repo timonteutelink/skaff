@@ -7,6 +7,12 @@ export async function switchProjectBranch(
   project: Project,
   branch: string,
 ): Promise<Result<void>> {
+  if (!project.gitStatus) {
+    logError({shortMessage: "no git status"})
+    return {
+      error: "No gitstatus on project"
+    }
+  }
   const branchExists = project.gitStatus.branches.includes(branch);
 
   if (!branchExists) {

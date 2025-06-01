@@ -7,6 +7,9 @@ export async function addAllAndCommit(
   project: Project,
   commitMessage: string,
 ): Promise<Result<void>> {
+  if (!project.gitStatus) {
+    return { data: undefined };
+  }
   if (project.gitStatus.isClean) {
     logError({ shortMessage: "No changes to commit" });
     return { error: "No changes to commit" };
