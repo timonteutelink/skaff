@@ -1,9 +1,11 @@
 import { exec } from "node:child_process";
-import { DiffHunk, ParsedFile, pathInCache } from '@timonteutelink/code-templator-lib';
+import { DiffHunk, ParsedFile, pathInCache, saveToCache } from '@timonteutelink/code-templator-lib';
 import type { CacheKey } from "@timonteutelink/code-templator-lib";
 import nodeCrypto from "node:crypto";
 import fs from "node:fs/promises";
-import { saveToCache } from "../../../../packages/code-templator-lib/dist/services/cache-service";
+import { promisify } from "node:util";
+
+const asyncExec = promisify(exec);
 
 async function execWithInheritedStdio(command: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -21,44 +23,6 @@ async function execWithInheritedStdio(command: string): Promise<void> {
   });
 }
 
-export function serializeParsedFiles(files: ParsedFile[]): string {
-  const out: string[] = [];
-
-  for (const file of files) {
-    // Header -------------------------------------------------------------
-    out.push(`diff --git a/${file.path} b/${file.path}`);
-
-    // File-level status lines
-    switch (file.status) {
-      case "added":
-        out.push("new file mode 100644");
-        break;
-      case "deleted":
-        out.push("deleted file mode 100644");
-        break;
-      /* ‘modified’ needs no extra header */
-    }
-
-    // --- / +++ header lines
-    const lhs = file.status === "added" ? "/dev/null" : `a/${file.path}`;
-    const rhs = file.status === "deleted" ? "/dev/null" : `b/${file.path}`;
-    out.push(`--- ${lhs}`);
-    out.push(`+++ ${rhs}`);
-
-    // Hunks --------------------------------------------------------------
-    file.hunks.forEach((h: DiffHunk) => {
-      out.push(
-        `@@ -${h.oldStart},${h.oldLines} +${h.newStart},${h.newLines} @@`,
-      );
-      out.push(...h.lines);
-    });
-
-    // Blank line between files
-    out.push("");
-  }
-
-  return out.join("\n");
-}
 
 function hashDiffText(diffText: string): string {
   return nodeCrypto.createHash('sha256').
@@ -67,6 +31,45 @@ function hashDiffText(diffText: string): string {
 }
 
 // 'less' | 'bat' | 'delta' | 'diff-so-fancy' | 'git-split-diffs';
+
+function serializeParsedFiles(files: ParsedFile[]): string {
+  const lines: string[] = [];
+
+  for (const file of files) {
+    // Header -------------------------------------------------------------
+    lines.push(`diff --git a/${file.path} b/${file.path}`);
+
+    // File-level status lines
+    switch (file.status) {
+      case "added":
+        lines.push("new file mode 100644");
+        break;
+      case "deleted":
+        lines.push("deleted file mode 100644");
+        break;
+      /* ‘modified’ needs no extra header */
+    }
+
+    // --- / +++ header lines
+    const lhs = file.status === "added" ? "/dev/null" : `a/${file.path}`;
+    const rhs = file.status === "deleted" ? "/dev/null" : `b/${file.path}`;
+    lines.push(`--- ${lhs}`);
+    lines.push(`+++ ${rhs}`);
+
+    // Hunks --------------------------------------------------------------
+    file.hunks.forEach((h: DiffHunk) => {
+      lines.push(
+        `@@ -${h.oldStart},${h.oldLines} +${h.newStart},${h.newLines} @@`,
+      );
+      lines.push(...h.lines);
+    });
+
+    // Blank line between files
+    lines.push("");
+  }
+
+  return lines.join("\n");
+}
 
 export async function viewParsedDiffWithGit(
   parsed: ParsedFile[],
@@ -155,7 +158,7 @@ async function openWithTool(patchFile: string, tool?: string): Promise<void> {
 
 async function isCommandAvailable(command: string): Promise<boolean> {
   try {
-    execWithInheritedStdio(`which ${command}`);
+    await asyncExec(`which ${command}`);
     return true;
   } catch {
     return false;
