@@ -1,0 +1,19 @@
+{
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"jsx": "react-jsx",
+		"allowJs": true,
+		"skipLibCheck": true,
+		"strict": false,
+		"types": [
+			"node"
+		]
+	},
+	"include": [
+		"docusaurus.config.js",
+		"sidebars.ts"
+	]
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["../../packages/code-templator-lib/src/index.ts"],
+  "tsconfig": "../../packages/code-templator-lib/tsconfig.json",
+
+  "skipErrorChecking": true,
+  "excludePrivate": true,
+  "readme": "none"
+}
+

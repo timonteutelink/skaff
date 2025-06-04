@@ -3,6 +3,11 @@ import { logError } from "../../lib/utils";
 import { Project } from "../../models";
 import { commitAll } from "../../services/git-service";
 
+/**
+ * @public
+ *
+ * VEERY IMPORTANT: This function is used to add all changes in the project
+ */
 export async function addAllAndCommit(
   project: Project,
   commitMessage: string,

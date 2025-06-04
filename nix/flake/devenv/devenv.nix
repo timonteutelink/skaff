@@ -75,7 +75,7 @@ localFlake:
               mv updated-package.json package.json
             '';
             local-dev.exec = ''
-              jq '.workspaces = ["apps/web", "apps/cli", "packages/typescript-config", "packages/eslint-config","packages/tailwind-config", "packages/code-templator-lib"]' package.json > updated-package.json
+              jq '.workspaces = ["apps/web", "apps/cli", "packages/typescript-config", "packages/eslint-config","packages/tailwind-config", "packages/code-templator-lib", "packages/docs"]' package.json > updated-package.json
               mv updated-package.json package.json
             '';
           };

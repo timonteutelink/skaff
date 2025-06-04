@@ -1,0 +1,26 @@
+{
+	"name": "@timonteutelink/code-templator-docs",
+	"private": true,
+	"packageManager": "bun@1.2.15",
+	"scripts": {
+		"dev": "docusaurus start --port 3100",
+		"clean": "rm -rf build .docusaurus src/api temp",
+		"gen:api": "api-extractor run --local --verbose",
+		"gen:cli": "bun run scripts/gen-cli-docs.mjs",
+		"docs": "bun run gen:api && bun run gen:cli && docusaurus build",
+		"devdocs": "bun run gen:api && bun run gen:cli && docusaurus start --port 3100",
+		"serve": "docusaurus serve"
+	},
+	"dependencies": {
+		"@docusaurus/core": "^3.8.0",
+		"@docusaurus/preset-classic": "^3.8.0",
+		"docusaurus-plugin-typedoc-api": "^4.4.0",
+		"@microsoft/api-extractor": "^7.52.8",
+		"typedoc": "^0.28.5",
+		"react": "^19.1.0",
+		"react-dom": "^19.1.0",
+		"commander": "^14.0.0",
+		"clsx": "^2.1.1",
+		"typescript": "5.4.5"
+	}
+}

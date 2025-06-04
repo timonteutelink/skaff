@@ -1,0 +1,40 @@
+---
+title: Web Architecture
+---
+
+This page documents how `apps/web` is wired so contributors can jump in confidently.
+
+## Stack
+
+| Layer | Tech | Notes |
+| ----- | ---- | ----- |
+| Front-end framework | **Next.js 14 App Router** | Server Components + React 18 |
+| Styling | Tailwind CSS + shadcn/ui | Generates zero-runtime CSS |
+| Data layer | tRPC + Zod | End-to-end typesafe |
+| Auth | NextAuth | GitHub & Email providers |
+| Testing | Playwright + Jest | CI runs on push & PR |
+
+## Folder map (excerpt)
+
+```text
+apps/web
+├─ app/                     # Route tree
+│  ├─ layout.tsx            # shared layout
+│  ├─ page.tsx              # homepage
+│  └─ (dashboard)/…         # protected routes
+├─ components/
+│  ├─ ui/                   # shadcn wrapped
+│  └─ features/
+└─ lib/
+   ├─ trpc/
+   └─ prisma/
+````
+
+### Rendering model
+
+![diagram../static/screenshots/rendering-flow.png)
+
+1. **Server Components** fetch data—no bundle cost.
+2. Client islands hydrate only the interactive widgets.
+3. The CLI can export **static HTML** for marketing pages: `bun run web:export`.
+

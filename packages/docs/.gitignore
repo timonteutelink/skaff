@@ -1,0 +1,9 @@
+# build artefacts
+build/
+.docusaurus/
+api/
+temp/
+node_modules/
+
+
+tsdoc-metadata.json
