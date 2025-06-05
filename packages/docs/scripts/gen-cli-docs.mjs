@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(fileURLToPath(import.meta.url), '../../../..');
 const cliBin = path.join(root, 'apps/cli/bin/code-templator');
-const outDir = path.join(root, 'packages/docs/src/api/cli');
+const outDir = path.join(root, 'packages/docs/src/docs/cli');
 
 await mkdir(outDir, { recursive: true });
 const raw = await $`${cliBin} --help`.text();

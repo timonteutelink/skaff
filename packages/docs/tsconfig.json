@@ -14,6 +14,6 @@
 	},
 	"include": [
 		"docusaurus.config.js",
-		"sidebars.ts"
+		"./src/sidebars/*-sidebar.js"
 	]
 }

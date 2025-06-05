@@ -3070,16 +3070,6 @@
     url = "https://registry.npmjs.org/@tailwindcss/postcss/-/postcss-4.1.8.tgz";
     hash = "sha512-vB/vlf7rIky+w94aWMw34bWW1ka6g6C3xIOdICKX2GC0VcLtL6fhlLiafF0DVIwa9V6EHz8kbWMkS2s2QvvNlw==";
   };
-  "@timonteutelink/code-templator-docs/typescript" = {
-    out_path = "@timonteutelink/code-templator-docs/node_modules/typescript";
-    binaries = {
-      "tsc" = "../@timonteutelink/code-templator-docs/node_modules/typescript/bin/tsc";
-      "tsserver" = "../@timonteutelink/code-templator-docs/node_modules/typescript/bin/tsserver";
-    };
-    name = "typescript@5.4.5";
-    url = "https://registry.npmjs.org/typescript/-/typescript-5.4.5.tgz";
-    hash = "sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==";
-  };
   "@timonteutelink/template-types-lib" = {
     out_path = "@timonteutelink/template-types-lib";
     name = "@timonteutelink/template-types-lib@0.0.35";

@@ -4,14 +4,14 @@
 	"packageManager": "bun@1.2.15",
 	"scripts": {
 		"dev": "docusaurus start --port 3100",
-		"clean": "rm -rf build .docusaurus src/api dist temp",
+		"clean": "rm -rf build .docusaurus src/docs/lib src/docs/cli dist temp",
 		"gen:api": "api-extractor run --local --verbose",
 		"gen:cli": "bun run scripts/gen-cli-docs.mjs",
 		"docs": "bun run gen:api && bun run gen:cli && docusaurus build",
 		"devdocs": "bun run gen:api && bun run gen:cli && docusaurus start --port 3100",
 		"serve": "docusaurus serve"
 	},
-	"dependencies": {
+	"devDependencies": {
 		"@docusaurus/core": "^3.8.0",
 		"@docusaurus/preset-classic": "^3.8.0",
 		"@microsoft/api-extractor": "^7.52.8",
@@ -20,9 +20,6 @@
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",
 		"typedoc": "^0.28.5",
-		"typescript": "5.4.5"
-	},
-	"devDependencies": {
 		"docusaurus-plugin-typedoc": "^1.4.0",
 		"typedoc-plugin-markdown": "^4.6.4"
 	}

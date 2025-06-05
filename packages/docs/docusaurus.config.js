@@ -16,28 +16,29 @@ module.exports = {
     [
       'docusaurus-plugin-typedoc',
       {
-        id: 'api-lib',
+        id: 'lib',
 
         entryPoints: ['../code-templator-lib/src/index.ts'],
         tsconfig: '../code-templator-lib/tsconfig.json',
 
-        out: 'src/api/lib',
+        out: 'src/docs/lib',
 
-        sidebar: { autoConfiguration: true },
+        sidebar: {
+          autoConfiguration: true
+        },
 
-        basePath: 'api-lib',
+        basePath: 'lib',
       }
     ],
 
     [
       '@docusaurus/plugin-content-docs',
       {
-        id: 'api-lib',
-        path: 'src/api/lib',
-        routeBasePath: 'api-lib',
+        id: 'lib',
+        path: 'src/docs/lib',
+        routeBasePath: 'lib',
 
-        // sidebarPath: require.resolve('./src/api/lib/typedoc-sidebar.cjs'),
-
+        // sidebarPath: require.resolve('./src/sidebars/lib-sidebar.js'),
         includeCurrentVersion: true,
       },
     ],
@@ -45,18 +46,18 @@ module.exports = {
     // CLI reference
     ['@docusaurus/plugin-content-docs', {
       id: 'cli',
-      path: 'src/api/cli',
+      path: 'src/docs/cli',
       routeBasePath: 'cli',
-      sidebarPath: require.resolve('./sidebars.js'),
+      sidebarPath: require.resolve('./src/sidebars/cli-sidebar.js'),
       editUrl: 'https://github.com/timonteutelink/code-templator/edit/main/'
     }],
 
     // Guides
     ['@docusaurus/plugin-content-docs', {
       id: 'guides',
-      path: 'src/guides',
-      routeBasePath: 'guides',
-      sidebarPath: require.resolve('./sidebars.js'),
+      path: 'src/docs/guides',
+      routeBasePath: 'docs',
+      sidebarPath: require.resolve('./src/sidebars/docs-sidebar.js'),
       showLastUpdateAuthor: true,
       showLastUpdateTime: true
     }]
@@ -67,13 +68,18 @@ module.exports = {
       title: 'Code Templator',
       logo: { src: 'img/logo.svg', alt: 'logo' },
       items: [
-        { to: '/guides', label: 'Guides', position: 'left' },
-        { to: '/api-lib', label: 'Library API', position: 'left' },
-        { to: '/cli', label: 'CLI Commands', position: 'left' },
+        { to: '/docs', label: 'Docs', position: 'left' },
+        { to: '/lib', label: 'Lib Reference', position: 'left' },
+        { to: '/cli', label: 'CLI Documentation', position: 'left' },
         { href: 'https://github.com/timonteutelink/code-templator', label: 'GitHub', position: 'right' }
       ]
     },
-    footer: { copyright: `© ${new Date().getFullYear()} Timon Teutelink` }
+    footer: { copyright: `© ${new Date().getFullYear()} Timon Teutelink` },
+    colorMode: {
+      defaultMode: 'dark',
+      disableSwitch: false,
+      respectPrefersColorScheme: false,
+    },
   }
 };
 

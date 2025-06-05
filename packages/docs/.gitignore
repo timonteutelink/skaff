@@ -1,7 +1,8 @@
 # build artefacts
 build/
 .docusaurus/
-src/api/
+src/lib
+src/cli
 temp/
 node_modules/
 docs/
