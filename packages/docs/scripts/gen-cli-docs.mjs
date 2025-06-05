@@ -11,6 +11,9 @@ const outDir = path.join(root, 'packages/docs/src/api/cli');
 await mkdir(outDir, { recursive: true });
 const raw = await $`${cliBin} --help`.text();
 const blocks = raw.split(/\n{2,}/);      // naive split
+console.log(`Found ${blocks.length} blocks in CLI help output.`);
+console.log(`Writing CLI docs to ${outDir}...`);
+console.log(`First block:\n${blocks.join("||||")}\n`);
 
 await writeFile(path.join(outDir, 'index.md'), mdFromHelp(blocks[0], 'CLI Overview'));
 
