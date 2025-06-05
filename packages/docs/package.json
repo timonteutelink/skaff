@@ -4,7 +4,7 @@
 	"packageManager": "bun@1.2.15",
 	"scripts": {
 		"dev": "docusaurus start --port 3100",
-		"clean": "rm -rf build .docusaurus src/api temp",
+		"clean": "rm -rf build .docusaurus src/api dist temp",
 		"gen:api": "api-extractor run --local --verbose",
 		"gen:cli": "bun run scripts/gen-cli-docs.mjs",
 		"docs": "bun run gen:api && bun run gen:cli && docusaurus build",

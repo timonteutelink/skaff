@@ -108,7 +108,7 @@ export class Template {
    * or by checking for nested directories.
    *
    * For example, if a template is located at:
-   *   <parent-dir>/project-types/<sub-template-dir>
+   *   parent-dir/project-types/sub-template-dir
    * then the key will be 'project-types'.
    *
    * @param rootTemplateDir The directory containing the templateConfig.ts and templates folder of the root of this template
@@ -425,11 +425,6 @@ export class Template {
     return "";
   }
 
-  /**
-   * Finds all partials in the template and its parents.
-   * Does this by finding all files in the partials directory if exists. Then using await glob(`**\/*`, {cwd: src, dot: false, nodir: true}) to find ALL FILES in the directory and subdirectories and use the part before the first dot as the key of the partial. The path to the file is the value.
-   * If the partials directory does not exist, it will return only the partials of the parent templates.
-   */
   public async findAllPartials(): Promise<Result<Record<string, string>>> {
     if (this.foundPartials) {
       return { data: this.foundPartials };

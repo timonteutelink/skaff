@@ -23,16 +23,24 @@ module.exports = {
 
         out: 'src/api/lib',
 
-        sidebar: { autoConfiguration: true }
+        sidebar: { autoConfiguration: true },
+
+        basePath: 'api-lib',
       }
     ],
 
-    // Library API reference
-    ['@docusaurus/plugin-content-docs', {
-      id: 'api-lib-pages',
-      path: 'src/api/lib',
-      routeBasePath: 'api-lib'
-    }],
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'api-lib',
+        path: 'src/api/lib',
+        routeBasePath: 'api-lib',
+
+        // sidebarPath: require.resolve('./src/api/lib/typedoc-sidebar.cjs'),
+
+        includeCurrentVersion: true,
+      },
+    ],
 
     // CLI reference
     ['@docusaurus/plugin-content-docs', {
