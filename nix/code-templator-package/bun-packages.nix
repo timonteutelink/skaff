@@ -3599,12 +3599,6 @@
     url = "https://registry.npmjs.org/@ungap/structured-clone/-/structured-clone-1.3.0.tgz";
     hash = "sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==";
   };
-  "@vscode/codicons" = {
-    out_path = "@vscode/codicons";
-    name = "@vscode/codicons@0.0.36";
-    url = "https://registry.npmjs.org/@vscode/codicons/-/codicons-0.0.36.tgz";
-    hash = "sha512-wsNOvNMMJ2BY8rC2N2MNBG7yOowV3ov8KlvUE/AiVUlHKTfWsw3OgAOQduX7h0Un6GssKD3aoTVH+TF3DSQwKQ==";
-  };
   "@webassemblyjs/ast" = {
     out_path = "@webassemblyjs/ast";
     name = "@webassemblyjs/ast@1.14.1";
@@ -3892,12 +3886,6 @@
     name = "ansi-regex@5.0.1";
     url = "https://registry.npmjs.org/ansi-regex/-/ansi-regex-5.0.1.tgz";
     hash = "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==";
-  };
-  "ansi-sequence-parser" = {
-    out_path = "ansi-sequence-parser";
-    name = "ansi-sequence-parser@1.1.3";
-    url = "https://registry.npmjs.org/ansi-sequence-parser/-/ansi-sequence-parser-1.1.3.tgz";
-    hash = "sha512-+fksAx9eG3Ab6LDnLs3ZqZa8KVJ/jYnX+D4Qe1azX+LFGFAXqynCQLOdLpNYN/l9e7l6hMWwZbrnctqr6eSQSw==";
   };
   "ansi-styles" = {
     out_path = "ansi-styles";
@@ -5193,41 +5181,11 @@
     url = "https://registry.npmjs.org/doctrine/-/doctrine-2.1.0.tgz";
     hash = "sha512-35mSku4ZXK0vfCuHEDAwt55dg2jNajHZ1odvF+8SSr82EsZY4QmXfuWso8oEd8zRhVObSN18aM0CjSdoBX7zIw==";
   };
-  "docusaurus-plugin-typedoc-api" = {
-    out_path = "docusaurus-plugin-typedoc-api";
-    name = "docusaurus-plugin-typedoc-api@4.4.0";
-    url = "https://registry.npmjs.org/docusaurus-plugin-typedoc-api/-/docusaurus-plugin-typedoc-api-4.4.0.tgz";
-    hash = "sha512-7crE/IO2qh4WztNQThIlXiSgToFLb57urYz5VKnHVGuwTxLfStWaXoAGKB60s+XAaLFuTh7wUI93fx72wIdC3w==";
-  };
-  "docusaurus-plugin-typedoc-api/typedoc" = {
-    out_path = "docusaurus-plugin-typedoc-api/node_modules/typedoc";
-    binaries = {
-      "typedoc" = "../docusaurus-plugin-typedoc-api/node_modules/typedoc/bin/typedoc";
-    };
-    name = "typedoc@0.25.13";
-    url = "https://registry.npmjs.org/typedoc/-/typedoc-0.25.13.tgz";
-    hash = "sha512-pQqiwiJ+Z4pigfOnnysObszLiU3mVLWAExSPf+Mu06G/qsc3wzbuM56SZQvONhHLncLUhYzOVkjFFpFfL5AzhQ==";
-  };
-  "docusaurus-plugin-typedoc-api/typedoc/marked" = {
-    out_path = "docusaurus-plugin-typedoc-api/node_modules/typedoc/node_modules/marked";
-    binaries = {
-      "marked" = "../docusaurus-plugin-typedoc-api/node_modules/typedoc/node_modules/marked/bin/marked.js";
-    };
-    name = "marked@4.3.0";
-    url = "https://registry.npmjs.org/marked/-/marked-4.3.0.tgz";
-    hash = "sha512-PRsaiG84bK+AMvxziE/lCFss8juXjNaWzVbN5tXAm4XjeaS9NAHhop+PjQxz2A9h8Q4M/xGmzP8vqNwy6JeK0A==";
-  };
-  "docusaurus-plugin-typedoc-api/typedoc/minimatch" = {
-    out_path = "docusaurus-plugin-typedoc-api/node_modules/typedoc/node_modules/minimatch";
-    name = "minimatch@9.0.5";
-    url = "https://registry.npmjs.org/minimatch/-/minimatch-9.0.5.tgz";
-    hash = "sha512-G6T0ZX48xgozx7587koeX9Ys2NYy6Gmv//P89sEte9V9whIapMNF4idKxnW2QtCcLiTWlb/wfCabAtAFWhhBow==";
-  };
-  "docusaurus-plugin-typedoc-api/typedoc/minimatch/brace-expansion" = {
-    out_path = "docusaurus-plugin-typedoc-api/node_modules/typedoc/node_modules/minimatch/node_modules/brace-expansion";
-    name = "brace-expansion@2.0.1";
-    url = "https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.0.1.tgz";
-    hash = "sha512-XnAIvQ8eM+kC6aULx6wuQiwVsnzsi9d3WxzV3FpWTGA19F621kwdbsAcFKXgKUHZWsy+mY6iL1sHTxWEFCytDA==";
+  "docusaurus-plugin-typedoc" = {
+    out_path = "docusaurus-plugin-typedoc";
+    name = "docusaurus-plugin-typedoc@1.4.0";
+    url = "https://registry.npmjs.org/docusaurus-plugin-typedoc/-/docusaurus-plugin-typedoc-1.4.0.tgz";
+    hash = "sha512-lRehUMevMHc40gy/bVuTzu/XwB46Tk342AG0UbpjIKkj3lvsG9rQZK5nnpWffvNalk8QHs3BlAb+xmG4FAUGcg==";
   };
   "dom-converter" = {
     out_path = "dom-converter";
@@ -7366,12 +7324,6 @@
     url = "https://registry.npmjs.org/json5/-/json5-2.2.3.tgz";
     hash = "sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==";
   };
-  "jsonc-parser" = {
-    out_path = "jsonc-parser";
-    name = "jsonc-parser@3.3.1";
-    url = "https://registry.npmjs.org/jsonc-parser/-/jsonc-parser-3.3.1.tgz";
-    hash = "sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==";
-  };
   "jsonfile" = {
     out_path = "jsonfile";
     name = "jsonfile@6.1.0";
@@ -7683,21 +7635,6 @@
     name = "markdown-table@2.0.0";
     url = "https://registry.npmjs.org/markdown-table/-/markdown-table-2.0.0.tgz";
     hash = "sha512-Ezda85ToJUBhM6WGaG6veasyym+Tbs3cMAw/ZhOPqXiYsr0jgocBV3j3nx+4lk47plLlIqjwuTm/ywVI+zjJ/A==";
-  };
-  "marked" = {
-    out_path = "marked";
-    binaries = {
-      "marked" = "../marked/bin/marked.js";
-    };
-    name = "marked@9.1.6";
-    url = "https://registry.npmjs.org/marked/-/marked-9.1.6.tgz";
-    hash = "sha512-jcByLnIFkd5gSXZmjNvS1TlmRhCXZjIzHYlaGkPlLIekG55JDR2Z4va9tZwCiP+/RDERiNhMOFu01xd6O5ct1Q==";
-  };
-  "marked-smartypants" = {
-    out_path = "marked-smartypants";
-    name = "marked-smartypants@1.1.9";
-    url = "https://registry.npmjs.org/marked-smartypants/-/marked-smartypants-1.1.9.tgz";
-    hash = "sha512-VPeuaUr5IWptI7nJdgQ9ugrLWYGv13NdzEXTtKY3cmB4aRWOI2RzhLlf+xQp6Wnob9SAPO2sNVlfSJr+nflk/A==";
   };
   "math-intrinsics" = {
     out_path = "math-intrinsics";
@@ -10654,12 +10591,6 @@
     url = "https://registry.npmjs.org/shell-quote/-/shell-quote-1.8.3.tgz";
     hash = "sha512-ObmnIF4hXNg1BqhnHmgbDETF8dLPCggZWBjkQfhZpbszZnYur5DUljTcCHii5LC3J5E0yeO/1LIMyH+UvHQgyw==";
   };
-  "shiki" = {
-    out_path = "shiki";
-    name = "shiki@0.14.7";
-    url = "https://registry.npmjs.org/shiki/-/shiki-0.14.7.tgz";
-    hash = "sha512-dNPAPrxSc87ua2sKJ3H5dQ/6ZaY8RNnaAqK+t0eG7p0Soi2ydiqbGOTaZCqaYvA/uZYfS1LJnemt3Q+mSfcPCg==";
-  };
   "side-channel" = {
     out_path = "side-channel";
     name = "side-channel@1.1.0";
@@ -10746,16 +10677,6 @@
     name = "slash@3.0.0";
     url = "https://registry.npmjs.org/slash/-/slash-3.0.0.tgz";
     hash = "sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==";
-  };
-  "smartypants" = {
-    out_path = "smartypants";
-    binaries = {
-      "smartypants" = "../smartypants/bin/smartypants.js";
-      "smartypantsu" = "../smartypants/bin/smartypantsu.js";
-    };
-    name = "smartypants@0.2.2";
-    url = "https://registry.npmjs.org/smartypants/-/smartypants-0.2.2.tgz";
-    hash = "sha512-TzobUYoEft/xBtb2voRPryAUIvYguG0V7Tt3de79I1WfXgCwelqVsGuZSnu3GFGRZhXR90AeEYIM+icuB/S06Q==";
   };
   "snake-case" = {
     out_path = "snake-case";
@@ -11372,6 +11293,18 @@
     url = "https://registry.npmjs.org/typedoc/-/typedoc-0.28.5.tgz";
     hash = "sha512-5PzUddaA9FbaarUzIsEc4wNXCiO4Ot3bJNeMF2qKpYlTmM9TTaSHQ7162w756ERCkXER/+o2purRG6YOAv6EMA==";
   };
+  "typedoc-docusaurus-theme" = {
+    out_path = "typedoc-docusaurus-theme";
+    name = "typedoc-docusaurus-theme@1.4.0";
+    url = "https://registry.npmjs.org/typedoc-docusaurus-theme/-/typedoc-docusaurus-theme-1.4.0.tgz";
+    hash = "sha512-L8etzGUfGv1nxcdzw/s/0MUgfiIetTMttdqCY2ZpTnK26pDB8GsBi+9hHwl8cgDrMz+FF+mIyPKNDKhqDeGvTA==";
+  };
+  "typedoc-plugin-markdown" = {
+    out_path = "typedoc-plugin-markdown";
+    name = "typedoc-plugin-markdown@4.6.4";
+    url = "https://registry.npmjs.org/typedoc-plugin-markdown/-/typedoc-plugin-markdown-4.6.4.tgz";
+    hash = "sha512-AnbToFS1T1H+n40QbO2+i0wE6L+55rWnj7zxnM1r781+2gmhMF2dB6dzFpaylWLQYkbg4D1Y13sYnne/6qZwdw==";
+  };
   "typedoc/minimatch" = {
     out_path = "typedoc/node_modules/minimatch";
     name = "minimatch@9.0.5";
@@ -11693,18 +11626,6 @@
     name = "victory-vendor@36.9.2";
     url = "https://registry.npmjs.org/victory-vendor/-/victory-vendor-36.9.2.tgz";
     hash = "sha512-PnpQQMuxlwYdocC8fIJqVXvkeViHYzotI+NJrCuav0ZYFoq912ZHBk3mCeuj+5/VpodOjPe1z0Fk2ihgzlXqjQ==";
-  };
-  "vscode-oniguruma" = {
-    out_path = "vscode-oniguruma";
-    name = "vscode-oniguruma@1.7.0";
-    url = "https://registry.npmjs.org/vscode-oniguruma/-/vscode-oniguruma-1.7.0.tgz";
-    hash = "sha512-L9WMGRfrjOhgHSdOYgCt/yRMsXzLDJSL7BPrOZt73gU0iWO4mpqzqQzOz5srxqTvMBaR0XZTSrVWo4j55Rc6cA==";
-  };
-  "vscode-textmate" = {
-    out_path = "vscode-textmate";
-    name = "vscode-textmate@8.0.0";
-    url = "https://registry.npmjs.org/vscode-textmate/-/vscode-textmate-8.0.0.tgz";
-    hash = "sha512-AFbieoL7a5LMqcnOF04ji+rpXadgOXnZsxQr//r83kLPr7biP7am3g9zbaZIaBGwBRWeSvoMD4mgPdX3e4NWBg==";
   };
   "walker" = {
     out_path = "walker";

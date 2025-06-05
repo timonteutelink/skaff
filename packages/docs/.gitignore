@@ -4,6 +4,7 @@ build/
 api/
 temp/
 node_modules/
+docs/
 
 
 tsdoc-metadata.json

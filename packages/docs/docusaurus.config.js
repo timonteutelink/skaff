@@ -13,24 +13,26 @@ module.exports = {
   ],
 
   plugins: [
-    // Library API – produced by docusaurus-plugin-typedoc-api
     [
-      'docusaurus-plugin-typedoc-api',
+      'docusaurus-plugin-typedoc',
       {
         id: 'api-lib',
-        projectName: '@timonteutelink/code-templator-lib',
 
-        /** Run TypeDoc directly */
         entryPoints: ['../code-templator-lib/src/index.ts'],
         tsconfig: '../code-templator-lib/tsconfig.json',
 
-        /** where it will live */
-        routeBasePath: 'api-lib',
+        out: 'src/api/lib',
 
-        /** nice left-nav title */
-        sidebar: { categoryLabel: 'Library API', collapsed: false }
+        sidebar: { autoConfiguration: true }
       }
     ],
+
+    // Library API reference
+    ['@docusaurus/plugin-content-docs', {
+      id: 'api-lib-pages',
+      path: 'src/api/lib',
+      routeBasePath: 'api-lib'
+    }],
 
     // CLI reference
     ['@docusaurus/plugin-content-docs', {
