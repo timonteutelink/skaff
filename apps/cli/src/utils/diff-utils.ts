@@ -1,6 +1,7 @@
-import { exec } from "node:child_process";
-import { DiffHunk, ParsedFile, pathInCache, saveToCache } from '@timonteutelink/code-templator-lib';
 import type { CacheKey } from "@timonteutelink/code-templator-lib";
+
+import { DiffHunk, ParsedFile, pathInCache, saveToCache } from '@timonteutelink/code-templator-lib';
+import { exec } from "node:child_process";
 import nodeCrypto from "node:crypto";
 import fs from "node:fs/promises";
 import { promisify } from "node:util";
@@ -41,27 +42,28 @@ function serializeParsedFiles(files: ParsedFile[]): string {
 
     // File-level status lines
     switch (file.status) {
-      case "added":
+      case "added": {
         lines.push("new file mode 100644");
         break;
-      case "deleted":
+      }
+
+      case "deleted": {
         lines.push("deleted file mode 100644");
         break;
+      }
       /* ‘modified’ needs no extra header */
     }
 
     // --- / +++ header lines
     const lhs = file.status === "added" ? "/dev/null" : `a/${file.path}`;
     const rhs = file.status === "deleted" ? "/dev/null" : `b/${file.path}`;
-    lines.push(`--- ${lhs}`);
-    lines.push(`+++ ${rhs}`);
+    lines.push(`--- ${lhs}`, `+++ ${rhs}`);
 
     // Hunks --------------------------------------------------------------
     file.hunks.forEach((h: DiffHunk) => {
       lines.push(
-        `@@ -${h.oldStart},${h.oldLines} +${h.newStart},${h.newLines} @@`,
+        `@@ -${h.oldStart},${h.oldLines} +${h.newStart},${h.newLines} @@`, ...h.lines
       );
-      lines.push(...h.lines);
     });
 
     // Blank line between files
@@ -89,28 +91,25 @@ export async function viewParsedDiffWithGit(
 
   try {
     await openWithTool(tempFile.data, options.tool);
-  } catch (err) {
-    console.error("Error opening diff:", err);
+  } catch (error) {
+    console.error("Error opening diff:", error);
     console.log("Fallback: cat", tempFile);
     await execWithInheritedStdio(`cat "${tempFile}"`);
   }
 }
 
 export async function viewExistingPatchWithGit(cacheKey: CacheKey, projectCommitHash: string, options: {
-  tool?: string
   output?: string;
+  tool?: string
 } = {}): Promise<void> {
   const patchFile = await pathInCache(`${cacheKey}-${projectCommitHash}.patch`);
   if ('error' in patchFile) {
     console.error('Error getting patch file path:', patchFile.error);
     return;
   }
+
   try {
-    if (options.tool) {
-      await openWithTool(patchFile.data, options.tool);
-    } else {
-      await openWithTool(patchFile.data);
-    }
+    await (options.tool ? openWithTool(patchFile.data, options.tool) : openWithTool(patchFile.data));
   } catch (error) {
     console.error('Error opening patch file:', error);
     console.log(`Patch file saved to: ${patchFile.data}`);
@@ -123,12 +122,12 @@ export async function viewExistingPatchWithGit(cacheKey: CacheKey, projectCommit
  */
 async function openWithTool(patchFile: string, tool?: string): Promise<void> {
   const tools = [
-    { name: 'delta', cmd: `delta "${patchFile}"` },
-    { name: 'diff-so-fancy', cmd: `diff-so-fancy < "${patchFile}"` },
-    { name: 'git-split-diffs', cmd: `git-split-diffs --color=always < "${patchFile}"` },
-    { name: 'bat', cmd: `bat --language=diff "${patchFile}"` },
-    { name: 'less', cmd: `less -R "${patchFile}"` },
-    { name: 'cat', cmd: `cat "${patchFile}"` }
+    { cmd: `delta "${patchFile}"`, name: 'delta' },
+    { cmd: `diff-so-fancy < "${patchFile}"`, name: 'diff-so-fancy' },
+    { cmd: `git-split-diffs --color=always < "${patchFile}"`, name: 'git-split-diffs' },
+    { cmd: `bat --language=diff "${patchFile}"`, name: 'bat' },
+    { cmd: `less -R "${patchFile}"`, name: 'less' },
+    { cmd: `cat "${patchFile}"`, name: 'cat' }
   ];
 
   if (tool) {

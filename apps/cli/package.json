@@ -1,24 +1,83 @@
 {
   "name": "code-templator-cli",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "buildprod": "tsc --noEmit && bun run build.ts && bun build --compile ./dist/main.js ./dist/*.js --outfile ./bin/code-templator"
+  "description": "A CLI tool for managing code templates",
+  "version": "0.0.0",
+  "author": "timonteutelink",
+  "bin": {
+    "code-templator": "./bin/run.js"
   },
+  "bugs": "https://github.com/timonteutelink/code-templator/issues",
   "dependencies": {
+    "@oclif/core": "^4",
+    "@oclif/plugin-help": "^6",
+    "@oclif/plugin-plugins": "^5",
     "@inquirer/prompts": "^7.5.3",
     "@timonteutelink/code-templator-lib": "workspace:*",
     "@timonteutelink/template-types-lib": "^0.0.35",
     "@types/node": "^22.15.19",
-    "commander": "^13.1.0",
     "esbuild": "^0.25.4",
     "pino": "^9.6.0",
     "typescript": "^5.8.3",
     "yaml": "^2.7.1"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
+    "@eslint/compat": "^1",
+    "@oclif/prettier-config": "^0.2.1",
+    "@oclif/test": "^4",
+    "@types/chai": "^4",
+    "@types/mocha": "^10",
+    "@types/node": "^18",
+    "chai": "^4",
+    "eslint": "^9",
+    "eslint-config-oclif": "^6",
+    "eslint-config-prettier": "^10",
+    "mocha": "^10",
+    "oclif": "^4",
+    "shx": "^0.3.3",
+    "ts-node": "^10",
+    "typescript": "^5",
     "bun-plugin-pino": "^1.4.0"
-  }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "./bin",
+    "./dist",
+    "./oclif.manifest.json"
+  ],
+  "homepage": "https://github.com/timonteutelink/code-templator",
+  "keywords": [
+    "oclif"
+  ],
+  "license": "MIT",
+  "main": "dist/index.js",
+  "type": "module",
+  "oclif": {
+    "bin": "code-templator",
+    "dirname": "code-templator",
+    "commands": "./dist/commands",
+    "plugins": [
+      "@oclif/plugin-help",
+      "@oclif/plugin-plugins"
+    ],
+    "topicSeparator": " ",
+    "topics": {
+      "code-templating": {
+        "description": "Manage code templates"
+      }
+    }
+  },
+  "repository": "timonteutelink/code-templator",
+  "scripts": {
+    "build": "shx rm -rf dist && tsc -b",
+    "lint": "eslint",
+    "postpack": "shx rm -f oclif.manifest.json",
+    "posttest": "bun run lint",
+    "prepack": "oclif manifest && oclif readme",
+    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+    "version": "oclif readme && git add README.md",
+    "__buildprod": "tsc --noEmit && bun run build.ts && bun build --compile ./dist/main.js ./dist/*.js --outfile ./bin/code-templator"
+  },
+  "types": "dist/index.d.ts"
 }

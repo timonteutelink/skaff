@@ -1,14 +1,22 @@
 {
-  "extends": "@repo/typescript-config/base.json",
-  "exclude": [
-    "node_modules",
-    "dist"
-  ],
   "compilerOptions": {
-    "outDir": "dist"
+    "declaration": true,
+    "module": "Node16",
+    "outDir": "dist",
+    "rootDir": "src",
+    "strict": true,
+    "target": "es2022",
+    "moduleResolution": "node16",
+    "jsx": "react-jsx",
+    "types": [
+      "node",
+      "react"
+    ]
   },
   "include": [
-    "src",
-    "../../packages/ts/src"
-  ]
+    "./src/**/*"
+  ],
+  "ts-node": {
+    "esm": true
+  }
 }
