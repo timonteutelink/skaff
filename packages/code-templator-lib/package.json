@@ -1,6 +1,6 @@
 {
   "name": "@timonteutelink/code-templator-lib",
-  "version": "0.0.54",
+  "version": "0.0.55",
   "exports": {
     ".": "./dist/index.js",
     "./browser": "./dist/browser.js"
@@ -10,7 +10,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "rm -r dist && tsc -p tsconfig.json",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
     "test": "jest",
@@ -19,26 +19,26 @@
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/bun": "^1.2.14",
+    "@types/bun": "^1.2.15",
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^22.14.1",
-    "eslint": "^9.24.0",
+    "@types/node": "^22.15.30",
+    "eslint": "^9.28.0",
     "jest": "^29.7.0",
     "pino-pretty": "^13.0.0",
     "typescript": "5.8.3"
   },
   "dependencies": {
-    "@langchain/langgraph": "^0.2.67",
-    "@langchain/openai": "^0.5.10",
-    "@timonteutelink/template-types-lib": "0.0.35",
-    "esbuild": "^0.25.2",
+    "@langchain/langgraph": "^0.3.1",
+    "@langchain/openai": "^0.5.12",
+    "@timonteutelink/template-types-lib": "0.0.38",
+    "esbuild": "^0.25.5",
     "fs-extra": "^11.3.0",
-    "glob": "^11.0.1",
+    "glob": "^11.0.2",
     "handlebars": "^4.7.8",
-    "langchain": "^0.3.24",
-    "pino": "^9.6.0",
-    "yaml": "^2.7.1",
-    "zod": "^3.24.2",
+    "langchain": "^0.3.27",
+    "pino": "^9.7.0",
+    "yaml": "^2.8.0",
+    "zod": "^3.25.56",
     "zod-to-json-schema": "^3.24.5"
   }
 }

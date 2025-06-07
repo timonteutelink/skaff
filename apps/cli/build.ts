@@ -1,7 +1,7 @@
 import { bunPluginPino } from "bun-plugin-pino";
 
 await Bun.build({
-  entrypoints: ["./src/main.ts"],
+  entrypoints: ["./src/index.ts"],
   format: "esm",
   outdir: "./dist",
   plugins: [bunPluginPino()],

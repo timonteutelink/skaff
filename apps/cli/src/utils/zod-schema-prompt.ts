@@ -1,13 +1,10 @@
-import confirm from '@inquirer/confirm';
-import input from '@inquirer/input';
-import numberPrompt from '@inquirer/number';
-import select from '@inquirer/select';
+import { confirm, input, number as numberPrompt, select } from '@inquirer/prompts';
 import { z, ZodTypeAny } from 'zod';
 
 type Path = Array<number | string>;
 
 interface PromptContext {
-  defaultValue?: any;
+  defaultValue?: unknown;
   description?: string;
   hasDefault?: boolean;
   isOptional?: boolean;
@@ -43,7 +40,7 @@ export async function promptForSchema<T extends ZodTypeAny>(
           return await promptForSchema(schema, options);
         }
 
-        process.exit(1);
+        throw new Error("Problem");
       }
 
       console.log('✅ All inputs validated successfully!');
@@ -53,7 +50,7 @@ export async function promptForSchema<T extends ZodTypeAny>(
     return result as z.infer<T>;
   } catch (error) {
     console.error('❌ An error occurred:', error);
-    process.exit(1);
+    throw new Error("Problem");
   }
 }
 
@@ -98,11 +95,11 @@ async function promptNode(schema: ZodTypeAny, context: PromptContext): Promise<u
     }
   }
 
-  return await promptByType(schema, context);
+  return promptByType(schema, context);
 }
 
 function unwrapSchema(schema: ZodTypeAny): {
-  defaultValue?: any;
+  defaultValue?: unknown;
   description?: string;
   hasDefault: boolean;
   isOptional: boolean;
@@ -111,7 +108,7 @@ function unwrapSchema(schema: ZodTypeAny): {
   let current = schema;
   let isOptional = false;
   let hasDefault = false;
-  let defaultValue: any;
+  let defaultValue: unknown;
   let description: string | undefined;
 
   // First, check for description on the original schema
@@ -190,13 +187,13 @@ function unwrapSchema(schema: ZodTypeAny): {
 
 async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise<unknown> {
   const def = (schema as any)._def;
-  const {typeName} = def;
+  const { typeName } = def;
   const pathStr = context.path.join('.');
   const descriptionSuffix = context.description ? ` (${context.description})` : '';
 
   switch (typeName) {
     case 'ZodAny': {
-      return await input({
+      return input({
         message: `❓ Enter any value for "${pathStr}"${descriptionSuffix} (will be parsed as JSON):`,
         validate(value) {
           try {
@@ -224,7 +221,8 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
       if (def.minLength) min = def.minLength.value;
       if (def.maxLength) max = def.maxLength.value;
       if (def.exactLength) {
-        min = max = def.exactLength.value;
+        min = def.exactLength.value;
+        max = def.exactLength.value;
       }
 
       const constraintInfo = min > 0 || max < Infinity
@@ -294,7 +292,7 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
     }
 
     case 'ZodBoolean': {
-      return await confirm({
+      return confirm({
         default: false,
         message: `❓ "${pathStr}"${descriptionSuffix}:`,
       });
@@ -325,7 +323,7 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
         message: `📅 Enter date for "${pathStr}"${constraintInfo}${descriptionSuffix} (ISO format, e.g., 2023-12-25 or 2023-12-25T10:30:00Z):`,
         validate(value) {
           const date = new Date(value);
-          if (isNaN(date.getTime())) return 'Invalid date format';
+          if (Number.isNaN(date.getTime())) return 'Invalid date format';
           const result = schema.safeParse(date);
           return result.success || result.error.errors[0]?.message || 'Invalid date';
         },
@@ -334,8 +332,8 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
     }
 
     case 'ZodDiscriminatedUnion': {
-      const {discriminator} = def;
-      const {optionsMap} = def;
+      const { discriminator } = def;
+      const { optionsMap } = def;
 
       const discriminatorValue = await select({
         choices: [...optionsMap.keys()].map((key: any) => ({
@@ -346,11 +344,11 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
       });
 
       const selectedSchema = optionsMap.get(discriminatorValue);
-      return await promptNode(selectedSchema, context);
+      return promptNode(selectedSchema, context);
     }
 
     case 'ZodEnum': {
-      return await select({
+      return select({
         choices: def.values.map((value: any) => ({
           name: String(value),
           value,
@@ -360,8 +358,8 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
     }
 
     case 'ZodIntersection': {
-      const {left} = def;
-      const {right} = def;
+      const { left } = def;
+      const { right } = def;
 
       console.log(`\n🔗 Building intersection for "${pathStr}"${descriptionSuffix}:`);
       console.log('  📝 First part:');
@@ -389,7 +387,7 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
 
       if (isNull) return null;
 
-      return await promptNode(def.innerType, context);
+      return promptNode(def.innerType, context);
     }
 
     case 'ZodLiteral': {
@@ -398,8 +396,8 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
     }
 
     case 'ZodMap': {
-      const {keyType} = def;
-      const {valueType} = def;
+      const { keyType } = def;
+      const { valueType } = def;
 
       const count = await numberPrompt({
         message: `🗺️  How many entries for map "${pathStr}"${descriptionSuffix}?`,
@@ -430,7 +428,7 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
 
     case 'ZodNativeEnum': {
       const enumValues = Object.values(def.values);
-      return await select({
+      return select({
         choices: enumValues.map((value: any) => ({
           name: String(value),
           value,
@@ -480,7 +478,7 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
 
       const constraintInfo = constraints.length > 0 ? ` [${constraints.join(', ')}]` : '';
 
-      return await numberPrompt({
+      return numberPrompt({
         message: `🔢 Enter number for "${pathStr}"${constraintInfo}${descriptionSuffix}:`,
         validate(value) {
           if (value === undefined || value === null) return 'Number is required';
@@ -496,7 +494,7 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
       const result: Record<string, unknown> = {};
 
       // Handle catchall
-      const {catchall} = def;
+      const { catchall } = def;
 
       // Get known keys first
       const knownKeys = Object.keys(shape);
@@ -540,7 +538,7 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
 
     case 'ZodRecord': {
       const keyType = def.keyType || z.string();
-      const {valueType} = def;
+      const { valueType } = def;
 
       const count = await numberPrompt({
         message: `🗂️  How many entries for record "${pathStr}"${descriptionSuffix}?`,
@@ -568,7 +566,7 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
     }
 
     case 'ZodSet': {
-      const {valueType} = def;
+      const { valueType } = def;
       let min = 0;
       let max = Infinity;
 
@@ -707,7 +705,7 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
 
       const constraintInfo = constraints.length > 0 ? ` [${constraints.join(', ')}]` : '';
 
-      return await input({
+      return input({
         message: `📝 Enter string for "${pathStr}"${constraintInfo}${descriptionSuffix}:`,
         validate(value) {
           if (value === '') {
@@ -726,7 +724,7 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
 
     case 'ZodTuple': {
       const items = def.items as ZodTypeAny[];
-      const {rest} = def;
+      const { rest } = def;
 
       console.log(`\n📋 Building tuple for "${pathStr}" (${items.length} fixed items)${descriptionSuffix}:`);
 
@@ -774,7 +772,7 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
       // Special case for literal unions (like enums)
       if (options.every((opt: any) => opt._def.typeName === 'ZodLiteral')) {
         const values = options.map((opt: any) => opt._def.value);
-        return await select({
+        return select({
           choices: values.map((value: any) => ({
             name: JSON.stringify(value),
             value,
@@ -792,11 +790,11 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
         message: `🤔 Select type for union "${pathStr}"${descriptionSuffix}:`,
       });
 
-      return await promptNode(options[choiceIndex]!, context);
+      return promptNode(options[choiceIndex]!, context);
     }
 
     case 'ZodUnknown': {
-      return await input({
+      return input({
         message: `❓ Enter unknown value for "${pathStr}"${descriptionSuffix} (will be parsed as JSON):`,
         validate(value) {
           try {
@@ -840,7 +838,7 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
 
 function getSchemaDescription(schema: ZodTypeAny): string {
   const def = (schema as any)._def;
-  const {typeName} = def;
+  const { typeName } = def;
 
   // Check for description first
   if (def.description) {
@@ -848,88 +846,116 @@ function getSchemaDescription(schema: ZodTypeAny): string {
   }
 
   switch (typeName) {
-    case 'ZodAny': { return 'any';
+    case 'ZodAny': {
+      return 'any';
     }
 
-    case 'ZodArray': { return `array of ${getSchemaDescription(def.type)}`;
+    case 'ZodArray': {
+      return `array of ${getSchemaDescription(def.type)}`;
     }
 
-    case 'ZodBigInt': { return 'bigint';
+    case 'ZodBigInt': {
+      return 'bigint';
     }
 
-    case 'ZodBoolean': { return 'boolean';
+    case 'ZodBoolean': {
+      return 'boolean';
     }
 
-    case 'ZodDate': { return 'date';
+    case 'ZodDate': {
+      return 'date';
     }
 
-    case 'ZodDefault': { return `default ${getSchemaDescription(def.innerType)}`;
+    case 'ZodDefault': {
+      return `default ${getSchemaDescription(def.innerType)}`;
     }
 
-    case 'ZodDiscriminatedUnion': { return `discriminatedUnion`;
+    case 'ZodDiscriminatedUnion': {
+      return `discriminatedUnion`;
     }
 
-    case 'ZodEnum': { return `enum: ${def.values.join(' | ')}`;
+    case 'ZodEnum': {
+      return `enum: ${def.values.join(' | ')}`;
     }
 
-    case 'ZodIntersection': { return `intersection`;
+    case 'ZodIntersection': {
+      return `intersection`;
     }
 
-    case 'ZodLiteral': { return `literal: ${JSON.stringify(def.value)}`;
+    case 'ZodLiteral': {
+      return `literal: ${JSON.stringify(def.value)}`;
     }
 
-    case 'ZodMap': { return `map<${getSchemaDescription(def.keyType)}, ${getSchemaDescription(def.valueType)}>`;
+    case 'ZodMap': {
+      return `map<${getSchemaDescription(def.keyType)}, ${getSchemaDescription(def.valueType)}>`;
     }
 
-    case 'ZodNaN': { return 'NaN';
+    case 'ZodNaN': {
+      return 'NaN';
     }
 
-    case 'ZodNativeEnum': { return `nativeEnum: ${Object.values(def.values).join(' | ')}`;
+    case 'ZodNativeEnum': {
+      return `nativeEnum: ${Object.values(def.values).join(' | ')}`;
     }
 
-    case 'ZodNever': { return 'never';
+    case 'ZodNever': {
+      return 'never';
     }
 
-    case 'ZodNull': { return 'null';
+    case 'ZodNull': {
+      return 'null';
     }
 
-    case 'ZodNullable': { return `nullable ${getSchemaDescription(def.innerType)}`;
+    case 'ZodNullable': {
+      return `nullable ${getSchemaDescription(def.innerType)}`;
     }
 
-    case 'ZodNumber': { return 'number';
+    case 'ZodNumber': {
+      return 'number';
     }
 
-    case 'ZodObject': { return 'object';
+    case 'ZodObject': {
+      return 'object';
     }
 
-    case 'ZodOptional': { return `optional ${getSchemaDescription(def.innerType)}`;
+    case 'ZodOptional': {
+      return `optional ${getSchemaDescription(def.innerType)}`;
     }
 
-    case 'ZodRecord': { return `record<${getSchemaDescription(def.keyType || z.string())}, ${getSchemaDescription(def.valueType)}>`;
+    case 'ZodRecord': {
+      return `record<${getSchemaDescription(def.keyType || z.string())}, ${getSchemaDescription(def.valueType)}>`;
     }
 
-    case 'ZodSet': { return `set<${getSchemaDescription(def.valueType)}>`;
+    case 'ZodSet': {
+      return `set<${getSchemaDescription(def.valueType)}>`;
     }
 
-    case 'ZodString': { return 'string';
+    case 'ZodString': {
+      return 'string';
     }
 
-    case 'ZodTuple': { return `tuple[${def.items.map(getSchemaDescription).join(', ')}]`;
+    case 'ZodTuple': {
+      return `tuple[${def.items.map(getSchemaDescription).join(', ')}]`;
     }
 
-    case 'ZodUndefined': { return 'undefined';
+    case 'ZodUndefined': {
+      return 'undefined';
     }
 
-    case 'ZodUnion': { return `union: ${def.options.map(getSchemaDescription).join(' | ')}`;
+    case 'ZodUnion': {
+      return `union: ${def.options.map(getSchemaDescription).join(' | ')}`;
     }
 
-    case 'ZodUnknown': { return 'unknown';
+    case 'ZodUnknown': {
+      return 'unknown';
     }
 
-    case 'ZodVoid': { return 'void';
+    case 'ZodVoid': {
+      return 'void';
     }
 
-    default: { return typeName.replace('Zod', '').toLowerCase();
+    default: {
+      return typeName.replace('Zod', '').toLowerCase();
     }
   }
 }
