@@ -22,7 +22,7 @@ jobs:
         run: cd packages/docs && bun install --frozen-lockfile --ignore-scripts
 
       - name: Build website
-        run: cd packages/docs && bun run build
+        run: cd packages/docs && bun run docs
 
       - name: Upload Build Artifact
         uses: actions/upload-pages-artifact@v3
