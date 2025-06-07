@@ -3,14 +3,16 @@ name: version, tag and github release
 
 on:
   push:
-    branches: [main]
+    branches: [bananas]
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.12
       - name: Check if version already exists
         id: version-check
         run: |

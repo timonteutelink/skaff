@@ -6,7 +6,9 @@ module.exports = {
   baseUrl: '/',
   favicon: 'img/logo.svg',
   organizationName: 'timonteutelink',
-  projectName: 'code-templator',
+  projectName: 'timonteutelink.github.io',
+  organizationName: 'timonteutelink',
+  trailingSlash: false,
 
   presets: [
     ['@docusaurus/preset-classic', { docs: false, blog: false, pages: {}, theme: { customCss: require.resolve('./src/css/custom.css') } }]

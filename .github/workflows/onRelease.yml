@@ -9,13 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: latest
-      - run: pnpm install
-      - run: pnpm run build
-      - run: pnpm run prepack
-      - uses: JS-DevTools/npm-publish@19c28f1ef146469e409470805ea4279d47c3d35c
+          bun-version: 1.2.12
+      - run: bun install
+      - run: bun run build
+      - run: bun run prepack
+      - uses: JS-DevTools/npm-publish
         with:
           token: ${{ secrets.NPM_TOKEN }}
-      - run: pnpm run postpack
+      - run: bun run postpack
