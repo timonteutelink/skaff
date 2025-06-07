@@ -3,7 +3,7 @@ module.exports = {
   title: 'Code Templator',
   tagline: 'Generate, scaffold & ship code faster',
   url: 'https://timonteutelink.github.io',
-  baseUrl: '/',
+  baseUrl: '/code-templator/',
   favicon: 'img/logo.svg',
   organizationName: 'timonteutelink',
   projectName: 'timonteutelink.github.io',
