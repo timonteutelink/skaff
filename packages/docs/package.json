@@ -6,7 +6,7 @@
 		"dev": "docusaurus start --port 3100",
 		"clean": "rm -rf build .docusaurus src/docs/lib src/docs/cli dist temp",
 		"gen:api": "cd ../code-templator-lib && bun run build && cd ../docs && api-extractor run --local --verbose",
-		"gen:cli": "cd ../../apps/cli && bun run pack:here && oclif readme --multi --output-dir=../../packages/docs/src/docs/cli && cd ../../packages/docs",
+		"gen:cli": "cd ../../apps/cli && bun run build:dist && oclif readme --multi --output-dir=../../packages/docs/src/docs/cli && cd ../../packages/docs",
 		"docs": "bun run gen:api && bun run gen:cli && cp src/extra-pages/cli-index.md src/docs/cli/index.md && docusaurus build",
 		"devdocs": "bun run gen:api && bun run gen:cli && cp src/extra-pages/cli-index.md src/docs/cli/index.md && docusaurus start --port 3100",
 		"serve": "docusaurus serve"
