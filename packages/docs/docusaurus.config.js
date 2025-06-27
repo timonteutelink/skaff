@@ -30,6 +30,8 @@ module.exports = {
         },
 
         basePath: 'template-types-lib',
+
+        options: "./template-types-lib-typedoc.json"
       }
     ],
 
@@ -59,6 +61,8 @@ module.exports = {
         },
 
         basePath: 'code-templator-lib',
+
+        options: "./code-templator-lib-typedoc.json"
       }
     ],
 

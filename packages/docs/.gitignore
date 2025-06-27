@@ -4,7 +4,8 @@ build/
 temp/
 node_modules/
 src/docs/cli
-src/docs/lib
+src/docs/code-templator-lib
+src/docs/template-types-lib
 dist/
 
 tsdoc-metadata.json

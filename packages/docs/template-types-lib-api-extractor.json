@@ -4,7 +4,8 @@
 	"projectFolder": ".",
 	"apiReport": {
 		"enabled": false,
-		"reportFileName": "template-types-lib.api.md"
+		"reportFileName": "template-types-lib.api.md",
+		"reportFolder": "src/docs/template-types-lib"
 	},
 	"docModel": {
 		"enabled": true,

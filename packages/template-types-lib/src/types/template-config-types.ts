@@ -271,7 +271,7 @@ export interface TemplateConfigModule<
    * Ai auto generation settings.
    * This is invoked to add ai generated vars to the template.
    * Provides the expected keys the ai will produce.
-   * In the template ai_results will be a Record<string, string> where the expected keys are the ones provided here.
+   * In the template ai_results will be a Record string string where the expected keys are the ones provided here.
    * These have to be provided to generate the template so this function needs to return these keys.
    */
   aiAutoGenerate?: AiAutoGenerateSettings<TFinalSettings>;

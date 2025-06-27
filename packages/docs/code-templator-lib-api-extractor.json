@@ -4,7 +4,8 @@
 	"projectFolder": ".",
 	"apiReport": {
 		"enabled": false,
-		"reportFileName": "code-templator-lib.api.md"
+		"reportFileName": "code-templator-lib.api.md",
+		"reportFolder": "src/docs/code-templator-lib"
 	},
 	"docModel": {
 		"enabled": true,

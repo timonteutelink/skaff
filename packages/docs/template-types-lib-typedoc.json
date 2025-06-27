@@ -1,0 +1,10 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "../template-types-lib/src/index.ts"
+  ],
+  "tsconfig": "../template-types-lib/tsconfig.json",
+  "skipErrorChecking": true,
+  "excludePrivate": true,
+  "readme": "none"
+}
