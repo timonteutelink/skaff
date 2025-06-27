@@ -1,6 +1,7 @@
 import {
+  FinalTemplateSettings,
+  ProjectSettings,
   TemplateConfigModule,
-  TemplateSettingsType,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import * as fs from "node:fs/promises";
@@ -18,7 +19,6 @@ import { TemplateGeneratorService } from "../services/template-generator-service
 import {
   ProjectCreationOptions,
   ProjectCreationResult,
-  ProjectSettings,
   Result,
   TemplateDTO,
 } from "../lib/types";
@@ -30,7 +30,8 @@ import { parseProjectCreationResult } from "../services/project-service";
 export class Template {
   // The loaded configuration module.
   public config: TemplateConfigModule<
-    TemplateSettingsType<z.AnyZodObject>,
+    FinalTemplateSettings,
+    UserTemplateSettings,
     z.AnyZodObject
   >;
   // Subtemplates, keyed by the immediate subdirectory name (each key holds an array of children).
@@ -67,7 +68,8 @@ export class Template {
 
   private constructor(
     config: TemplateConfigModule<
-      TemplateSettingsType<z.AnyZodObject>,
+      FinalTemplateSettings,
+      UserTemplateSettings,
       z.AnyZodObject
     >,
     baseDir: string,

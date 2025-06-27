@@ -14,20 +14,7 @@ import {
   saveToCache,
 } from "../services/cache-service";
 import { initEsbuild } from "../utils/get-esbuild";
-import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { existsSync } from "node:fs";
-
-type TemplateConfigModule<
-  TFullSettingsType extends TemplateSettingsType<
-    TSettingsType,
-    UserTemplateSettings
-  >,
-  TSettingsType extends zodNS.AnyZodObject,
-> = templateTypesLibNS.TemplateConfigModule<TFullSettingsType, TSettingsType>;
-type TemplateSettingsType<
-  TSettingsSchema extends zodNS.AnyZodObject,
-  TParentSettings extends UserTemplateSettings = {},
-> = templateTypesLibNS.TemplateSettingsType<TSettingsSchema, TParentSettings>;
 
 const { templateConfigSchema } = templateTypesLibNS;
 
@@ -46,8 +33,9 @@ interface TemplateConfigFileInfo {
 }
 
 export type TemplateConfigWithFileInfo = {
-  templateConfig: TemplateConfigModule<
-    TemplateSettingsType<zodNS.AnyZodObject>,
+  templateConfig: templateTypesLibNS.TemplateConfigModule<
+    templateTypesLibNS.FinalTemplateSettings,
+    templateTypesLibNS.FinalTemplateSettings,
     zodNS.AnyZodObject
   >;
 } & TemplateConfigFileInfo;
@@ -138,6 +126,7 @@ async function typeCheckFile(filePath: string): Promise<void> {
   }
 }
 
+// TODO NEW add extra templateloader step that checks all "templates" and checks if all values used in templates are provided in FinalTemplateSettings
 async function findTemplateConfigFilesInSubdirs(
   dir: string,
 ): Promise<TemplateConfigFileInfo[]> {

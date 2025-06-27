@@ -2,15 +2,13 @@ import * as fs from "node:fs/promises";
 import path from "node:path";
 import { Template } from "../models/template";
 import {
-  InstantiatedTemplate,
-  ProjectSettings,
-  ProjectSettingsSchema,
   Result,
 } from "../lib/types";
 import { makeDir } from "./file-service";
 import { deepSortObject } from "../utils/shared-utils";
 import { logError } from "../lib/utils";
 import { getRootTemplateRepository } from "../repositories";
+import { InstantiatedTemplate, ProjectSettings, projectSettingsSchema } from "@timonteutelink/template-types-lib";
 
 export async function writeNewProjectSettings(
   absoluteProjectPath: string,
@@ -128,7 +126,7 @@ export async function loadProjectSettings(
     };
   }
 
-  const finalProjectSettings = ProjectSettingsSchema.safeParse(
+  const finalProjectSettings = projectSettingsSchema.safeParse(
     parsedProjectSettings,
   );
   if (!finalProjectSettings.success) {

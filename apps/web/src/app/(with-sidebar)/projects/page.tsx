@@ -81,7 +81,7 @@ export default function TemplatesListPage() {
   const [open, setOpen] = useState(false);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema as any),
     defaultValues: {
       projectName: "",
       template: "",

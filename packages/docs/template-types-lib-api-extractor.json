@@ -1,0 +1,29 @@
+{
+	"$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+	"mainEntryPointFilePath": "../template-types-lib/dist/index.d.ts",
+	"projectFolder": ".",
+	"apiReport": {
+		"enabled": false,
+		"reportFileName": "template-types-lib.api.md"
+	},
+	"docModel": {
+		"enabled": true,
+		"apiJsonFilePath": "temp/template-types-lib.api.json"
+	},
+	"dtsRollup": {
+		"enabled": true,
+		"publicTrimmedFilePath": "dist/template-types-lib.d.ts"
+	},
+	"messages": {
+		"compilerMessageReporting": {
+			"default": {
+				"logLevel": "warning"
+			}
+		},
+		"extractorMessageReporting": {
+			"default": {
+				"logLevel": "warning"
+			}
+		}
+	}
+}

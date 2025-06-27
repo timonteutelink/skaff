@@ -1,15 +1,14 @@
 import {
   AnyOrCallback,
-  TemplateSettingsType,
+  FinalTemplateSettings,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import { Result } from "./types";
 import { logger } from "./logger";
-import z from "zod";
 import { Level } from "pino";
 
 export function anyOrCallbackToAny<
-  TSettings extends TemplateSettingsType<z.AnyZodObject>,
+  TSettings extends FinalTemplateSettings,
   T,
 >(
   anyOrCallback: AnyOrCallback<TSettings, T>,
@@ -20,8 +19,8 @@ export function anyOrCallbackToAny<
       data:
         typeof anyOrCallback === "function"
           ? (anyOrCallback as (userSettings: UserTemplateSettings) => T)(
-              parsedUserSettings,
-            )
+            parsedUserSettings,
+          )
           : anyOrCallback,
     };
   } catch (error) {
@@ -34,7 +33,7 @@ export function anyOrCallbackToAny<
 }
 
 export function stringOrCallbackToString<
-  TSettings extends TemplateSettingsType<z.AnyZodObject>,
+  TSettings extends FinalTemplateSettings,
 >(
   strOrCallback: AnyOrCallback<TSettings, string>,
   parsedUserSettings: TSettings,

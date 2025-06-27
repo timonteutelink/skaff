@@ -12,8 +12,8 @@
     "@oclif/core": "^4",
     "@oclif/plugin-help": "^6",
     "@oclif/plugin-plugins": "^5",
-    "@timonteutelink/code-templator-lib": "0.0.55",
-    "@timonteutelink/template-types-lib": "0.0.38",
+    "@timonteutelink/code-templator-lib": "0.0.56",
+    "@timonteutelink/template-types-lib": "0.0.43",
     "@types/node": "^22",
     "esbuild": "^0.25.5",
     "pino": "^9.7.0",
@@ -74,6 +74,7 @@
   },
   "repository": "timonteutelink/code-templator",
   "scripts": {
+    "rundev": "",
     "build": "shx rm -rf dist && tsc -b",
     "lint": "eslint",
     "postpack": "shx rm -f oclif.manifest.json",
@@ -86,7 +87,7 @@
     "prepack:tarballs": "npm install --package-lock-only && npm shrinkwrap --production",
     "pack:tarballs": "npm run build:dist && oclif pack tarballs --targets linux-x64,linux-arm64,darwin-x64,darwin-arm64,win-x64",
     "postpack:tarballs": "shx rm -f oclif.manifest.json npm-shrinkwrap.json",
-    "pack:here": "npm run build:dist && oclif pack tarballs"
+    "pack:here": "npm run build:dist && oclif pack tarballs --targets linux-x64"
   },
   "types": "dist/index.d.ts"
 }

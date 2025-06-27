@@ -1,9 +1,10 @@
 import {
   AllowOverwrite,
   AutoInstantiatedSubtemplate,
+  FinalTemplateSettings,
+  ProjectSettings,
   RedirectFile,
   SideEffectFunction,
-  TemplateSettingsType,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import fs from "fs-extra";
@@ -11,9 +12,8 @@ import { glob } from "glob";
 import Handlebars, { HelperDelegate, HelperOptions } from "handlebars";
 import { readFile } from "node:fs/promises";
 import * as path from "node:path";
-import z from "zod";
 import { logger } from "../lib/logger";
-import { ProjectSettings, Result } from "../lib/types";
+import { Result } from "../lib/types";
 import {
   anyOrCallbackToAny,
   logError,
@@ -23,11 +23,11 @@ import { Template } from "../models/template";
 import { isSubset } from "../utils/shared-utils";
 import { makeDir } from "./file-service";
 import { commitAll, createGitRepo } from "./git-service";
-import { getParsedUserSettingsWithParentSettings } from "./project-service";
 import {
   writeNewProjectSettings,
   writeNewTemplateToSettings,
 } from "./project-settings-service";
+import { Project } from "../models";
 
 const eqHelper = (a: any, b: any, options?: HelperOptions) => {
   // block form: options.fn is a function
@@ -84,7 +84,7 @@ export class TemplateGeneratorService {
   // Values set when generating a template. Should always be set again before generating a new template.
   private currentlyGeneratingTemplate?: Template;
   private currentlyGeneratingTemplateParentInstanceId?: string;
-  private currentlyGeneratingTemplateFullSettings?: TemplateSettingsType<z.AnyZodObject>;
+  private currentlyGeneratingTemplateFinalSettings?: FinalTemplateSettings;
 
   constructor(
     options: GeneratorOptions,
@@ -96,33 +96,10 @@ export class TemplateGeneratorService {
     this.destinationProjectSettings = destinationProjectSettings;
   }
 
-  private updateParsedUserSettingsWithAllParentSettings(
-    userSettings: UserTemplateSettings,
-  ): Result<void> {
-    if (!this.currentlyGeneratingTemplate) {
-      logger.error("No template is currently being generated.");
-      return { error: "No template is currently being generated." };
-    }
-    const result = getParsedUserSettingsWithParentSettings(
-      userSettings,
-      this.currentlyGeneratingTemplate,
-      this.destinationProjectSettings,
-      this.currentlyGeneratingTemplateParentInstanceId,
-    );
-
-    if ("error" in result) {
-      return result;
-    }
-
-    this.currentlyGeneratingTemplateFullSettings = result.data;
-
-    return { data: undefined };
-  }
-
   private getTargetPath(): Result<string> {
     if (
       !this.currentlyGeneratingTemplate ||
-      !this.currentlyGeneratingTemplateFullSettings
+      !this.currentlyGeneratingTemplateFinalSettings
     ) {
       logger.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
@@ -133,7 +110,7 @@ export class TemplateGeneratorService {
     }
     const path = stringOrCallbackToString(
       targetPath,
-      this.currentlyGeneratingTemplateFullSettings,
+      this.currentlyGeneratingTemplateFinalSettings,
     );
     if ("error" in path) {
       return path;
@@ -156,11 +133,11 @@ export class TemplateGeneratorService {
   private getRedirects(): Result<RedirectFile[]> {
     if (
       !this.currentlyGeneratingTemplate ||
-      !this.currentlyGeneratingTemplateFullSettings
+      !this.currentlyGeneratingTemplateFinalSettings
     ) {
       return { error: "No template is currently being generated." };
     }
-    const fullSettings = this.currentlyGeneratingTemplateFullSettings;
+    const fullSettings = this.currentlyGeneratingTemplateFinalSettings;
     const redirects = anyOrCallbackToAny(
       this.currentlyGeneratingTemplate.config.redirects,
       fullSettings,
@@ -178,11 +155,11 @@ export class TemplateGeneratorService {
   private getOverwrites(): Result<AllowOverwrite[]> {
     if (
       !this.currentlyGeneratingTemplate ||
-      !this.currentlyGeneratingTemplateFullSettings
+      !this.currentlyGeneratingTemplateFinalSettings
     ) {
       return { error: "No template is currently being generated." };
     }
-    const fullSettings = this.currentlyGeneratingTemplateFullSettings;
+    const fullSettings = this.currentlyGeneratingTemplateFinalSettings;
     const overwrites = anyOrCallbackToAny(
       this.currentlyGeneratingTemplate.config.allowedOverwrites,
       fullSettings,
@@ -202,11 +179,11 @@ export class TemplateGeneratorService {
   > {
     if (
       !this.currentlyGeneratingTemplate ||
-      !this.currentlyGeneratingTemplateFullSettings
+      !this.currentlyGeneratingTemplateFinalSettings
     ) {
       return { error: "No template is currently being generated." };
     }
-    const fullSettings = this.currentlyGeneratingTemplateFullSettings;
+    const fullSettings = this.currentlyGeneratingTemplateFinalSettings;
     const templatesToAutoInstantiate = anyOrCallbackToAny(
       this.currentlyGeneratingTemplate.config.autoInstantiatedSubtemplates,
       fullSettings,
@@ -224,11 +201,11 @@ export class TemplateGeneratorService {
   private getHandlebarHelpers(): Result<Record<string, HelperDelegate>> {
     if (
       !this.currentlyGeneratingTemplate ||
-      !this.currentlyGeneratingTemplateFullSettings
+      !this.currentlyGeneratingTemplateFinalSettings
     ) {
       return { error: "No template is currently being generated." };
     }
-    const fullSettings = this.currentlyGeneratingTemplateFullSettings;
+    const fullSettings = this.currentlyGeneratingTemplateFinalSettings;
     const handlebarHelpers = anyOrCallbackToAny(
       this.currentlyGeneratingTemplate.config.handlebarHelpers,
       fullSettings,
@@ -400,7 +377,7 @@ export class TemplateGeneratorService {
 
         const content = await readFile(srcPath, { encoding: "utf-8" });
         const compiled = Handlebars.compile(content);
-        const result = compiled(this.currentlyGeneratingTemplateFullSettings);
+        const result = compiled(this.currentlyGeneratingTemplateFinalSettings);
 
         await fs.ensureDir(path.dirname(destPath));
         await fs.writeFile(destPath, result, "utf-8");
@@ -433,13 +410,13 @@ export class TemplateGeneratorService {
   private async applySideEffects(): Promise<Result<void>> {
     if (
       !this.currentlyGeneratingTemplate ||
-      !this.currentlyGeneratingTemplateFullSettings
+      !this.currentlyGeneratingTemplateFinalSettings
     ) {
       logger.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
     }
 
-    const fullSettings = this.currentlyGeneratingTemplateFullSettings;
+    const fullSettings = this.currentlyGeneratingTemplateFinalSettings;
     const sideEffects = anyOrCallbackToAny(
       this.currentlyGeneratingTemplate.config.sideEffects,
       fullSettings,
@@ -471,7 +448,7 @@ export class TemplateGeneratorService {
   ): Promise<Result<void>> {
     if (
       !this.currentlyGeneratingTemplate ||
-      !this.currentlyGeneratingTemplateFullSettings
+      !this.currentlyGeneratingTemplateFinalSettings
     ) {
       logger.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
@@ -491,7 +468,7 @@ export class TemplateGeneratorService {
     let sideEffectResult: string | null | undefined;
     try {
       sideEffectResult = await sideEffectFunction(
-        this.currentlyGeneratingTemplateFullSettings,
+        this.currentlyGeneratingTemplateFinalSettings,
         oldFileContents,
       );
     } catch (error) {
@@ -533,13 +510,28 @@ export class TemplateGeneratorService {
         error: `Template repo is not clean or template commit hash is not valid.`,
       };
     }
+
+    const result = Project.getFinalTemplateSettings(
+      template,
+      this.destinationProjectSettings,
+      userSettings,
+      parentInstanceId,
+    );
+
+    if ("error" in result) {
+      return result;
+    }
+
     this.currentlyGeneratingTemplate = template;
     this.currentlyGeneratingTemplateParentInstanceId = parentInstanceId;
-    return this.updateParsedUserSettingsWithAllParentSettings(userSettings);
+    this.currentlyGeneratingTemplateFinalSettings = result.data;
+
+    return { data: undefined };
   }
 
+  // TODO NOW fix instantation tree.
   private async autoInstantiateSubTemplates(
-    fullParentSettings: TemplateSettingsType<z.AnyZodObject>,
+    fullParentSettings: FinalTemplateSettings,
     parentTemplateInstanceId: string,
     templatesToAutoInstantiate?: AutoInstantiatedSubtemplate[],
   ): Promise<Result<void>> {
@@ -552,19 +544,20 @@ export class TemplateGeneratorService {
     }
 
     for (const templateToAutoInstantiate of templatesToAutoInstantiate || []) {
-      const newTemplateSettings = anyOrCallbackToAny(
+      const autoGeneratedTemplateUserSettings = anyOrCallbackToAny(
         templateToAutoInstantiate.mapSettings,
         fullParentSettings,
       );
 
-      if ("error" in newTemplateSettings) {
-        return newTemplateSettings;
+      if ("error" in autoGeneratedTemplateUserSettings) {
+        return autoGeneratedTemplateUserSettings;
       }
 
-      const newFullTemplateSettings = Object.assign(
-        {},
-        fullParentSettings,
-        newTemplateSettings,
+      const newFinalTemplateSettings = Project.getFinalTemplateSettings(
+        this.currentlyGeneratingTemplate,
+        this.destinationProjectSettings,
+        autoGeneratedTemplateUserSettings.data,
+        parentTemplateInstanceId,
       );
 
       const nameOfTemplateToAutoInstantiate =
@@ -598,7 +591,7 @@ export class TemplateGeneratorService {
       }
 
       const addTemplateResult = this.addNewTemplate(
-        newTemplateSettings.data,
+        autoGeneratedTemplateUserSettings.data,
         nameOfTemplateToAutoInstantiate,
         parentTemplateInstanceId,
         true,
@@ -611,7 +604,7 @@ export class TemplateGeneratorService {
       const savedCurrentlyGeneratingTemplate: Template =
         this.currentlyGeneratingTemplate;
       const savedCurrentlyGeneratingTemplateFullSettings =
-        this.currentlyGeneratingTemplateFullSettings;
+        this.currentlyGeneratingTemplateFinalSettings;
       const savedCurrentlyGeneratingTemplateParentInstanceId =
         this.currentlyGeneratingTemplateParentInstanceId;
 
@@ -621,7 +614,7 @@ export class TemplateGeneratorService {
 
       if ("error" in instantiateTemplateResult) {
         this.currentlyGeneratingTemplate = savedCurrentlyGeneratingTemplate;
-        this.currentlyGeneratingTemplateFullSettings =
+        this.currentlyGeneratingTemplateFinalSettings =
           savedCurrentlyGeneratingTemplateFullSettings;
         this.currentlyGeneratingTemplateParentInstanceId =
           savedCurrentlyGeneratingTemplateParentInstanceId;
@@ -633,14 +626,14 @@ export class TemplateGeneratorService {
 
       if (childrenTemplatesToAutoInstantiate) {
         const autoInstantiationResult = await this.autoInstantiateSubTemplates(
-          newFullTemplateSettings,
+          newFinalTemplateSettings,
           addTemplateResult.data,
           childrenTemplatesToAutoInstantiate,
         );
 
         if ("error" in autoInstantiationResult) {
           this.currentlyGeneratingTemplate = savedCurrentlyGeneratingTemplate;
-          this.currentlyGeneratingTemplateFullSettings =
+          this.currentlyGeneratingTemplateFinalSettings =
             savedCurrentlyGeneratingTemplateFullSettings;
           this.currentlyGeneratingTemplateParentInstanceId =
             savedCurrentlyGeneratingTemplateParentInstanceId;
@@ -652,7 +645,7 @@ export class TemplateGeneratorService {
 
       if ("error" in templatesToAutoInstantiate) {
         this.currentlyGeneratingTemplate = savedCurrentlyGeneratingTemplate;
-        this.currentlyGeneratingTemplateFullSettings =
+        this.currentlyGeneratingTemplateFinalSettings =
           savedCurrentlyGeneratingTemplateFullSettings;
         this.currentlyGeneratingTemplateParentInstanceId =
           savedCurrentlyGeneratingTemplateParentInstanceId;
@@ -660,14 +653,14 @@ export class TemplateGeneratorService {
       }
 
       const autoInstantiationResult = await this.autoInstantiateSubTemplates(
-        newFullTemplateSettings,
+        newFinalTemplateSettings,
         parentTemplateInstanceId,
         templatesToAutoInstantiate.data,
       );
 
       if ("error" in autoInstantiationResult) {
         this.currentlyGeneratingTemplate = savedCurrentlyGeneratingTemplate;
-        this.currentlyGeneratingTemplateFullSettings =
+        this.currentlyGeneratingTemplateFinalSettings =
           savedCurrentlyGeneratingTemplateFullSettings;
         this.currentlyGeneratingTemplateParentInstanceId =
           savedCurrentlyGeneratingTemplateParentInstanceId;
@@ -675,7 +668,7 @@ export class TemplateGeneratorService {
       }
 
       this.currentlyGeneratingTemplate = savedCurrentlyGeneratingTemplate;
-      this.currentlyGeneratingTemplateFullSettings =
+      this.currentlyGeneratingTemplateFinalSettings =
         savedCurrentlyGeneratingTemplateFullSettings;
       this.currentlyGeneratingTemplateParentInstanceId =
         savedCurrentlyGeneratingTemplateParentInstanceId;
@@ -842,14 +835,14 @@ export class TemplateGeneratorService {
     // TODO: disable every other action in project page when the commithash is not equal.
     // NO actually just make sure always before generating to git checkout the right template. I guess before every generation/copydirectory we need to git checkout the right commit hash, load the template again from this the newly checked out template. Run the generation and git checkout the old branch again. This needs to happen for every generation but also when displaying the template.
     // NO maybe we will NEED to make another copy of the templates dir and checkout there so we can just retrieve templates and get all versions not only the newest. So when retrieving projects if there is a oldtemplatehash used anywhere we call a function to copy the template dir to cache. There we checkout this commit hash and we load it from there. This way we can also display the other revisions of template in frontend on templates list since they will have been added. Then we can make it so the apps requires restart if you change and recommit the templates dir because before that all templates will be loaded in memory with a commit hash and will never be loaded again. So add checks everywhere if commit hash still the same and if git dir is clean before actually generating the template. So now to uniquely identify template should use everywhere name and commit hash and when searching template you have the newest one and then all revisions used for projects. Probaly store the copied revisions in the cachedir inside a dir with the commithash as name. This way we in generation we can reference files from any revision directly to use old and new templates and also to update from old to new template. When app starts and projects are loaded will check if revisions in cache else copy dir there and checkout right revision. Add error TEMPLATE DIR CHANGED and a button to manually reload all templates and then revisions and will delete all cached revisions. This way no restart of app is needed. So the registry will fill up with revisions while app is running and when user press reload will clean and load again.
-    if (!this.currentlyGeneratingTemplateFullSettings) {
+    if (!this.currentlyGeneratingTemplateFinalSettings) {
       logger.error("Failed to parse user settings.");
       return { error: "Failed to parse user settings." };
     }
 
     const templatesThatDisableThisTemplate = anyOrCallbackToAny(
       template.config.templatesThatDisableThis,
-      this.currentlyGeneratingTemplateFullSettings,
+      this.currentlyGeneratingTemplateFinalSettings,
     );
 
     if ("error" in templatesThatDisableThisTemplate) {
@@ -884,7 +877,7 @@ export class TemplateGeneratorService {
 
     const assertions = anyOrCallbackToAny(
       template.config.assertions,
-      this.currentlyGeneratingTemplateFullSettings,
+      this.currentlyGeneratingTemplateFinalSettings,
     );
 
     if ("error" in assertions) {
@@ -924,7 +917,7 @@ export class TemplateGeneratorService {
       }
 
       const result = await this.autoInstantiateSubTemplates(
-        this.currentlyGeneratingTemplateFullSettings,
+        this.currentlyGeneratingTemplateFinalSettings,
         instantiatedTemplate.id,
         templatesToAutoInstantiate.data,
       );
@@ -997,7 +990,7 @@ export class TemplateGeneratorService {
       return result;
     }
 
-    if (!this.currentlyGeneratingTemplateFullSettings) {
+    if (!this.currentlyGeneratingTemplateFinalSettings) {
       logger.error("Failed to parse user settings.");
       return { error: "Failed to parse user settings." };
     }
@@ -1058,7 +1051,7 @@ export class TemplateGeneratorService {
         return templatesToAutoInstantiate;
       }
       const result = await this.autoInstantiateSubTemplates(
-        this.currentlyGeneratingTemplateFullSettings,
+        this.currentlyGeneratingTemplateFinalSettings,
         instantiatedTemplate.id,
         templatesToAutoInstantiate.data,
       );

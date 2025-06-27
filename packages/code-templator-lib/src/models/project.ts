@@ -1,15 +1,17 @@
 import {
-  TemplateSettingsType,
+  FinalTemplateSettings,
+  ProjectSettings,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import path from "node:path";
 import z from "zod";
-import { GitStatus, ProjectDTO, ProjectSettings, Result } from "../lib/types";
+import { GitStatus, ProjectDTO, Result } from "../lib/types";
 import { logError, stringOrCallbackToString } from "../lib/utils";
 import { isGitRepo, loadGitStatus } from "../services/git-service";
 import { loadProjectSettings } from "../services/project-settings-service";
 import { executeCommand } from "../services/shell-service";
 import { Template } from "./template";
+import { logger } from "../lib";
 
 // every project name inside a root project should be unique.
 // The root project can be uniquely identified by its name and author.(and version)
@@ -40,21 +42,75 @@ export class Project {
   }
 
   /**
-   * Aggregates all settings of the provided template and all parent templates inside of this project. If the template or any of the parents are not initialized in this project return an empty object
-   * can be called recursively with parent templates to assemble a final object of all templates up to the root template.
+   * Retrieves the final template settings for a given template and user provided settings.
+   * If the template has a parent, it will also retrieve the parent's final settings.
+   *
+   * @param template - The template to get the final settings for.
+   * @param projectSettings - The project settings containing instantiated templates.
+   * @param userProvidedSettings - The user provided settings for the template.
+   * @param parentInstanceId - Optional ID of the parent instance if applicable.
+   * @returns Result containing FinalTemplateSettings or an error message.
    */
-  public static getInstantiatedSettings(
+  public static getFinalTemplateSettings(
+    template: Template,
+    projectSettings: ProjectSettings,
+    userProvidedSettings: UserTemplateSettings,
+    parentInstanceId?: string,
+  ): Result<FinalTemplateSettings> {
+    const parsedUserSettings = template.config.templateSettingsSchema.safeParse(
+      userProvidedSettings,
+    );
+
+    if (!parsedUserSettings?.success) {
+      logger.error(`Failed to parse user settings: ${parsedUserSettings?.error}`);
+      return {
+        error: `Failed to parse user settings: ${parsedUserSettings?.error}`,
+      };
+    }
+
+    let parentFinalSettings: FinalTemplateSettings | undefined;
+
+    if (
+      template?.parentTemplate &&
+      parentInstanceId
+    ) {
+      const newInstantiatedSettings = Project.getFinalTemplateSettingsForInstantiatedTemplate(
+        template.parentTemplate,
+        parentInstanceId,
+        projectSettings,
+      );
+
+      if ("error" in newInstantiatedSettings) {
+        return newInstantiatedSettings;
+      }
+
+      parentFinalSettings = newInstantiatedSettings.data;
+    }
+
+    const finalSettings = template.config.mapFinalSettings({
+      fullProjectSettings: projectSettings,
+      templateSettings: parsedUserSettings.data,
+      parentSettings: parentFinalSettings,
+      aiResults: {},
+    });
+
+    return { data: finalSettings };
+  }
+
+  /**
+   * Retrieves the final template settings for an instantiated template.
+   */
+  public static getFinalTemplateSettingsForInstantiatedTemplate(
     template: Template,
     instanceId: string,
     instantiatedProjectSettings: ProjectSettings,
-  ): Result<UserTemplateSettings> {
-    let instantiatedSettings: UserTemplateSettings = {};
-    const projectTemplateSettings =
-      instantiatedProjectSettings.instantiatedTemplates.find(
-        (t) =>
-          t.id === instanceId &&
-          t.templateName === template.config.templateConfig.name,
-      );
+  ): Result<FinalTemplateSettings> {
+    const instantiatedSettings: UserTemplateSettings = {};
+    const projectTemplateSettings = instantiatedProjectSettings.instantiatedTemplates.find(
+      (t) =>
+        t.id === instanceId &&
+        t.templateName === template.config.templateConfig.name,
+    );
     if (!projectTemplateSettings) {
       logError({
         shortMessage: `Template ${template.config.templateConfig.name} with id ${instanceId} not found in project settings`,
@@ -62,32 +118,42 @@ export class Project {
       return { data: instantiatedSettings };
     }
 
-    const parsedSchema = template.config.templateSettingsSchema.safeParse(
+    const parsedUserProvidedSettingsSchema = template.config.templateSettingsSchema.safeParse(
       projectTemplateSettings.templateSettings,
     );
 
-    if (!parsedSchema.success) {
+    if (!parsedUserProvidedSettingsSchema.success) {
       logError({
-        shortMessage: `Invalid template settings for template ${template.config.templateConfig.name}: ${parsedSchema.error}`,
+        shortMessage: `Invalid template settings for template ${template.config.templateConfig.name}: ${parsedUserProvidedSettingsSchema.error}`,
       });
-      return { error: `${parsedSchema.error}` };
+      return { error: `${parsedUserProvidedSettingsSchema.error}` };
     }
 
-    instantiatedSettings = parsedSchema.data;
-
     const parentTemplate = template.parentTemplate;
+
+    let parentSettings: FinalTemplateSettings | undefined;
+
     if (parentTemplate && projectTemplateSettings.parentId) {
-      const parentSettings = Project.getInstantiatedSettings(
+      const finalParentSettings = Project.getFinalTemplateSettingsForInstantiatedTemplate(
         parentTemplate,
         projectTemplateSettings.parentId,
         instantiatedProjectSettings,
       );
-      if ("error" in parentSettings) {
-        return { error: parentSettings.error };
+      if ("error" in finalParentSettings) {
+        return { error: finalParentSettings.error };
       }
-      Object.assign(instantiatedSettings, parentSettings.data);
+
+      parentSettings = finalParentSettings.data;
     }
-    return { data: instantiatedSettings };
+
+    const finalSettings = template.config.mapFinalSettings({
+      fullProjectSettings: instantiatedProjectSettings,
+      templateSettings: parsedUserProvidedSettingsSchema.data,
+      parentSettings: parentSettings,
+      aiResults: {},
+    });
+
+    return { data: finalSettings };
   }
 
   static async create(absDir: string): Promise<Result<Project>> {
@@ -166,7 +232,7 @@ export class Project {
       };
     }
 
-    const fullSettings = Project.getInstantiatedSettings(
+    const fullSettings = Project.getFinalTemplateSettingsForInstantiatedTemplate(
       template,
       templateInstanceId,
       this.instantiatedProjectSettings,
@@ -176,14 +242,9 @@ export class Project {
       return fullSettings;
     }
 
-    const fullProjectSettings: TemplateSettingsType<z.AnyZodObject> = {
-      project_name: this.instantiatedProjectSettings.projectName,
-      fullSettings: fullSettings.data,
-    };
-
     const commandToExecute = stringOrCallbackToString(
       templateCommand.command,
-      fullProjectSettings,
+      fullSettings.data,
     );
 
     if ("error" in commandToExecute) {

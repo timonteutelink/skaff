@@ -1,13 +1,12 @@
 import path from "node:path";
 import {
   ProjectCreationResult,
-  ProjectSettings,
-  ProjectSettingsSchema,
   Result,
   ProjectCreationOptions
 } from "../../lib";
 import { logError } from "../../lib/utils";
 import { generateProjectFromTemplateSettings } from "../../services/project-service";
+import { ProjectSettings, projectSettingsSchema } from "@timonteutelink/template-types-lib";
 
 export async function generateNewProjectFromSettings(
   projectSettingsJson: string,
@@ -18,7 +17,7 @@ export async function generateNewProjectFromSettings(
   let parsedProjectSettings: ProjectSettings | undefined;
 
   try {
-    parsedProjectSettings = ProjectSettingsSchema.parse(
+    parsedProjectSettings = projectSettingsSchema.parse(
       JSON.parse(projectSettingsJson),
     );
   } catch (error) {

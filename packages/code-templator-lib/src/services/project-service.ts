@@ -1,13 +1,11 @@
 import {
-  TemplateSettingsType,
+  ProjectSettings,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import path from "node:path";
-import { AnyZodObject, z } from "zod";
 import { logger } from "../lib/logger";
-import { ProjectCreationResult, ProjectSettings, Result, ProjectCreationOptions } from "../lib/types";
+import { ProjectCreationResult, Result, ProjectCreationOptions } from "../lib/types";
 import { Project } from "../models/project";
-import { Template } from "../models/template";
 import {
   getProjectRepository,
   getRootTemplateRepository,
@@ -59,50 +57,6 @@ export async function parseProjectCreationResult(
   return { data: { newProjectPath: projectPath, newProject: projectDto.data, diff: processedDiff } };
 
 }
-
-export function getParsedUserSettingsWithParentSettings(
-  userSettings: UserTemplateSettings,
-  currentlyGeneratingTemplate: Template,
-  destinationProjectSettings: ProjectSettings,
-  currentlyGeneratingTemplateParentInstanceId?: string,
-): Result<TemplateSettingsType<AnyZodObject>> {
-  const parsedUserSettings =
-    currentlyGeneratingTemplate.config.templateSettingsSchema.safeParse(
-      userSettings,
-    );
-  if (!parsedUserSettings?.success) {
-    logger.error(`Failed to parse user settings: ${parsedUserSettings?.error}`);
-    return {
-      error: `Failed to parse user settings: ${parsedUserSettings?.error}`,
-    };
-  }
-  let newUserSettings: TemplateSettingsType<z.AnyZodObject> = {
-    ...parsedUserSettings.data,
-    project_name: destinationProjectSettings.projectName,
-  } as TemplateSettingsType<z.AnyZodObject>;
-
-  if (
-    currentlyGeneratingTemplate?.parentTemplate &&
-    currentlyGeneratingTemplateParentInstanceId
-  ) {
-    const newInstantiatedSettings = Project.getInstantiatedSettings(
-      currentlyGeneratingTemplate.parentTemplate,
-      currentlyGeneratingTemplateParentInstanceId,
-      destinationProjectSettings,
-    );
-
-    if ("error" in newInstantiatedSettings) {
-      return newInstantiatedSettings;
-    }
-
-    newUserSettings = {
-      ...newUserSettings,
-      ...newInstantiatedSettings.data,
-    };
-  }
-  return { data: newUserSettings };
-}
-
 
 export async function instantiateProject(
   rootTemplateName: string,

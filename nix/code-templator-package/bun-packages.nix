@@ -2913,11 +2913,23 @@
     url = "https://registry.npmjs.org/uuid/-/uuid-9.0.1.tgz";
     hash = "sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==";
   };
+  "@langchain/langgraph/zod" = {
+    out_path = "@langchain/langgraph/node_modules/zod";
+    name = "zod@3.25.56";
+    url = "https://registry.npmjs.org/zod/-/zod-3.25.56.tgz";
+    hash = "sha512-rd6eEF3BTNvQnR2e2wwolfTmUTnp70aUTqr0oaGbHifzC3BKJsoV+Gat8vxUMR1hwOKBs6El+qWehrHbCpW6SQ==";
+  };
   "@langchain/openai" = {
     out_path = "@langchain/openai";
     name = "@langchain/openai@0.5.12";
     url = "https://registry.npmjs.org/@langchain/openai/-/openai-0.5.12.tgz";
     hash = "sha512-k7rxBY3ed/HIiMLd6HBqFibsfB0+L6c82H8JgXDqKeyUoACJIi1JaKHXmofmCeF2SBXBU9dog4gEGpHfcUDGUA==";
+  };
+  "@langchain/openai/zod" = {
+    out_path = "@langchain/openai/node_modules/zod";
+    name = "zod@3.25.56";
+    url = "https://registry.npmjs.org/zod/-/zod-3.25.56.tgz";
+    hash = "sha512-rd6eEF3BTNvQnR2e2wwolfTmUTnp70aUTqr0oaGbHifzC3BKJsoV+Gat8vxUMR1hwOKBs6El+qWehrHbCpW6SQ==";
   };
   "@langchain/textsplitters" = {
     out_path = "@langchain/textsplitters";
@@ -4425,9 +4437,9 @@
   };
   "@timonteutelink/template-types-lib" = {
     out_path = "@timonteutelink/template-types-lib";
-    name = "@timonteutelink/template-types-lib@0.0.38";
-    url = "https://registry.npmjs.org/@timonteutelink/template-types-lib/-/template-types-lib-0.0.38.tgz";
-    hash = "sha512-TCPu848evTUmwU+9iJ/qDKST8Dmom+UlTAf54J59YXG+5wxvObxg6qD8zOEKzvUdU1OJ+8N6HqB3KuBCt4DFXA==";
+    name = "@timonteutelink/template-types-lib@0.0.43";
+    url = "https://registry.npmjs.org/@timonteutelink/template-types-lib/-/template-types-lib-0.0.43.tgz";
+    hash = "sha512-/uTqkGbXGwAEQK0srygDn6A+5LQHxdg7pew+Zbfdzhx63TQ8OxcMcsBuZ7x8wcTXoMLk17gtU1o5wXumJr0RPQ==";
   };
   "@tootallnate/quickjs-emscripten" = {
     out_path = "@tootallnate/quickjs-emscripten";
@@ -16995,9 +17007,9 @@
   };
   "zod" = {
     out_path = "zod";
-    name = "zod@3.25.56";
-    url = "https://registry.npmjs.org/zod/-/zod-3.25.56.tgz";
-    hash = "sha512-rd6eEF3BTNvQnR2e2wwolfTmUTnp70aUTqr0oaGbHifzC3BKJsoV+Gat8vxUMR1hwOKBs6El+qWehrHbCpW6SQ==";
+    name = "zod@3.25.67";
+    url = "https://registry.npmjs.org/zod/-/zod-3.25.67.tgz";
+    hash = "sha512-idA2YXwpCdqUSKRCACDE6ItZD9TZzy3OZMtpfLoh6oPR47lipysRrJfjzMqFxQ3uJuUPyUeWe1r9vLH33xO/Qw==";
   };
   "zod-to-json-schema" = {
     out_path = "zod-to-json-schema";

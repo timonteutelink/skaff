@@ -1,20 +1,12 @@
-import z from "zod";
-
 export type UserTemplateSettings = Record<string, any>;
+export type FinalTemplateSettings = Record<string, any>;
 
-export type TemplateSettingsType<
-  TSettingsSchema extends z.AnyZodObject,
-  TParentSettings extends UserTemplateSettings = {},
-> = {
-  project_name: string;
-  ai_results?: Record<string, string>;
-} & z.output<TSettingsSchema> &
-  TParentSettings; //return type is still a UserTemplateSettings but is the Full template settings
+export type AiResultsObject = Record<string, string>;
 
 export type AnyOrCallback<
-  TSettings extends TemplateSettingsType<z.AnyZodObject>,
+  TFinalSettings extends FinalTemplateSettings,
   T,
-> = T | ((settings: TSettings) => T);
+> = T | ((settings: TFinalSettings) => T);
 export type StringOrCallback<
-  TSettings extends TemplateSettingsType<z.AnyZodObject>,
-> = AnyOrCallback<TSettings, string>;
+  TFinalSettings extends FinalTemplateSettings
+> = AnyOrCallback<TFinalSettings, string>;

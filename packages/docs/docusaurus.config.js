@@ -18,29 +18,57 @@ module.exports = {
     [
       'docusaurus-plugin-typedoc',
       {
-        id: 'lib',
+        id: 'template-types-lib',
 
-        entryPoints: ['../code-templator-lib/src/index.ts'],
-        tsconfig: '../code-templator-lib/tsconfig.json',
+        entryPoints: ['../template-types-lib/src/index.ts'],
+        tsconfig: '../template-types-lib/tsconfig.json',
 
-        out: 'src/docs/lib',
+        out: 'src/docs/template-types-lib',
 
         sidebar: {
           autoConfiguration: true
         },
 
-        basePath: 'lib',
+        basePath: 'template-types-lib',
       }
     ],
 
     [
       '@docusaurus/plugin-content-docs',
       {
-        id: 'lib',
-        path: 'src/docs/lib',
-        routeBasePath: 'lib',
+        id: 'template-types-lib',
+        path: 'src/docs/template-types-lib',
+        routeBasePath: 'template-types-lib',
 
-        // sidebarPath: require.resolve('./src/sidebars/lib-sidebar.js'),
+        includeCurrentVersion: true,
+      },
+    ],
+
+    [
+      'docusaurus-plugin-typedoc',
+      {
+        id: 'code-templator-lib',
+
+        entryPoints: ['../code-templator-lib/src/index.ts'],
+        tsconfig: '../code-templator-lib/tsconfig.json',
+
+        out: 'src/docs/code-templator-lib',
+
+        sidebar: {
+          autoConfiguration: true
+        },
+
+        basePath: 'code-templator-lib',
+      }
+    ],
+
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'code-templator-lib',
+        path: 'src/docs/code-templator-lib',
+        routeBasePath: 'code-templator-lib',
+
         includeCurrentVersion: true,
       },
     ],
@@ -71,7 +99,8 @@ module.exports = {
       logo: { src: 'img/logo.svg', alt: 'logo' },
       items: [
         { to: '/docs', label: 'Docs', position: 'left' },
-        { to: '/lib', label: 'Lib Reference', position: 'left' },
+        { to: '/code-templator-lib', label: 'Lib Reference', position: 'left' },
+        { to: '/template-types-lib', label: 'Template Types Lib Reference', position: 'left' },
         { to: '/cli', label: 'CLI Documentation', position: 'left' },
         { href: 'https://github.com/timonteutelink/code-templator', label: 'GitHub', position: 'right' }
       ]

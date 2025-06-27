@@ -59,7 +59,7 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
   }, [selectedTemplateSettingsSchema, formDefaultValues]);
 
   const form = useForm<Record<string, any>>({
-    resolver: zodResolver(zodSchema),
+    resolver: zodResolver(zodSchema as any),
     defaultValues: formDefaults,
     values: formDefaults,
     mode: "onChange",
