@@ -1,0 +1,108 @@
+---
+title: Examples & Use Cases
+---
+
+Still wondering what you can do with Code Templator, or looking for inspiration for your own templates? This section highlights several real-world example templates and scenarios to spark ideas. These examples range from common web apps to infrastructure and beyond. Each example demonstrates how templates and subtemplates can be used to address different project needs.
+
+## 🕸️ Next.js Web Application Template
+
+**Scenario:** Your team frequently creates new frontend applications using Next.js. You want every app to have a consistent setup: TypeScript, linting, testing, CI/CD, etc., with optional features like a UI library or auth.
+
+**Template:** **nextjs-app** (root template)
+**Description:** Scaffolds a Next.js application with a standard file structure and configuration.
+**Features:**
+
+* *Base template outputs:* a Next.js project with pages, API routes folder, `tsconfig.json`, ESLint config, Prettier config, a GitHub Actions workflow for CI, and a README. It’s a complete working app out-of-the-box.
+* *Inputs:* projectName, default author, perhaps a choice of package manager (npm/pnpm/yarn), and toggle options for extras.
+* *Subtemplates:*
+
+  * **tailwind** – If enabled, adds Tailwind CSS setup (Tailwind config file, imports in `_app.js`, example styles).
+  * **auth** – If enabled, integrates an authentication module (could add pages/api/auth, install NextAuth or similar, and environment variables).
+  * **testing** – Optionally include a testing setup (Jest or React Testing Library with example tests).
+  * **docker** – Optionally add a Dockerfile and Docker compose for containerizing the app.
+* *Usage:* When generating, the user checks which features they need. The template auto-includes those subtemplates. Later, if they want to add a feature, they can run the CLI to add it (for instance, maybe they initially didn’t include auth, but later need to – they can apply the auth subtemplate after the fact).
+
+**Benefit:** This template ensures every Next.js project at the company has the same foundation. New devs spend zero time on setup and more time building features. If down the road the team changes how they do auth or testing, they update the template and reapply – all projects get the improvements.
+
+## ⚙️ Rust CLI Tool Template
+
+**Scenario:** You maintain many small command-line tools in Rust. Bootstrapping each with Clap, structopt, or similar is tedious. Also, you want them all to have a similar project layout and CI.
+
+**Template:** **rust-cli** (root template)
+**Description:** Sets up a Rust project geared for CLI applications.
+**Features:**
+
+* *Base output:* A new binary crate with a `main.rs` that uses [Clap](https://clap.rs) for argument parsing (or another library of choice), a Cargo.toml with common dependencies (like anyhow for error handling, maybe serde if needed), and a sample command implementation. Also includes a `.github/workflows` action for Rust CI (build and test), and configuration for release (maybe using `cargo release`).
+* *Inputs:* crate name, binary name (if different), brief description, GitHub repo URL (to put in Cargo.toml), and an option for license.
+* *Subtemplates:*
+
+  * **subcommand** (multi-instance) – This could be a subtemplate to add a new CLI subcommand module. Input might be subcommand name and description. It would create a new Rust module file, add it to the `clap` definitions, and perhaps an entry in README. Because it’s multi-instance, the user can invoke it multiple times to scaffold various subcommands as the CLI grows. It might use a side effect to register the command in the main CLI parser.
+  * **docker-release** – Adds a Dockerfile and GitHub Action to build and publish a Docker image of the CLI on release. Optional if not all tools need containerization.
+  * **lib-module** – If the CLI project is also providing a library API, this subtemplate could add a `lib.rs` with some boilerplate.
+
+**Benefit:** Consistency across CLI projects (same argument parsing approach, error handling, etc.). If Clap releases a new major version, update the template and quickly apply updates. Developers adding new subcommands use the template to get the module structure right without copy-pasting from another command.
+
+## 🗃️ Monorepo (Turborepo) Template
+
+**Scenario:** You want to maintain a monorepo that can hold multiple packages/apps (perhaps using Turborepo or Nx). Setting up the initial repo with proper config is complex, and adding new packages should be streamlined.
+
+**Template:** **turborepo** (root template)
+**Description:** Initializes a monorepo with a package-based architecture.
+**Features:**
+
+* *Base output:* A repository with a `package.json` at the root (maybe using npm workspaces or pnpm), a Turborepo config (turbo.json) or Nx config, and some shared tooling (lint config, TS base config). It might create a core package by default (like `packages/core` as an empty library).
+* *Inputs:* repo name, default scope for packages, choice of npm vs pnpm, etc.
+* *Subtemplates:*
+
+  * **nextjs-app** (subtemplate) – Adds a new Next.js app to the monorepo under, say, `apps/`. It could reuse the earlier Next.js template internally. For instance, this subtemplate might really import or reference our standalone `nextjs-app` template to generate an app in the monorepo context. It ensures the app is configured to work inside the monorepo (maybe shares ESLint config, etc.). Multi-instance (you can add multiple apps).
+  * **node-package** – Adds a generic Node.js package (maybe a library) under `packages/`. Could be TypeScript configured, ready to be published or used internally. Multi-instance for multiple packages.
+  * **go-service** – If it’s a polyglot repo, you might even have a subtemplate to add a Go service (with its own folder and go.mod). Code Templator can handle non-JS stuff too!
+  * **CI-workflow** – Perhaps each time you add a new app/package, you want to update the CI pipeline. A side effect or separate subtemplate could add CI matrix entries for the new component. Or the base template’s CI config might be dynamic (possibly using a side effect whenever a new component is added).
+
+**Benefit:** One template to rule them all for your monorepo infrastructure. Adding a new app is as simple as running one command, and you know it will adhere to the repo’s standards. The template can evolve as tools change (for example, if you switch from Turborepo to Nx, the template can be adjusted and monorepos updated accordingly).
+
+## ☸️ Helm Chart & Kubernetes Resources Template
+
+**Scenario:** You maintain Helm charts for deploying apps to Kubernetes, and you want a standard structure for charts. Also, not every deployment is the same – some need an Ingress, some need a DB, etc., so you want optional parts.
+
+**Template:** **helm-chart** (root template)
+**Description:** Creates a scaffold for a Helm chart (YAML manifests for k8s) with optional resources.
+**Features:**
+
+* *Base output:* A directory structure following Helm conventions: Chart.yaml (with name, version), values.yaml (empty or with common fields), templates/\_helpers.tpl, etc. This is essentially `helm create` but customized. It ensures things like labels and naming conventions are consistent.
+* *Inputs:* chart\_name, description, initial version, and perhaps the target platform (if deploying in specific environments requiring tweaks).
+* *Subtemplates:*
+
+  * **deployment** – Adds a `Deployment` and related `Service` manifest to the chart. Inputs might include the container image name, port, and environment variables. As described earlier, this subtemplate would add a file for the Deployment and update values.yaml with fields for replicas, image tag, etc. Multi-instance: you can add multiple deployments (for microservices in one chart, or maybe multiple worker deployments, etc.).
+  * **ingress** – Adds an Ingress resource. Inputs: host name, TLS secret, path, service to route to (perhaps choose from existing deployed services in this chart). It would add an ingress.yaml file and maybe update values.yaml with hostnames. Could be one per chart (or multi-instance if multiple hosts).
+  * **configmap** – Adds a ConfigMap manifest with some key-value pairs (maybe based on user input).
+  * **aws-specific** – If deploying to AWS, maybe a subtemplate to include an IAM annotation ConfigMap or something specific. Similarly for GCP. These could be auto-included based on an input (as shown with the GitHub Actions example for ECR/GCP).
+  * **tests** – Helm charts often have an optional “test” pod spec. A subtemplate could add a test manifest under templates/tests/.
+
+**Benefit:** Instead of writing raw Helm YAML for each new service, developers use the template to generate a chart with everything needed. As the DevOps team refines their Kubernetes approach (say they change how Ingress is configured or add new best practices), they update the template and push out changes. This keeps all Helm charts consistently updated. It’s also great for generating boilerplate for additional resources in an existing chart (e.g., need to add a new microservice deployment to an existing chart – use the deployment subtemplate to add it, ensuring the values and templates are correctly added).
+
+## 🗂️ Other Ideas
+
+* **Language/Framework Starter Kits:** Virtually any tech stack can be templated. Think **Django project template**, **Flask API template**, **Spring Boot service template**, **Laravel package template**, etc. All of these typically involve a set of files and configs which can be codified with options (e.g., include a certain library or not).
+* **Config/Infrastructure Modules:** Templates don’t have to produce a full “app.” You could have a template that generates a Terraform module structure, or a GitHub Actions workflow file with certain configurable steps, or a documentation site setup (like Docusaurus template). Because Code Templator can operate in a partial mode, you might inject these into existing repos as needed.
+* **Multi-language Repos:** Suppose you want to enforce that each repo has certain files – a CODEOWNERS, a CONTRIBUTING.md, maybe a CI workflow for linting, etc. You could create a template just for “repository standards” that adds those files, and then apply it to any repo. This is more of a “stateless partial” use where you drop in standard files.
+* **Educational Templates:** If you maintain an open-source project, you could create a template for “plugin” or “extension”. For instance, a **VSCode Extension template** to help people get started building extensions, or a **Browser extension template**. The possibilities are endless.
+
+## Using the Example Templates Repository
+
+We have compiled several of the above examples in the [Code Templator Example Templates](https://github.com/timonteutelink/code-templator-example-templates) repository. If you have that repo added to your template paths, you can try them out directly:
+
+* Run `code-templator template default` to see templates like `nextjs-app`, `rust-cli`, `helm-chart`, etc.
+* Use `code-templator project new` with one of them to see it in action (check the README in that repo for specific template names and details).
+* Feel free to copy and modify those templates to suit your own needs.
+
+Studying the templates in the example repo can also give you concrete ideas on how to implement features in your own templates (like how we did the Ingress subtemplate or the Turborepo package addition).
+
+## Conclusion
+
+Code Templator is a tool limited only by your imagination and the effort put into templates. The above use cases demonstrate its versatility – from web dev to DevOps to backend services. By abstracting patterns into templates, you reduce the friction for starting new projects or scaling existing ones.
+
+We’re excited to see what the community does with Code Templator. If you build a template that others could use, consider sharing it! And if there’s a scenario you’re not sure how to template, feel free to ask (open an issue or discussion on our GitHub) – we might feature it in our docs down the line.
+
+Happy templating! 🚀
+

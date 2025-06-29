@@ -1,0 +1,242 @@
+---
+title: Template Authoring Guide
+---
+
+One of the greatest strengths of Code Templator is the ability to create your **own templates**. By writing templates, you can encapsulate best practices and boilerplate for your team or open-source community, and empower others to generate projects with just the features they need. This guide will walk you through how to author a template, covering the template structure, configuration, and advanced features like subtemplates and side effects.
+
+## Template Basics
+
+A template is essentially a directory with two main parts:
+
+1. A **`templates/` folder** containing the file and directory structure that will be generated.
+2. A **`templateConfig.ts` file** that defines the template’s metadata, input schema, and behavior.
+
+Templates live in a **template repository** (just a git repo that can hold one or many templates). In a repository, we typically organize templates as follows:
+
+* **`root-templates/`** – each subdirectory here is a separate root template available for use. For example, `root-templates/nextjs-app/`, `root-templates/helm-chart/`, etc. Each of those subdirs will contain its own `templateConfig.ts` and `templates/` folder (and potentially subtemplates within).
+* **`extra-templates/`** – (optional) a place to put additional templates or partials that are not meant to be top-level root templates. You might keep shared helper code or even reusable subtemplate folders here that can be referenced from multiple root templates. Templates in `extra-templates` are not automatically loaded as root templates – they’d be included via references or programmatically.
+
+When you add a template repository path to Code Templator, it will scan the `root-templates` directory and load each template found.
+
+### “Hello World” Template Structure
+
+Let’s start with a simple example: a template for a README and License for a new project (just to demonstrate structure).
+
+Suppose our template repo (or a subfolder in one) is `root-templates/oss-project/`. Inside that:
+
+```
+oss-project/
+├─ templateConfig.ts
+└─ templates/
+    ├─ README.md.hbs
+    └─ LICENSE_MIT.txt
+```
+
+* The `templates/` directory contains the actual files to output. Here we have `README.md.hbs` (the `.hbs` extension indicates it’s a Handlebars-templated text file; when generated, the `.hbs` extension will be stripped) and a static `LICENSE_MIT.txt` file (no placeholders, just the text of MIT license).
+* `templateConfig.ts` will describe the inputs, e.g., maybe a project name and a license choice.
+
+A very minimal `templateConfig.ts` for this could be:
+
+```ts
+import z from "zod";
+import { TemplateConfigModule, TemplateConfig } from "@timonteutelink/template-types-lib";
+
+// Define the input schema using Zod
+const templateSettingsSchema = z.object({
+  projectName: z.string().min(1).describe("Name of the project"),
+  description: z.string().describe("Short project description").default(""),
+  license: z.enum(["MIT", "Apache"]).describe("License type").default("MIT")
+});
+type TemplateSettings = z.infer<typeof templateSettingsSchema>;
+
+// Basic template metadata
+const templateConfig: TemplateConfig = {
+  name: "oss-project",
+  description: "Basic open-source project setup with README and License",
+  author: "YourName"
+};
+
+// No subtemplates or special behavior in this simple case
+const templateConfigModule: TemplateConfigModule<TemplateSettings, {}, typeof templateSettingsSchema> = {
+  templateConfig,
+  templateSettingsSchema,
+  targetPath: ".",  // output to the root of the new project
+  mapFinalSettings: ({ templateSettings }) => templateSettings  // no transformation
+};
+
+export default templateConfigModule;
+```
+
+Key points here:
+
+* We use `z.object({...})` to define the inputs. Each field has a type and optional `.describe()` which is used in the UI/CLI prompts. We set defaults for description and license.
+* `TemplateSettings` is the TypeScript type for those inputs.
+* `TemplateConfig` provides static info: name (must be unique among templates in your repo), a description (shown in lists), and author.
+* We then assemble a `TemplateConfigModule` which is the full export. We pass the schema, and we define `targetPath: "."` meaning when this template is instantiated as a root, its files go to the project root.
+* `mapFinalSettings` is an optional hook to process the raw inputs. Here we just pass them through, but you could, for instance, derive additional fields or normalize inputs here. The returned object becomes the context for Handlebars.
+
+Our Handlebars templates can then use these settings. For example, in `README.md.hbs` we might write:
+
+```hbs
+# {{projectName}}
+
+{{#if description}}
+{{description}}
+{{/if}}
+
+This project was bootstrapped with [Code Templator](https://github.com/timonteutelink/code-templator).
+```
+
+When the user generates a project and inputs “MyProject” and a description, those will be substituted.
+
+### Running Template vs Diff Template
+
+By default, when you create a new project, Code Templator will instantiate **all root template files** into a fresh directory. If you apply a template into an existing project (partial templating), or apply a subtemplate, Code Templator generates the files in a temporary space first and then computes a diff.
+
+As a template author, you generally don’t need to worry about these differences – you just define what the output should be given the inputs. The engine decides whether it’s making a new directory or a diff patch.
+
+## Adding Subtemplates
+
+Subtemplates let you break a template into modular, optional pieces. Any directory within a template’s `templates/` folder structure could potentially be a subtemplate if it has its own `templateConfig.ts`. However, typically we structure subtemplates in a subfolder of the template.
+
+For example, imagine our **Next.js app** template. It might have a structure like:
+
+```
+nextjs-app/
+├─ templateConfig.ts
+├─ templates/  (... base app files ...)
+└─ subtemplates/
+    ├─ tailwind/        # subtemplate for adding Tailwind CSS
+    │   ├─ templateConfig.ts
+    │   └─ templates/ (... tailwind config files ...)
+    └─ auth/
+        ├─ templateConfig.ts
+        └─ templates/  (... auth module files ...)
+```
+
+Here, we’ve put subtemplates in a `subtemplates/` directory for organization (this is not a required name, just a common convention). The engine will discover these because it recursively searches for `templateConfig.ts` files in subdirectories.
+
+Each subtemplate’s `templateConfig.ts` looks similar to a root template’s, but there are some differences:
+
+* A subtemplate can access its parent template’s final settings. The `TemplateConfigModule` type for subtemplates includes a second type parameter (parent settings type) and you can use that if needed.
+* Subtemplates often set `targetPath` to a subdirectory or specific location in the project. For instance, an “auth” subtemplate might set `targetPath: "."` if it places files throughout the project, or if it specifically only affects certain areas it might not need a special path.
+* You can mark a subtemplate as `multiInstance: true` in its `TemplateConfig`. This means the template can be added multiple times to the same parent. A typical example is a “page” subtemplate for a web app – you might want to generate multiple pages, each with different settings (like page name). When `multiInstance` is true, Code Templator will allow multiple instances with distinct IDs, and the `targetPath` should probably incorporate something from settings to avoid collisions (e.g., use the page name to create a new file or folder for each page).
+
+#### Linking Subtemplates in TemplateConfig
+
+In the parent template (or even in another subtemplate), you decide when subtemplates are applied. There are a few ways to include subtemplates:
+
+* **Automatic (always on):** In the parent’s `templateConfig.ts`, you can list `autoInstantiatedSubtemplates`. This is an array (or a function returning an array) of subtemplates that should be applied automatically whenever the parent is applied. Use this for things that are essentially part of the template but are implemented as subtemplate for reuse or structure. For example, our earlier **Helm chart** root template might always include a “nix flake” subtemplate to add Nix configuration files – you’d list that in `autoInstantiatedSubtemplates`. You can make it conditional by using a function that checks the user’s settings.
+  Each entry in `autoInstantiatedSubtemplates` can also include `children`, which means “apply this subtemplate, and then within it, also automatically apply some of its sub-subtemplates.” The Helm example in the prompt does this: it adds a “github\_folder” subtemplate and then if deploying to AWS, also automatically includes the “push\_helm\_ecr” sub-subtemplate under it.
+
+* **User-selected via schema:** Another method is to make the inclusion of a subtemplate controlled by a boolean or option in the schema. For instance, your template schema could have `useAuth: z.boolean().default(false)` and in your `autoInstantiatedSubtemplates` function, check `if (userSettings.useAuth) { return [{ subTemplateName: "auth", ...}] }`. This way, if the user checks the box for auth, the auth subtemplate is auto-applied; if not, it’s skipped. This is a convenient pattern for optional features.
+
+* **Manual (post creation):** You don’t have to wire every subtemplate to a schema option. Some subtemplates might always be manually added later. For example, a “page” subtemplate in a web app – you wouldn’t ask at project creation “how many pages do you want?” (well, you could, but typically it’s something you add as needed). In such cases, you simply don’t reference that subtemplate in `autoInstantiatedSubtemplates`. It will remain available for the user to apply via CLI (`prepare-instantiation` command) or via the web UI, whenever they decide to. This is truly on-demand.
+
+**Referencing Subtemplates by Name:** In the code, we use `subTemplateName` to specify which subtemplate to instantiate. This name comes from the `TemplateConfig.name` field of the subtemplate’s config. Essentially, each template (root or sub) has a unique name in its scope. Code Templator identifies them by these names when linking. Be sure your names are unique within a template repo; e.g., don’t have two different subtemplates both named `"auth"` under the same parent or things could get confusing.
+
+## Advanced TemplateConfig Features
+
+Besides the basics of schema and subtemplates, `templateConfig.ts` supports several advanced features:
+
+* **`targetPath`:** We saw this used to specify where in the project the template’s files should go. This can be a string (path relative to the project root) or a function that computes a path from the user settings. Example: in a multi-instance template, you might do ```js
+targetPath: (settings) => \`pages/\${settings.pageName}\`
+```to create a new folder/file per instance. In the Helm deployment example,`targetPath\` uses the deployment name to make unique directories.
+
+* **`mapFinalSettings`:** This function (optional) lets you derive the final context for templating. It receives an object with `{ templateSettings, parentSettings? }`. You can use it to, for instance, combine or transform fields. A common use-case: your schema might collect some high-level option that needs to be broken down. Or you might want to inject default values that depend on other inputs. The default implementation if you omit it is effectively identity (pass through the inputs).
+
+* **Side Effects (`sideEffects` and `sideEffectFiles`):** Sometimes a subtemplate needs to **modify an existing file** rather than just create new files. For example, adding a new Kubernetes Deployment subtemplate should also add an entry to the `values.yaml` of the Helm chart. This is where side effects come in.
+
+  In `templateConfig.ts`, you can export `sideEffects: [ { filePath: 'path/to/file', apply: (userSettings, oldContent) => newContent } ]`. Code Templator will call your `apply` function when the template is instantiated or removed:
+
+  * `userSettings` are the final settings for this template instance.
+  * `oldContent` is the content of the target file *before* applying this template (or before removal, etc.).
+    The function should return the new content for that file (as a string). In effect, you’re programmatically editing the file.
+
+  The Helm example provided shows a `addToValuesYaml` side effect function that parses the YAML, inserts new environment variables, and stringifies it back. This runs whenever a deployment subtemplate is added (or possibly updated).
+
+  Side effects allow your template to do things like:
+
+  * Register a component in a central index file.
+  * Insert a line in a config (like add a new route to a routes list).
+  * Remove or update something on template removal.
+
+  Be careful with side effects – since they manipulate existing content, ensure idempotency (running it twice with same input shouldn’t duplicate entries, etc., ideally). Use unique markers or keys if possible when inserting.
+
+* **Template Commands (`TemplateConfig.templateCommands`):** You can define custom commands that can be executed in the context of a generated project. For example, a template might provide a script or automation (like “regenerate API docs”). In `templateConfig`, you could define a command with a title and a shell command or Node function to run. Then the user can invoke it via `code-templator project run -c "<commandTitle>"`. This is an advanced feature and not commonly used for simple scaffolds, but it’s there if your template can automate post-creation tasks.
+
+* **Disabling Files or Templates:** Sometimes a subtemplate might need to turn off or replace something in the parent. There are features like `TemplateConfig.allowOverwrite` (to allow this template to overwrite files that already exist – normally duplicates would error out) and `TemplateConfig.disable`/`TemplateDisablingThis` which can conditionally skip parts. These are edge cases – refer to the API docs if you need this level of control.
+
+* **AI Integration (Experimental):** You might notice types like `AiCallbackFunction` or `LLMTools` in the template types library. These hint at potential AI-assisted template features (like generating content via GPT). This is still experimental and beyond the scope of this guide, but keep an eye out for future docs if you’re interested in AI augmenting your templates.
+
+## Best Practices for Template Authors
+
+* **Keep templates focused:** A template should ideally serve a clear purpose (e.g., “scaffold a REST API service” or “set up a Python library project”). Avoid making one template do everything – that’s what subtemplates are for. Composable pieces lead to cleaner designs.
+* **Use subtemplates for optional parts:** If some feature is not always needed, make it a subtemplate. This keeps the base template simpler and reduces bloat for users who don’t need that part.
+* **Validate and provide defaults:** Thanks to Zod, you can validate inputs easily. Use `.min()`, `.regex()`, etc., to ensure inputs meet requirements (for example, you might restrict project name to a certain pattern). Also provide sensible defaults where possible to make the initial experience easier (like a default author name could pull from git config, etc., in the future).
+* **Describe your fields:** The `.describe("...")` on Zod schemas is used in the CLI and UI to show help text. A brief, friendly description can guide the user. For booleans or options, phrase them clearly (e.g., `enableDocker: z.boolean().describe("Include a Dockerfile for this project")`).
+* **Test your template:** Before distributing a template, generate a project with it and make sure it runs! Also try adding/removing each subtemplate to see that the diffs apply cleanly. Resolve any merge conflicts by adjusting how files or side effects are written (for example, ensure unique identifiers or markers to avoid conflicts).
+* **Template naming:** The `TemplateConfig.name` is the identifier for the template. Choose a short, meaningful name with no spaces (e.g., `nextjs-app`, `rust-cli`). This is what users will type to use your template. If you have company-specific templates, you might prefix them (e.g., `acme-python-lib`) to avoid collision with others.
+* **Organize repository wisely:** If you have many templates, group related ones in a single repo if they share code or subtemplates. If templates are vastly different, separate repos might be cleaner. Remember, users can add multiple templatePaths, so you can ship templates in multiple repos.
+
+## Sharing Templates
+
+Since templates are just git repositories, sharing them is as easy as pushing to GitHub (or your preferred git server). We encourage you to share templates for frameworks or setups you think others will find useful! And if you do, let us know – we’d love to list community templates in our docs in the future.
+
+For an example of a collection of templates, check out our **[code-templator-example-templates](https://github.com/timonteutelink/code-templator-example-templates)** repo. It includes some of the use cases described in our docs (Next.js app, Helm chart, Turborepo, etc.) and can serve as a reference for structuring your own template repo.
+
+When you publish a template repo, users can include it by cloning it and adding to their `templatePaths`, or potentially (in the future) by pointing Code Templator to a remote URL (planned feature). For now, templates are loaded locally for safety and speed.
+
+## Example: Helm Chart Template Anatomy
+
+Let’s tie it all together with a more elaborate example outline (from the prompt):
+
+* **Root Template: “helm\_chart”** – templates a boilerplate Helm chart (with Chart.yaml, values.yaml, etc.).
+  **Inputs:** chart\_name, chart\_description, chart\_version, deployment\_platform (none/AWS/GCP with respective settings).
+  **Behavior:**
+
+  * Always include a Nix flake subtemplate (for DevOps consistency).
+  * Always include a “.github” workflow folder subtemplate. Inside that, based on `deployment_platform`, auto-include either an ECR push workflow or a GCP push workflow as a nested child subtemplate. (If deployment\_platform is “none”, maybe skip CI workflows).
+  * Files: Chart.yaml uses chart\_name, etc. Values.yaml is mostly empty to start.
+* **Subtemplate: “helm\_chart/deployment”** – adds a Kubernetes Deployment resource to the chart. Marked multiInstance (so you can add multiple deployments).
+  **Inputs:** deployment\_name (used to name k8s objects), env (an array of env var definitions, each could be a literal, from values, or from secret – using Zod discriminated unions as seen).
+  **Behavior:**
+
+  * `targetPath`: outputs a file at `templates/<deployment_name>-deployment.yaml` (the actual k8s Deployment manifest).
+  * `sideEffect`: modifies `values.yaml` – it adds a section for this deployment (so that replica count, image, env defaults can go into values). The side effect code ensures it doesn’t clobber existing content and merges nicely as shown in the snippet.
+  * multiInstance: true, so each instance adds its own deployment manifest and values entries.
+* **Subtemplate: “helm\_chart/ingress”** – (not fully shown earlier, but imagine) adds an Ingress resource. Could have inputs like domain name, path, etc. It would add a file and perhaps update values as well.
+* **Subtemplate: “project\_nix\_flake”** – this might be a generic subtemplate that adds Nix flake support to any project. It lives under `extra-templates/` perhaps, and can be reused by different root templates. It likely adds `flake.nix` and some config files.
+* **Subtemplate: “project\_github\_folder”** – adds a `.github/` folder with a Actions workflow template. In the Helm chart case, it’s used as a parent to then include either AWS or GCP specific workflow.
+* **Subtemplates: “github\_actions\_push\_helm\_ecr” & “github\_actions\_push\_helm\_gcp”** – these add CI YAML files for pushing the chart to ECR or GCP Artifact Registry, respectively. Their inputs derive from the root (like AWS account ID, etc., passed via `mapSettings`).
+
+This example shows how you can construct a very feature-rich template by breaking it into logical pieces. The user generating a Helm chart would choose their deployment platform, and the appropriate CI gets wired in automatically. Later, they can add multiple deployments via the deployment subtemplate, and maybe add an ingress via that subtemplate, etc., all without manually editing YAML – the template’s side effects handle the grunt work.
+
+## Template Testing and Iteration
+
+While developing a template, you’ll likely go through cycles of:
+
+* Edit `templateConfig.ts` or template files.
+* Run Code Templator in a scratch project to see the output.
+* Adjust as needed.
+
+You don’t need to commit your template to test it (though committing helps if you want to test updates between revisions). You can point the CLI config to your working directory of the template repo. However, remember that if you change the schema or structure significantly, and you want to test updates, you should simulate version bumps by committing and using the update command with the new commit hash.
+
+It’s often helpful to keep a throwaway “sandbox” project where you repeatedly apply your evolving template to see how changes manifest.
+
+## Publishing a Template Package (Advanced)
+
+Currently, Code Templator uses git repositories as the distribution mechanism for templates. There’s no centralized template registry yet. However, one could distribute a template as an npm package or similar, and have users install it and add to `templatePaths`. This isn’t mainstream usage, but because templates are just files, it’s conceivable. In most cases, though, a git repo (on GitHub or internal) is easiest – just clone it.
+
+In the future, we might introduce commands to directly fetch templates from a remote source or an official registry. Stay tuned!
+
+## Conclusion
+
+That was a lot to take in – congrats on reaching the end of the authoring guide! 🚀 Creating templates unlocks the full power of Code Templator for you and your team. Start simple, perhaps by templating something small you find yourself doing repeatedly. Then iteratively add sophistication: more options, subtemplates for optional bits, maybe even cross-cutting side effects.
+
+If you’re ever unsure about the TemplateConfig API or types, refer to the **Template Types Lib Reference** in our documentation (it’s generated from code, so it’s always up-to-date with all available fields and types). And don’t hesitate to check out existing templates (like those in the example repo) to learn by example.
+
+We look forward to seeing the amazing templates you create. Feel free to share them with the community or contribute examples back!
+
+Happy templating, and may your boilerplate be forever banished. 🎉
+

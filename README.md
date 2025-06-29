@@ -1,86 +1,138 @@
 # Code Templator
 
-[![NPM Version – Library](https://img.shields.io/npm/v/@timonteutelink/code-templator-lib.svg?label=Library%20NPM)](https://www.npmjs.com/package/@timonteutelink/code-templator-lib)
-![Build Status – Library](https://img.shields.io/github/actions/workflow/status/timonteutelink/code-templator/library-ci.yml?branch=main)
-[![API Docs – TypeDoc](https://img.shields.io/badge/docs-TypeDoc-blue.svg)](https://your-docs-domain)
-[![NPM Version – CLI](https://img.shields.io/npm/v/code-templator.svg?label=CLI%20NPM)](https://www.npmjs.com/package/code-templator)
-![Build Status – CLI](https://img.shields.io/github/actions/workflow/status/timonteutelink/code-templator/cli-ci.yml?branch=main)
-![Build Status – Web UI](https://img.shields.io/github/actions/workflow/status/timonteutelink/code-templator/web-ci.yml?branch=main)
+**Code Templator** is an open-source toolkit for **generating, maintaining, and evolving software projects from templates**. It lets you quickly scaffold new projects with best practices *and* continuously apply template updates to existing projects. Unlike one-off code generators, Code Templator uses **git patches** to merge template changes into your codebase. This means you can customize your project freely and still pull in upstream template improvements over time – all while preserving your own edits.
 
-## Introduction
+**Features at a glance:**
 
-**Code Templator** is a powerful templating engine and toolkit for generating **and** evolving software projects. It helps developers and engineering teams quickly scaffold new projects with best practices, while **also** keeping those projects up-to-date as templates improve. Unlike traditional code generators that only create a project once, Code Templator lets you continuously reapply template changes (via git patches) so your code stays in sync with the latest template enhancements. This means you can standardize project structure and configurations across many repositories and easily incorporate updates over time.
+* **Flexible Template Engine:** Templates are just folders of text files (code, config, docs – anything) with Handlebars placeholders. No special DSL – if you can write it in a file, you can template it.
+* **Strongly-Typed Config:** Each template defines a schema (with TypeScript + Zod) for user inputs and feature toggles. This ensures safe, validated inputs and provides auto-generated prompts/UI forms for your template’s options.
+* **Nested Subtemplates:** Compose templates within templates. A *root template* can have any number of subtemplates (even nested multiple levels) representing optional components or features. You can add or remove subtemplates at any point – e.g. enable a “Dockerfile” subtemplate in a Node.js app or remove an optional module – without breaking the project.
+* **Git Patch Workflow:** Under the hood, Code Templator applies changes via git diffs. When you generate a project or apply a subtemplate, it creates a git patch of the differences and applies it to your repo. This approach makes template updates non-destructive – you review and commit changes like a normal code change, preserving git history and your custom modifications.
+* **Multi-Interface Monorepo:** Use Code Templator however you prefer. It includes a CLI (`apps/cli`) for terminal lovers, a local Web UI (`apps/web`) for an interactive form-driven experience (with diff previews), and a reusable Node.js API (`packages/code-templator-lib`) for integration into scripts or CI pipelines. All interfaces share the same core logic.
 
-Templates in Code Templator are simply directory folders with files written using **Handlebars**, a popular logic-less templating language (templates look like regular text with embedded placeholders). Each template has a `templateConfig.ts` that defines a schema (using **Zod**, a TypeScript-first schema validation library) for user-provided settings and feature toggles. This ensures template inputs (like project name, author info, or feature flags) are **validated and strongly typed**, giving users a safe and predictable generation process.
+## How It Works
 
-## Key Features
+**Templates.** A template is a self-contained folder (usually stored in a git repo) containing a `templates/` directory (with all the template files) and a `templateConfig.ts` file defining the template’s metadata and schema. The template config uses our [template-types-lib] to declare: the template’s name, description, author, the Zod schema for settings, and any special behavior (like subtemplates or file post-processing). All user-defined settings become available to the Handlebars templates, allowing dynamic generation of files and content.
 
-* **Customizable Templates** – Define templates as folder structures with Handlebars-based files for flexible content generation. You can template anything: code files, config files, README text, etc., using the full power of Handlebars expressions and helpers.
-* **Template Configuration with Zod** – Each template ships with a `templateConfig.ts` that uses Zod schemas to define required inputs and optional features. This provides a clear contract for template options (e.g. enabling/disabling certain components) and automatically validates user input.
-* **Nested Subtemplates** – Organize templates into **subtemplates** for modularity. Subtemplates allow optional pieces of a project (for example, a Docker setup, a testing framework, or specific plugin) to be generated on demand. They can be added or removed at any time, even after the project is created, without breaking the overall structure.
-* **Git Patch Application** – Instead of naive file copying, Code Templator applies templates using git diffs/patches. This **unique approach** means you can re-run or update a template on an already modified project. Changes from the template are merged into your codebase as a git patch, preserving any custom modifications you’ve made while applying new template updates. This makes Code Templator not just a generator, but a tool for **maintaining** and evolving projects over time.
-* **Multi-Interface Monorepo** – Code Templator is delivered as a TypeScript **monorepo** containing:
+**Project Generation.** To create a new project, choose a root template and provide values for its settings (via CLI prompts, a JSON file, or the Web UI form). Code Templator then renders the template into a new project folder. It initializes a git repository for the project and records the template name, commit hash, and all settings in a `templateSettings.json` file inside the project. This file tracks the **template state** of the project (including all subtemplates and their options).
 
-  * a command-line interface (**CLI**) built with Oclif (`apps/cli`)
-  * a web-based GUI (Next.js app in `apps/web`) for interactive templating through a browser
-  * a reusable core library (`packages/code-templator-lib`) published to NPM as `@timonteutelink/code-templator-lib` for integration into other tools or CI pipelines
-    These components share the same core logic, enabling you to use Code Templator in the way that best fits your workflow.
+**Continuous Updates.** The recorded template state enables powerful syncing:
 
-## Use Cases
+* Need to update your project to the latest template version? Run the update command – Code Templator will fetch the updated template, diff your project against it, and apply the changes as a git patch for you to review and merge. Your custom changes remain intact.
+* Want to add a new feature module later? Simply instantiate the corresponding subtemplate. For example, if your Next.js app needs a new page, apply the “page” subtemplate – new files and modifications will be patched in. Removing a feature is just as easy: the tool can generate a patch to undo a subtemplate’s additions.
 
-Code Templator can be used to standardize and bootstrap a variety of project types. Here are a few real-world examples of what you can build with it:
+This **continuous templating** workflow means your project’s boilerplate never grows stale – you can always align with improvements in the template or adapt to new requirements by adding/removing template pieces.
 
-* **Next.js App Scaffolding** – Create a company-standard Next.js starter app with all the boilerplate (folder structure, linting, CI config, etc.) set up. Subtemplates could allow toggling features like Tailwind CSS, authentication module, testing setup, etc. as needed.
-* **Rust CLI Generator** – Define a template for a Rust command-line application using Clap or StructOpt. The template could include a pre-configured `Cargo.toml`, example command modules, and CI workflows. Developers can generate a new Rust CLI tool in seconds with all best practices in place.
-* **WordPress Plugin Template** – Scaffold a new WordPress plugin project (PHP) with the correct file layout, sample plugin code, and deployment scripts. Using subtemplates, you might optionally add components like a custom Gutenberg block or integration with an external API.
-* **Helm Chart Builder** – Maintain a template for Helm charts to deploy applications on Kubernetes. The base template could create a standard chart structure, and subtemplates could represent add-on k8s resources (e.g. an Ingress, a Database config, a HorizontalPodAutoscaler). Teams can generate a chart and later apply additional subtemplates to introduce new resources as the application grows.
+**Templating Modes.** Code Templator is designed to handle a variety of use cases:
 
-These examples illustrate how Code Templator helps enforce consistency across projects. A platform engineering team can codify their best practices into templates, so that every new service or app starts with the right foundation. More importantly, when best practices evolve (say you change your CI/CD setup or upgrade a framework), you can update the template and then reapply it to existing projects to automatically propagate those changes.
+* *Full Project Scaffolding:* Generate an entire project from a template (with its own git repo and tracking). This is the primary mode – ideal for kickstarting new applications or services with a known structure.
+* *Partial Templating (Stateful):* Apply a template *into* an existing project, while keeping a templateSettings record. This is useful for adding a new component/module to a larger codebase and still being able to update or remove it later via the template engine. (Planned feature)
+* *Partial Templating (Stateless):* One-off injection of templated files into an existing project, **without** tracking state. This is like an “insert snippet” operation – useful when you just want to drop in some boilerplate and manage it entirely by hand afterward.
 
-## Evolving Projects Over Time
+No matter the mode, the same git-diff approach is used to ensure that introducing template changes is transparent and conflict-minimized.
 
-One of the **biggest advantages** of Code Templator is that it treats project templates as living blueprints rather than one-off generators. You don’t have to abandon the template after initial generation – instead, you can continuously pull in updates:
+## Example Use Cases
 
-* **Reapply Template Updates:** If the template improves (new features, dependency upgrades, refactoring, etc.), simply run the CLI to apply the latest template to your project. Code Templator will generate a git patch of the differences and apply it to your repository. You get to review changes (just like a pull request) and merge them, ensuring your project stays up-to-date with minimal effort. This addresses the common issue where scaffolded projects diverge and miss out on upstream improvements.
-* **Add/Remove Subtemplates:** Decided to add a new module to your project later on? No problem – run a command to apply the corresponding subtemplate. Code Templator will insert the new files and code diffs for that feature into your project. Conversely, if you no longer need a component, the tool can generate a patch to remove or disable it. This dynamic nature lets your codebase evolve along with your requirements.
+* **Standardizing New Apps:** Kickstart projects with your organization’s best practices. For example, a “Next.js App” template can set up a complete web application skeleton – including folder structure, ESLint/Prettier config, CI workflows, etc. Subtemplates let developers toggle features like Tailwind CSS, authentication, testing setup, etc., at creation time. Every new app starts consistent, and when the template evolves (say, new ESLint rules or CI improvements), you can propagate those changes to all existing apps effortlessly.
+* **Modular Monorepo Scaffolding:** Manage complex setups with subtemplates. Imagine a **Turborepo** template for a polyglot monorepo. The root template creates the repository with shared config (e.g. a Nx or Turborepo config). Subtemplates could allow adding a new package or app to the monorepo (e.g. a Next.js webapp module or a Node microservice). You could even nest subtemplates further: a “Next.js App” subtemplate might itself include a “Homepage Page” subtemplate to add a default page component. This makes it easy to grow the repository by injecting new pieces as needed.
+* **Infrastructure as Code Templates:** Use Code Templator for ops too. For instance, a **Helm Chart** template could scaffold a standard Kubernetes chart. Subtemplates under it might include an Ingress resource, a Deployment config, a HorizontalPodAutoscaler, etc. Each subtemplate can also update central files – our Helm subtemplate example automatically merges environment variables into the chart’s `values.yaml` using a side-effect function. The result is a tailored chart where you can add components on demand and still update the whole chart when best practices change.
+* **CLI and Library Generators:** Create templates for any programming language or framework. A **Rust CLI tool** template could generate a new binary crate with Clap argument parsing, a configured Cargo.toml, and CI scripts. Need to add another CLI sub-command later? Add a subtemplate that creates a new module and wires it into the CLI.
+* **Plugin/Extension Scaffolding:** Streamline plugin development with templates. A **WordPress Plugin** template can provide the basic PHP file structure, readme, and deployment scripts. Subtemplates might add optional components like a custom Gutenberg block or third-party API integration boilerplate. Similarly, you could template browser extensions, VSCode plugins, etc., with optional features.
 
-By using git patches under the hood, these updates are transparent and safe. You maintain full control – if there are conflicts with your local changes, you can resolve them manually during the patch apply (just as you would with any merge conflict). In essence, Code Templator enables **continuous templating**: your projects can keep in sync with template revisions without resorting to manual copy-paste.
+These are just a few ideas – Code Templator can template *any* project that lives in a folder with text-based files. By combining Handlebars templating with the organizational power of subtemplates and the safety of git, you’re free to create templates for virtually any domain or stack.
 
-## Project Structure and Packages
+## Getting Started
 
-This repository is a monorepo containing multiple packages/apps, each with its own responsibility. The main components are:
+**1．Install the CLI:** Code Templator requires [Node.js](https://nodejs.org) (or [Bun](https://bun.sh)) and git. You can install the CLI globally via your preferred package manager:
 
-* **CLI –** Located in [`apps/cli`](apps/cli). An Oclif-based command-line interface for using Code Templator via terminal. It provides commands to create new projects, apply subtemplates, update projects, etc. *([See CLI README](apps/cli/README.md) for usage details.)*
-* **Web UI –** Located in [`apps/web`](apps/web). A Next.js application that offers a web interface for Code Templator. This is primarily for local use (e.g. run it on your machine to interactively choose a template, fill in settings, and preview diffs before applying). *([See Web UI README](apps/web/README.md) for more info.)*
-* **Core Library –** Located in [`packages/code-templator-lib`](packages/code-templator-lib). A reusable TypeScript library that implements the templating engine logic (loading templates, generating diffs, applying patches, etc.). This library is published to NPM as **`@timonteutelink/code-templator-lib`** and can be used in other Node.js projects or CI pipelines. *([See Library README](packages/code-templator-lib/README.md) for API details.)*
+```bash
+# Using Bun (>= 1.2)
+bun add -g @timonteutelink/code-templator-cli
 
-Each subproject has its own README with specifics. The root README (this file) provides a high-level overview and links to those submodules.
+# Or using npm
+npm install -g @timonteutelink/code-templator-cli
+
+# Or npx (no install step)
+npx code-templator --help
+```
+
+> **Note:** The CLI is published as `@timonteutelink/code-templator-cli` on npm. You’ll also need `git` available in your PATH, as the engine uses git for diffing and patching.
+
+**2．Create a new project from a template:** Once installed, you can generate a project in one command. For example, to create a new Next.js API route project:
+
+```bash
+code-templator project new my-api next-api
+```
+
+*(This will interactively prompt you for any template-specific settings, then scaffold `my-api/` as a new git repo.)*
+
+<details>
+  <summary><strong>▶ Sample Output</strong> (click to expand)</summary>
+
+After running the above, you might see output summarizing the included features and files, for example:
+
+* **Template:** Next.js API (with TypeScript)
+* **Features:** ESLint, Prettier, Testing, Serverless-ready config
+
+Your new project structure could look like:
+
+```
+my-api/
+├─ pages/api/hello.ts    # Example endpoint (Hello World)
+├─ package.json          # Project metadata & scripts
+├─ .eslintrc.js          # Preconfigured linting rules
+├─ .github/workflows/ci.yml   # CI pipeline ready to go
+└─ ... other standard files ...
+```
+
+</details>
+
+Now you have a fully functional project! You can `cd my-api` and start developing right away. In this example, the Next.js API template includes everything to deploy a serverless function (just `npm run dev` or `bun dev` to start).
+
+**3．Apply a subtemplate (optional):** Want to extend your project? You can add subtemplates to an existing project using the CLI. For instance, if the `next-api` project has an optional “webpage” subtemplate, you could run:
+
+```bash
+code-templator project diff prepare-instantiation root webpage
+```
+
+This will generate a git diff introducing the new subtemplate (e.g. adding a new page file). Review the diff, then run `code-templator project diff apply <diff-id>` to apply it, or re-run with the `--apply` flag for one-step patching. *(The Web UI provides a more visual way to do this, if you prefer.)*
+
+**4．Learn more:** Now that you’ve created a project, check out the documentation for next steps. You might explore:
+
+* **Using the Web UI:** If you’d rather pick templates and options in a browser, see *Using the Web Interface* in the docs.
+* **Template Authoring:** Ready to create your own templates? See the *Template Authoring Guide* to learn how to write templates with `templateConfig.ts` and subtemplates.
+* **CLI Reference:** The CLI has many commands (for updates, diffing, etc.). See the [CLI Documentation][cli-docs] for a full reference.
 
 ## Documentation
 
-**Full documentation** for Code Templator is available on our documentation site (built with Docusaurus). There you will find:
+Full documentation is available **[here on the Code Templator website](https://timonteutelink.github.io/code-templator/)**. Key sections include:
 
-* **Getting Started Guides:** Step-by-step tutorials on installing the CLI, creating your first project from a template, and using the web UI.
-* **CLI Reference:** Detailed documentation of every CLI command and flag (auto-generated from the Oclif CLI help).
-* **API Reference:** TypeDoc-generated reference for the code-templator-lib (for those who want to use the library directly in JavaScript/TypeScript).
-* **Template Authoring Guide:** Best practices for writing your own templates (using Handlebars syntax, defining `templateConfig.ts` with Zod schemas, organizing subtemplates, etc.).
-* **Examples and Recipes:** More example templates and use-case guides to help you get the most out of Code Templator.
-
-👉 **Visit the [Code Templator Documentation](https://your-docs-domain)** for in-depth guides and reference material.
-
-*(If you are reading the README on GitHub, the documentation is also hosted in the `docs/` directory of the repository for offline access.)*
+* **Getting Started Guide** – step-by-step installation and your first template project.
+* **Using the Web UI** – running the local web interface and its features.
+* **Template Authoring Guide** – how to build your own templates (with examples).
+* **CLI & API Reference** – detailed reference for CLI commands and the TypeScript library.
 
 ## Contributing
 
-Contributions are welcome! If you have ideas for improvements or have found a bug, please open an issue or submit a pull request. We aim to follow a typical open-source workflow on GitHub: for larger changes, please discuss in an issue first. All contributions should adhere to the code style and standards of the project (linting and tests will run in CI).
+Contributions are welcome! 🎉 If you have an idea for improvement or find a bug, please open an issue or pull request. We follow a typical GitHub flow:
 
-If you want to add a new template or example to the repository, feel free – templates are a great way to extend the usefulness of Code Templator for more frameworks and languages. Check out the documentation’s authoring guide for tips on creating high-quality templates.
+* **Development:** This project is a TypeScript monorepo managed with pnpm workspaces. For local development, fork and clone the repo, run `pnpm install`, and you can work on the packages (CLI, web, etc.). We use Prettier and ESLint for consistency – please format your code before committing (CI will check this).
+* **Feature Branches & PRs:** For any change, create a feature branch and submit a pull request to the **main** branch. Include a clear description of the problem or feature. For larger changes, it’s best to discuss in an issue first to align on design.
+* **Testing:** Ensure that any new features or fixes include appropriate tests if possible. We aim to keep the core library reliable, as it’s used by all interfaces.
+* **Releases:** The project uses semantic versioning. The repository is versioned with a single version number across packages for consistency. Releases are triggered via tags on the main branch (CI/CD will publish the CLI to npm and Docker, and the libraries to npm, etc., as needed).
+
+We’d also love contributions of **new templates** or improvements to existing ones. If you have a great template for a framework or use case, feel free to add it to our [example templates repository](https://github.com/timonteutelink/code-templator-example-templates) or share it with the community!
+
+By contributing, you agree that your contributions will be licensed under the same AGPL-3.0 license that covers this project.
 
 ## License
 
-This project is open-source software licensed under the **AGPL-3.0 License**. See the [LICENSE](LICENSE) file for details. This means any distributed modifications or derivative works should also be open-sourced under the same license. We chose AGPL to encourage a community of sharing improvements to the templating engine and to ensure that enhancements to Code Templator benefit everyone.
+Code Templator is licensed under the **GNU AGPLv3** (see the [LICENSE](LICENSE) file for details). This copyleft license ensures that any modifications or derivative works you distribute must be open-sourced under the same terms. We chose AGPL to encourage a community of sharing improvements – if you extend Code Templator, those enhancements can benefit everyone. 😄
+
+[cli-docs]: https://timonteutelink.github.io/code-templator/cli/ "Code Templator CLI Reference"
+[template-types-lib]: https://timonteutelink.github.io/code-templator/template-types-lib/ "Template Types API"
 
 ---
 
-*Happy templating!*
+*Happy templating!* Go build amazing projects faster, and keep them in sync with ease, using Code Templator.
 
