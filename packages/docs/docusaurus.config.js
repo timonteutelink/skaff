@@ -14,6 +14,7 @@ module.exports = {
     ['@docusaurus/preset-classic', { docs: false, blog: false, pages: {}, theme: { customCss: require.resolve('./src/css/custom.css') } }]
   ],
 
+
   plugins: [
     [
       'docusaurus-plugin-typedoc',
