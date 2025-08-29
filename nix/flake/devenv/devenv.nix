@@ -29,6 +29,8 @@ localFlake:
         packages = with pkgs; [
           jupyter
           inputs.bun2nix.packages.${system}.default
+          jq
+          formatjson5
         ];
 
         languages = {

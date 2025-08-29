@@ -11,14 +11,14 @@
     bun2nix.url = "github:baileyluTCD/bun2nix";
     bun2nix.inputs.nixpkgs.follows = "nixpkgs";
 
-    timon-modules = {
-      url = "git+ssh://git@github.com/timonteutelink/nix-modules";
+    nix-utils = {
+      url = "git+ssh://git@github.com/timonteutelink/nix-utils";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
   outputs =
-    { timon-modules
+    { nix-utils
     , flake-parts
     , ...
     } @ inputs:
@@ -28,7 +28,7 @@
         inherit (flake-parts-lib) importApply mkSubmoduleOptions;
 
         importApplyMod = file: importApply file { inherit withSystem moduleWithSystem importApply mkSubmoduleOptions; };
-        modFiles = timon-modules.lib.import-files { path = ./nix/flake; recursive = true; };
+        modFiles = nix-utils.lib.import-files { path = ./nix/flake; recursive = true; };
       in
       {
         imports = map importApplyMod modFiles;
