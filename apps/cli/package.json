@@ -70,7 +70,8 @@
       "code-templating": {
         "description": "Manage code templates"
       }
-    }
+    },
+    "repositoryPrefix": "https://github.com/timonteutelink/code-templator/tree/main/apps/cli/<%- commandPath %>"
   },
   "repository": "timonteutelink/code-templator",
   "scripts": {
