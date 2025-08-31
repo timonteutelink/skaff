@@ -15,15 +15,15 @@
     "publish": "npm publish"
   },
   "devDependencies": {
-    "@eslint/js": "^9.29.0",
-    "eslint": "^9.29.0",
-    "eslint-config-prettier": "^10.1.5",
+    "@eslint/js": "^9.34.0",
+    "eslint": "^9.34.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-only-warn": "^1.1.0",
     "typescript": "5.8.3",
-    "typescript-eslint": "^8.35.0"
+    "typescript-eslint": "^8.41.0"
   },
   "dependencies": {
     "handlebars": "^4.7.8",
-    "zod": "^3.25.67"
+    "zod": "^3.25.76"
   }
 }
