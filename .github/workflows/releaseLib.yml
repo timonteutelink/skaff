@@ -33,5 +33,5 @@ jobs:
           EOF
 
           bun publish --access public
-        working-directory: packages/template-types-lib
+        working-directory: packages/code-templator-lib
 
