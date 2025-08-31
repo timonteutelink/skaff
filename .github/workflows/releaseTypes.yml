@@ -32,6 +32,6 @@ jobs:
           registry=https://registry.npmjs.org
           EOF
 
-          bun publish --access public
+          npm publish
         working-directory: packages/template-types-lib
 
