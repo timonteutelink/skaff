@@ -26,6 +26,12 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
+          cat > .npmrc <<'EOF'
+          //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
+          always-auth=true
+          registry=https://registry.npmjs.org
+          EOF
+
           bun publish --access public
-        working-directory: packages/code-templator-lib
+        working-directory: packages/template-types-lib
+
