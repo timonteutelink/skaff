@@ -2899,12 +2899,6 @@
     url = "https://registry.npmjs.org/@tailwindcss/postcss/-/postcss-4.1.12.tgz";
     hash = "sha512-5PpLYhCAwf9SJEeIsSmCDLgyVfdBhdBpzX1OJ87anT9IVR0Z9pjM0FNixCAUAHGnMBGB8K99SwAheXrT0Kh6QQ==";
   };
-  "@timonteutelink/template-types-lib" = {
-    out_path = "@timonteutelink/template-types-lib";
-    name = "@timonteutelink/template-types-lib@0.0.44";
-    url = "https://registry.npmjs.org/@timonteutelink/template-types-lib/-/template-types-lib-0.0.44.tgz";
-    hash = "sha512-EabjDdBNtDOzZeLwA9NYeGYRnyqt1sLZUH+fTcpJpJ7WTwVthfpCTTAdzFKRGpXy+RxhdxuePLu0OsXFIk9wTA==";
-  };
   "@tootallnate/quickjs-emscripten" = {
     out_path = "@tootallnate/quickjs-emscripten";
     name = "@tootallnate/quickjs-emscripten@0.23.0";
