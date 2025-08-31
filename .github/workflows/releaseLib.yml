@@ -1,43 +1,34 @@
-name: Release Lib
+name: Release Code Templator Lib
 
 on:
-  workflow_dispatch:
-    inputs:
-      release_version:
-        description: >
-          Version to release. New version must be bigger than existing version and must be nonexistant.
-          Will not patch main with new version for now
-        required: true
-        default: "v0.0.1"
+  push:
+    tags:
+      - 'lib-v*'
 
 jobs:
-  release:
+  publish:
     runs-on: ubuntu-latest
     permissions:
-      content: write
+      contents: read
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Ensure tag on main
+        run: |
+          if ! git branch -r --contains "$GITHUB_SHA" | grep -q "origin/main"; then
+            echo "Tag must reference commit on main branch" >&2
+            exit 1
+          fi
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Build distribution
-        run: bun run build:dist
-      - name: Pack tarballs
-        run: bun run pack:tarballs
-
-      - name: Create release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: 'apps/cli/tarballs/*.tgz'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+      - run: bun install --frozen-lockfile
+      - name: Build package
+        working-directory: packages/code-templator-lib
+        run: bun run build
       - name: Publish to npm
+        working-directory: packages/code-templator-lib
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |

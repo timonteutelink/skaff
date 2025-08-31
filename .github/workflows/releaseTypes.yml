@@ -1,15 +1,15 @@
-name: Release CLI
+name: Release Template Types Lib
 
 on:
   push:
     tags:
-      - 'cli-v*'
+      - 'types-v*'
 
 jobs:
-  release:
+  publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,21 +24,13 @@ jobs:
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
-      - name: Build Template Types Lib
+      - name: Build package
         working-directory: packages/template-types-lib
         run: bun run build
-      - name: Build Code Templator Lib
-        working-directory: packages/code-templator-lib
-        run: bun run build
-      - name: Pack tarballs
-        working-directory: apps/cli
-        run: |
-          bun run prepack:tarballs
-          bun run pack:tarballs
-          bun run postpack:tarballs
-      - name: Create release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: apps/cli/tarballs/*.tgz
+      - name: Publish to npm
+        working-directory: packages/template-types-lib
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
+          bun publish --access public
