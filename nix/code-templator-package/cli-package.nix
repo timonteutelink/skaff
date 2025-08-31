@@ -16,12 +16,12 @@
   # };
 
   buildPhase = ''
-    bun run buildprod
+    bun run pack:here
   '';
 
   installPhase = ''
     mkdir -p $out/bin
-    cp bin/code-templator $out/bin/
+    cp ./tmp/code-templator/bin/code-templator $out/bin/
     chmod +x $out/bin/code-templator
   '';
 }
