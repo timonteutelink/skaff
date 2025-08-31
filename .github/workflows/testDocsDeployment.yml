@@ -17,8 +17,6 @@ jobs:
         with:
           bun-version: 1.2.12
       - name: Install dependencies
-        run: bun install --frozen-lockfile --ignore-scripts
-        cwd: packages/docs
+        run: cd packages/docs && bun install --frozen-lockfile --ignore-scripts
       - name: Test build website
-        run: bun run docs
-        cwd: packages/docs
+        run: cd packages/docs && bun run docs
