@@ -4741,15 +4741,9 @@
   };
   "@timonteutelink/template-types-lib" = {
     out_path = "@timonteutelink/template-types-lib";
-    name = "@timonteutelink/template-types-lib@0.0.43";
-    url = "https://registry.npmjs.org/@timonteutelink/template-types-lib/-/template-types-lib-0.0.43.tgz";
-    hash = "sha512-/uTqkGbXGwAEQK0srygDn6A+5LQHxdg7pew+Zbfdzhx63TQ8OxcMcsBuZ7x8wcTXoMLk17gtU1o5wXumJr0RPQ==";
-  };
-  "@timonteutelink/template-types-lib/zod" = {
-    out_path = "@timonteutelink/template-types-lib/node_modules/zod";
-    name = "zod@3.25.67";
-    url = "https://registry.npmjs.org/zod/-/zod-3.25.67.tgz";
-    hash = "sha512-idA2YXwpCdqUSKRCACDE6ItZD9TZzy3OZMtpfLoh6oPR47lipysRrJfjzMqFxQ3uJuUPyUeWe1r9vLH33xO/Qw==";
+    name = "@timonteutelink/template-types-lib@0.0.44";
+    url = "https://registry.npmjs.org/@timonteutelink/template-types-lib/-/template-types-lib-0.0.44.tgz";
+    hash = "sha512-EabjDdBNtDOzZeLwA9NYeGYRnyqt1sLZUH+fTcpJpJ7WTwVthfpCTTAdzFKRGpXy+RxhdxuePLu0OsXFIk9wTA==";
   };
   "@tootallnate/quickjs-emscripten" = {
     out_path = "@tootallnate/quickjs-emscripten";
@@ -6667,6 +6661,24 @@
     name = "code-excerpt@4.0.0";
     url = "https://registry.npmjs.org/code-excerpt/-/code-excerpt-4.0.0.tgz";
     hash = "sha512-xxodCmBen3iy2i0WtAK8FlFNrRzjUqjRsMfho58xT/wvZU1YTM3fCnRjcy1gJPMepaRlgm/0e6w8SpWHpn3/cA==";
+  };
+  "code-templator/@timonteutelink/code-templator-lib" = {
+    out_path = "code-templator/@timonteutelink/node_modules/code-templator-lib";
+    name = "@timonteutelink/code-templator-lib@0.0.56";
+    url = "https://registry.npmjs.org/@timonteutelink/code-templator-lib/-/code-templator-lib-0.0.56.tgz";
+    hash = "sha512-rLpvY3/HCmHZ5Mf93jvG076EypMXtQ4aoIDfkN/7E1dhNn7C3Ud1gmuXFp8ql4yYQeUnzOWlF59MbAQ+UW1mjQ==";
+  };
+  "code-templator/@timonteutelink/code-templator-lib/@timonteutelink/template-types-lib" = {
+    out_path = "code-templator/@timonteutelink/node_modules/code-templator-lib/node_modules/@timonteutelink/node_modules/template-types-lib";
+    name = "@timonteutelink/template-types-lib@0.0.43";
+    url = "https://registry.npmjs.org/@timonteutelink/template-types-lib/-/template-types-lib-0.0.43.tgz";
+    hash = "sha512-/uTqkGbXGwAEQK0srygDn6A+5LQHxdg7pew+Zbfdzhx63TQ8OxcMcsBuZ7x8wcTXoMLk17gtU1o5wXumJr0RPQ==";
+  };
+  "code-templator/@timonteutelink/code-templator-lib/@timonteutelink/template-types-lib/zod" = {
+    out_path = "code-templator/@timonteutelink/node_modules/code-templator-lib/node_modules/@timonteutelink/node_modules/template-types-lib/node_modules/zod";
+    name = "zod@3.25.67";
+    url = "https://registry.npmjs.org/zod/-/zod-3.25.67.tgz";
+    hash = "sha512-idA2YXwpCdqUSKRCACDE6ItZD9TZzy3OZMtpfLoh6oPR47lipysRrJfjzMqFxQ3uJuUPyUeWe1r9vLH33xO/Qw==";
   };
   "code-templator/typescript" = {
     out_path = "code-templator/node_modules/typescript";
