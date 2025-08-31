@@ -1,15 +1,15 @@
-name: Release CLI
+name: Release Template Types Lib
 
 on:
   push:
     tags:
-      - 'cli-v*'
+      - 'types-v*'
 
 jobs:
-  release:
+  publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -19,19 +19,13 @@ jobs:
           bun-version: latest
       - name: Install dependencies
         run: bun install --frozen-lockfile
-      - name: Pack tarballs
-        run: bun run pack:tarballs
-        working-directory: apps/cli
+      - name: Build library
+        run: bun run build
+        working-directory: packages/template-types-lib
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
           bun publish --access public
-        working-directory: apps/cli
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: apps/cli/tarballs/*.tgz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: packages/template-types-lib
