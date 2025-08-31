@@ -56,7 +56,7 @@ export async function saveToCache(
     await fs.writeFile(cacheFilePath.data, value.trim() + "\n", "utf-8");
     logger.info(`Cache file created at ${cacheFilePath.data}`);
   } catch (error) {
-    logger.error("Failed to write cache file:", error);
+    logger.error({ message: "Failed to write cache file:", error });
     return { error: `Failed to write cache file: ${error}` };
   }
 
