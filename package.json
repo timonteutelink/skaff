@@ -23,8 +23,7 @@
     "packages/typescript-config",
     "packages/eslint-config",
     "packages/tailwind-config",
-    "packages/code-templator-lib",
-    "packages/template-types-lib"
+    "packages/code-templator-lib"
   ],
   "resolutions": {
     "react": "19.1.0",

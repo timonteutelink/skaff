@@ -183,28 +183,6 @@
         "tailwindcss": "^4.1.12",
       },
     },
-    "packages/template-types-lib": {
-      "name": "@timonteutelink/template-types-lib",
-      "version": "0.0.44",
-      "dependencies": {
-        "handlebars": "^4.7.8",
-        "zod": "^3.25.76",
-      },
-      "devDependencies": {
-        "@eslint/js": "^9.34.0",
-        "eslint": "^9.34.0",
-        "eslint-config-prettier": "^10.1.8",
-        "eslint-plugin-only-warn": "^1.1.0",
-        "handlebars": "^4.7.8",
-        "typescript": "5.8.3",
-        "typescript-eslint": "^8.41.0",
-        "zod": "^3.25.76",
-      },
-      "peerDependencies": {
-        "handlebars": "^4.7.8",
-        "zod": "^3.25.76",
-      },
-    },
     "packages/typescript-config": {
       "name": "@repo/typescript-config",
       "version": "0.0.0",
@@ -943,7 +921,7 @@
 
     "@timonteutelink/code-templator-lib": ["@timonteutelink/code-templator-lib@workspace:packages/code-templator-lib"],
 
-    "@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@workspace:packages/template-types-lib"],
+    "@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.44", "", { "peerDependencies": { "handlebars": "^4.7.8", "zod": "^3.25.76" } }, "sha512-EabjDdBNtDOzZeLwA9NYeGYRnyqt1sLZUH+fTcpJpJ7WTwVthfpCTTAdzFKRGpXy+RxhdxuePLu0OsXFIk9wTA=="],
 
     "@tootallnate/quickjs-emscripten": ["@tootallnate/quickjs-emscripten@0.23.0", "", {}, "sha512-C5Mc6rdnsaJDjO3UpGW/CQTHtCKaYlScZTly4JIu97Jxo/odCiH0ITnDXSJPTOrEKk/ycSZ0AOgTmkDtkOsvIA=="],
 
