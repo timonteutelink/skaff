@@ -4,7 +4,7 @@ import * as fs from "node:fs/promises";
 import { makeDir } from "./file-service";
 import { Result } from "../lib/types";
 import { createHash } from "node:crypto";
-import { logger } from "../lib/logger";
+import { backendLogger } from "../lib/logger";
 import { logError } from "../lib/utils";
 
 export type CacheKey =
@@ -54,9 +54,9 @@ export async function saveToCache(
 
   try {
     await fs.writeFile(cacheFilePath.data, value.trim() + "\n", "utf-8");
-    logger.info(`Cache file created at ${cacheFilePath.data}`);
+    backendLogger.info(`Cache file created at ${cacheFilePath.data}`);
   } catch (error) {
-    logger.error({ message: "Failed to write cache file:", error });
+    backendLogger.error({ message: "Failed to write cache file:", error });
     return { error: `Failed to write cache file: ${error}` };
   }
 
@@ -104,7 +104,7 @@ export async function runEraseCache(): Promise<Result<void>> {
 
   try {
     await fs.rm(cacheDir.data, { recursive: true, force: true });
-    logger.info("Cache erased");
+    backendLogger.info("Cache erased");
   } catch (error) {
     logError({
       shortMessage: "Failed to erase cache",

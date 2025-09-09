@@ -1,4 +1,6 @@
+import path from "node:path";
 import { Result, TemplateDTO } from "./../lib/types";
+import { DOCS_BASE_URL } from "../lib/constants";
 
 export function projectSearchPathKey(
   projectSearchPath?: string,
@@ -14,6 +16,10 @@ export function projectSearchPathKey(
   return processedPath.slice(
     processedPath.lastIndexOf("_", processedPath.lastIndexOf("_") - 1) + 1,
   );
+}
+
+export function getDocLink(documentPath: string) {
+  return path.join(DOCS_BASE_URL, documentPath);
 }
 
 export function findTemplate(

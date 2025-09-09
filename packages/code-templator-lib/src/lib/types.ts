@@ -1,8 +1,12 @@
 import {
+    FinalTemplateSettings,
   ProjectSettings,
   TemplateConfig,
+  TemplateConfigModule,
   TemplateDisablingThis,
+  UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
+import z from "zod";
 
 export type ProjectCreationOptions = {
   git?: boolean
@@ -72,3 +76,5 @@ export interface DiffHunk {
   newLines: number;
   lines: string[];
 }
+
+export type GenericTemplateConfigModule = TemplateConfigModule<FinalTemplateSettings, UserTemplateSettings, z.AnyZodObject>;

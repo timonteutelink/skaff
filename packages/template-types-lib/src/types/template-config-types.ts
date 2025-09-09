@@ -29,6 +29,14 @@ export const templateConfigSchema = z.object({
     .describe("A description of the template."),
 
   description: z.string().optional().describe("Author"),
+
+  specVersion: z
+    .string()
+    .nonempty()
+    .min(1)
+    .regex(/^\d+\.\d+\.\d+$/, "Must be in semver format")
+    .describe("The version of the template specification being used."),
+
   multiInstance: z
     .boolean()
     .optional()
@@ -178,10 +186,12 @@ export type AiUserConversationSettings<
  * @template TSchemaType - The type of the schema used for template settings.
  */
 export interface TemplateConfigModule<
-  TFinalSettings extends FinalTemplateSettings,
   TParentFinalSettings extends FinalTemplateSettings,
   TInputSettingsSchema extends z.AnyZodObject,
+  TFinalSettingsSchema extends z.AnyZodObject = TInputSettingsSchema,
   TAiResultsObject extends AiResultsObject = {},
+  TInputSettings extends UserTemplateSettings = z.output<TInputSettingsSchema>,
+  TFinalSettings extends FinalTemplateSettings = z.output<TFinalSettingsSchema>
 > {
   /**
    * The target path for the template. Must be set on subtemplates.
@@ -202,12 +212,17 @@ export interface TemplateConfigModule<
   templateSettingsSchema: TInputSettingsSchema;
 
   /**
+   * Schema expected when generating template. Might be same as templateSettingsSchema. Used to check template validity when loading.
+   */
+  templateFinalSettingsSchema: TFinalSettingsSchema;
+
+  /**
    * The final settings type mapping after the user inputted settings are merged with the template settings.
    * This is the type that will be used to generate the template.
    */
   mapFinalSettings: (inputSettings: {
     fullProjectSettings: ProjectSettings;
-    templateSettings: z.output<TInputSettingsSchema>;
+    templateSettings: TInputSettings;
     parentSettings?: TParentFinalSettings;
     aiResults: TAiResultsObject;
   }) => TFinalSettings;
@@ -251,10 +266,7 @@ export interface TemplateConfigModule<
   /**
    * A list of helper functions provided to handlebars before rendering the template.
    */
-  handlebarHelpers?: AnyOrCallback<
-    TFinalSettings,
-    Record<string, HelperDelegate>
-  >;
+  handlebarHelpers?: Record<string, HelperDelegate>
 
   /**
    * A list of commands the user might want to run inside the project. Related to this template. Executed using bash.

@@ -2,24 +2,23 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   webpack(config, { isServer }) {
-    if (isServer) {
-      config.externals = config.externals || [];
+    config.externals = config.externals || [];
+
+    if(isServer) {
       config.resolve.alias = {
         ...config.resolve.alias,
         handlebars: "handlebars/dist/handlebars.js",
+        esbuild: false,
       };
     }
 
     return config;
   },
-  serverExternalPackages: ["esbuild", "pino", "node:vm"],
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  output: "standalone"
+
+  serverExternalPackages: ["esbuild", "node:vm"],
+
+  output: "standalone",
 };
 
 export default nextConfig;
+

@@ -4,14 +4,13 @@ import {
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import path from "node:path";
-import z from "zod";
 import { GitStatus, ProjectDTO, Result } from "../lib/types";
 import { logError, stringOrCallbackToString } from "../lib/utils";
 import { isGitRepo, loadGitStatus } from "../services/git-service";
 import { loadProjectSettings } from "../services/project-settings-service";
 import { executeCommand } from "../services/shell-service";
 import { Template } from "./template";
-import { logger } from "../lib";
+import { backendLogger } from "../lib";
 
 // every project name inside a root project should be unique.
 // The root project can be uniquely identified by its name and author.(and version)
@@ -62,7 +61,7 @@ export class Project {
     );
 
     if (!parsedUserSettings?.success) {
-      logger.error(`Failed to parse user settings: ${parsedUserSettings?.error}`);
+      backendLogger.error(`Failed to parse user settings: ${parsedUserSettings?.error}`);
       return {
         error: `Failed to parse user settings: ${parsedUserSettings?.error}`,
       };

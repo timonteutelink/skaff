@@ -5,7 +5,7 @@ import {
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import * as fs from "node:fs/promises";
-import { logger } from "../lib/logger";
+import { backendLogger } from "../lib/logger";
 import {
   NewTemplateDiffResult,
   ParsedFile,
@@ -91,7 +91,7 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
       );
 
     if (existingTemplateIndex === -1) {
-      logger.error(
+      backendLogger.error(
         `Auto instantiated template ${autoInstantiatedTemplate.subTemplateName} not found`,
       );
       return {
@@ -121,7 +121,7 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
     const subTemplateName = autoInstantiatedTemplate.subTemplateName;
 
     if (!projectSettings.instantiatedTemplates[existingTemplateIndex]) {
-      logger.error(
+      backendLogger.error(
         `Instantiated template ${autoInstantiatedTemplate.subTemplateName} not found in project settings`,
       );
       return { error: "Instantiated template not found in project settings" };
@@ -131,7 +131,7 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
       currentTemplateToAddChildren.findSubTemplate(subTemplateName);
 
     if (!subTemplate) {
-      logger.error(
+      backendLogger.error(
         `Subtemplate ${autoInstantiatedTemplate.subTemplateName} not found`,
       );
       return {
@@ -144,7 +144,7 @@ async function recursivelyModifyAutoInstantiatedTemplatesInProjectSettings(
       subTemplate.parentTemplate.config.templateConfig.name !==
       currentTemplateToAddChildren.config.templateConfig.name
     ) {
-      logger.error(
+      backendLogger.error(
         `Subtemplate ${autoInstantiatedTemplate.subTemplateName} is not a child of template ${currentTemplateToAddChildren.config.templateConfig.name}`,
       );
       return {
@@ -286,7 +286,7 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
     }
 
     if (!rootTemplate.data) {
-      logger.error(
+      backendLogger.error(
         `Root template not found: ${projectSettings.rootTemplateName}`,
       );
       return {
@@ -297,7 +297,7 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
     const subTemplate = rootTemplate.data.findSubTemplate(subTemplateName);
 
     if (!subTemplate) {
-      logger.error(
+      backendLogger.error(
         `Subtemplate ${autoInstantiatedTemplate.subTemplateName} not found`,
       );
       return {
@@ -310,7 +310,7 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
       subTemplate.parentTemplate.config.templateConfig.name !==
       currentTemplateToAddChildren.config.templateConfig.name
     ) {
-      logger.error(
+      backendLogger.error(
         `Subtemplate ${autoInstantiatedTemplate.subTemplateName} is not a child of template ${currentTemplateToAddChildren.config.templateConfig.name}`,
       );
       return {
@@ -376,7 +376,7 @@ export async function generateModifyTemplateDiff(
     );
 
   if (instantiatedTemplateIndex === -1) {
-    logger.error(`Instantiated template ${instantiatedTemplateId} not found`);
+    backendLogger.error(`Instantiated template ${instantiatedTemplateId} not found`);
     return { error: "Instantiated template not found" };
   }
 
@@ -395,7 +395,7 @@ export async function generateModifyTemplateDiff(
   }
 
   if (!template.data) {
-    logger.error(`Template ${instantiatedTemplate.templateName} not found`);
+    backendLogger.error(`Template ${instantiatedTemplate.templateName} not found`);
     return { error: `Template ${instantiatedTemplate.templateName} not found` };
   }
 
@@ -407,7 +407,7 @@ export async function generateModifyTemplateDiff(
   };
 
   if (!newProjectSettings.instantiatedTemplates[instantiatedTemplateIndex]) {
-    logger.error(
+    backendLogger.error(
       `Instantiated template ${instantiatedTemplateId} not found in project settings`,
     );
     return { error: "Instantiated template not found in project settings" };
@@ -554,7 +554,7 @@ export async function generateNewTemplateDiff(
     destinationProject.instantiatedProjectSettings.instantiatedTemplates[0]
       ?.templateCommitHash;
   if (!instantiatedRootTemplate) {
-    logger.error(
+    backendLogger.error(
       `No instantiated root template commit hash found in project settings`,
     );
     return {
@@ -571,14 +571,14 @@ export async function generateNewTemplateDiff(
   }
 
   if (!rootTemplate.data) {
-    logger.error(`Root template not found: ${rootTemplateName}`);
+    backendLogger.error(`Root template not found: ${rootTemplateName}`);
     return { error: "Root template not found" };
   }
 
   const template = rootTemplate.data.findSubTemplate(templateName);
 
   if (!template) {
-    logger.error(`Template ${templateName} not found`);
+    backendLogger.error(`Template ${templateName} not found`);
     return { error: "Template not found" };
   }
 
@@ -637,7 +637,7 @@ export async function applyDiffToProject(
   }
 
   if (!diff.data) {
-    logger.error(`Diff not found in cache`);
+    backendLogger.error(`Diff not found in cache`);
     return { error: "Diff not found" };
   }
 
@@ -647,7 +647,7 @@ export async function applyDiffToProject(
   );
 
   if (!applyResult) {
-    logger.error(`Failed to apply diff to project`);
+    backendLogger.error(`Failed to apply diff to project`);
     return { error: "Failed to apply diff" };
   }
 
@@ -680,7 +680,7 @@ export async function diffProjectFromItsTemplate(
     }
   }
   if (!project.gitStatus.isClean) {
-    logger.error("Cannot diff project with uncommitted changes");
+    backendLogger.error("Cannot diff project with uncommitted changes");
     return { error: "Cannot diff project with uncommitted changes" };
   }
 
@@ -759,7 +759,7 @@ export async function generateUpdateTemplateDiff(
   }
 
   if (!template.data) {
-    logger.error(`Template ${rootTemplateName} not found`);
+    backendLogger.error(`Template ${rootTemplateName} not found`);
     return { error: "Template not found" };
   }
 
@@ -771,7 +771,7 @@ export async function generateUpdateTemplateDiff(
   };
 
   if (!newProjectSettings.instantiatedTemplates[0]) {
-    logger.error(
+    backendLogger.error(
       `Instantiated template ${rootTemplateName} not found in project settings`,
     );
     return { error: "Instantiated template not found in project settings" };

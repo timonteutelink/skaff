@@ -9,16 +9,17 @@ import {
 } from "@timonteutelink/template-types-lib";
 import fs from "fs-extra";
 import { glob } from "glob";
-import Handlebars, { HelperDelegate, HelperOptions } from "handlebars";
+import Handlebars, { HelperDelegate } from "handlebars";
 import { readFile } from "node:fs/promises";
 import * as path from "node:path";
-import { logger } from "../lib/logger";
+import { backendLogger } from "../lib/logger";
 import { Result } from "../lib/types";
 import {
   anyOrCallbackToAny,
   logError,
   stringOrCallbackToString,
 } from "../lib/utils";
+import { Project } from "../models";
 import { Template } from "../models/template";
 import { isSubset } from "../utils/shared-utils";
 import { makeDir } from "./file-service";
@@ -27,28 +28,7 @@ import {
   writeNewProjectSettings,
   writeNewTemplateToSettings,
 } from "./project-settings-service";
-import { Project } from "../models";
 
-const eqHelper = (a: any, b: any, options?: HelperOptions) => {
-  // block form: options.fn is a function
-  if (options && typeof options.fn === "function") {
-    return a === b ? options.fn(this) : options.inverse(this);
-  }
-  // inline/subexpression form: just return the boolean
-  return a === b;
-};
-
-Handlebars.registerHelper("eq", eqHelper);
-
-const snakeCaseHelper = (str: string) => {
-  return str
-    ?.replace("-", "_")
-    .replace(/([a-z])([A-Z])/g, "$1_$2")
-    .replace(/\s+/g, "_")
-    .toLowerCase();
-};
-
-Handlebars.registerHelper("snakeCase", snakeCaseHelper);
 
 export interface GeneratorOptions {
   /**
@@ -101,7 +81,7 @@ export class TemplateGeneratorService {
       !this.currentlyGeneratingTemplate ||
       !this.currentlyGeneratingTemplateFinalSettings
     ) {
-      logger.error("No template is currently being generated.");
+      backendLogger.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
     }
     const targetPath = this.currentlyGeneratingTemplate.config.targetPath;
@@ -205,19 +185,8 @@ export class TemplateGeneratorService {
     ) {
       return { error: "No template is currently being generated." };
     }
-    const fullSettings = this.currentlyGeneratingTemplateFinalSettings;
-    const handlebarHelpers = anyOrCallbackToAny(
-      this.currentlyGeneratingTemplate.config.handlebarHelpers,
-      fullSettings,
-    );
-    if ("error" in handlebarHelpers) {
-      return handlebarHelpers;
-    }
-    if (!handlebarHelpers.data) {
-      return { data: {} };
-    }
 
-    return { data: handlebarHelpers.data };
+    return { data: this.currentlyGeneratingTemplate.config.handlebarHelpers || {} };
   }
 
   private registerHandlebarHelpers(
@@ -257,7 +226,7 @@ export class TemplateGeneratorService {
     unregister?: boolean,
   ): Promise<Result<void>> {
     if (!this.currentlyGeneratingTemplate) {
-      logger.error("No template is currently being generated.");
+      backendLogger.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
     }
 
@@ -294,7 +263,7 @@ export class TemplateGeneratorService {
   // TODO never use a template if commit hashes dont match
   private async copyDirectory(): Promise<Result<void>> {
     if (!this.currentlyGeneratingTemplate) {
-      logger.error("No template is currently being generated.");
+      backendLogger.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
     }
 
@@ -357,14 +326,14 @@ export class TemplateGeneratorService {
               overwrite.srcRegex.test(entry),
             );
             if (!allowedOverwrite || allowedOverwrite.mode === "error") {
-              logger.error(`File: ${entry} at ${destPath} already exists.`);
+              backendLogger.error(`File: ${entry} at ${destPath} already exists.`);
               this.registerHandlebarHelpers(handlebarHelpers.data, true);
               this.registerAllPartials(true);
               return { error: `File: ${entry} at ${destPath} already exists.` };
             }
 
             if (allowedOverwrite.mode.endsWith("warn")) {
-              logger.warn(
+              backendLogger.warn(
                 `File: ${entry} at ${destPath} already exists. ${allowedOverwrite.mode.startsWith("ignore") ? "Ignoring" : "Overwriting"} it.`,
               );
             }
@@ -376,7 +345,7 @@ export class TemplateGeneratorService {
         } catch { }
 
         const content = await readFile(srcPath, { encoding: "utf-8" });
-        const compiled = Handlebars.compile(content);
+        const compiled = Handlebars.compile(content, { strict: true });
         const result = compiled(this.currentlyGeneratingTemplateFinalSettings);
 
         await fs.ensureDir(path.dirname(destPath));
@@ -384,7 +353,7 @@ export class TemplateGeneratorService {
 
         await fs.chmod(destPath, srcStats.mode);
 
-        logger.trace(`Generated: ${destPath}`);
+        backendLogger.debug(`Generated: ${destPath}`);
       } catch (error) {
         logError({
           shortMessage: `Error processing file ${srcPath}`,
@@ -412,7 +381,7 @@ export class TemplateGeneratorService {
       !this.currentlyGeneratingTemplate ||
       !this.currentlyGeneratingTemplateFinalSettings
     ) {
-      logger.error("No template is currently being generated.");
+      backendLogger.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
     }
 
@@ -450,7 +419,7 @@ export class TemplateGeneratorService {
       !this.currentlyGeneratingTemplate ||
       !this.currentlyGeneratingTemplateFinalSettings
     ) {
-      logger.error("No template is currently being generated.");
+      backendLogger.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
     }
     const absoluteFilePath = path.join(
@@ -480,7 +449,7 @@ export class TemplateGeneratorService {
     }
 
     if (!sideEffectResult) {
-      logger.debug(`Side effect function returned null. Skipping file write.`);
+      backendLogger.debug(`Side effect function returned null. Skipping file write.`);
       return { data: undefined };
     }
 
@@ -503,7 +472,7 @@ export class TemplateGeneratorService {
     parentInstanceId?: string,
   ): Promise<Result<void>> {
     if (!template.isValid()) {
-      logger.error(
+      backendLogger.error(
         `Template repo is not clean or template commit hash is not valid.`,
       );
       return {
@@ -539,7 +508,7 @@ export class TemplateGeneratorService {
       return { data: undefined };
     }
     if (!this.currentlyGeneratingTemplate) {
-      logger.error("No template is currently being generated.");
+      backendLogger.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
     }
 
@@ -569,7 +538,7 @@ export class TemplateGeneratorService {
         );
 
       if (!templateToInstantiate) {
-        logger.error(
+        backendLogger.error(
           `Template ${nameOfTemplateToAutoInstantiate} not found in ${this.currentlyGeneratingTemplate.config.templateConfig.name}`,
         );
         return {
@@ -582,7 +551,7 @@ export class TemplateGeneratorService {
         templateToInstantiate.parentTemplate.config.templateConfig.name !==
         this.currentlyGeneratingTemplate.config.templateConfig.name
       ) {
-        logger.error(
+        backendLogger.error(
           `Subtemplate ${templateToAutoInstantiate.subTemplateName} is not a child of template ${this.currentlyGeneratingTemplate.config.templateConfig.name}`,
         );
         return {
@@ -685,7 +654,7 @@ export class TemplateGeneratorService {
     newUuid?: string,
   ): Result<string> {
     if (this.destinationProjectSettings.instantiatedTemplates.length > 0) {
-      logger.error(
+      backendLogger.error(
         `Project ${this.destinationProjectSettings.projectName} already has instantiated templates.`,
       );
       return {
@@ -696,7 +665,7 @@ export class TemplateGeneratorService {
     const parsedUserSettings =
       this.rootTemplate.config.templateSettingsSchema.safeParse(userSettings);
     if (!parsedUserSettings.success) {
-      logger.error(
+      backendLogger.error(
         `Failed to parse user settings: ${parsedUserSettings.error}`,
       );
       return {
@@ -725,7 +694,7 @@ export class TemplateGeneratorService {
   ): Result<string> {
     const template = this.rootTemplate.findSubTemplate(templateName);
     if (!template) {
-      logger.error(
+      backendLogger.error(
         `Template ${templateName} could not be found in rootTemplate ${this.rootTemplate.config.templateConfig.name}`,
       );
       return {
@@ -736,7 +705,7 @@ export class TemplateGeneratorService {
     const parsedUserSettings =
       template.config.templateSettingsSchema.safeParse(userSettings);
     if (!parsedUserSettings.success) {
-      logger.error(
+      backendLogger.error(
         `Failed to parse user settings: ${parsedUserSettings.error}`,
       );
       return {
@@ -751,7 +720,7 @@ export class TemplateGeneratorService {
         instantiatedTemplate.templateName === templateName &&
         !template.config.templateConfig.multiInstance
       ) {
-        logger.error(`Template ${templateName} is already instantiated.`);
+        backendLogger.error(`Template ${templateName} is already instantiated.`);
         return { error: `Template ${templateName} is already instantiated.` };
       }
     }
@@ -796,7 +765,7 @@ export class TemplateGeneratorService {
       );
 
     if (!instantiatedTemplate) {
-      logger.error(`Template with id ${newTemplateInstanceId} not found.`);
+      backendLogger.error(`Template with id ${newTemplateInstanceId} not found.`);
       return { error: `Template with id ${newTemplateInstanceId} not found.` };
     }
 
@@ -805,7 +774,7 @@ export class TemplateGeneratorService {
     const parentInstanceId = instantiatedTemplate.parentId;
 
     if (!parentInstanceId) {
-      logger.error(
+      backendLogger.error(
         `Parent instance ID is required for template ${templateName}. Maybe you are trying to instantiate the root template?`,
       );
       return {
@@ -815,7 +784,7 @@ export class TemplateGeneratorService {
 
     const template = this.rootTemplate.findSubTemplate(templateName);
     if (!template) {
-      logger.error(
+      backendLogger.error(
         `Template ${templateName} could not be found in rootTemplate ${this.rootTemplate.config.templateConfig.name}`,
       );
       return {
@@ -836,7 +805,7 @@ export class TemplateGeneratorService {
     // NO actually just make sure always before generating to git checkout the right template. I guess before every generation/copydirectory we need to git checkout the right commit hash, load the template again from this the newly checked out template. Run the generation and git checkout the old branch again. This needs to happen for every generation but also when displaying the template.
     // NO maybe we will NEED to make another copy of the templates dir and checkout there so we can just retrieve templates and get all versions not only the newest. So when retrieving projects if there is a oldtemplatehash used anywhere we call a function to copy the template dir to cache. There we checkout this commit hash and we load it from there. This way we can also display the other revisions of template in frontend on templates list since they will have been added. Then we can make it so the apps requires restart if you change and recommit the templates dir because before that all templates will be loaded in memory with a commit hash and will never be loaded again. So add checks everywhere if commit hash still the same and if git dir is clean before actually generating the template. So now to uniquely identify template should use everywhere name and commit hash and when searching template you have the newest one and then all revisions used for projects. Probaly store the copied revisions in the cachedir inside a dir with the commithash as name. This way we in generation we can reference files from any revision directly to use old and new templates and also to update from old to new template. When app starts and projects are loaded will check if revisions in cache else copy dir there and checkout right revision. Add error TEMPLATE DIR CHANGED and a button to manually reload all templates and then revisions and will delete all cached revisions. This way no restart of app is needed. So the registry will fill up with revisions while app is running and when user press reload will clean and load again.
     if (!this.currentlyGeneratingTemplateFinalSettings) {
-      logger.error("Failed to parse user settings.");
+      backendLogger.error("Failed to parse user settings.");
       return { error: "Failed to parse user settings." };
     }
 
@@ -866,7 +835,7 @@ export class TemplateGeneratorService {
           )
           .includes(instantiatedTemplate.templateName)
       ) {
-        logger.error(
+        backendLogger.error(
           `Template ${templateName} cannot be instantiated because ${instantiatedTemplate.templateName} is already instantiated.`,
         );
         return {
@@ -885,7 +854,7 @@ export class TemplateGeneratorService {
     }
 
     if (assertions.data !== undefined && !assertions.data) {
-      logger.error(`Template ${templateName} failed assertions.`);
+      backendLogger.error(`Template ${templateName} failed assertions.`);
       return { error: `Template ${templateName} failed assertions.` };
     }
 
@@ -946,7 +915,7 @@ export class TemplateGeneratorService {
     const instantiatedTemplate =
       this.destinationProjectSettings.instantiatedTemplates[0];
     if (!instantiatedTemplate) {
-      logger.error(
+      backendLogger.error(
         `Template with id ${this.currentlyGeneratingTemplateParentInstanceId} not found.`,
       );
       return {
@@ -958,7 +927,7 @@ export class TemplateGeneratorService {
       instantiatedTemplate.templateName !==
       this.rootTemplate.config.templateConfig.name
     ) {
-      logger.error(
+      backendLogger.error(
         `Root template name mismatch in project settings. Make sure root template is the first one in the list.`,
       );
       return {
@@ -973,7 +942,7 @@ export class TemplateGeneratorService {
       .stat(this.options.absoluteDestinationPath)
       .catch(() => null);
     if (dirStat && dirStat.isDirectory()) {
-      logger.error(
+      backendLogger.error(
         `Directory ${this.options.absoluteDestinationPath} already exists.`,
       );
       return {
@@ -991,7 +960,7 @@ export class TemplateGeneratorService {
     }
 
     if (!this.currentlyGeneratingTemplateFinalSettings) {
-      logger.error("Failed to parse user settings.");
+      backendLogger.error("Failed to parse user settings.");
       return { error: "Failed to parse user settings." };
     }
 
@@ -1002,7 +971,7 @@ export class TemplateGeneratorService {
           this.options.absoluteDestinationPath,
         );
         if (!createRepoResult) {
-          logger.error(
+          backendLogger.error(
             `Failed to create git repository in ${this.options.absoluteDestinationPath}`,
           );
           return {
@@ -1026,7 +995,7 @@ export class TemplateGeneratorService {
           `Initial commit for ${this.destinationProjectSettings.projectName}`,
         );
         if (!commitResult) {
-          logger.error(`Failed to commit project settings: ${commitResult}`);
+          backendLogger.error(`Failed to commit project settings: ${commitResult}`);
           return {
             error: `Failed to commit project settings: ${commitResult}`,
           };
@@ -1077,7 +1046,7 @@ export class TemplateGeneratorService {
     Result<string>
   > {
     if (!this.options.dontAutoInstantiate) {
-      logger.error(
+      backendLogger.error(
         "Please make sure child templates are not autoinstantiated before generating a full project from existing settings.",
       );
       return {
@@ -1091,12 +1060,12 @@ export class TemplateGeneratorService {
         this.rootTemplate.config.templateConfig.name !==
         this.destinationProjectSettings.rootTemplateName
       ) {
-        logger.error("Root template name mismatch in project settings.");
+        backendLogger.error("Root template name mismatch in project settings.");
         return { error: "Root template name mismatch in project settings." };
       }
 
       if (this.destinationProjectSettings.instantiatedTemplates.length === 0) {
-        logger.error("No instantiated templates found in project settings.");
+        backendLogger.error("No instantiated templates found in project settings.");
         return {
           error: "No instantiated templates found in project settings.",
         };
@@ -1120,7 +1089,7 @@ export class TemplateGeneratorService {
           instantiated.templateName,
         );
         if (!subTemplate) {
-          logger.error(
+          backendLogger.error(
             `Subtemplate ${instantiated.templateName} not found. Skipping...`,
           );
           continue;

@@ -1,19 +1,33 @@
+// src/app/actions/logs.ts
 "use server";
 
 import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
-import prettyPrint from "pino-pretty";
-import type { Level, LogEvent } from "pino";
-import { Result } from "@timonteutelink/code-templator-lib";
-import { getCacheDirPath } from "@timonteutelink/code-templator-lib";
-import { serverLogger } from "@timonteutelink/code-templator-lib";
-import { LEVEL_NAMES, LogFilter, LogJSON } from "@/lib/types";
-import { logError } from "@timonteutelink/code-templator-lib";
+import { Result, getCacheDirPath, logError } from "@timonteutelink/code-templator-lib";
 
-export async function fetchLogs(
-  filter: LogFilter,
-): Promise<Result<LogJSON[] | string>> {
+export async function logFromClient(data: {
+  level: LevelName;
+  msg: string;
+  meta?: unknown;
+}): Promise<Result<boolean>> {
+  const allowed: LevelName[] = ["trace", "debug", "info", "warn", "error", "fatal"];
+  const { level, msg, meta } = data;
+
+  if (!allowed.includes(level)) {
+    return { error: `Invalid log level: ${String(level)}` };
+  }
+
+  serverLogger.child({ src: "frontend" }).log({
+    level,
+    message: (msg ?? "client log").toString(),
+    meta,
+  });
+
+  return { data: true };
+}
+
+export async function fetchLogs(filter: LogFilter): Promise<Result<LogJSON[] | string>> {
   const {
     levels,
     src,
@@ -28,16 +42,12 @@ export async function fetchLogs(
   const fromMs = from ? Date.parse(from) : null;
   const toMs = to ? Date.parse(to) : null;
 
-  const logPath = path.join(
-    getCacheDirPath(),
-    "logs",
-    `code-templator.${file}.log`,
-  );
+  const logPath = path.join(getCacheDirPath(), "logs", `code-templator.${file}.log`);
 
   try {
     await fs.promises.access(logPath, fs.constants.R_OK);
   } catch {
-    return { data: [] };
+    return { data: [] }; // no log file for that date
   }
 
   const rli = readline.createInterface({
@@ -48,21 +58,22 @@ export async function fetchLogs(
   const matches: LogJSON[] = [];
 
   for await (const line of rli) {
-    if (!line.trim()) continue;
+    const trimmed = line.trim();
+    if (!trimmed) continue;
 
-    let obj: LogJSON;
+    let obj: LogJSON | null = null;
     try {
-      obj = JSON.parse(line);
+      obj = JSON.parse(trimmed);
     } catch {
       continue; // skip corrupted
     }
+    if (!obj) continue;
 
-    if (levels?.length && !levels.includes(LEVEL_NAMES[obj.level]!)) continue;
-    if (src?.length && !src.includes((obj.src ?? "backend") as any)) continue;
+    if (levels?.length && !levels.includes(obj.level)) continue;
+    if (src?.length && !src.includes((obj.src ?? "backend") as unknown)) continue;
     if (fromMs !== null && obj.time < fromMs) continue;
     if (toMs !== null && obj.time > toMs) continue;
-    if (q && !JSON.stringify(obj).toLowerCase().includes(q.toLowerCase()))
-      continue;
+    if (q && !JSON.stringify(obj).toLowerCase().includes(q.toLowerCase())) continue;
 
     matches.push(obj);
     if (matches.length >= limit) break;
@@ -74,32 +85,8 @@ export async function fetchLogs(
     return { data: matches.reverse() }; // newest first
   }
 
-  const stream = prettyPrint({
-    colorize: false,
-    sync: true,
-    translateTime: "SYS:standard",
-  });
-
-  return {
-    data: matches.map((m) => stream.write(JSON.stringify(m)) || "").join(""),
-  };
-}
-
-export async function logFromClient(data: {
-  level: Level;
-  msg: string;
-  meta?: LogEvent;
-}): Promise<Result<boolean>> {
-  const { level = "info", msg, meta = {} } = data;
-  const allowed: Level[] = ["trace", "debug", "info", "warn", "error", "fatal"];
-
-  if (!allowed.includes(level)) {
-    return { error: `Invalid log level: ${level}` };
-  }
-
-  serverLogger.child({ src: "frontend" })[level](meta ?? {}, msg);
-
-  return { data: true };
+  const lines = matches.map(prettyLine).join("\n");
+  return { data: lines };
 }
 
 export async function getAvailableLogDates(): Promise<Result<string[]>> {
@@ -108,18 +95,24 @@ export async function getAvailableLogDates(): Promise<Result<string[]>> {
   try {
     const files = await fs.promises.readdir(logDir);
 
-    return {
-      data: files
-        .filter((f) => /^app\.\d{4}-\d{2}-\d{2}\.log$/.test(f))
-        .map((f) => f.slice(4, -4))
-        .sort()
-        .reverse(),
-    };
+    const dates = files
+      .filter((f) => /^code-templator\.\d{4}-\d{2}-\d{2}\.log$/.test(f))
+      .map((f) => f.slice("code-templator.".length, -".log".length))
+      .sort()
+      .reverse();
+
+    return { data: dates };
   } catch (error) {
-    logError({
-      shortMessage: "Failed to read log directory",
-      error,
-    });
+    logError({ shortMessage: "Failed to read log directory", error });
     return { error: "Failed to read log directory" };
   }
 }
+
+
+function prettyLine(m: LogJSON): string {
+  const ts = new Date(m.time).toISOString();
+  const meta = m.meta ? ` ${JSON.stringify(m.meta)}` : "";
+  const stack = (m as any).stack ? `\n${(m as any).stack}` : "";
+  return `${ts} ${m.level.toUpperCase()} [${m.src}] ${m.msg}${meta}${stack}`;
+}
+

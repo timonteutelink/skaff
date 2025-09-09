@@ -1,8 +1,7 @@
-import { Result, TemplateDTO } from "@timonteutelink/code-templator-lib";
+import { Result } from "@timonteutelink/code-templator-lib";
 import { clsx, type ClassValue } from "clsx";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
-import logger from "./logger";
 import { useRouter } from "next/navigation";
 
 export function cn(...inputs: ClassValue[]) {
@@ -44,7 +43,7 @@ export function toastNullError<T>({
   redirectType = "push",
 }: ToastErrorOptions<T>): T | false {
   const log = (err: unknown, message: string) =>
-    logger[level]({ err }, message);
+    logger[level](message, err);
   const toastErrorMessage = shortMessage || "An error occurred";
 
   if (error) {

@@ -1,6 +1,6 @@
 import * as fs from "node:fs/promises";
 import path from "node:path";
-import { logger } from "../lib/logger";
+import { backendLogger } from "../lib/logger";
 import { Result } from "../lib/types";
 import { Project } from "../models/project";
 import { logError } from "../lib";
@@ -29,7 +29,7 @@ export class ProjectRepository {
 
       return { data: projectResult.data };
     } catch (error) {
-      logger.debug({ error }, `Failed to load project from path ${projectPath}`);
+      backendLogger.debug(`Failed to load project from path ${projectPath}`, error);
       return { error: "Failed to load project due to an error." };
     }
   }
@@ -96,7 +96,7 @@ export class ProjectRepository {
 
       return { data: projects };
     } catch (error) {
-      logger.warn({ error }, `Failed to find projects in path ${searchPath}`);
+      backendLogger.warn(`Failed to find projects in path ${searchPath}`, error);
       return { error: "Failed to find projects due to an error." };
     }
   }

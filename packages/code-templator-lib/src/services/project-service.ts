@@ -3,7 +3,6 @@ import {
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import path from "node:path";
-import { logger } from "../lib/logger";
 import { ProjectCreationResult, Result, ProjectCreationOptions } from "../lib/types";
 import { Project } from "../models/project";
 import {
@@ -12,6 +11,7 @@ import {
 } from "../repositories";
 import { addAllAndRetrieveDiff, parseGitDiff } from "./git-service";
 import { TemplateGeneratorService } from "./template-generator-service";
+import { backendLogger } from "../lib";
 
 export async function parseProjectCreationResult(
   projectPath: string,
@@ -28,7 +28,7 @@ export async function parseProjectCreationResult(
   }
 
   if (!project.data) {
-    logger.error(`Project ${newProjectName} not found after creation`);
+    backendLogger.error(`Project ${newProjectName} not found after creation`);
     return {
       error: "Failed to create project, project not found after creation",
     };
@@ -73,7 +73,7 @@ export async function instantiateProject(
   }
 
   if (!template.data) {
-    logger.error(`Root template not found: ${rootTemplateName}`);
+    backendLogger.error(`Root template not found: ${rootTemplateName}`);
     return { error: "Root template not found" };
   }
 
@@ -110,7 +110,7 @@ export async function generateProjectFromTemplateSettings(
     projectSettings.instantiatedTemplates[0]?.templateCommitHash;
 
   if (!instantiatedRootTemplate) {
-    logger.error(
+    backendLogger.error(
       `No instantiated root template commit hash found in project settings`,
     );
     return {
@@ -126,7 +126,7 @@ export async function generateProjectFromTemplateSettings(
   }
 
   if (!rootTemplate.data) {
-    logger.error(
+    backendLogger.error(
       `Root template not found: ${projectSettings.rootTemplateName}`,
     );
     return { error: "Root template not found" };

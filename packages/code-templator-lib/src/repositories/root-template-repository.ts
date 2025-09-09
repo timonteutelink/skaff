@@ -3,7 +3,7 @@ import { Template } from "../models/template";
 import { Result } from "../lib/types";
 import path from "node:path";
 import { cloneRevisionToCache } from "../services/git-service";
-import { logger } from "../lib/logger";
+import { backendLogger } from "../lib/logger";
 import { logError } from "../lib/utils";
 
 // TODO: findTemplate and loadRevision should only load that specific template not load all templates
@@ -32,9 +32,9 @@ export class RootTemplateRepository {
       try {
         rootTemplateDirs = await fs.readdir(rootTemplateDirsPath);
       } catch (error) {
-        logger.warn(
-          { error },
+        backendLogger.warn(
           `Failed to read root template directories at ${rootTemplateDirsPath}.`,
+          error
         );
         continue;
       }
@@ -46,13 +46,13 @@ export class RootTemplateRepository {
         try {
           const stat = await fs.stat(rootTemplateDirPath);
           if (!stat.isDirectory()) {
-            logger.warn(
+            backendLogger.warn(
               `Root template directory at ${rootTemplateDirPath} is not a directory`,
             );
             continue;
           }
         } catch (e) {
-          logger.warn(
+          backendLogger.warn(
             `Failed to read root template directory at ${rootTemplateDirPath}: ${e}`,
           );
           continue;
@@ -128,7 +128,7 @@ export class RootTemplateRepository {
     });
 
     if (revisions.length === 0) {
-      logger.warn(`No revisions found for template ${templateName}`);
+      backendLogger.warn(`No revisions found for template ${templateName}`);
       return { data: null };
     }
 

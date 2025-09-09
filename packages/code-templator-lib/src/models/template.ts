@@ -23,9 +23,22 @@ import {
   TemplateDTO,
 } from "../lib/types";
 import { Project } from "./project";
-import { logger } from "../lib/logger";
+import { backendLogger } from "../lib/logger";
 import { logError } from "../lib/utils";
 import { parseProjectCreationResult } from "../services/project-service";
+import * as semver from "semver";
+import { MAJOR_SPEC_VERSION } from "../lib/constants";
+import { getDocLink } from "../utils/shared-utils";
+import { checkMissingPartials, checkMissingSettings } from "../utils/handlebars-utils";
+
+export class InvalidTemplateSpecVersionError extends Error {
+  constructor(templateName: string, templateSpecVersion: string) {
+    const templateVersion = semver.coerce(templateSpecVersion) ?? "0.0.0";
+    const majorTemplateVersion = semver.major(templateVersion)
+    super(`Template: ${templateName} is using an ${majorTemplateVersion > MAJOR_SPEC_VERSION ? "newer" : "older"} version. Please upgrade to major version: ${MAJOR_SPEC_VERSION}. Check out ${getDocLink(`docs/migration-guide#${MAJOR_SPEC_VERSION}`)} for a full migration guide`)
+    this.name = "InvalidTemplateSpecVersionError";
+  }
+}
 
 export class Template {
   // The loaded configuration module.
@@ -103,6 +116,34 @@ export class Template {
     }
   }
 
+  private async validate() {
+    if (semver.major(semver.coerce(this.config.templateConfig.specVersion) ?? "0.0.0") != MAJOR_SPEC_VERSION) {
+      throw new InvalidTemplateSpecVersionError(this.config.templateConfig.name, this.config.templateConfig.specVersion)
+    }
+
+    await checkMissingSettings(this);
+    await checkMissingPartials(this);
+  }
+
+  private static async constructTemplate(
+    config: TemplateConfigModule<
+      FinalTemplateSettings,
+      UserTemplateSettings,
+      z.AnyZodObject
+    >,
+    baseDir: string,
+    absDir: string,
+    templatesDir: string,
+    commitHash?: string,
+    refDir?: string,
+    partialsDir?: string,
+  ) {
+    const template = new Template(config, baseDir, absDir, templatesDir, commitHash, refDir, partialsDir);
+
+    await template.validate();
+    return template
+  }
+
   /**
    * Loads all template configurations under the given root directory using loadAllTemplateConfigs.
    * A Template instance is created for every config file that has an adjacent "templates" folder.
@@ -128,7 +169,7 @@ export class Template {
       };
     }
     if (!isRepoClean.data) {
-      logger.warn(`Ignoring template because the repo is not clean`);
+      backendLogger.warn(`Ignoring template because the repo is not clean`);
       return { error: "Template dir is not clean" };
     }
 
@@ -178,16 +219,26 @@ export class Template {
         rootCommitHash = commitHash.data;
       }
 
-      const template = new Template(
-        info.templateConfig,
-        absoluteBaseDir,
-        templateDir,
-        templatesDir,
-        rootCommitHash,
-        info.refDir,
-        partialsDir,
-      );
-      templatesMap[templateDir] = template;
+      try {
+        const template = await Template.constructTemplate(
+          info.templateConfig,
+          absoluteBaseDir,
+          templateDir,
+          templatesDir,
+          rootCommitHash,
+          info.refDir,
+          partialsDir,
+        );
+        templatesMap[templateDir] = template;
+      } catch (e: unknown) {
+        const errMsg = e instanceof Error ? e.message : "A problem occured while initializing the template class"
+        backendLogger.error(
+          errMsg
+        );
+        return {
+          error: errMsg
+        }
+      }
     }
 
     const allTemplates = Object.values(templatesMap);
@@ -268,9 +319,9 @@ export class Template {
     }
 
     if (rootTemplates.length > 1) {
-      logger.error(
-        { rootTemplates },
+      backendLogger.error(
         `Multiple root templates found. Make sure the directory structure is correct.`,
+        rootTemplates
       );
       return {
         error:
@@ -315,7 +366,7 @@ export class Template {
     if ("error" in resultPath) {
       return resultPath;
     } else {
-      logger.info(`Template instantiated at: ${resultPath.data}`);
+      backendLogger.info(`Template instantiated at: ${resultPath.data}`);
     }
     return resultPath;
   }
@@ -359,7 +410,7 @@ export class Template {
       return result;
     }
 
-    logger.info(`New project created at: ${result.data}`);
+    backendLogger.info(`New project created at: ${result.data}`);
     return await parseProjectCreationResult(result.data, projectCreationOptions);
   }
 
