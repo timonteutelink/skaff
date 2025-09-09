@@ -8,12 +8,11 @@ import {
   DialogTitle,
   DialogFooter,
   DialogTrigger,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useDropzone } from "react-dropzone";
-import { X, FileJson } from "lucide-react";
+import { FileJson } from "lucide-react";
 import { cn, toastNullError } from "@/lib/utils";
 import { Result } from "@timonteutelink/code-templator-lib/browser";
 

@@ -4,8 +4,7 @@ import {
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import { Result } from "./types";
-import { logger } from "./logger";
-import { Level } from "pino";
+import { backendLogger, LevelName } from "./logger";
 
 export function anyOrCallbackToAny<
   TSettings extends FinalTemplateSettings,
@@ -42,7 +41,7 @@ export function stringOrCallbackToString<
 }
 
 export interface LogErrorOptions<T> {
-  level?: Level;
+  level?: LevelName;
   shortMessage?: string;
   result?: Result<T>;
   error?: unknown;
@@ -57,7 +56,7 @@ export function logError<T>({
   nullErrorMessage,
 }: LogErrorOptions<T>): T | false {
   const log = (err: unknown, message: string) =>
-    logger[level]({ err }, message);
+    backendLogger[level as 'info'](message, error, err);
   const msg = shortMessage || "An error occurred";
 
   if (error) {

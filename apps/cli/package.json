@@ -13,7 +13,7 @@
     "@oclif/plugin-help": "^6.2.32",
     "@oclif/plugin-plugins": "^5.4.46",
     "@timonteutelink/code-templator-lib": "0.0.56",
-    "@timonteutelink/template-types-lib": "0.0.44",
+    "@timonteutelink/template-types-lib": "0.0.45",
     "@types/node": "^22.18.0",
     "esbuild": "^0.25.9",
     "pino": "^9.9.0",

@@ -1,14 +1,14 @@
-import { Result } from "@timonteutelink/code-templator-lib";
+import { Result } from "@timonteutelink/code-templator-lib/browser";
 import { clsx, type ClassValue } from "clsx";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
 import { useRouter } from "next/navigation";
+import logger from "./logger";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Same strings as pino Level type
 type ToastLevel = "info" | "error" | "warn";
 
 export function showToast(message: string, level: ToastLevel) {

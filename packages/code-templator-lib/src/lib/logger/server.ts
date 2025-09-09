@@ -59,7 +59,7 @@ export const serverLogger = createLogger({
       filename: "code-templator.%DATE%.log",
       datePattern: "YYYY-MM-DD",
       zippedArchive: false,
-      maxFiles: process.env.LOG_MAX_FILES ?? "14d",
+      maxFiles: process.env.NEXT_PUBLIC_LOG_MAX_FILES ?? "14d",
       format: jsonLine,
       level: process.env.NEXT_PUBLIC_FILE_LOG_LEVEL ?? "info",
     }),

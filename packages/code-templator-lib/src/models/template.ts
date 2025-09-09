@@ -1,12 +1,9 @@
 import {
-  FinalTemplateSettings,
   ProjectSettings,
-  TemplateConfigModule,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import z from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   loadAllTemplateConfigs,
@@ -17,6 +14,7 @@ import { getCacheDirPath } from "../services/cache-service";
 import { getCommitHash, isGitRepoClean } from "../services/git-service";
 import { TemplateGeneratorService } from "../services/template-generator-service";
 import {
+  GenericTemplateConfigModule,
   ProjectCreationOptions,
   ProjectCreationResult,
   Result,
@@ -42,11 +40,7 @@ export class InvalidTemplateSpecVersionError extends Error {
 
 export class Template {
   // The loaded configuration module.
-  public config: TemplateConfigModule<
-    FinalTemplateSettings,
-    UserTemplateSettings,
-    z.AnyZodObject
-  >;
+  public config: GenericTemplateConfigModule;
   // Subtemplates, keyed by the immediate subdirectory name (each key holds an array of children).
   public subTemplates: Record<string, Template[]> = {};
   // A reference to the parent template, if this is a subtemplate.
@@ -80,11 +74,7 @@ export class Template {
   public isDefault: boolean = false;
 
   private constructor(
-    config: TemplateConfigModule<
-      FinalTemplateSettings,
-      UserTemplateSettings,
-      z.AnyZodObject
-    >,
+    config: GenericTemplateConfigModule,
     baseDir: string,
     absDir: string,
     templatesDir: string,
@@ -126,11 +116,7 @@ export class Template {
   }
 
   private static async constructTemplate(
-    config: TemplateConfigModule<
-      FinalTemplateSettings,
-      UserTemplateSettings,
-      z.AnyZodObject
-    >,
+    config: GenericTemplateConfigModule,
     baseDir: string,
     absDir: string,
     templatesDir: string,

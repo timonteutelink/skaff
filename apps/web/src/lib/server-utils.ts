@@ -1,4 +1,4 @@
-import { getConfig, getProjectRepository, logger, Project, Result } from "@timonteutelink/code-templator-lib";
+import { getConfig, getProjectRepository, backendLogger, Project, Result } from "@timonteutelink/code-templator-lib";
 
 export async function findProject(
   projectName: string,
@@ -20,7 +20,7 @@ export async function findProject(
   }
 
   if (!project) {
-    logger.error(`Project ${projectName} not found`);
+    backendLogger.error(`Project ${projectName} not found`);
     return { error: `Project ${projectName} not found` };
   }
 

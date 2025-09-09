@@ -1,10 +1,10 @@
-// src/app/actions/logs.ts
 "use server";
 
 import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
-import { Result, getCacheDirPath, logError } from "@timonteutelink/code-templator-lib";
+import { LevelName, LogFilter, LogJSON, Result, getCacheDirPath, logError, serverLogger } from "@timonteutelink/code-templator-lib";
+import { getCacheDir } from "../../../../../packages/code-templator-lib/dist/services/cache-service";
 
 export async function logFromClient(data: {
   level: LevelName;
@@ -70,7 +70,7 @@ export async function fetchLogs(filter: LogFilter): Promise<Result<LogJSON[] | s
     if (!obj) continue;
 
     if (levels?.length && !levels.includes(obj.level)) continue;
-    if (src?.length && !src.includes((obj.src ?? "backend") as unknown)) continue;
+    if (src?.length && !src.includes(obj.src ?? "backend")) continue;
     if (fromMs !== null && obj.time < fromMs) continue;
     if (toMs !== null && obj.time > toMs) continue;
     if (q && !JSON.stringify(obj).toLowerCase().includes(q.toLowerCase())) continue;
@@ -90,10 +90,15 @@ export async function fetchLogs(filter: LogFilter): Promise<Result<LogJSON[] | s
 }
 
 export async function getAvailableLogDates(): Promise<Result<string[]>> {
-  const logDir = path.join(getCacheDirPath(), "logs");
+  const logDir = await getCacheDir();
+
+  if ("error" in logDir) {
+    logError({ shortMessage: "Failed to get cache directory", error: logDir.error });
+    return { error: "Failed to get cache directory" };
+  }
 
   try {
-    const files = await fs.promises.readdir(logDir);
+    const files = await fs.promises.readdir(path.join(logDir.data, "logs"));
 
     const dates = files
       .filter((f) => /^code-templator\.\d{4}-\d{2}-\d{2}\.log$/.test(f))

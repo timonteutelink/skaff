@@ -1,6 +1,6 @@
-import path from "node:path";
 import { Result, TemplateDTO } from "./../lib/types";
 import { DOCS_BASE_URL } from "../lib/constants";
+import path from "path";
 
 export function projectSearchPathKey(
   projectSearchPath?: string,

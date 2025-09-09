@@ -1,6 +1,6 @@
 {
   "name": "@timonteutelink/code-templator-lib",
-  "version": "0.0.57",
+  "version": "0.0.58",
   "exports": {
     ".": "./dist/index.js",
     "./browser": "./dist/browser.js"
@@ -30,7 +30,7 @@
   "dependencies": {
     "@langchain/langgraph": "^0.3.12",
     "@langchain/openai": "^0.5.18",
-    "@timonteutelink/template-types-lib": "0.0.44",
+    "@timonteutelink/template-types-lib": "0.0.45",
     "esbuild": "^0.25.9",
     "fs-extra": "^11.3.1",
     "glob": "^11.0.3",

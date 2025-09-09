@@ -22,7 +22,7 @@
         "@oclif/plugin-help": "^6.2.32",
         "@oclif/plugin-plugins": "^5.4.46",
         "@timonteutelink/code-templator-lib": "0.0.56",
-        "@timonteutelink/template-types-lib": "0.0.44",
+        "@timonteutelink/template-types-lib": "0.0.45",
         "@types/node": "^22.18.0",
         "esbuild": "^0.25.9",
         "pino": "^9.9.0",
@@ -81,7 +81,7 @@
         "@radix-ui/react-tooltip": "^1.2.8",
         "@tailwindcss/postcss": "^4.1.13",
         "@timonteutelink/code-templator-lib": "workspace:*",
-        "@timonteutelink/template-types-lib": "0.0.44",
+        "@timonteutelink/template-types-lib": "0.0.45",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "cmdk": "^1.1.1",
@@ -136,7 +136,7 @@
       "dependencies": {
         "@langchain/langgraph": "^0.3.12",
         "@langchain/openai": "^0.5.18",
-        "@timonteutelink/template-types-lib": "0.0.44",
+        "@timonteutelink/template-types-lib": "0.0.45",
         "esbuild": "^0.25.9",
         "fs-extra": "^11.3.1",
         "glob": "^11.0.3",
@@ -929,7 +929,7 @@
 
     "@timonteutelink/code-templator-lib": ["@timonteutelink/code-templator-lib@workspace:packages/code-templator-lib"],
 
-    "@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.44", "", { "peerDependencies": { "handlebars": "^4.7.8", "zod": "^3.25.76" } }, "sha512-EabjDdBNtDOzZeLwA9NYeGYRnyqt1sLZUH+fTcpJpJ7WTwVthfpCTTAdzFKRGpXy+RxhdxuePLu0OsXFIk9wTA=="],
+    "@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.45", "", { "peerDependencies": { "handlebars": "^4.7.8", "zod": "^3.25.76" } }, "sha512-VCAXOsckSYrNLNyHPEnLUaZGDOfQtoeUCuSVh94h4x7Q/O1Afim6hZj8ZcczcDQYeGUzdUNS/UV5JKY/ISkL+Q=="],
 
     "@tootallnate/quickjs-emscripten": ["@tootallnate/quickjs-emscripten@0.23.0", "", {}, "sha512-C5Mc6rdnsaJDjO3UpGW/CQTHtCKaYlScZTly4JIu97Jxo/odCiH0ITnDXSJPTOrEKk/ycSZ0AOgTmkDtkOsvIA=="],
 
@@ -2774,8 +2774,6 @@
     "cli-truncate/string-width": ["string-width@7.2.0", "", { "dependencies": { "emoji-regex": "^10.3.0", "get-east-asian-width": "^1.0.0", "strip-ansi": "^7.1.0" } }, "sha512-tsaTIkKW9b4N+AEj+SVA+WhJzV7/zMhcSu78mLKWSk7cXMOSHsBKFWUs0fWwq8QyK3MgJBQRX6Gbi4kYbdvGkQ=="],
 
     "code-templator/@timonteutelink/code-templator-lib": ["@timonteutelink/code-templator-lib@0.0.56", "", { "dependencies": { "@langchain/langgraph": "^0.3.1", "@langchain/openai": "^0.5.12", "@timonteutelink/template-types-lib": "0.0.43", "esbuild": "^0.25.5", "fs-extra": "^11.3.0", "glob": "^11.0.2", "handlebars": "^4.7.8", "langchain": "^0.3.27", "pino": "^9.7.0", "yaml": "^2.8.0", "zod": "^3.25.56", "zod-to-json-schema": "^3.24.5" } }, "sha512-rLpvY3/HCmHZ5Mf93jvG076EypMXtQ4aoIDfkN/7E1dhNn7C3Ud1gmuXFp8ql4yYQeUnzOWlF59MbAQ+UW1mjQ=="],
-
-    "code-templator/@types/node": ["@types/node@22.18.0", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-m5ObIqwsUp6BZzyiy4RdZpzWGub9bqLJMvZDD0QMXhxjqMHMENlj+SqF5QxoUwaQNFe+8kz8XM8ZQhqkQPTgMQ=="],
 
     "code-templator/typescript": ["typescript@5.9.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A=="],
 

@@ -15,6 +15,7 @@ import {
 } from "../services/cache-service";
 import { initEsbuild } from "../utils/get-esbuild";
 import { existsSync } from "node:fs";
+import { GenericTemplateConfigModule } from "../lib";
 
 const { templateConfigSchema } = templateTypesLibNS;
 
@@ -33,11 +34,7 @@ interface TemplateConfigFileInfo {
 }
 
 export type TemplateConfigWithFileInfo = {
-  templateConfig: templateTypesLibNS.TemplateConfigModule<
-    templateTypesLibNS.FinalTemplateSettings,
-    templateTypesLibNS.FinalTemplateSettings,
-    zodNS.AnyZodObject
-  >;
+  templateConfig: GenericTemplateConfigModule
 } & TemplateConfigFileInfo;
 
 async function readTsConfig(): Promise<any> {

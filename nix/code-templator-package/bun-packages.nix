@@ -2940,9 +2940,9 @@
   };
   "@timonteutelink/template-types-lib" = {
     out_path = "@timonteutelink/template-types-lib";
-    name = "@timonteutelink/template-types-lib@0.0.44";
-    url = "https://registry.npmjs.org/@timonteutelink/template-types-lib/-/template-types-lib-0.0.44.tgz";
-    hash = "sha512-EabjDdBNtDOzZeLwA9NYeGYRnyqt1sLZUH+fTcpJpJ7WTwVthfpCTTAdzFKRGpXy+RxhdxuePLu0OsXFIk9wTA==";
+    name = "@timonteutelink/template-types-lib@0.0.45";
+    url = "https://registry.npmjs.org/@timonteutelink/template-types-lib/-/template-types-lib-0.0.45.tgz";
+    hash = "sha512-VCAXOsckSYrNLNyHPEnLUaZGDOfQtoeUCuSVh94h4x7Q/O1Afim6hZj8ZcczcDQYeGUzdUNS/UV5JKY/ISkL+Q==";
   };
   "@tootallnate/quickjs-emscripten" = {
     out_path = "@tootallnate/quickjs-emscripten";
@@ -4077,12 +4077,6 @@
     name = "@timonteutelink/template-types-lib@0.0.43";
     url = "https://registry.npmjs.org/@timonteutelink/template-types-lib/-/template-types-lib-0.0.43.tgz";
     hash = "sha512-/uTqkGbXGwAEQK0srygDn6A+5LQHxdg7pew+Zbfdzhx63TQ8OxcMcsBuZ7x8wcTXoMLk17gtU1o5wXumJr0RPQ==";
-  };
-  "code-templator/@types/node" = {
-    out_path = "code-templator/@types/node_modules/node";
-    name = "@types/node@22.18.0";
-    url = "https://registry.npmjs.org/@types/node/-/node-22.18.0.tgz";
-    hash = "sha512-m5ObIqwsUp6BZzyiy4RdZpzWGub9bqLJMvZDD0QMXhxjqMHMENlj+SqF5QxoUwaQNFe+8kz8XM8ZQhqkQPTgMQ==";
   };
   "code-templator/typescript" = {
     out_path = "code-templator/node_modules/typescript";

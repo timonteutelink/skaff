@@ -23,10 +23,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Copy, Download, RefreshCw } from "lucide-react";
+
 import { fetchLogs, getAvailableLogDates } from "@/app/actions/logs";
 import { toastNullError } from "@/lib/utils";
 import { toast } from "sonner";
-import { Level, LogJSON, Source, ALL_LEVELS, LEVEL_NAMES } from "@/lib/types";
+
+import type { LevelName as Level, LogJSON, Source } from "@timonteutelink/code-templator-lib/browser";
+import { ALL_LEVELS } from "@timonteutelink/code-templator-lib/browser";
 
 const LEVEL_COLORS: Record<Level, string> = {
   trace: "bg-slate-500",
@@ -39,12 +42,7 @@ const LEVEL_COLORS: Record<Level, string> = {
 
 export default function LogsPage() {
   /* --------------------------------- filters -------------------------------- */
-  const [levels, setLevels] = useState<Level[]>([
-    "info",
-    "warn",
-    "error",
-    "fatal",
-  ]);
+  const [levels, setLevels] = useState<Level[]>(["info", "warn", "error", "fatal"]);
   const [sources, setSources] = useState<Source[]>(["backend", "frontend"]);
   const [query, setQuery] = useState("");
   const [fromDate, setFromDate] = useState("");
@@ -85,7 +83,6 @@ export default function LogsPage() {
         toastNullError({ error, shortMessage: "Failed to load log dates" });
       }
     };
-
     loadDates();
   }, [selectedDate]);
 
@@ -134,12 +131,6 @@ export default function LogsPage() {
     return () => clearInterval(id);
   }, [autoRefresh, loadLogs]);
 
-  // useEffect(() => {
-  //   if (logEndRef.current && !pretty) {
-  //     logEndRef.current.scrollIntoView({ behavior: "smooth" })
-  //   }
-  // }, [logs, pretty])
-
   const startDrag = useCallback(
     (e: React.MouseEvent) => {
       dragStartYRef.current = e.clientY;
@@ -147,10 +138,7 @@ export default function LogsPage() {
 
       const onDrag = (ev: MouseEvent) => {
         const delta = dragStartYRef.current - ev.clientY;
-        const newHeight = Math.min(
-          Math.max(startHeightRef.current + delta, 120),
-          600,
-        );
+        const newHeight = Math.min(Math.max(startHeightRef.current + delta, 120), 600);
         setPanelHeight(newHeight);
       };
 
@@ -166,15 +154,11 @@ export default function LogsPage() {
   );
 
   const toggleLevel = useCallback((level: Level) => {
-    setLevels((prev) =>
-      prev.includes(level) ? prev.filter((l) => l !== level) : [...prev, level],
-    );
+    setLevels((prev) => (prev.includes(level) ? prev.filter((l) => l !== level) : [...prev, level]));
   }, []);
 
   const toggleSource = useCallback((src: Source) => {
-    setSources((prev) =>
-      prev.includes(src) ? prev.filter((s) => s !== src) : [...prev, src],
-    );
+    setSources((prev) => (prev.includes(src) ? prev.filter((s) => s !== src) : [...prev, src]));
   }, []);
 
   const copyToClipboard = useCallback(() => {
@@ -182,9 +166,7 @@ export default function LogsPage() {
     navigator.clipboard
       .writeText(content)
       .then(() => toast.info("Logs copied to clipboard"))
-      .catch((error) =>
-        toastNullError({ error, shortMessage: "Failed to copy logs" }),
-      );
+      .catch((error) => toastNullError({ error, shortMessage: "Failed to copy logs" }));
   }, [logs, rawLogs, pretty]);
 
   const downloadLogs = useCallback(() => {
@@ -216,15 +198,8 @@ export default function LogsPage() {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={loadLogs}
-                  disabled={isLoading}
-                >
-                  <RefreshCw
-                    className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
-                  />
+                <Button variant="outline" size="icon" onClick={loadLogs} disabled={isLoading}>
+                  <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Refresh logs</TooltipContent>
@@ -232,11 +207,7 @@ export default function LogsPage() {
           </TooltipProvider>
 
           <div className="flex items-center space-x-2">
-            <Switch
-              id="auto-refresh"
-              checked={autoRefresh}
-              onCheckedChange={setAutoRefresh}
-            />
+            <Switch id="auto-refresh" checked={autoRefresh} onCheckedChange={setAutoRefresh} />
             <Label htmlFor="auto-refresh">Auto-refresh</Label>
           </div>
         </div>
@@ -265,15 +236,16 @@ export default function LogsPage() {
               </div>
             </div>
 
+            {/* sources */}
             <div className="space-y-2">
               <Label>Sources</Label>
               <div className="flex flex-col space-y-2">
-                {["backend", "frontend"].map((src) => (
+                {(["backend", "frontend"] as Source[]).map((src) => (
                   <div key={src} className="flex items-center space-x-2">
                     <Checkbox
                       id={`source-${src}`}
-                      checked={sources.includes(src as Source)}
-                      onCheckedChange={() => toggleSource(src as Source)}
+                      checked={sources.includes(src)}
+                      onCheckedChange={() => toggleSource(src)}
                     />
                     <Label htmlFor={`source-${src}`}>{src}</Label>
                   </div>
@@ -281,6 +253,7 @@ export default function LogsPage() {
               </div>
             </div>
 
+            {/* date range */}
             <div className="space-y-2">
               <Label>Date Range</Label>
               <div className="grid grid-cols-2 gap-2">
@@ -309,6 +282,7 @@ export default function LogsPage() {
               </div>
             </div>
 
+            {/* search + pretty + date */}
             <div className="space-y-2">
               <Label htmlFor="search">Search</Label>
               <Input
@@ -321,11 +295,7 @@ export default function LogsPage() {
 
               <div className="flex items-center justify-between mt-4">
                 <div className="flex items-center space-x-2">
-                  <Switch
-                    id="pretty-print"
-                    checked={pretty}
-                    onCheckedChange={setPretty}
-                  />
+                  <Switch id="pretty-print" checked={pretty} onCheckedChange={setPretty} />
                   <Label htmlFor="pretty-print">Pretty Print</Label>
                 </div>
 
@@ -341,9 +311,7 @@ export default function LogsPage() {
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value={selectedDate}>
-                        {selectedDate}
-                      </SelectItem>
+                      <SelectItem value={selectedDate}>{selectedDate}</SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -367,6 +335,7 @@ export default function LogsPage() {
             </Button>
           </div>
         </CardHeader>
+
         <CardContent className="p-0 h-[calc(100%-3.5rem)]">
           <Tabs defaultValue="formatted" className="h-full">
             <div className="border-b px-4">
@@ -383,9 +352,7 @@ export default function LogsPage() {
               >
                 {logs.length === 0 && !pretty ? (
                   <div className="flex items-center justify-center h-full text-muted-foreground">
-                    {isLoading
-                      ? "Loading logs..."
-                      : "No logs found matching your criteria"}
+                    {isLoading ? "Loading logs..." : "No logs found matching your criteria"}
                   </div>
                 ) : (
                   logs.map((log, idx) => (
@@ -397,12 +364,10 @@ export default function LogsPage() {
                       <span className="text-muted-foreground">
                         {new Date(log.time).toLocaleString()}
                       </span>
-                      <Badge className={LEVEL_COLORS[LEVEL_NAMES[log.level]!]}>
-                        {LEVEL_NAMES[log.level]!.toUpperCase()}
+                      <Badge className={LEVEL_COLORS[log.level]}>
+                        {log.level.toUpperCase()}
                       </Badge>
-                      <span className="text-muted-foreground">
-                        [{log.src || "backend"}]
-                      </span>
+                      <span className="text-muted-foreground">[{log.src || "backend"}]</span>
                       <span>{log.msg || JSON.stringify(log)}</span>
                     </div>
                   ))
@@ -424,17 +389,10 @@ export default function LogsPage() {
             className="absolute bottom-0 left-0 right-0 bg-background border-t shadow-lg"
             style={{ height: panelHeight }}
           >
-            <div
-              className="h-2 w-full cursor-row-resize bg-muted"
-              onMouseDown={startDrag}
-            />
+            <div className="h-2 w-full cursor-row-resize bg-muted" onMouseDown={startDrag} />
             <div className="flex items-center justify-between px-4 border-b">
               <span className="text-sm font-medium">Log Details</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedLog(null)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setSelectedLog(null)}>
                 Close
               </Button>
             </div>
@@ -447,3 +405,4 @@ export default function LogsPage() {
     </div>
   );
 }
+

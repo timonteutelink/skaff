@@ -1,5 +1,5 @@
 import {
-    FinalTemplateSettings,
+  FinalTemplateSettings,
   ProjectSettings,
   TemplateConfig,
   TemplateConfigModule,
@@ -77,4 +77,4 @@ export interface DiffHunk {
   lines: string[];
 }
 
-export type GenericTemplateConfigModule = TemplateConfigModule<FinalTemplateSettings, UserTemplateSettings, z.AnyZodObject>;
+export type GenericTemplateConfigModule = TemplateConfigModule<FinalTemplateSettings, z.AnyZodObject, z.AnyZodObject, Record<string, string>, UserTemplateSettings, FinalTemplateSettings>;
