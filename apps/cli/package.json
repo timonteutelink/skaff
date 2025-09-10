@@ -92,7 +92,7 @@
     "__buildprod": "tsc --noEmit && bun run build.ts && bun build --compile ./dist/main.js ./dist/*.js --outfile ./bin/skaff",
     "build:dist": "bun run build && oclif manifest",
     "prepack:all": "bun install --lockfile-only",
-    "pack:all": "bun run build:dist && oclif pack tarballs --targets linux-x64,linux-arm64,darwin-x64,darwin-arm64 && oclif pack deb && oclif pack macos",
+    "pack:all": "bun run build:dist && oclif pack tarballs --targets linux-x64,linux-arm64,darwin-x64,darwin-arm64 && oclif pack deb",
     "postpack:all": "shx rm -f oclif.manifest.json",
     "pack:here": "npm run build:dist && oclif pack tarballs --targets linux-x64"
   },
