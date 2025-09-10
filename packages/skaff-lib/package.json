@@ -17,8 +17,6 @@
     "test:watch": "jest --watch"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
     "@types/bun": "^1.2.21",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.18.0",
