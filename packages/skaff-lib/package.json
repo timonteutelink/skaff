@@ -5,6 +5,10 @@
     ".": "./dist/index.js",
     "./browser": "./dist/browser.js"
   },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
