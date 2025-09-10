@@ -13,16 +13,26 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+      - name: Setup Node (for npm/oclif)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install deps (bun) + create npm lockfile
+        run: |
+          bun install --frozen-lockfile
+          npm install --package-lock-only
         working-directory: apps/cli
+
       - name: Pack tarballs
-        run: bun run pack:tarballs
+        run: bun run pack:all
         working-directory: apps/cli
+
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -35,9 +45,14 @@ jobs:
 
           npm publish
         working-directory: apps/cli
+
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          files: apps/cli/tarballs/*.tgz
+          files: |
+            apps/cli/dist/**/*.deb
+            apps/cli/dist/**/*.pkg
+            apps/cli/tarballs/*.tgz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

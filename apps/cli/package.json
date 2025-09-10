@@ -89,9 +89,9 @@
     "version": "oclif readme && git add README.md",
     "__buildprod": "tsc --noEmit && bun run build.ts && bun build --compile ./dist/main.js ./dist/*.js --outfile ./bin/skaff",
     "build:dist": "bun run build && oclif manifest",
-    "prepack:tarballs": "bun install --lockfile-only",
-    "pack:tarballs": "bun run build:dist && oclif pack tarballs --targets linux-x64,linux-arm64,darwin-x64,darwin-arm64,win-x64",
-    "postpack:tarballs": "shx rm -f oclif.manifest.json",
+    "prepack:all": "bun install --lockfile-only",
+    "pack:all": "bun run build:dist && oclif pack tarballs --targets linux-x64,linux-arm64,darwin-x64,darwin-arm64,win-x64 && oclif pack deb && oclif pack macos",
+    "postpack:all": "shx rm -f oclif.manifest.json",
     "pack:here": "npm run build:dist && oclif pack tarballs --targets linux-x64"
   },
   "types": "dist/index.d.ts"
