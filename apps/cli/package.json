@@ -6,6 +6,10 @@
   "bin": {
     "skaff": "./bin/run.js"
   },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "bugs": "https://github.com/timonteutelink/skaff/issues",
   "dependencies": {
     "@inquirer/prompts": "^7.8.4",
