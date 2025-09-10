@@ -22,7 +22,8 @@
     "apps/cli",
     "packages/typescript-config",
     "packages/eslint-config",
-    "packages/tailwind-config"
+    "packages/tailwind-config",
+    "packages/skaff-lib"
   ],
   "resolutions": {
     "react": "19.1.0",
