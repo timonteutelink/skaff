@@ -45,8 +45,7 @@ jobs:
           registry=https://registry.npmjs.org
           EOF
 
-          npm publish
-        working-directory: apps/cli
+          npm publish --workspace ./apps/cli
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
