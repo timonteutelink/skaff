@@ -53,7 +53,6 @@ jobs:
         with:
           files: |
             apps/cli/dist/**/*.deb
-            apps/cli/dist/**/*.pkg
             apps/cli/tarballs/*.tgz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
