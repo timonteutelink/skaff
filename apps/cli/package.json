@@ -12,7 +12,7 @@
     "@oclif/core": "^4.5.2",
     "@oclif/plugin-help": "^6.2.32",
     "@oclif/plugin-plugins": "^5.4.46",
-    "@timonteutelink/skaff-lib": "0.0.58",
+    "@timonteutelink/skaff-lib": "0.0.59",
     "@timonteutelink/template-types-lib": "0.0.45",
     "@types/node": "^22.18.0",
     "esbuild": "^0.25.9",
