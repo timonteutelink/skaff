@@ -2635,6 +2635,16 @@
     url = "https://registry.npmjs.org/semver/-/semver-7.7.2.tgz";
     hash = "sha512-RF0Fw+rO5AMf9MAyaRXI4AV0Ulj5lMHqVxxdSgiVbixSCXoEmmX/jk0CuJw4+3SqroYO9VoUh+HcuJivvtJemA==";
   };
+  "@timonteutelink/skaff/typescript" = {
+    out_path = "@timonteutelink/skaff/node_modules/typescript";
+    binaries = {
+      "tsc" = "../@timonteutelink/skaff/node_modules/typescript/bin/tsc";
+      "tsserver" = "../@timonteutelink/skaff/node_modules/typescript/bin/tsserver";
+    };
+    name = "typescript@5.9.2";
+    url = "https://registry.npmjs.org/typescript/-/typescript-5.9.2.tgz";
+    hash = "sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A==";
+  };
   "@timonteutelink/template-types-lib" = {
     out_path = "@timonteutelink/template-types-lib";
     name = "@timonteutelink/template-types-lib@0.0.45";
@@ -8374,16 +8384,6 @@
     name = "simple-wcswidth@1.1.2";
     url = "https://registry.npmjs.org/simple-wcswidth/-/simple-wcswidth-1.1.2.tgz";
     hash = "sha512-j7piyCjAeTDSjzTSQ7DokZtMNwNlEAyxqSZeCS+CXH7fJ4jx3FuJ/mTW3mE+6JLs4VJBbcll0Kjn+KXI5t21Iw==";
-  };
-  "skaff/typescript" = {
-    out_path = "skaff/node_modules/typescript";
-    binaries = {
-      "tsc" = "../skaff/node_modules/typescript/bin/tsc";
-      "tsserver" = "../skaff/node_modules/typescript/bin/tsserver";
-    };
-    name = "typescript@5.9.2";
-    url = "https://registry.npmjs.org/typescript/-/typescript-5.9.2.tgz";
-    hash = "sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A==";
   };
   "slice-ansi" = {
     out_path = "slice-ansi";
