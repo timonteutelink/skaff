@@ -23,16 +23,13 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install deps (bun) + create npm lockfile
+      - name: Install deps (bun)
         run: |
           bun install --frozen-lockfile
         working-directory: apps/cli
 
       - name: Create npm lockfile for oclif
-        run: |
-          npm config set workspaces false
-          npm install --package-lock-only --omit=dev --no-audit --fund=false
-        working-directory: apps/cli
+        run: npm install --package-lock-only --omit=dev --no-audit --fund=false --workspaces=false --prefix ./apps/cli ./apps/cli
 
       - name: Pack tarballs
         run: bun run pack:all
