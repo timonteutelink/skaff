@@ -7,4 +7,4 @@ await Bun.build({
   target: "bun",
 });
 
-export {};
+export { };
