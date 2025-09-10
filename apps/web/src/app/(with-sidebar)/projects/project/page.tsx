@@ -14,7 +14,7 @@ import { toastNullError } from "@/lib/utils";
 import type {
   ProjectDTO,
   TemplateDTO,
-} from "@timonteutelink/code-templator-lib/browser";
+} from "@timonteutelink/skaff-lib/browser";
 import { InstantiatedTemplate } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";

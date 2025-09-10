@@ -1,5 +1,5 @@
 {
-  "name": "@timonteutelink/code-templator-lib",
+  "name": "@timonteutelink/skaff-lib",
   "version": "0.0.58",
   "exports": {
     ".": "./dist/index.js",

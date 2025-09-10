@@ -1,4 +1,4 @@
-name: Release Code Templator Lib
+name: Release Skaff Lib
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Build library
         run: bun run build
-        working-directory: packages/code-templator-lib
+        working-directory: packages/skaff-lib
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -33,5 +33,5 @@ jobs:
           EOF
 
           npm publish
-        working-directory: packages/code-templator-lib
+        working-directory: packages/skaff-lib
 

@@ -2,7 +2,7 @@ import { Args, Flags } from '@oclif/core';
 import {
   applyDiff,
   prepareModificationDiff,
-} from '@timonteutelink/code-templator-lib';
+} from '@timonteutelink/skaff-lib';
 
 import Base from '../../../base-command.js';
 import { getCurrentProject } from '../../../utils/cli-utils.js';

@@ -1,5 +1,5 @@
 import { Args, Flags } from '@oclif/core';
-import { generateNewProject } from '@timonteutelink/code-templator-lib';
+import { generateNewProject } from '@timonteutelink/skaff-lib';
 
 import Base from '../../base-command.js';
 import { viewParsedDiffWithGit } from '../../utils/diff-utils.js';

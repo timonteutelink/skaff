@@ -1,8 +1,8 @@
 "use server";
 
 import { findProject } from "@/lib/server-utils";
-import * as tempLib from "@timonteutelink/code-templator-lib";
-import { DefaultTemplateResult, Result, TemplateDTO } from "@timonteutelink/code-templator-lib";
+import * as tempLib from "@timonteutelink/skaff-lib";
+import { DefaultTemplateResult, Result, TemplateDTO } from "@timonteutelink/skaff-lib";
 
 export async function runEraseCache(): Promise<
   Result<DefaultTemplateResult[]>

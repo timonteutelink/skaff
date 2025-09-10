@@ -1,4 +1,4 @@
-import { getDefaultTemplate } from '@timonteutelink/code-templator-lib';
+import { getDefaultTemplate } from '@timonteutelink/skaff-lib';
 import { UserTemplateSettings } from '@timonteutelink/template-types-lib';
 import fs from 'node:fs';
 

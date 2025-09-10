@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { useDropzone } from "react-dropzone";
 import { FileJson } from "lucide-react";
 import { cn, toastNullError } from "@/lib/utils";
-import { Result } from "@timonteutelink/code-templator-lib/browser";
+import { Result } from "@timonteutelink/skaff-lib/browser";
 
 export type JsonFile = { name: string; text: string };
 

@@ -1,6 +1,6 @@
-import type { CacheKey } from "@timonteutelink/code-templator-lib";
+import type { CacheKey } from "@timonteutelink/skaff-lib";
 
-import { DiffHunk, ParsedFile, pathInCache, saveToCache } from '@timonteutelink/code-templator-lib';
+import { DiffHunk, ParsedFile, pathInCache, saveToCache } from '@timonteutelink/skaff-lib';
 import { exec } from "node:child_process";
 import nodeCrypto from "node:crypto";
 import fs from "node:fs/promises";

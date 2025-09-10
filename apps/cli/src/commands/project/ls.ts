@@ -1,5 +1,5 @@
 import { Flags } from '@oclif/core';
-import { getProjects } from '@timonteutelink/code-templator-lib';
+import { getProjects } from '@timonteutelink/skaff-lib';
 
 import Base from '../../base-command.js';
 

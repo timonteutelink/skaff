@@ -1,4 +1,4 @@
-import { getProjectFromPath, Project, Result } from "@timonteutelink/code-templator-lib";
+import { getProjectFromPath, Project, Result } from "@timonteutelink/skaff-lib";
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 

@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "@timonteutelink/code-templator-docs",
+      "name": "@timonteutelink/skaff-docs",
       "devDependencies": {
         "@docusaurus/core": "^3.8.1",
         "@docusaurus/preset-classic": "^3.8.1",

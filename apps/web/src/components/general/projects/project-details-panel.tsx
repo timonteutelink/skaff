@@ -6,7 +6,7 @@ import {
   ProjectDTO,
   TemplateDTO,
   findTemplate
-} from "@timonteutelink/code-templator-lib/browser";
+} from "@timonteutelink/skaff-lib/browser";
 import { useCallback, useMemo } from "react";
 import { toastNullError } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";

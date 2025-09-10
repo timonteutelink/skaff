@@ -2,7 +2,7 @@ import { Args } from '@oclif/core';
 import {
   addConfigItems
 
-} from '@timonteutelink/code-templator-lib';
+} from '@timonteutelink/skaff-lib';
 
 import Base from '../../base-command.js';
 

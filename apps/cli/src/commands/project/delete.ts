@@ -1,5 +1,5 @@
 import { Args } from '@oclif/core';
-import { deleteProject, getProjectFromPath } from '@timonteutelink/code-templator-lib';
+import { deleteProject, getProjectFromPath } from '@timonteutelink/skaff-lib';
 
 import Base from '../../base-command.js';
 

@@ -23,5 +23,5 @@ json5 bun.lock | jq '
      )
 ' > bun.lock.clean
 
-bun2nix -l bun.lock.clean -o ./nix/code-templator-package/bun-packages.nix
+bun2nix -l bun.lock.clean -o ./nix/skaff-package/bun-packages.nix
 

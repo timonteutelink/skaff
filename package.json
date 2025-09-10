@@ -1,9 +1,9 @@
 {
-  "name": "code-templator",
+  "name": "skaff",
   "private": true,
   "scripts": {
-    "buildNixWeb": "nix-web && bun i && git add -A && nix build .#code-templator-web",
-    "buildNixCli": "nix-cli && bun i && git add -A && nix build .#code-templator-cli",
+    "buildNixWeb": "nix-web && bun i && git add -A && nix build .#skaff-web",
+    "buildNixCli": "nix-cli && bun i && git add -A && nix build .#skaff-cli",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "postinstall": "./scripts/bun2nix.sh"
   },
@@ -23,7 +23,7 @@
     "packages/typescript-config",
     "packages/eslint-config",
     "packages/tailwind-config",
-    "packages/code-templator-lib"
+    "packages/skaff-lib"
   ],
   "resolutions": {
     "react": "19.1.0",

@@ -1,8 +1,8 @@
 "use server";
 
 import { findProject, listProjects } from "@/lib/server-utils";
-import * as tempLib from "@timonteutelink/code-templator-lib";
-import { ProjectDTO, Result } from "@timonteutelink/code-templator-lib";
+import * as tempLib from "@timonteutelink/skaff-lib";
+import { ProjectDTO, Result } from "@timonteutelink/skaff-lib";
 
 export async function retrieveProjectSearchPaths(): Promise<
   { id: string; path: string }[]

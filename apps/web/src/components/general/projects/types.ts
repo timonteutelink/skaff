@@ -1,6 +1,6 @@
 import type {
 	TemplateDTO,
-} from "@timonteutelink/code-templator-lib";
+} from "@timonteutelink/skaff-lib";
 
 /* =============================================================================
 	 Tree Node Types

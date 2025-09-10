@@ -3,8 +3,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
-import { LevelName, LogFilter, LogJSON, Result, getCacheDirPath, logError, serverLogger } from "@timonteutelink/code-templator-lib";
-import { getCacheDir } from "../../../../../packages/code-templator-lib/dist/services/cache-service";
+import { LevelName, LogFilter, LogJSON, Result, getCacheDirPath, logError, serverLogger } from "@timonteutelink/skaff-lib";
+import { getCacheDir } from "../../../../../packages/skaff-lib/dist/services/cache-service";
 
 export async function logFromClient(data: {
   level: LevelName;
@@ -42,7 +42,7 @@ export async function fetchLogs(filter: LogFilter): Promise<Result<LogJSON[] | s
   const fromMs = from ? Date.parse(from) : null;
   const toMs = to ? Date.parse(to) : null;
 
-  const logPath = path.join(getCacheDirPath(), "logs", `code-templator.${file}.log`);
+  const logPath = path.join(getCacheDirPath(), "logs", `skaff.${file}.log`);
 
   try {
     await fs.promises.access(logPath, fs.constants.R_OK);
@@ -101,8 +101,8 @@ export async function getAvailableLogDates(): Promise<Result<string[]>> {
     const files = await fs.promises.readdir(path.join(logDir.data, "logs"));
 
     const dates = files
-      .filter((f) => /^code-templator\.\d{4}-\d{2}-\d{2}\.log$/.test(f))
-      .map((f) => f.slice("code-templator.".length, -".log".length))
+      .filter((f) => /^skaff\.\d{4}-\d{2}-\d{2}\.log$/.test(f))
+      .map((f) => f.slice("skaff.".length, -".log".length))
       .sort()
       .reverse();
 

@@ -1,19 +1,19 @@
 {
 	"$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
-	"mainEntryPointFilePath": "../code-templator-lib/dist/index.d.ts",
+	"mainEntryPointFilePath": "../skaff-lib/dist/index.d.ts",
 	"projectFolder": ".",
 	"apiReport": {
 		"enabled": false,
-		"reportFileName": "code-templator-lib.api.md",
-		"reportFolder": "src/docs/code-templator-lib"
+		"reportFileName": "skaff-lib.api.md",
+		"reportFolder": "src/docs/skaff-lib"
 	},
 	"docModel": {
 		"enabled": true,
-		"apiJsonFilePath": "temp/code-templator-lib.api.json"
+		"apiJsonFilePath": "temp/skaff-lib.api.json"
 	},
 	"dtsRollup": {
 		"enabled": true,
-		"publicTrimmedFilePath": "dist/code-templator-lib.d.ts"
+		"publicTrimmedFilePath": "dist/skaff-lib.d.ts"
 	},
 	"messages": {
 		"compilerMessageReporting": {

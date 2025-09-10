@@ -4,7 +4,7 @@ build/
 temp/
 node_modules/
 src/docs/cli
-src/docs/code-templator-lib
+src/docs/skaff-lib
 src/docs/template-types-lib
 dist/
 

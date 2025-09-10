@@ -1,5 +1,5 @@
 "use client";
-import { ParsedFile } from "@timonteutelink/code-templator-lib/browser";
+import { ParsedFile } from "@timonteutelink/skaff-lib/browser";
 import { useEffect, useMemo, useState } from "react";
 import { FileTree } from "./file-tree";
 import { DiffVisualizer } from "./diff-visualizer";

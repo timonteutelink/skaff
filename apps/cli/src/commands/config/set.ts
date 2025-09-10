@@ -1,5 +1,5 @@
 import { Args } from '@oclif/core';
-import { setConfig, Settings } from '@timonteutelink/code-templator-lib';
+import { setConfig, Settings } from '@timonteutelink/skaff-lib';
 
 import Base from '../../base-command.js';
 

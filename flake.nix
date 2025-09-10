@@ -2,7 +2,7 @@
   # "packages/template-types-lib",
   # "apps/web",
   # "packages/notebook",
-  # "packages/code-templator-lib",
+  # "packages/skaff-lib",
   # "packages/tailwind-config"
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";

@@ -1,5 +1,5 @@
 import { Args } from '@oclif/core';
-import { getLoadedRevisions } from '@timonteutelink/code-templator-lib';
+import { getLoadedRevisions } from '@timonteutelink/skaff-lib';
 
 import Base from '../../base-command.js';
 

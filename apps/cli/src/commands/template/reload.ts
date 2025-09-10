@@ -1,4 +1,4 @@
-import { reloadTemplates } from '@timonteutelink/code-templator-lib';
+import { reloadTemplates } from '@timonteutelink/skaff-lib';
 
 import Base from '../../base-command.js';
 

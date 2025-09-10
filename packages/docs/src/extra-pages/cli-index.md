@@ -1,5 +1,5 @@
 ---
-title: code-templator
+title: skaff
 ---
 
 

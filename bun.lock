@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "code-templator",
+      "name": "skaff",
       "devDependencies": {
         "prettier": "^3.5.3",
         "prettier-plugin-tailwindcss": "^0.6.11",
@@ -11,17 +11,17 @@
       },
     },
     "apps/cli": {
-      "name": "code-templator",
+      "name": "skaff",
       "version": "0.0.0",
       "bin": {
-        "code-templator": "./bin/run.js",
+        "skaff": "./bin/run.js",
       },
       "dependencies": {
         "@inquirer/prompts": "^7.8.4",
         "@oclif/core": "^4.5.2",
         "@oclif/plugin-help": "^6.2.32",
         "@oclif/plugin-plugins": "^5.4.46",
-        "@timonteutelink/code-templator-lib": "0.0.56",
+        "@timonteutelink/skaff-lib": "0.0.56",
         "@timonteutelink/template-types-lib": "0.0.45",
         "@types/node": "^22.18.0",
         "esbuild": "^0.25.9",
@@ -80,7 +80,7 @@
         "@radix-ui/react-toggle-group": "^1.1.11",
         "@radix-ui/react-tooltip": "^1.2.8",
         "@tailwindcss/postcss": "^4.1.13",
-        "@timonteutelink/code-templator-lib": "workspace:*",
+        "@timonteutelink/skaff-lib": "workspace:*",
         "@timonteutelink/template-types-lib": "0.0.45",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
@@ -130,8 +130,8 @@
         "react-dom": "^19.1.0",
       },
     },
-    "packages/code-templator-lib": {
-      "name": "@timonteutelink/code-templator-lib",
+    "packages/skaff-lib": {
+      "name": "@timonteutelink/skaff-lib",
       "version": "0.0.57",
       "dependencies": {
         "@langchain/langgraph": "^0.3.12",
@@ -927,7 +927,7 @@
 
     "@tailwindcss/postcss": ["@tailwindcss/postcss@4.1.13", "", { "dependencies": { "@alloc/quick-lru": "^5.2.0", "@tailwindcss/node": "4.1.13", "@tailwindcss/oxide": "4.1.13", "postcss": "^8.4.41", "tailwindcss": "4.1.13" } }, "sha512-HLgx6YSFKJT7rJqh9oJs/TkBFhxuMOfUKSBEPYwV+t78POOBsdQ7crhZLzwcH3T0UyUuOzU/GK5pk5eKr3wCiQ=="],
 
-    "@timonteutelink/code-templator-lib": ["@timonteutelink/code-templator-lib@workspace:packages/code-templator-lib"],
+    "@timonteutelink/skaff-lib": ["@timonteutelink/skaff-lib@workspace:packages/skaff-lib"],
 
     "@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.45", "", { "peerDependencies": { "handlebars": "^4.7.8", "zod": "^3.25.76" } }, "sha512-VCAXOsckSYrNLNyHPEnLUaZGDOfQtoeUCuSVh94h4x7Q/O1Afim6hZj8ZcczcDQYeGUzdUNS/UV5JKY/ISkL+Q=="],
 
@@ -1263,7 +1263,7 @@
 
     "code-excerpt": ["code-excerpt@4.0.0", "", { "dependencies": { "convert-to-spaces": "^2.0.1" } }, "sha512-xxodCmBen3iy2i0WtAK8FlFNrRzjUqjRsMfho58xT/wvZU1YTM3fCnRjcy1gJPMepaRlgm/0e6w8SpWHpn3/cA=="],
 
-    "code-templator": ["code-templator@workspace:apps/cli"],
+    "skaff": ["skaff@workspace:apps/cli"],
 
     "collect-v8-coverage": ["collect-v8-coverage@1.0.2", "", {}, "sha512-lHl4d5/ONEbLlJvaJNtsF/Lz+WvB07u2ycqTYbdrq7UypDXailES4valYb2eWiJFxZlVmpGekfqoxQhzyFdT4Q=="],
 
@@ -2773,9 +2773,9 @@
 
     "cli-truncate/string-width": ["string-width@7.2.0", "", { "dependencies": { "emoji-regex": "^10.3.0", "get-east-asian-width": "^1.0.0", "strip-ansi": "^7.1.0" } }, "sha512-tsaTIkKW9b4N+AEj+SVA+WhJzV7/zMhcSu78mLKWSk7cXMOSHsBKFWUs0fWwq8QyK3MgJBQRX6Gbi4kYbdvGkQ=="],
 
-    "code-templator/@timonteutelink/code-templator-lib": ["@timonteutelink/code-templator-lib@0.0.56", "", { "dependencies": { "@langchain/langgraph": "^0.3.1", "@langchain/openai": "^0.5.12", "@timonteutelink/template-types-lib": "0.0.43", "esbuild": "^0.25.5", "fs-extra": "^11.3.0", "glob": "^11.0.2", "handlebars": "^4.7.8", "langchain": "^0.3.27", "pino": "^9.7.0", "yaml": "^2.8.0", "zod": "^3.25.56", "zod-to-json-schema": "^3.24.5" } }, "sha512-rLpvY3/HCmHZ5Mf93jvG076EypMXtQ4aoIDfkN/7E1dhNn7C3Ud1gmuXFp8ql4yYQeUnzOWlF59MbAQ+UW1mjQ=="],
+    "skaff/@timonteutelink/skaff-lib": ["@timonteutelink/skaff-lib@0.0.56", "", { "dependencies": { "@langchain/langgraph": "^0.3.1", "@langchain/openai": "^0.5.12", "@timonteutelink/template-types-lib": "0.0.43", "esbuild": "^0.25.5", "fs-extra": "^11.3.0", "glob": "^11.0.2", "handlebars": "^4.7.8", "langchain": "^0.3.27", "pino": "^9.7.0", "yaml": "^2.8.0", "zod": "^3.25.56", "zod-to-json-schema": "^3.24.5" } }, "sha512-rLpvY3/HCmHZ5Mf93jvG076EypMXtQ4aoIDfkN/7E1dhNn7C3Ud1gmuXFp8ql4yYQeUnzOWlF59MbAQ+UW1mjQ=="],
 
-    "code-templator/typescript": ["typescript@5.9.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A=="],
+    "skaff/typescript": ["typescript@5.9.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A=="],
 
     "colorspace/color": ["color@3.2.1", "", { "dependencies": { "color-convert": "^1.9.3", "color-string": "^1.6.0" } }, "sha512-aBl7dZI9ENN6fUGC7mWpMTPNHmWUSNan9tuWN6ahh5ZLNk9baLJOnSMlrQkHcrfFgz2/RigjUVAjdx36VcemKA=="],
 
@@ -3393,7 +3393,7 @@
 
     "cli-truncate/string-width/strip-ansi": ["strip-ansi@7.1.0", "", { "dependencies": { "ansi-regex": "^6.0.1" } }, "sha512-iq6eVVI64nQQTRYq2KtEg2d2uU7LElhTJwsH4YzIHZshxlgZms/wIc4VoDQTlG/IvVIrBKG06CrZnp0qv7hkcQ=="],
 
-    "code-templator/@timonteutelink/code-templator-lib/@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.43", "", { "dependencies": { "handlebars": "^4.7.8", "zod": "^3.25.67" } }, "sha512-/uTqkGbXGwAEQK0srygDn6A+5LQHxdg7pew+Zbfdzhx63TQ8OxcMcsBuZ7x8wcTXoMLk17gtU1o5wXumJr0RPQ=="],
+    "skaff/@timonteutelink/skaff-lib/@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.43", "", { "dependencies": { "handlebars": "^4.7.8", "zod": "^3.25.67" } }, "sha512-/uTqkGbXGwAEQK0srygDn6A+5LQHxdg7pew+Zbfdzhx63TQ8OxcMcsBuZ7x8wcTXoMLk17gtU1o5wXumJr0RPQ=="],
 
     "colorspace/color/color-convert": ["color-convert@1.9.3", "", { "dependencies": { "color-name": "1.1.3" } }, "sha512-QfAUtd+vFdAtFQcC8CCyYt1fYWxSqAiK2cSD6zDB8N3cpsEBAvRxp9zOGg6G/SHHJYAT88/az/IuDGALsNVbGg=="],
 

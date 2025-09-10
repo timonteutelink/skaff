@@ -1,9 +1,9 @@
 services:
-  code-templator-web:
+  skaff-web:
     build:
       context: ../../..
       dockerfile: apps/web/docker/Dockerfile
-    image: code-templator-web:latest
+    image: skaff-web:latest
     environment:
       BANANA: "banana"
     ports:

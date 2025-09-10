@@ -28,7 +28,7 @@ import {
   Result,
   TemplateDTO,
   findTemplate,
-} from "@timonteutelink/code-templator-lib/browser";
+} from "@timonteutelink/skaff-lib/browser";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";

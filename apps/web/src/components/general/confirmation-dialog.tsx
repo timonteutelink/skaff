@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useCallback, useState } from "react";
-import { Result } from "@timonteutelink/code-templator-lib/browser";
+import { Result } from "@timonteutelink/skaff-lib/browser";
 
 interface ConfirmationDialogProps {
   buttonText: string;

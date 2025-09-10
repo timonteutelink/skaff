@@ -1,4 +1,4 @@
-import { getConfig, getProjectRepository, backendLogger, Project, Result } from "@timonteutelink/code-templator-lib";
+import { getConfig, getProjectRepository, backendLogger, Project, Result } from "@timonteutelink/skaff-lib";
 
 export async function findProject(
   projectName: string,

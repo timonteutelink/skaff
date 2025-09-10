@@ -1,7 +1,7 @@
 "use server";
 import { findProject } from "@/lib/server-utils";
-import * as tempLib from "@timonteutelink/code-templator-lib";
-import { getConfig, NewTemplateDiffResult, ParsedFile, ProjectCreationResult, projectSearchPathKey, Result } from "@timonteutelink/code-templator-lib";
+import * as tempLib from "@timonteutelink/skaff-lib";
+import { getConfig, NewTemplateDiffResult, ParsedFile, ProjectCreationResult, projectSearchPathKey, Result } from "@timonteutelink/skaff-lib";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 
 export async function createNewProject(

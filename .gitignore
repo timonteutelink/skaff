@@ -42,7 +42,7 @@ yarn-error.log*
 
 bun.lock.clean
 
-code-templator
+skaff
 
 result/
 result

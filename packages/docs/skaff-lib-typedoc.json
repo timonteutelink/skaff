@@ -1,9 +1,9 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": [
-    "../code-templator-lib/src/index.ts"
+    "../skaff-lib/src/index.ts"
   ],
-  "tsconfig": "../code-templator-lib/tsconfig.json",
+  "tsconfig": "../skaff-lib/tsconfig.json",
   "skipErrorChecking": true,
   "excludePrivate": true,
   "readme": "none"

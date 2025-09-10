@@ -1,5 +1,5 @@
 import { Args } from '@oclif/core';
-import { generateNewProjectFromSettings } from '@timonteutelink/code-templator-lib';
+import { generateNewProjectFromSettings } from '@timonteutelink/skaff-lib';
 import fs from 'node:fs';
 
 import Base from '../../base-command.js';

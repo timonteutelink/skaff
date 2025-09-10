@@ -38,7 +38,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   type ProjectDTO,
   type TemplateDTO,
-} from "@timonteutelink/code-templator-lib/browser";
+} from "@timonteutelink/skaff-lib/browser";
 import { projectNameRegex } from "@timonteutelink/template-types-lib";
 import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";

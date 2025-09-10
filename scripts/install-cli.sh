@@ -2,8 +2,8 @@
 set -euo pipefail
 
 OWNER="timonteutelink"
-REPO="code-templator"
-CLI="code-templator"
+REPO="skaff"
+CLI="skaff"
 
 usage() {
   cat <<EOF

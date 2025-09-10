@@ -28,8 +28,8 @@ import { fetchLogs, getAvailableLogDates } from "@/app/actions/logs";
 import { toastNullError } from "@/lib/utils";
 import { toast } from "sonner";
 
-import type { LevelName as Level, LogJSON, Source } from "@timonteutelink/code-templator-lib/browser";
-import { ALL_LEVELS } from "@timonteutelink/code-templator-lib/browser";
+import type { LevelName as Level, LogJSON, Source } from "@timonteutelink/skaff-lib/browser";
+import { ALL_LEVELS } from "@timonteutelink/skaff-lib/browser";
 
 const LEVEL_COLORS: Record<Level, string> = {
   trace: "bg-slate-500",

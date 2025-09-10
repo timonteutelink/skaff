@@ -1,4 +1,4 @@
-import { eraseCache } from '@timonteutelink/code-templator-lib';
+import { eraseCache } from '@timonteutelink/skaff-lib';
 
 import Base from '../../base-command.js';
 

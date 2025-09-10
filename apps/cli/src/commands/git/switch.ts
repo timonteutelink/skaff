@@ -1,5 +1,5 @@
 import { Args } from '@oclif/core';
-import { switchProjectBranch } from '@timonteutelink/code-templator-lib';
+import { switchProjectBranch } from '@timonteutelink/skaff-lib';
 
 import Base from '../../base-command.js';
 import { getCurrentProject } from '../../utils/cli-utils.js';

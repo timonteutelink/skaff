@@ -1,5 +1,5 @@
 import { Flags } from '@oclif/core';
-import { addAllAndCommit } from '@timonteutelink/code-templator-lib';
+import { addAllAndCommit } from '@timonteutelink/skaff-lib';
 
 import Base from '../../base-command.js';
 import { getCurrentProject } from '../../utils/cli-utils.js';

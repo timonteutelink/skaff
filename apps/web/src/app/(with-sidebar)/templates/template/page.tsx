@@ -4,7 +4,7 @@ import { Tree } from "@/components/general/tree";
 import type {
   Result,
   TemplateDTO,
-} from "@timonteutelink/code-templator-lib/browser";
+} from "@timonteutelink/skaff-lib/browser";
 import { useRouter, useSearchParams } from "next/navigation";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";

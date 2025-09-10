@@ -6,7 +6,7 @@ import { toastNullError } from "@/lib/utils";
 import type {
   ParsedFile,
   Result,
-} from "@timonteutelink/code-templator-lib/browser";
+} from "@timonteutelink/skaff-lib/browser";
 import { ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";

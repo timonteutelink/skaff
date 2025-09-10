@@ -84,7 +84,7 @@ Our Handlebars templates can then use these settings. For example, in `README.md
 {{description}}
 {{/if}}
 
-This project was bootstrapped with [Code Templator](https://github.com/timonteutelink/code-templator).
+This project was bootstrapped with [Code Templator](https://github.com/timonteutelink/skaff).
 ```
 
 When the user generates a project and inputs “MyProject” and a description, those will be substituted.
@@ -163,7 +163,7 @@ targetPath: (settings) => \`pages/\${settings.pageName}\`
 
   Be careful with side effects – since they manipulate existing content, ensure idempotency (running it twice with same input shouldn’t duplicate entries, etc., ideally). Use unique markers or keys if possible when inserting.
 
-* **Template Commands (`TemplateConfig.templateCommands`):** You can define custom commands that can be executed in the context of a generated project. For example, a template might provide a script or automation (like “regenerate API docs”). In `templateConfig`, you could define a command with a title and a shell command or Node function to run. Then the user can invoke it via `code-templator project run -c "<commandTitle>"`. This is an advanced feature and not commonly used for simple scaffolds, but it’s there if your template can automate post-creation tasks.
+* **Template Commands (`TemplateConfig.templateCommands`):** You can define custom commands that can be executed in the context of a generated project. For example, a template might provide a script or automation (like “regenerate API docs”). In `templateConfig`, you could define a command with a title and a shell command or Node function to run. Then the user can invoke it via `skaff project run -c "<commandTitle>"`. This is an advanced feature and not commonly used for simple scaffolds, but it’s there if your template can automate post-creation tasks.
 
 * **Disabling Files or Templates:** Sometimes a subtemplate might need to turn off or replace something in the parent. There are features like `TemplateConfig.allowOverwrite` (to allow this template to overwrite files that already exist – normally duplicates would error out) and `TemplateConfig.disable`/`TemplateDisablingThis` which can conditionally skip parts. These are edge cases – refer to the API docs if you need this level of control.
 
@@ -183,7 +183,7 @@ targetPath: (settings) => \`pages/\${settings.pageName}\`
 
 Since templates are just git repositories, sharing them is as easy as pushing to GitHub (or your preferred git server). We encourage you to share templates for frameworks or setups you think others will find useful! And if you do, let us know – we’d love to list community templates in our docs in the future.
 
-For an example of a collection of templates, check out our **[code-templator-example-templates](https://github.com/timonteutelink/code-templator-example-templates)** repo. It includes some of the use cases described in our docs (Next.js app, Helm chart, Turborepo, etc.) and can serve as a reference for structuring your own template repo.
+For an example of a collection of templates, check out our **[skaff-example-templates](https://github.com/timonteutelink/skaff-example-templates)** repo. It includes some of the use cases described in our docs (Next.js app, Helm chart, Turborepo, etc.) and can serve as a reference for structuring your own template repo.
 
 When you publish a template repo, users can include it by cloning it and adding to their `templatePaths`, or potentially (in the future) by pointing Code Templator to a remote URL (planned feature). For now, templates are loaded locally for safety and speed.
 

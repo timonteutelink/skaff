@@ -1,18 +1,18 @@
 {
-  "name": "code-templator",
+  "name": "skaff",
   "description": "A CLI tool for managing code templates",
   "version": "0.0.0",
   "author": "timonteutelink",
   "bin": {
-    "code-templator": "./bin/run.js"
+    "skaff": "./bin/run.js"
   },
-  "bugs": "https://github.com/timonteutelink/code-templator/issues",
+  "bugs": "https://github.com/timonteutelink/skaff/issues",
   "dependencies": {
     "@inquirer/prompts": "^7.8.4",
     "@oclif/core": "^4.5.2",
     "@oclif/plugin-help": "^6.2.32",
     "@oclif/plugin-plugins": "^5.4.46",
-    "@timonteutelink/code-templator-lib": "0.0.56",
+    "@timonteutelink/skaff-lib": "0.0.56",
     "@timonteutelink/template-types-lib": "0.0.45",
     "@types/node": "^22.18.0",
     "esbuild": "^0.25.9",
@@ -46,7 +46,7 @@
     "./dist",
     "./oclif.manifest.json"
   ],
-  "homepage": "https://github.com/timonteutelink/code-templator",
+  "homepage": "https://github.com/timonteutelink/skaff",
   "keywords": [
     "oclif"
   ],
@@ -54,8 +54,8 @@
   "main": "dist/index.js",
   "type": "module",
   "oclif": {
-    "bin": "code-templator",
-    "dirname": "code-templator",
+    "bin": "skaff",
+    "dirname": "skaff",
     "commands": "./dist/commands",
     "plugins": [
       "@oclif/plugin-help",
@@ -63,7 +63,7 @@
       "@oclif/plugin-update"
     ],
     "macos": {
-      "identifier": "com.timonteutelink.code-templator"
+      "identifier": "com.timonteutelink.skaff"
     },
     "topicSeparator": " ",
     "topics": {
@@ -71,9 +71,9 @@
         "description": "Manage code templates"
       }
     },
-    "repositoryPrefix": "https://github.com/timonteutelink/code-templator/tree/main/apps/cli/<%- commandPath %>"
+    "repositoryPrefix": "https://github.com/timonteutelink/skaff/tree/main/apps/cli/<%- commandPath %>"
   },
-  "repository": "timonteutelink/code-templator",
+  "repository": "timonteutelink/skaff",
   "scripts": {
     "rundev": "",
     "build": "shx rm -rf dist && tsc -b",
@@ -83,7 +83,7 @@
     "prepack": "oclif manifest && oclif readme",
     "test": "mocha --forbid-only \"test/**/*.test.ts\"",
     "version": "oclif readme && git add README.md",
-    "__buildprod": "tsc --noEmit && bun run build.ts && bun build --compile ./dist/main.js ./dist/*.js --outfile ./bin/code-templator",
+    "__buildprod": "tsc --noEmit && bun run build.ts && bun build --compile ./dist/main.js ./dist/*.js --outfile ./bin/skaff",
     "build:dist": "bun run build && oclif manifest",
     "prepack:tarballs": "bun install --lockfile-only",
     "pack:tarballs": "bun run build:dist && oclif pack tarballs --targets linux-x64,linux-arm64,darwin-x64,darwin-arm64,win-x64",

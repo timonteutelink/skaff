@@ -16,21 +16,21 @@ The quickest way to get started is with the command-line tool. You can install i
 **Using npm:**
 
 ```bash
-npm install -g @timonteutelink/code-templator-cli
+npm install -g @timonteutelink/skaff-cli
 ```
 
 **Using Bun:**
 
 ```bash
-bun add -g @timonteutelink/code-templator-cli
+bun add -g @timonteutelink/skaff-cli
 ```
 
-> **Note:** The CLI is distributed under the name `code-templator` (scoped in npm as `@timonteutelink/code-templator-cli`). After installation, you should be able to run `code-templator --help` to verify it’s on your PATH.
+> **Note:** The CLI is distributed under the name `skaff` (scoped in npm as `@timonteutelink/skaff-cli`). After installation, you should be able to run `skaff --help` to verify it’s on your PATH.
 
 If you prefer not to install globally, you can invoke the CLI with `npx` whenever you need it:
 
 ```bash
-npx @timonteutelink/code-templator-cli --help
+npx @timonteutelink/skaff-cli --help
 ```
 
 This will download and run the CLI temporarily. You can prepend `npx` to any of the commands shown in the docs if you choose not to install the tool globally.
@@ -42,26 +42,26 @@ This will download and run the CLI temporarily. You can prepend `npx` to any of 
 For first-time use, we recommend using our **official example templates** to have some templates to play with. You can get them by cloning the repository:
 
 ```bash
-git clone https://github.com/timonteutelink/code-templator-example-templates.git
+git clone https://github.com/timonteutelink/skaff-example-templates.git
 ```
 
-Suppose you cloned it to `~/code-templator-templates`. Now let’s register this path in Code Templator’s config so the CLI knows about these templates:
+Suppose you cloned it to `~/skaff-templates`. Now let’s register this path in Code Templator’s config so the CLI knows about these templates:
 
 ```bash
-code-templator config add ~/code-templator-templates templatePaths
+skaff config add ~/skaff-templates templatePaths
 ```
 
 This adds your local templates repository to the search paths. You can add multiple paths (for example, if your company maintains its own template repo, add that path too). To verify templates are recognized, run:
 
 ```bash
-code-templator template default
+skaff template default
 ```
 
 This should list all **root templates** available (top-level templates) from the added repositories. If you see a list of template names (like `next-api`, `react-app`, `helm-chart`, etc.), you’re ready to go!
 
-*If no templates show up*, double-check that you ran the `config add` command with the correct path. You can run `code-templator config get` to see current settings. By default, `templatePaths` might be empty until you add one.
+*If no templates show up*, double-check that you ran the `config add` command with the correct path. You can run `skaff config get` to see current settings. By default, `templatePaths` might be empty until you add one.
 
-> **Tip:** The config file is stored at `~/.config/code-templator/config.json`. In addition to `templatePaths`, it may contain other settings (like preferred diff viewer tool, package manager preferences, etc.). You typically won’t need to edit this by hand – use the `code-templator config` commands.
+> **Tip:** The config file is stored at `~/.config/skaff/config.json`. In addition to `templatePaths`, it may contain other settings (like preferred diff viewer tool, package manager preferences, etc.). You typically won’t need to edit this by hand – use the `skaff config` commands.
 
 ## 3. Generate a New Project
 
@@ -70,7 +70,7 @@ Now for the fun part – creating your first project! We’ll use a **Next.js AP
 Run the following command:
 
 ```bash
-code-templator project new my-api next-api
+skaff project new my-api next-api
 ```
 
 Here:
@@ -138,9 +138,9 @@ This can be a gentler introduction for those who dislike CLI prompts.
 Congratulations on generating your first project! From here, you can:
 
 * **Add Features:** Try adding a subtemplate to your project if one is available. For instance, if there’s a subtemplate for adding a new component or enabling a feature, use the CLI or Web UI to apply it. This will show you how Code Templator manages incremental changes.
-* **Update the Template:** If the template gets updated (you pull a newer version of the template repo), try running an update on your project. Use `code-templator project diff prepare-update <newTemplateCommit>` to see the changes.
+* **Update the Template:** If the template gets updated (you pull a newer version of the template repo), try running an update on your project. Use `skaff project diff prepare-update <newTemplateCommit>` to see the changes.
 * **Create Your Own Template:** That’s the ultimate power – you can write templates tailored to your needs. Head over to the **Template Authoring Guide** to learn how to create a template config, use Handlebars, define subtemplates, etc. Start with something simple like a README and expand from there.
 * **Read the CLI Reference:** For a full list of CLI commands (like cloning an existing project, listing templates, etc.), see the CLI reference documentation.
 
-Have fun, and happy coding with Code Templator! If you encounter any issues, check our [GitHub issues](https://github.com/timonteutelink/code-templator/issues) or join the discussion – we’re here to help.
+Have fun, and happy coding with Code Templator! If you encounter any issues, check our [GitHub issues](https://github.com/timonteutelink/skaff/issues) or join the discussion – we’re here to help.
 

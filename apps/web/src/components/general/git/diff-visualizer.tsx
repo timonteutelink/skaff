@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   DiffHunk,
   ParsedFile,
-} from "@timonteutelink/code-templator-lib/browser";
+} from "@timonteutelink/skaff-lib/browser";
 
 interface DiffVisualizerProps {
   file: ParsedFile;

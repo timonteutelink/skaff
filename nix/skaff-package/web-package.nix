@@ -1,7 +1,7 @@
 { mkBunDerivation, pkgs, lib }:
 
 mkBunDerivation {
-  pname = "code-templator-web";
+  pname = "skaff-web";
   version = "0.0.1";
 
   src = ./../../apps/web;
@@ -27,13 +27,13 @@ mkBunDerivation {
     cp -r .next/static $out/share/app/.next/static
 
     # Symlink a cache dir for Next.js
-    ln -s /var/cache/code-templator-web $out/share/app/.next/cache
+    ln -s /var/cache/skaff-web $out/share/app/.next/cache
 
     # Make the server entrypoint executable
     chmod +x $out/share/app/server.js
 
     # Wrap the server to set defaults and environment
-    makeWrapper $out/share/app/server.js $out/bin/code-templator-web \
+    makeWrapper $out/share/app/server.js $out/bin/skaff-web \
       --set HOSTNAME 0.0.0.0 \
       --set PORT 3000 \
       --set NODE_ENV production
@@ -45,7 +45,7 @@ mkBunDerivation {
     description = "Next.js web application for Code Templator packaged with Bun";
     license = licenses.mit;
     platforms = platforms.unix;
-    mainProgram = "code-templator-web";
+    mainProgram = "skaff-web";
   };
 }
 

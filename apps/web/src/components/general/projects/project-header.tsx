@@ -14,7 +14,7 @@ import {
   ProjectDTO,
   Result,
   TemplateDTO,
-} from "@timonteutelink/code-templator-lib/browser";
+} from "@timonteutelink/skaff-lib/browser";
 import { FileDiffIcon, GitBranchIcon, GitCommitIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";

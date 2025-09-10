@@ -14,31 +14,31 @@ The web UI is packaged as a Next.js application in the monorepo (`apps/web`). Yo
 * Pull the latest image:
 
   ```bash
-  docker pull timonteutelink/code-templator-web:latest
+  docker pull timonteutelink/skaff-web:latest
   ```
 * Run the container:
 
   ```bash
-  docker run -p 3000:3000 -v ~/.config/code-templator:/home/node/.config/code-templator timonteutelink/code-templator-web:latest
+  docker run -p 3000:3000 -v ~/.config/skaff:/home/node/.config/skaff timonteutelink/skaff-web:latest
   ```
 
   This command maps port 3000 from the container to port 3000 on your localhost, and also mounts your local Code Templator config directory into the container so it can read your `templatePaths` and other settings.
 * Now open your browser to **`http://localhost:3000`**. You should see the Code Templator interface.
 
-**2. Running locally with Node:** If you have Node.js and pnpm installed and have cloned the `code-templator` repository, you can run the web app directly:
+**2. Running locally with Node:** If you have Node.js and pnpm installed and have cloned the `skaff` repository, you can run the web app directly:
 
 * Install dependencies in the monorepo: `pnpm install`
 * Build the core libraries: `pnpm build` (this compiles the packages so the web app can use them)
 * Start the dev server: `pnpm --filter apps/web dev` (this runs the Next.js app in development mode on port 3000 by default)
 * Open **`http://localhost:3000`** in your browser.
 
-> **Note:** The web app expects access to the same template repositories as your CLI. It will read your config (in `~/.config/code-templator`) for the `templatePaths` setting. If you configured templates in the CLI, the same config should be mounted or available to the web app. If you run the app locally, it uses your home directory’s config by default. If you run via Docker, ensure you mount the config volume as shown above or use the web UI’s settings page to add template paths.
+> **Note:** The web app expects access to the same template repositories as your CLI. It will read your config (in `~/.config/skaff`) for the `templatePaths` setting. If you configured templates in the CLI, the same config should be mounted or available to the web app. If you run the app locally, it uses your home directory’s config by default. If you run via Docker, ensure you mount the config volume as shown above or use the web UI’s settings page to add template paths.
 
 ## Browsing and Selecting Templates
 
 Once the web interface is running, you’ll typically go through these steps:
 
-**1. Browse Templates:** The home screen of the app shows the list of available root templates (the same ones `code-templator template default` would list). For each template, you might see a name, description, and author. Click on a template to start using it.
+**1. Browse Templates:** The home screen of the app shows the list of available root templates (the same ones `skaff template default` would list). For each template, you might see a name, description, and author. Click on a template to start using it.
 
 **2. Template Details:** After selecting a template, you’ll see a page with more details:
 

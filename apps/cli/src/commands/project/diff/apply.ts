@@ -1,5 +1,5 @@
 import { Args } from '@oclif/core';
-import { applyDiff } from '@timonteutelink/code-templator-lib';
+import { applyDiff } from '@timonteutelink/skaff-lib';
 
 import Base from '../../../base-command.js';
 import { getCurrentProject } from '../../../utils/cli-utils.js';

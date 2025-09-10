@@ -7,7 +7,7 @@ import {
 import { ConfirmationDialog } from "@/components/general/confirmation-dialog";
 import TablePage, { FieldInfo } from "@/components/general/table-page";
 import { toastNullError } from "@/lib/utils";
-import { DefaultTemplateResult } from "@timonteutelink/code-templator-lib/browser";
+import { DefaultTemplateResult } from "@timonteutelink/skaff-lib/browser";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";

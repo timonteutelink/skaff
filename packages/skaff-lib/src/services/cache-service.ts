@@ -18,7 +18,7 @@ export function getHash(stringToHash: string): string {
 }
 
 export function getCacheDirPath(): string {
-  return path.join(tmpdir(), "code-templator-cache");
+  return path.join(tmpdir(), "skaff-cache");
 }
 
 export async function getCacheDir(): Promise<Result<string>> {

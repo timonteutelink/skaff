@@ -25,7 +25,7 @@ const SETTINGS_DEFINITIONS = [
       os.homedir(),
       "projects",
       "timon",
-      "code-templator",
+      "skaff",
       "scripts",
       "generate-diff-patch.sh",
     ),
@@ -44,7 +44,7 @@ export type Settings = {
   [P in Def as P["key"]]: P["type"] extends "string[]" ? string[] : string;
 };
 
-const APP_NAME = "code-templator";
+const APP_NAME = "skaff";
 
 function getSettingsFilePath(): string {
   const configHome =

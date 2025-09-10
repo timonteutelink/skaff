@@ -3,7 +3,7 @@ module.exports = {
   title: 'Code Templator',
   tagline: 'Generate, scaffold & ship code faster',
   url: 'https://timonteutelink.github.io',
-  baseUrl: '/code-templator/',
+  baseUrl: '/skaff/',
   favicon: 'img/logo.svg',
   organizationName: 'timonteutelink',
   projectName: 'timonteutelink.github.io',
@@ -50,29 +50,29 @@ module.exports = {
     [
       'docusaurus-plugin-typedoc',
       {
-        id: 'code-templator-lib',
+        id: 'skaff-lib',
 
-        entryPoints: ['../code-templator-lib/src/index.ts'],
-        tsconfig: '../code-templator-lib/tsconfig.json',
+        entryPoints: ['../skaff-lib/src/index.ts'],
+        tsconfig: '../skaff-lib/tsconfig.json',
 
-        out: 'src/docs/code-templator-lib',
+        out: 'src/docs/skaff-lib',
 
         sidebar: {
           autoConfiguration: true
         },
 
-        basePath: 'code-templator-lib',
+        basePath: 'skaff-lib',
 
-        options: "./code-templator-lib-typedoc.json"
+        options: "./skaff-lib-typedoc.json"
       }
     ],
 
     [
       '@docusaurus/plugin-content-docs',
       {
-        id: 'code-templator-lib',
-        path: 'src/docs/code-templator-lib',
-        routeBasePath: 'code-templator-lib',
+        id: 'skaff-lib',
+        path: 'src/docs/skaff-lib',
+        routeBasePath: 'skaff-lib',
 
         includeCurrentVersion: true,
       },
@@ -84,7 +84,7 @@ module.exports = {
       path: 'src/docs/cli',
       routeBasePath: 'cli',
       sidebarPath: require.resolve('./src/sidebars/cli-sidebar.js'),
-      editUrl: 'https://github.com/timonteutelink/code-templator/edit/main/'
+      editUrl: 'https://github.com/timonteutelink/skaff/edit/main/'
     }],
 
     // Guides
@@ -104,10 +104,10 @@ module.exports = {
       logo: { src: 'img/logo.svg', alt: 'logo' },
       items: [
         { to: '/docs', label: 'Docs', position: 'left' },
-        { to: '/code-templator-lib', label: 'Lib Reference', position: 'left' },
+        { to: '/skaff-lib', label: 'Lib Reference', position: 'left' },
         { to: '/template-types-lib', label: 'Template Types Lib Reference', position: 'left' },
         { to: '/cli', label: 'CLI Documentation', position: 'left' },
-        { href: 'https://github.com/timonteutelink/code-templator', label: 'GitHub', position: 'right' }
+        { href: 'https://github.com/timonteutelink/skaff', label: 'GitHub', position: 'right' }
       ]
     },
     footer: { copyright: `© ${new Date().getFullYear()} Timon Teutelink` },

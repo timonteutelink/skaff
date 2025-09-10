@@ -1,4 +1,4 @@
-import { getDefaultTemplates } from '@timonteutelink/code-templator-lib';
+import { getDefaultTemplates } from '@timonteutelink/skaff-lib';
 
 import Base from '../../base-command.js';
 

@@ -56,7 +56,7 @@ export const serverLogger = createLogger({
     }),
     new DailyRotateFile({
       dirname: LOG_DIR,
-      filename: "code-templator.%DATE%.log",
+      filename: "skaff.%DATE%.log",
       datePattern: "YYYY-MM-DD",
       zippedArchive: false,
       maxFiles: process.env.NEXT_PUBLIC_LOG_MAX_FILES ?? "14d",

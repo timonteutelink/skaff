@@ -1,4 +1,4 @@
-import { Result } from "@timonteutelink/code-templator-lib/browser";
+import { Result } from "@timonteutelink/skaff-lib/browser";
 import { clsx, type ClassValue } from "clsx";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";

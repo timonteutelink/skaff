@@ -19,7 +19,7 @@ localFlake:
           TEMPLATE_DIR_PATHS = "~/projects/timon/example-templates-dir/:~/projects/btc/mcp-templates/:~/projects/timon/timon-templates/";
           PROJECT_SEARCH_PATHS = "~/projects/btc/:~/projects/timon/templated/:~/projects/kosmoy/";
 
-          GENERATE_DIFF_SCRIPT_PATH = "~/projects/timon/code-templator/scripts/generate-diff-patch.sh";
+          GENERATE_DIFF_SCRIPT_PATH = "~/projects/timon/skaff/scripts/generate-diff-patch.sh";
           NPM_PATH = "${pkgs.pnpm}/bin/pnpm";
 
           NODE_OPTIONS = "--experimental-vm-modules";
@@ -66,7 +66,7 @@ localFlake:
         scripts =
           {
             clean-cache.exec = ''
-              rm -r /tmp/code-templator-cache/*
+              rm -r /tmp/skaff-cache/*
             '';
             nix-web.exec = ''
               jq '.workspaces = ["apps/web", "packages/tailwind-config", "packages/typescript-config", "packages/eslint-config"]' package.json > updated-package.json
@@ -77,7 +77,7 @@ localFlake:
               mv updated-package.json package.json
             '';
             local-dev.exec = ''
-              jq '.workspaces = ["apps/web", "apps/cli", "packages/typescript-config", "packages/eslint-config","packages/tailwind-config", "packages/code-templator-lib", "packages/docs"]' package.json > updated-package.json
+              jq '.workspaces = ["apps/web", "apps/cli", "packages/typescript-config", "packages/eslint-config","packages/tailwind-config", "packages/skaff-lib", "packages/docs"]' package.json > updated-package.json
               mv updated-package.json package.json
             '';
           };

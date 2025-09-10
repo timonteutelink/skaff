@@ -2,7 +2,7 @@ import { Args } from '@oclif/core';
 import {
   generateNewProjectFromExisting,
   getProjectFromPath,
-} from '@timonteutelink/code-templator-lib';
+} from '@timonteutelink/skaff-lib';
 
 import Base from '../../base-command.js';
 import { viewParsedDiffWithGit } from '../../utils/diff-utils.js';
