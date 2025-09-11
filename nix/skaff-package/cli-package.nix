@@ -1,11 +1,17 @@
-{ mkBunDerivation
-,
-}: mkBunDerivation {
+{ mkBunDerivation, pkgs }:
+mkBunDerivation {
   pname = "skaff";
   version = "0.0.1";
 
   src = ./../..;
   bunNix = ./bun-packages.nix;
+
+  nativeBuildInputs = with pkgs; [
+    makeWrapper
+    nodejs_22
+    bun
+    rsync
+  ];
 
   # workspaceRoot = ./../..;
   # passthru.workspaces = {
@@ -16,15 +22,27 @@
   # };
 
   buildPhase = ''
+    runHook preBuild
+    # bun install --no-progress --frozen-lockfile
     cd apps/cli
-    bun run pack:here
+    bun run build:dist
     cd ../..
+    runHook postBuild
   '';
 
   installPhase = ''
-    mkdir -p $out/bin
-    ls -la
-    cp ./tmp/skaff/bin/skaff $out/bin/
-    chmod +x $out/bin/skaff
+    runHook preInstall
+    mkdir -p $out/lib/skaff $out/bin
+
+    cd apps/cli
+
+    cp -r dist bin package.json oclif.manifest.json ../../node_modules $out/lib/skaff
+
+    makeWrapper ${pkgs.nodejs_22}/bin/node $out/bin/skaff \
+      --add-flags "$out/lib/skaff/bin/run.js" \
+      --set NODE_ENV production \
+      --set NODE_PATH "$out/lib/skaff/node_modules"
+
+    runHook postInstall
   '';
 }

@@ -27,5 +27,9 @@
   "resolutions": {
     "react": "19.1.0",
     "react-dom": "19.1.0"
+  },
+  "dependencies": {
+    "@inquirer/core": "^10.2.0",
+    "@inquirer/prompts": "^7.8.4"
   }
 }
