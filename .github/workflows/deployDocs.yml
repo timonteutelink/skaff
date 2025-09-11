@@ -21,6 +21,15 @@ jobs:
       - name: Install dependencies
         run: cd packages/docs && bun install --frozen-lockfile --ignore-scripts
 
+      - name: Install types lib dependencies
+        run: cd packages/template-types-lib && bun install --frozen-lockfile --ignore-scripts
+
+      - name: Install skaff lib dependencies
+        run: cd packages/skaff-lib && bun install --frozen-lockfile --ignore-scripts
+
+      - name: Install cli dependencies
+        run: cd apps/cli && bun install --frozen-lockfile --ignore-scripts
+
       - name: Build website
         run: cd packages/docs && bun run docs
 
