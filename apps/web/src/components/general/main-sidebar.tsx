@@ -43,7 +43,7 @@ export function MainSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="flex items-center justify-center py-6">
-        {!isCollapsed && <h2 className="text-xl font-bold">Code Templator</h2>}
+        {!isCollapsed && <h2 className="text-xl font-bold">Skaff</h2>}
         <SidebarTrigger
           className={isCollapsed ? "mx-auto" : "absolute right-2 top-4"}
         />

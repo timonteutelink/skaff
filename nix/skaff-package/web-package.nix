@@ -42,7 +42,7 @@ mkBunDerivation {
   doDist = false;
 
   meta = with lib; {
-    description = "Next.js web application for Code Templator packaged with Bun";
+    description = "Next.js web application for skaffolding tool packaged with Bun";
     license = licenses.mit;
     platforms = platforms.unix;
     mainProgram = "skaff-web";

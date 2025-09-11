@@ -1,6 +1,6 @@
 /** @type {import('@docusaurus/types').Config} */
 module.exports = {
-  title: 'Code Templator',
+  title: 'Skaff',
   tagline: 'Generate, scaffold & ship code faster',
   url: 'https://timonteutelink.github.io',
   baseUrl: '/skaff/',
@@ -100,7 +100,7 @@ module.exports = {
 
   themeConfig: {
     navbar: {
-      title: 'Code Templator',
+      title: 'Skaff',
       logo: { src: 'img/logo.svg', alt: 'logo' },
       items: [
         { to: '/docs', label: 'Docs', position: 'left' },
