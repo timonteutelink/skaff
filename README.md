@@ -18,7 +18,7 @@
 <p align="center"><strong>Modern scaffolding toolkit</strong> for bootstrapping consistent, reproducible projects from templates.</p>
 
 <p align="center">
-  <a href="https://github.com/timonteutelink/skaff/actions/workflows/ci.yml"><img alt="CI Status" src="https://github.com/timonteutelink/skaff/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/timonteutelink/skaff/actions/workflows/releaseLib.yml"><img alt="CI Status" src="https://github.com/timonteutelink/skaff/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <a href="https://www.npmjs.com/package/@timonteutelink/skaff"><img alt="@timonteutelink/skaff" src="https://img.shields.io/npm/v/%40timonteutelink%2Fskaff?label=%40timonteutelink%2Fskaff"></a>
   <a href="https://www.npmjs.com/package/@timonteutelink/skaff-lib"><img alt="@timonteutelink/skaff-lib" src="https://img.shields.io/npm/v/%40timonteutelink%2Fskaff-lib?label=%40timonteutelink%2Fskaff-lib"></a>
   <a href="https://www.npmjs.com/package/@timonteutelink/template-types-lib"><img alt="@timonteutelink/template-types-lib" src="https://img.shields.io/npm/v/%40timonteutelink%2Ftemplate-types-lib?label=%40timonteutelink%2Ftemplate-types-lib"></a>
@@ -40,9 +40,9 @@
 - **One‑command scaffolding.** Generate a new project or apply a subtemplate with a single command or click. A guided prompt collects the name, options and feature flags and applies them consistently across all files and configs.
 - **Diff preview and patching.** skaff shows you exactly what will be created or changed. For existing projects it generates a git patch so you can inspect and commit the changes yourself.
 - **Multi‑platform distribution.** Use it instantly via `npx` or `bunx`, install globally with npm or bun, download a prebuilt binary, or run it as a reproducible Nix flake.
-- **Visual Web UI.** A Next.js–powered interface allows you to browse templates, fill in form fields, preview the resulting file tree or diff, and apply patches without touching the terminal【940514835091926†L10-L25】.
-- **Flexible configuration.** Configure where your templates live and where to create projects through a simple JSON config or environment variables like `TEMPLATE_DIR_PATHS`, `PROJECT_SEARCH_PATHS` and `PROJECT_DIFF_SCRIPT_PATH`【819842200111602†L0-L3】.
-- **Language agnostic.** Templates can target any stack – FastAPI, React, Go, Rust – as long as they ship a schema. Additional template repositories can be referenced with `--repo`, and GitHub template retrieval is on the roadmap.
+- **Visual Web UI.** A Next.js powered interface allows you to browse templates, fill in form fields, preview the resulting file tree or diff, and apply patches without touching the terminal
+- **Flexible configuration.** Configure where your templates live and where to create projects through a simple JSON config or environment variables like `TEMPLATE_DIR_PATHS`, `PROJECT_SEARCH_PATHS` and `PROJECT_DIFF_SCRIPT_PATH`
+- **Language agnostic.** Templates can target any stack like FastAPI, React, Go and Rust as long as they ship a schema. Additional template repositories can be referenced with `--repo`, and GitHub template retrieval is on the roadmap.
 
 ## Installation
 
@@ -132,7 +132,7 @@ Run `skaff --help` to see the full list of commands and flags.
 
 ## Web interface
 
-In addition to the CLI, skaff provides a Web UI. The Web interface makes it easy to browse templates, enter values through forms, preview the file tree or diff and apply the changes interactively【940514835091926†L10-L25】.
+In addition to the CLI, skaff provides a Web UI. The Web interface makes it easy to browse templates, enter values through forms, preview the file tree or diff and apply the changes interactively
 
 ### Using Docker
 
@@ -145,7 +145,7 @@ docker run -p 3000:3000 \
   timonteutelink/skaff:latest
 ```
 
-Now open **http://localhost:3000** in your browser. The volume mount allows the UI to read your `templatePaths` and other settings【940514835091926†L20-L25】.
+Now open **http://localhost:3000** in your browser. The volume mount allows the UI to read your `templatePaths` and other settings.
 
 #### Customizing locations
 
@@ -167,28 +167,28 @@ docker run -p 3000:3000 \
   timonteutelink/skaff:latest
 ```
 
-The `.env.template` file in this repository provides example values【819842200111602†L0-L3】.
+The `.env.template` file in this repository provides example values.
 
 ### Running locally
 
-If you have Node.js and pnpm or Bun installed, you can run the Web UI from source:
+If you have Node.js and bun or Bun installed, you can run the Web UI from source:
 
 ```bash
-pnpm install
-pnpm build
-pnpm --filter apps/web dev
+bun install
+bun build
+bun --filter apps/web dev
 ```
 
-Open http://localhost:3000 to access the interface【940514835091926†L27-L34】. When running locally the app uses your home directory’s `~/.config/skaff` by default, and you can update the settings through the UI.
+Open http://localhost:3000 to access the interface. When running locally the app uses your home directory’s `~/.config/skaff` by default, and you can update the settings through the UI.
 
 ## Contributing
 
 We appreciate contributions of all kinds. Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for the full guide. In summary:
 
-- Set up the monorepo with `pnpm install` and build the core libs【194578119240935†L18-L25】.
-- Use `pnpm test` to run unit tests, and run `pnpm format` / `pnpm lint` before committing【194578119240935†L29-L33】.
-- Work on a feature branch and open a Pull Request against `main`. PRs run continuous integration and should be kept focused【194578119240935†L35-L44】.
-- Releases are handled by maintainers via semantic versioning and GitHub Actions; you usually don’t need to publish packages yourself【194578119240935†L46-L59】.
+- Set up the monorepo with `bun install` and build the core libs
+- Use `bun test` to run unit tests, and run `bun format` / `bun lint` before committing
+- Work on a feature branch and open a Pull Request against `main`. PRs run continuous integration and should be kept focused
+- Releases are handled by maintainers via semantic versioning and GitHub Actions; you usually don’t need to publish packages yourself
 
 ## License
 
@@ -202,10 +202,3 @@ skaff is released under the **GNU General Public License v3.0**. This copyleft l
 - **Community:** Join our Discord to ask questions and share ideas: [discord.gg/REPLACE_WITH_INVITE](https://discord.gg/REPLACE_WITH_INVITE).
 
 ---
-
-<!--
-Notes for maintainers:
-* Keep badges above in sync with the package versions as you add or remove packages.
-* If you rename flake outputs, update the Nix commands accordingly.
-* If you add more templates to example‑templates, showcase them here with concise examples.
--->
