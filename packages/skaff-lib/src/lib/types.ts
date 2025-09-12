@@ -38,7 +38,10 @@ export interface TemplateDTO {
   templatesDir: string;
   subTemplates: Record<string, TemplateDTO[]>;
   currentCommitHash?: string; //always defined on root templates.
-  isDefault: boolean;
+  isLocal: boolean;
+  branch?: string;
+  repoUrl?: string;
+  isOutdated: boolean;
   templatesThatDisableThis: TemplateDisablingThis[];
   templateCommands: { title: string; description: string }[];
   refDir?: string;

@@ -1,4 +1,4 @@
-import { getDefaultTemplate } from '@timonteutelink/skaff-lib';
+import { getTemplate } from '@timonteutelink/skaff-lib';
 import { UserTemplateSettings } from '@timonteutelink/template-types-lib';
 import fs from 'node:fs';
 
@@ -9,7 +9,7 @@ async function promptUserTemplateSettings(
   rootTemplateName: string,
   templateName: string,
 ): Promise<UserTemplateSettings> {
-  const rootTpl = await getDefaultTemplate(rootTemplateName);
+  const rootTpl = await getTemplate(rootTemplateName);
   if ('error' in rootTpl) throw new Error(rootTpl.error);
   if (!rootTpl.data) throw new Error(`No template named "${rootTemplateName}"`);
 

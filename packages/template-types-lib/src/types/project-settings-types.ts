@@ -7,6 +7,8 @@ export const instantiatedTemplateSchema = z.object({
   templateName: z.string().min(1),
   templateSettings: z.object({}).passthrough(), //UserTemplateSettings
   templateCommitHash: z.string().optional(), //TODO make sure this is a valid hash
+  templateRepoUrl: z.string().url().optional(),
+  templateRepoBranch: z.string().optional(),
 
   automaticallyInstantiatedByParent: z.boolean().optional(),
 });

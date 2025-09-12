@@ -34,6 +34,26 @@ export async function reloadTemplates(): Promise<
   };
 }
 
+export async function loadTemplatesFromRepo(
+  repoUrl: string,
+  branch: string,
+): Promise<Result<DefaultTemplateResult[]>> {
+  const loadRes = await tempLib.loadTemplateFromRepo(repoUrl, branch);
+  if ("error" in loadRes) {
+    return { error: loadRes.error };
+  }
+  const result = await tempLib.getDefaultTemplates();
+  if ("error" in result) {
+    return { error: result.error };
+  }
+  return {
+    data: result.data.map((template) => ({
+      revisions: template.revisions,
+      template: template.template.mapToDTO(),
+    })),
+  };
+}
+
 export async function retrieveDefaultTemplates(): Promise<
   Result<DefaultTemplateResult[]>
 > {

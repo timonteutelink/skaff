@@ -72,6 +72,62 @@ export async function switchBranch(
   }
 }
 
+export async function cloneRepoBranchToCache(
+  repoUrl: string,
+  branch: string,
+): Promise<Result<string>> {
+  const repoName = path.basename(repoUrl).replace(/\.git$/, "");
+  const destDirName = `${repoName}-${branch}`;
+  const destPath = await pathInCache(destDirName);
+  if ("error" in destPath) {
+    return destPath;
+  }
+  try {
+    const stat = await fs.stat(destPath.data).catch(() => null);
+    if (stat && stat.isDirectory()) {
+      await asyncExec(
+        `cd ${destPath.data} && git fetch && git checkout ${branch} && git pull`,
+      );
+      const installResult = await npmInstall(destPath.data);
+      if ("error" in installResult) {
+        return { error: installResult.error };
+      }
+      return { data: destPath.data };
+    }
+    await asyncExec(
+      `git clone --branch ${branch} ${repoUrl} ${destPath.data}`,
+    );
+    const installResult = await npmInstall(destPath.data);
+    if ("error" in installResult) {
+      return { error: installResult.error };
+    }
+    return { data: destPath.data };
+  } catch (error) {
+    logError({
+      shortMessage: "Error cloning repo to cache",
+      error,
+    });
+    return { error: `Error cloning repo to cache: ${error}` };
+  }
+}
+
+export async function getRemoteCommitHash(
+  repoUrl: string,
+  branch: string,
+): Promise<Result<string>> {
+  try {
+    const { stdout } = await asyncExec(`git ls-remote ${repoUrl} ${branch}`);
+    const hash = stdout.trim().split(/\s+/)[0];
+    return { data: hash };
+  } catch (error) {
+    logError({
+      shortMessage: "Error getting remote commit hash",
+      error,
+    });
+    return { error: `Error getting remote commit hash: ${error}` };
+  }
+}
+
 /**
  * Clone a specific commit of a repo into the cache.
  *

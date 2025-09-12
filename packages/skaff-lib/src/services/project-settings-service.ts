@@ -151,9 +151,17 @@ export async function loadProjectSettings(
     };
   }
 
-  const rootTemplate = await (
-    await getRootTemplateRepository()
-  ).loadRevision(
+  const rootRepo = await getRootTemplateRepository();
+  const repoUrl = finalProjectSettings.data.instantiatedTemplates[0]?.templateRepoUrl;
+  const repoBranch =
+    finalProjectSettings.data.instantiatedTemplates[0]?.templateRepoBranch || "main";
+  if (repoUrl) {
+    const addRes = await rootRepo.addRemoteRepo(repoUrl, repoBranch);
+    if ("error" in addRes) {
+      return addRes;
+    }
+  }
+  const rootTemplate = await rootRepo.loadRevision(
     finalProjectSettings.data.rootTemplateName,
     instantiatedRootTemplateCommitHash,
   );

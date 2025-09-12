@@ -2,7 +2,12 @@ import * as fs from "node:fs/promises";
 import { Template } from "../models/template";
 import { Result } from "../lib/types";
 import path from "node:path";
-import { cloneRevisionToCache } from "../services/git-service";
+import {
+  cloneRepoBranchToCache,
+  cloneRevisionToCache,
+  getCommitHash,
+  getRemoteCommitHash,
+} from "../services/git-service";
 import { backendLogger } from "../lib/logger";
 import { logError } from "../lib/utils";
 
@@ -13,20 +18,47 @@ import { logError } from "../lib/utils";
 export class RootTemplateRepository {
   private loading: boolean = false;
   private templatePaths: string[] = [];
+  private remoteRepos: { url: string; branch: string; path: string; hash: string; isOutdated: boolean }[] = [];
   public templates: Template[] = [];
 
   constructor(templatePaths: string[]) {
     this.templatePaths = templatePaths;
   }
 
-  // default templates are the template dirs defined by user. User decides which revision to use.
-  private async loadDefaultTemplates(): Promise<Result<void>> {
+  async addRemoteRepo(url: string, branch: string = "main"): Promise<Result<void>> {
+    const cloneResult = await cloneRepoBranchToCache(url, branch);
+    if ("error" in cloneResult) {
+      return { error: cloneResult.error };
+    }
+    const hashResult = await getCommitHash(cloneResult.data);
+    if ("error" in hashResult) {
+      return { error: hashResult.error };
+    }
+    const existing = this.remoteRepos.find(
+      (r) => r.url === url && r.branch === branch,
+    );
+    if (existing) {
+      existing.path = cloneResult.data;
+      existing.hash = hashResult.data;
+      existing.isOutdated = false;
+    } else {
+      this.remoteRepos.push({ url, branch, path: cloneResult.data, hash: hashResult.data, isOutdated: false });
+    }
+    return await this.loadTemplates();
+  }
+
+  // load templates from configured paths and cached remote repos
+  private async loadTemplates(): Promise<Result<void>> {
     if (this.loading) {
       return { error: "Templates are already loading" };
     }
     this.loading = true;
     this.templates = [];
-    for (const templatePath of this.templatePaths) {
+    const paths = [
+      ...this.templatePaths,
+      ...this.remoteRepos.map((r) => r.path),
+    ];
+    for (const templatePath of paths) {
       const rootTemplateDirsPath = path.join(templatePath, "root-templates");
       let rootTemplateDirs: string[] = [];
       try {
@@ -58,26 +90,79 @@ export class RootTemplateRepository {
           continue;
         }
 
-        const template = await Template.createAllTemplates(rootTemplateDirPath);
+        const repo = this.remoteRepos.find((r) => r.path === templatePath);
+        const template = await Template.createAllTemplates(
+          rootTemplateDirPath,
+          repo?.url,
+        );
         if ("error" in template) {
           continue;
         }
-        this.templates.push(template.data);
+        const tpl = template.data;
+        if (repo) {
+          tpl.branch = repo.branch;
+        }
+        this.templates.push(tpl);
       }
     }
 
     this.loading = false;
-
+    await this.updateOutdatedStatus();
     return { data: undefined };
   }
 
+  private async updateOutdatedStatus(): Promise<void> {
+    for (const repo of this.remoteRepos) {
+      const remote = await getRemoteCommitHash(repo.url, repo.branch);
+      if ("error" in remote) {
+        repo.isOutdated = false;
+      } else {
+        repo.isOutdated = remote.data !== repo.hash;
+      }
+    }
+
+    const mark = (tpl: Template, outdated: boolean) => {
+      tpl.isOutdated = outdated;
+      for (const arr of Object.values(tpl.subTemplates)) {
+        for (const child of arr) {
+          mark(child, outdated);
+        }
+      }
+    };
+
+    for (const tpl of this.templates) {
+      const repoPath = path.dirname(tpl.absoluteBaseDir);
+      const repo = this.remoteRepos.find((r) => r.path === repoPath);
+      if (repo) {
+        tpl.repoUrl = repo.url;
+        mark(tpl, repo.isOutdated);
+      } else {
+        mark(tpl, false);
+      }
+    }
+  }
+
   async reloadTemplates(): Promise<Result<void>> {
-    return await this.loadDefaultTemplates();
+    // refresh remote repos to latest commit on their branches
+    for (const repo of this.remoteRepos) {
+      const cloneResult = await cloneRepoBranchToCache(repo.url, repo.branch);
+      if ("error" in cloneResult) {
+        return { error: cloneResult.error };
+      }
+      const hashResult = await getCommitHash(cloneResult.data);
+      if ("error" in hashResult) {
+        return { error: hashResult.error };
+      }
+      repo.path = cloneResult.data;
+      repo.hash = hashResult.data;
+      repo.isOutdated = false;
+    }
+    return await this.loadTemplates();
   }
 
   async getAllTemplates(): Promise<Result<Template[]>> {
     if (!this.templates.length) {
-      const result = await this.loadDefaultTemplates();
+      const result = await this.loadTemplates();
       if ("error" in result) {
         return result;
       }
@@ -86,14 +171,13 @@ export class RootTemplateRepository {
         return { error: "No templates found." };
       }
     }
+    await this.updateOutdatedStatus();
     return { data: this.templates };
   }
 
-  async findDefaultTemplate(
-    templateName: string,
-  ): Promise<Result<Template | null>> {
+  async findTemplate(templateName: string): Promise<Result<Template | null>> {
     if (!this.templates.length) {
-      const result = await this.loadDefaultTemplates();
+      const result = await this.loadTemplates();
       if ("error" in result) {
         return result;
       }
@@ -102,16 +186,18 @@ export class RootTemplateRepository {
         return { error: "No templates found." };
       }
     }
+    await this.updateOutdatedStatus();
 
-    for (const template of this.templates) {
-      if (
-        template.config.templateConfig.name === templateName &&
-        template.isDefault
-      ) {
-        return { data: template };
-      }
+    const local = this.templates.find(
+      (t) => t.config.templateConfig.name === templateName && t.isLocal,
+    );
+    if (local) {
+      return { data: local };
     }
-    return { data: null };
+    const any = this.templates.find(
+      (t) => t.config.templateConfig.name === templateName,
+    );
+    return { data: any ?? null };
   }
 
   async findAllTemplateRevisions(
@@ -148,25 +234,19 @@ export class RootTemplateRepository {
       return { data: null };
     }
 
-    let defaultTemplate: Template | undefined;
     for (const revision of revisions) {
       if (revision.commitHash === revisionHash) {
         return { data: revision };
       }
-      if (revision.isDefault) {
-        defaultTemplate = revision;
-      }
     }
 
-    if (!defaultTemplate) {
-      logError({
-        shortMessage: `No default template found for ${templateName}`,
-      });
+    const sourceTemplate = revisions[0];
+    if (!sourceTemplate) {
       return { data: null };
     }
 
     const saveRevisionInCacheResult = await cloneRevisionToCache(
-      defaultTemplate,
+      sourceTemplate,
       revisionHash,
     );
 
@@ -177,7 +257,7 @@ export class RootTemplateRepository {
     const newTemplatePath = path.join(
       saveRevisionInCacheResult.data,
       "root-templates",
-      path.basename(defaultTemplate.absoluteDir),
+      path.basename(sourceTemplate.absoluteDir),
     );
 
     const newTemplate = await Template.createAllTemplates(newTemplatePath);

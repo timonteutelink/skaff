@@ -277,7 +277,7 @@ export class Project {
         rootTemplateName: this.instantiatedProjectSettings.rootTemplateName,
         settings: this.instantiatedProjectSettings,
         gitStatus: this.gitStatus,
-        outdatedTemplate: !this.rootTemplate.isDefault,
+        outdatedTemplate: this.rootTemplate.isOutdated,
       },
     };
   }

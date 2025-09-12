@@ -3,7 +3,7 @@ import { reloadTemplates } from '@timonteutelink/skaff-lib';
 import Base from '../../base-command.js';
 
 export default class TemplateReload extends Base {
-  static description = 'Reload templates from disk and show defaults afterwards';
+  static description = 'Reload templates from disk and show loaded templates afterwards';
 
   async run() {
     await this.parse(TemplateReload);
@@ -13,9 +13,11 @@ export default class TemplateReload extends Base {
 
     this.output(
       res.data.map(({ revisions, template }) => ({
-        defaultRevision: template.commitHash,
+        revision: template.commitHash,
         name: template.config.templateConfig.name,
         totalRevisions: revisions.length,
+        isLocal: template.isLocal,
+        branch: template.branch,
       })),
     );
   }

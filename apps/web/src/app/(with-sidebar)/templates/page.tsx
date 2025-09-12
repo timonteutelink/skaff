@@ -3,9 +3,11 @@ import {
   runEraseCache,
   reloadTemplates,
   retrieveDefaultTemplates,
+  loadTemplatesFromRepo,
 } from "@/app/actions/template";
 import { ConfirmationDialog } from "@/components/general/confirmation-dialog";
 import TablePage, { FieldInfo } from "@/components/general/table-page";
+import { Button } from "@/components/ui/button";
 import { toastNullError } from "@/lib/utils";
 import { DefaultTemplateResult } from "@timonteutelink/skaff-lib/browser";
 import { useRouter } from "next/navigation";
@@ -80,6 +82,29 @@ export default function TemplatesListPage() {
     return { data: undefined };
   }, []);
 
+  const handleLoadFromRepo = useCallback(async () => {
+    const repoUrl = prompt("Git repository URL");
+    if (!repoUrl) {
+      return { error: "No repository URL provided" } as const;
+    }
+    const branch = prompt("Branch", "main") || "main";
+    const result = await loadTemplatesFromRepo(repoUrl, branch);
+    const toastResult = toastNullError({
+      result,
+      shortMessage: "Error loading templates",
+    });
+    if (!toastResult) {
+      if ("error" in result) {
+        return { error: result.error } as const;
+      } else {
+        return { error: "Unknown error" } as const;
+      }
+    }
+    setTemplates(toastResult);
+    toast.success("Templates loaded successfully");
+    return { data: undefined } as const;
+  }, []);
+
   const templateButtons = useMemo(
     () => (
       <>
@@ -97,9 +122,10 @@ export default function TemplatesListPage() {
           dialogDescription="Are you sure you want to clear the cache? This action cannot be undone."
           onConfirm={handleClearCache}
         />
+        <Button onClick={handleLoadFromRepo}>Load From Repo</Button>
       </>
     ),
-    [handleReload, handleClearCache],
+    [handleReload, handleClearCache, handleLoadFromRepo],
   );
 
   return (
