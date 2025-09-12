@@ -3,8 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
-import { LevelName, LogFilter, LogJSON, Result, getCacheDirPath, logError, serverLogger } from "@timonteutelink/skaff-lib";
-import { getCacheDir } from "../../../../../packages/skaff-lib/dist/services/cache-service";
+import { LevelName, LogFilter, LogJSON, Result, getCacheDirPath, getCacheDir, logError, serverLogger } from "@timonteutelink/skaff-lib";
 
 export async function logFromClient(data: {
   level: LevelName;

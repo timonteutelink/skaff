@@ -89,7 +89,7 @@ nix run github:timonteutelink/skaff
 # or from a local checkout:
 nix develop       # enter a dev shell with all dependencies
 nix build         # build the package
-nix run .         # execute the CLI
+nix run           # execute the CLI
 ```
 
 ## Quickstart
@@ -113,7 +113,7 @@ skaff --help
 When you invoke skaff, it will:
 
 1. Resolve the template source (local directory, configured paths or a remote repo).
-2. Read the template’s schema and definitions from `template.json`/`template.ts`.
+2. Read the template’s schema and definitions from `templateConfig.ts`.
 3. Prompt you for the required inputs, validating them with Zod.
 4. Generate files and configuration into the target directory.
 5. Produce a git diff or patch so you can review and commit the changes.

@@ -4,39 +4,53 @@ mkBunDerivation {
   pname = "skaff-web";
   version = "0.0.1";
 
-  src = ./../../apps/web;
+  src = ./../..;
   bunNix = ./bun-packages.nix;
-  workspaceRoot = ./../..;
+
+  nativeBuildInputs = with pkgs; [
+    makeWrapper
+    nodejs_22
+    bun
+    rsync
+  ];
 
   buildPhase = ''
-    bun run build
-  '';
+    runHook preBuild
 
-  postBuild = ''
-    sed -i '1s|^|#!/usr/bin/env bun\n|' .next/standalone/server.js
-    patchShebangs .next/standalone/server.js
+    export NEXT_TELEMETRY_DISABLED=1
+    export CI=1
+
+    cd apps/web
+
+    bun run build
+
+    cd ../..
+
+    runHook postBuild
   '';
 
   installPhase = ''
-    mkdir -p $out/{share/app,bin}
+    runHook preInstall
 
-    # Copy standalone output and static assets
-    cp -r .next/standalone $out/share/app/
+    mkdir -p $out/share/app $out/bin
+
+    cd apps/web
+
+    cp -r .next/standalone/* $out/share/app/
     cp -r public $out/share/app/public
     mkdir -p $out/share/app/.next
     cp -r .next/static $out/share/app/.next/static
 
-    # Symlink a cache dir for Next.js
-    ln -s /var/cache/skaff-web $out/share/app/.next/cache
+    cd ../..
 
-    # Make the server entrypoint executable
-    chmod +x $out/share/app/server.js
+    makeWrapper ${pkgs.nodejs_22}/bin/node $out/bin/skaff-web \
+      --add-flags "$out/share/app/server.js" \
+      --set-default HOSTNAME 0.0.0.0 \
+      --set-default PORT 3000 \
+      --set NODE_ENV production \
+      --set-default NEXT_CACHE_DIR /var/cache/skaff-web
 
-    # Wrap the server to set defaults and environment
-    makeWrapper $out/share/app/server.js $out/bin/skaff-web \
-      --set HOSTNAME 0.0.0.0 \
-      --set PORT 3000 \
-      --set NODE_ENV production
+    runHook postInstall
   '';
 
   doDist = false;
