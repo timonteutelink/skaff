@@ -28,37 +28,15 @@
 <p align="center">
   <a href="https://timonteutelink.github.io/skaff">Documentation</a>
   &nbsp;&nbsp;•&nbsp;&nbsp;
-  <a href="https://discord.gg/REPLACE_WITH_INVITE">Discord</a>
+  <a href="https://discord.gg/efVC93Cr">Discord</a>
 </p>
 
-## Overview
-
-**skaff** helps teams standardize how they start new services, microservices and libraries. It codifies best practices into reusable templates, prompts you for the variables that matter, and writes out a ready‑to‑run project. Because templates are versioned and configured with Zod schemas, they remain type‑safe and upgradeable. The CLI runs anywhere Node or Bun can, prebuilt binaries can be downloaded from releases, and a Nix flake is provided for reproducible builds.
-
-## Features
-
-- **One‑command scaffolding.** Generate a new project or apply a subtemplate with a single command or click. A guided prompt collects the name, options and feature flags and applies them consistently across all files and configs.
-- **Diff preview and patching.** skaff shows you exactly what will be created or changed. For existing projects it generates a git patch so you can inspect and commit the changes yourself.
-- **Multi‑platform distribution.** Use it instantly via `npx` or `bunx`, install globally with npm or bun, download a prebuilt binary, or run it as a reproducible Nix flake.
-- **Visual Web UI.** A Next.js powered interface allows you to browse templates, fill in form fields, preview the resulting file tree or diff, and apply patches without touching the terminal
-- **Flexible configuration.** Configure where your templates live and where to create projects through a simple JSON config or environment variables like `TEMPLATE_DIR_PATHS`, `PROJECT_SEARCH_PATHS` and `PROJECT_DIFF_SCRIPT_PATH`
-- **Language agnostic.** Templates can target any stack like FastAPI, React, Go and Rust as long as they ship a schema. Additional template repositories can be referenced with `--repo`, and GitHub template retrieval is on the roadmap.
 
 ## Installation
 
-The CLI can be used without a global install. Choose the method that fits your workflow:
+The CLI can be used without a global install.
 
-### `npx` (no install)
-
-Use npm to run the CLI on the fly:
-
-```bash
-npx @timonteutelink/skaff --version
-```
-
-### `bunx` (no install)
-
-Run with Bun if you have it installed:
+### `bunx`
 
 ```bash
 bunx @timonteutelink/skaff --version
@@ -106,7 +84,21 @@ This will clone or fetch the `fastapi` template, prompt you for required values 
 
 ```bash
 skaff --help
+
 ```
+
+## Overview
+
+**skaff** helps teams standardize how they start new services, microservices and libraries. It codifies best practices into reusable templates, prompts you for the variables that matter, and writes out a ready‑to‑run project. Because templates are versioned and configured with Zod schemas, they remain type‑safe and upgradeable. The CLI runs anywhere Node or Bun can, prebuilt binaries can be downloaded from releases, and a Nix flake is provided for reproducible builds.
+
+## Features
+
+- **One‑command scaffolding.** Generate a new project or apply a subtemplate with a single command or click. A guided prompt collects the name, options and feature flags and applies them consistently across all files and configs.
+- **Diff preview and patching.** skaff shows you exactly what will be created or changed. For existing projects it generates a git patch so you can inspect and commit the changes yourself.
+- **Multi‑platform distribution.** Use it instantly via `npx` or `bunx`, install globally with npm or bun, download a prebuilt binary, or run it as a reproducible Nix flake.
+- **Visual Web UI.** A Next.js powered interface allows you to browse templates, fill in form fields, preview the resulting file tree or diff, and apply patches without touching the terminal
+- **Flexible configuration.** Configure where your templates live and where to create projects through a simple JSON config or environment variables like `TEMPLATE_DIR_PATHS`, `PROJECT_SEARCH_PATHS` and `PROJECT_DIFF_SCRIPT_PATH`
+- **Language agnostic.** Templates can target any stack like FastAPI, React, Go and Rust as long as they ship a schema. Additional template repositories can be referenced with `--repo`, and GitHub template retrieval is on the roadmap.
 
 ## How it works
 
@@ -199,6 +191,6 @@ skaff is released under the **GNU General Public License v3.0**. This copyleft l
 ## Documentation & community
 
 - **Documentation:** The full manual and API reference are hosted at [timonteutelink.github.io/skaff](https://timonteutelink.github.io/skaff).
-- **Community:** Join our Discord to ask questions and share ideas: [discord.gg/REPLACE_WITH_INVITE](https://discord.gg/REPLACE_WITH_INVITE).
+- **Community:** Join our Discord to ask questions and share ideas: [https://discord.gg/efVC93Cr](https://discord.gg/efVC93Cr).
 
 ---
