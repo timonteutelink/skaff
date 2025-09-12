@@ -6,7 +6,7 @@ import {
 import path from "node:path";
 import { GitStatus, ProjectDTO, Result } from "../lib/types";
 import { logError, stringOrCallbackToString } from "../lib/utils";
-import { isGitRepo, loadGitStatus } from "../services/git-service";
+import { isGitRepo, loadGitStatus, getRemoteCommitHash } from "../services/git-service";
 import { loadProjectSettings } from "../services/project-settings-service";
 import { executeCommand } from "../services/shell-service";
 import { Template } from "./template";
@@ -25,6 +25,7 @@ export class Project {
   public rootTemplate: Template;
 
   public gitStatus?: GitStatus;
+  public outdatedTemplate: boolean;
 
   constructor(
     absDir: string,
@@ -32,12 +33,14 @@ export class Project {
     projectSettings: ProjectSettings,
     rootTemplate: Template,
     gitStatus?: GitStatus,
+    outdatedTemplate: boolean = false,
   ) {
     this.absoluteRootDir = absDir;
     this.absoluteSettingsPath = absSettingsPath;
     this.instantiatedProjectSettings = projectSettings;
     this.rootTemplate = rootTemplate;
     this.gitStatus = gitStatus;
+    this.outdatedTemplate = outdatedTemplate;
   }
 
   /**
@@ -179,13 +182,30 @@ export class Project {
       gitStatus = gitStatusResult.data;
     }
 
+    let outdated = false;
+    const rootInstantiated = projectSettings.data.settings.instantiatedTemplates[0];
+    if (
+      rootInstantiated?.templateRepoUrl &&
+      rootInstantiated.templateBranch &&
+      rootInstantiated.templateCommitHash
+    ) {
+      const remote = await getRemoteCommitHash(
+        rootInstantiated.templateRepoUrl,
+        rootInstantiated.templateBranch,
+      );
+      if ("data" in remote && remote.data !== rootInstantiated.templateCommitHash) {
+        outdated = true;
+      }
+    }
+
     return {
       data: new Project(
         absDir,
         projectSettingsPath,
         projectSettings.data.settings,
         projectSettings.data.rootTemplate,
-        gitStatus
+        gitStatus,
+        outdated,
       ),
     };
   }
@@ -277,7 +297,7 @@ export class Project {
         rootTemplateName: this.instantiatedProjectSettings.rootTemplateName,
         settings: this.instantiatedProjectSettings,
         gitStatus: this.gitStatus,
-        outdatedTemplate: !this.rootTemplate.isDefault,
+        outdatedTemplate: this.outdatedTemplate,
       },
     };
   }

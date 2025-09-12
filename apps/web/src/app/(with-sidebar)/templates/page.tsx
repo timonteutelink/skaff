@@ -3,6 +3,7 @@ import {
   runEraseCache,
   reloadTemplates,
   retrieveDefaultTemplates,
+  loadTemplateRepo,
 } from "@/app/actions/template";
 import { ConfirmationDialog } from "@/components/general/confirmation-dialog";
 import TablePage, { FieldInfo } from "@/components/general/table-page";
@@ -30,6 +31,8 @@ const columnMapping: FieldInfo<DefaultTemplateResult>[] = [
 export default function TemplatesListPage() {
   const router = useRouter();
   const [templates, setTemplates] = useState<DefaultTemplateResult[]>([]);
+  const [repoUrl, setRepoUrl] = useState("");
+  const [branch, setBranch] = useState("main");
 
   useEffect(() => {
     retrieveDefaultTemplates().then((templatesResult) => {
@@ -83,6 +86,43 @@ export default function TemplatesListPage() {
   const templateButtons = useMemo(
     () => (
       <>
+        <div className="flex gap-2">
+          <input
+            value={repoUrl}
+            onChange={(e) => setRepoUrl(e.target.value)}
+            placeholder="Repo URL"
+            className="border px-2 py-1"
+          />
+          <input
+            value={branch}
+            onChange={(e) => setBranch(e.target.value)}
+            placeholder="Branch"
+            className="border px-2 py-1 w-24"
+          />
+          <button
+            className="border px-2 py-1"
+            onClick={async () => {
+              const result = await loadTemplateRepo(repoUrl, branch);
+              const toastResult = toastNullError({
+                result,
+                shortMessage: "Error loading repo",
+              });
+              if (toastResult) {
+                const templatesRes = await retrieveDefaultTemplates();
+                const newTemplates = toastNullError({
+                  result: templatesRes,
+                  shortMessage: "Error retrieving templates",
+                });
+                if (newTemplates) {
+                  setTemplates(newTemplates);
+                  toast.success("Repo loaded");
+                }
+              }
+            }}
+          >
+            Load Repo
+          </button>
+        </div>
         <ConfirmationDialog
           buttonText="Reload Templates"
           actionText="Reload"
@@ -99,7 +139,7 @@ export default function TemplatesListPage() {
         />
       </>
     ),
-    [handleReload, handleClearCache],
+    [repoUrl, branch, handleReload, handleClearCache],
   );
 
   return (

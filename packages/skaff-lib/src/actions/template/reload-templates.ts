@@ -1,7 +1,7 @@
 import { Result } from "../../lib";
 import { Template } from "../../models";
 import { getRootTemplateRepository } from "../../repositories";
-import { getDefaultTemplates } from "./get-default-templates";
+import { getTemplates } from "./get-templates";
 
 export async function reloadTemplates(): Promise<
   Result<{
@@ -16,5 +16,5 @@ export async function reloadTemplates(): Promise<
     return { error: result.error };
   }
 
-  return await getDefaultTemplates();
+  return await getTemplates();
 }

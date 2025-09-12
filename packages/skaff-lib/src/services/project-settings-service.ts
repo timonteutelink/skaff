@@ -139,8 +139,10 @@ export async function loadProjectSettings(
   }
 
   // TODO here we would also load other reference template repos. For now all templates of a root template need to be in same repo.
+  const rootInstantiated =
+    finalProjectSettings.data.instantiatedTemplates[0];
   const instantiatedRootTemplateCommitHash =
-    finalProjectSettings.data.instantiatedTemplates[0]?.templateCommitHash;
+    rootInstantiated?.templateCommitHash;
 
   if (!instantiatedRootTemplateCommitHash) {
     logError({
@@ -151,9 +153,18 @@ export async function loadProjectSettings(
     };
   }
 
-  const rootTemplate = await (
-    await getRootTemplateRepository()
-  ).loadRevision(
+  if (rootInstantiated?.templateRepoUrl) {
+    const repo = await getRootTemplateRepository();
+    const addResult = await repo.addRemoteRepo(
+      rootInstantiated.templateRepoUrl,
+      rootInstantiated.templateBranch ?? "main",
+    );
+    if ("error" in addResult) {
+      return addResult;
+    }
+  }
+  const repo = await getRootTemplateRepository();
+  const rootTemplate = await repo.loadRevision(
     finalProjectSettings.data.rootTemplateName,
     instantiatedRootTemplateCommitHash,
   );

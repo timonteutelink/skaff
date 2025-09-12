@@ -678,6 +678,8 @@ export class TemplateGeneratorService {
     this.destinationProjectSettings.instantiatedTemplates.push({
       id: newProjectId,
       templateCommitHash: this.rootTemplate.commitHash,
+      templateRepoUrl: this.rootTemplate.repoUrl,
+      templateBranch: this.rootTemplate.branch,
       templateName: this.rootTemplate.config.templateConfig.name,
       templateSettings: parsedUserSettings.data,
     });
@@ -741,6 +743,8 @@ export class TemplateGeneratorService {
       id: newProjectId,
       parentId: parentInstanceId,
       templateCommitHash: template.commitHash,
+      templateRepoUrl: template.repoUrl,
+      templateBranch: template.branch,
       automaticallyInstantiatedByParent: autoInstantiated,
       templateName,
       templateSettings: parsedUserSettings.data,

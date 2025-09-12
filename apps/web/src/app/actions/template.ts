@@ -19,6 +19,17 @@ export async function runEraseCache(): Promise<
   };
 }
 
+export async function loadTemplateRepo(
+  repoUrl: string,
+  branch: string,
+): Promise<Result<void>> {
+  const result = await tempLib.loadTemplateFromRepo(repoUrl, branch);
+  if ("error" in result) {
+    return { error: result.error };
+  }
+  return { data: undefined };
+}
+
 export async function reloadTemplates(): Promise<
   Result<DefaultTemplateResult[]>
 > {
