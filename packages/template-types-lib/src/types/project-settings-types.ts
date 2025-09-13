@@ -8,6 +8,8 @@ export const instantiatedTemplateSchema = z.object({
   templateSettings: z.object({}).passthrough(), //UserTemplateSettings
   templateCommitHash: z.string().optional(), //TODO make sure this is a valid hash
 
+  migrationUuid: z.string().uuid().optional(),
+
   automaticallyInstantiatedByParent: z.boolean().optional(),
 });
 

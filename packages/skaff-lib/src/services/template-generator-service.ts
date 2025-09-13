@@ -680,6 +680,9 @@ export class TemplateGeneratorService {
       templateCommitHash: this.rootTemplate.commitHash,
       templateName: this.rootTemplate.config.templateConfig.name,
       templateSettings: parsedUserSettings.data,
+      migrationUuid:
+        this.rootTemplate.migrations[this.rootTemplate.migrations.length - 1]
+          ?.id,
     });
 
     return { data: newProjectId };
@@ -744,6 +747,8 @@ export class TemplateGeneratorService {
       automaticallyInstantiatedByParent: autoInstantiated,
       templateName,
       templateSettings: parsedUserSettings.data,
+      migrationUuid:
+        template.migrations[template.migrations.length - 1]?.id,
     });
 
     return { data: newProjectId };

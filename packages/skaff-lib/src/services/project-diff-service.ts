@@ -267,15 +267,6 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
     );
     const subTemplateName = autoInstantiatedTemplate.subTemplateName;
 
-    projectSettings.instantiatedTemplates.push({
-      id: autoInstantiatedTemplateInstanceId,
-      parentId: parentInstanceId,
-      templateCommitHash: currentTemplateToAddChildren.commitHash,
-      automaticallyInstantiatedByParent: true,
-      templateName: subTemplateName,
-      templateSettings: newTemplateSettings.data,
-    });
-
     const rootTemplate = await rootTemplateRepository.loadRevision(
       projectSettings.rootTemplateName,
       currentTemplateToAddChildren.findRootTemplate().commitHash!,
@@ -317,6 +308,17 @@ async function recursivelyAddAutoInstantiatedTemplatesToProjectSettings(
         error: `Subtemplate ${autoInstantiatedTemplate.subTemplateName} is not a child of template ${currentTemplateToAddChildren.config.templateConfig.name}`,
       };
     }
+
+    projectSettings.instantiatedTemplates.push({
+      id: autoInstantiatedTemplateInstanceId,
+      parentId: parentInstanceId,
+      templateCommitHash: currentTemplateToAddChildren.commitHash,
+      automaticallyInstantiatedByParent: true,
+      templateName: subTemplateName,
+      templateSettings: newTemplateSettings.data,
+      migrationUuid:
+        subTemplate.migrations[subTemplate.migrations.length - 1]?.id,
+    });
 
     const childTemplatesToAutoInstantiate = autoInstantiatedTemplate.children;
     if (childTemplatesToAutoInstantiate) {
@@ -593,6 +595,8 @@ export async function generateNewTemplateDiff(
         templateCommitHash: template.commitHash,
         templateName: template.config.templateConfig.name,
         templateSettings: userTemplateSettings,
+        migrationUuid:
+          template.migrations[template.migrations.length - 1]?.id,
       },
     ],
   };

@@ -28,5 +28,12 @@ export type {
   ProjectSettings,
 } from "./project-settings-types";
 
-export { instantiatedTemplateSchema, projectSettingsSchema, projectNameRegex } from "./project-settings-types";
+export type { TemplateSettingsMigration } from "./template-migration-types";
+
+export {
+  instantiatedTemplateSchema,
+  projectSettingsSchema,
+  projectNameRegex,
+} from "./project-settings-types";
 export { templateConfigSchema } from "./template-config-types";
+export { templateSettingsMigrationSchema } from "./template-migration-types";

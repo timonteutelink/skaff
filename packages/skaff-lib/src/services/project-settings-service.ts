@@ -8,7 +8,12 @@ import { makeDir } from "./file-service";
 import { deepSortObject } from "../utils/shared-utils";
 import { logError } from "../lib/utils";
 import { getRootTemplateRepository } from "../repositories";
-import { InstantiatedTemplate, ProjectSettings, projectSettingsSchema } from "@timonteutelink/template-types-lib";
+import {
+  InstantiatedTemplate,
+  ProjectSettings,
+  projectSettingsSchema,
+} from "@timonteutelink/template-types-lib";
+import { applyTemplateMigrations } from "./migration-service";
 
 export async function writeNewProjectSettings(
   absoluteProjectPath: string,
@@ -202,5 +207,48 @@ export async function loadProjectSettings(
     settings: finalProjectSettings.data,
     rootTemplate: rootTemplate.data,
   };
+
+  let migrationsApplied = false;
+  for (const instantiatedTemplate of instantiatedProjectSettings.settings
+    .instantiatedTemplates) {
+    const template = instantiatedProjectSettings.rootTemplate.findSubTemplate(
+      instantiatedTemplate.templateName,
+    );
+    if (!template) {
+      logError({
+        shortMessage: `Template ${instantiatedTemplate.templateName} not found in root template ${finalProjectSettings.data.rootTemplateName}`,
+      });
+      return {
+        error: `Template ${instantiatedTemplate.templateName} not found in root template ${finalProjectSettings.data.rootTemplateName}`,
+      };
+    }
+    const changed = applyTemplateMigrations(template, instantiatedTemplate);
+    if (changed) {
+      migrationsApplied = true;
+      const schemaCheck = template.config.templateSettingsSchema.safeParse(
+        instantiatedTemplate.templateSettings,
+      );
+      if (!schemaCheck.success) {
+        logError({
+          shortMessage: `Invalid templateSettings.json for template ${instantiatedTemplate.templateName}: ${schemaCheck.error}`,
+        });
+        return {
+          error: `Invalid templateSettings.json for template ${instantiatedTemplate.templateName}: ${schemaCheck.error}`,
+        };
+      }
+    }
+  }
+
+  if (migrationsApplied) {
+    const projectDir = path.dirname(projectSettingsPath);
+    const writeResult = await writeProjectSettings(
+      projectDir,
+      instantiatedProjectSettings.settings,
+      true,
+    );
+    if ("error" in writeResult) {
+      return writeResult;
+    }
+  }
   return { data: instantiatedProjectSettings };
 }

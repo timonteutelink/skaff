@@ -8,6 +8,7 @@ import {
   AiResultsObject,
 } from "./utils";
 import { ProjectSettings } from "./project-settings-types";
+import { TemplateSettingsMigration } from "./template-migration-types";
 
 /**
  * Interface representing all mandatory options for a template.
@@ -293,4 +294,9 @@ export interface TemplateConfigModule<
    * These settings are used to start a conversation with the user. After the conversation is resolved the ai will call the final conversation ending tool and the ai should provide the expected keys otherwise generation will fail. Allow the user to retry a conversation if the ai doesnt provide the keys or if the user wants to modify the keys. Show all results to user before actually using the ai generated results in the template. All ai results will also go inside the templateSettings. Bit ugly but otherwise needs to go in a hidden file or a subdir.
    */
   aiUserConversationSettings?: AiUserConversationSettings<TFinalSettings>[];
+
+  /**
+   * Sequential migrations transforming settings between schema versions.
+   */
+  migrations?: TemplateSettingsMigration[];
 }

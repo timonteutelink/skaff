@@ -17,7 +17,8 @@ import { initEsbuild } from "../utils/get-esbuild";
 import { existsSync } from "node:fs";
 import { GenericTemplateConfigModule } from "../lib";
 
-const { templateConfigSchema } = templateTypesLibNS;
+const { templateConfigSchema, templateSettingsMigrationSchema } =
+  templateTypesLibNS;
 
 const SANDBOX_LIBS: Record<string, unknown> = {
   "@timonteutelink/template-types-lib": templateTypesLibNS,
@@ -295,6 +296,17 @@ export async function loadAllTemplateConfigs(
       );
     }
     mod.templateConfig.templateConfig = parsed.data;
+
+    const migrations = mod.templateConfig.migrations;
+    const parsedMigrations = templateSettingsMigrationSchema
+      .array()
+      .safeParse(migrations ?? []);
+    if (!parsedMigrations.success) {
+      throw new Error(
+        `Invalid migrations in ${key}: ${parsedMigrations.error}`,
+      );
+    }
+    mod.templateConfig.migrations = parsedMigrations.data;
   }
   return configs;
 }

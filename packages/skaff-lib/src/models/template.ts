@@ -1,6 +1,7 @@
 import {
   ProjectSettings,
   UserTemplateSettings,
+  TemplateSettingsMigration,
 } from "@timonteutelink/template-types-lib";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
@@ -70,6 +71,8 @@ export class Template {
   // The commit hash of the template. Will only be defined for root templates or the root of referenced templates in the future.
   public commitHash?: string;
 
+  public migrations: TemplateSettingsMigration[] = [];
+
   // If this is the template defined by the user or a revisions stored in the cache.
   public isDefault: boolean = false;
 
@@ -101,6 +104,8 @@ export class Template {
 
     this.commitHash = commitHash;
 
+    this.migrations = config.migrations ?? [];
+
     if (!this.absoluteBaseDir.startsWith(getCacheDirPath())) {
       this.isDefault = true;
     }
@@ -124,10 +129,18 @@ export class Template {
     refDir?: string,
     partialsDir?: string,
   ) {
-    const template = new Template(config, baseDir, absDir, templatesDir, commitHash, refDir, partialsDir);
+    const template = new Template(
+      config,
+      baseDir,
+      absDir,
+      templatesDir,
+      commitHash,
+      refDir,
+      partialsDir,
+    );
 
     await template.validate();
-    return template
+    return template;
   }
 
   /**
