@@ -3,7 +3,7 @@ import {
   retrieveProjects,
   retrieveProjectSearchPaths,
 } from "@/app/actions/project";
-import { retrieveDefaultTemplates } from "@/app/actions/template";
+import { retrieveTemplates } from "@/app/actions/template";
 import TablePage, { type FieldInfo } from "@/components/general/table-page";
 import { Button } from "@/components/ui/button";
 import {
@@ -100,7 +100,7 @@ export default function TemplatesListPage() {
       }
       setProjects(projects || []);
     });
-    retrieveDefaultTemplates().then((templatesResult) => {
+    retrieveTemplates().then((templatesResult) => {
       const templates = toastNullError({
         result: templatesResult,
         shortMessage: "Error retrieving templates",

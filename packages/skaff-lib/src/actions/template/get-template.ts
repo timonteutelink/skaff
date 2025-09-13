@@ -23,4 +23,3 @@ export async function getTemplate(
   return { data: { template, revisions } };
 }
 
-export { getTemplate as getDefaultTemplate };

@@ -23,14 +23,14 @@ interface ProjectDetailsPanelProps {
   selectedNode: ProjectTreeNode | null;
   project: ProjectDTO;
   rootTemplate: TemplateDTO;
-  defaultTemplate: TemplateDTO;
+  latestTemplate: TemplateDTO;
 }
 
 export function ProjectDetailsPanel({
   selectedNode,
   project,
   rootTemplate,
-  defaultTemplate,
+  latestTemplate,
 }: ProjectDetailsPanelProps) {
   const router = useRouter();
   const selectedNodeTemplate = useMemo(
@@ -100,7 +100,7 @@ export function ProjectDetailsPanel({
               {selectedNodeTemplate?.config.templateConfig.name} Instance
             </h2>
             {templateCommitHash ? (
-              defaultTemplate.currentCommitHash === templateCommitHash ? (
+              latestTemplate.currentCommitHash === templateCommitHash ? (
                 <Badge className="ml-4 bg-green-100 text-green-800">
                   Up-to-date
                 </Badge>

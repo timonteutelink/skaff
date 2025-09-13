@@ -2,18 +2,18 @@
 import {
   runEraseCache,
   reloadTemplates,
-  retrieveDefaultTemplates,
+  retrieveTemplates,
   loadTemplateRepo,
 } from "@/app/actions/template";
 import { ConfirmationDialog } from "@/components/general/confirmation-dialog";
 import TablePage, { FieldInfo } from "@/components/general/table-page";
 import { toastNullError } from "@/lib/utils";
-import { DefaultTemplateResult } from "@timonteutelink/skaff-lib/browser";
+import { TemplateSummary } from "@timonteutelink/skaff-lib/browser";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-const columnMapping: FieldInfo<DefaultTemplateResult>[] = [
+const columnMapping: FieldInfo<TemplateSummary>[] = [
   {
     name: "Name",
     data: (item) => item.template.config.templateConfig.name,
@@ -30,12 +30,12 @@ const columnMapping: FieldInfo<DefaultTemplateResult>[] = [
 
 export default function TemplatesListPage() {
   const router = useRouter();
-  const [templates, setTemplates] = useState<DefaultTemplateResult[]>([]);
+  const [templates, setTemplates] = useState<TemplateSummary[]>([]);
   const [repoUrl, setRepoUrl] = useState("");
   const [branch, setBranch] = useState("main");
 
   useEffect(() => {
-    retrieveDefaultTemplates().then((templatesResult) => {
+    retrieveTemplates().then((templatesResult) => {
       const templates = toastNullError({
         result: templatesResult,
         shortMessage: "Error retrieving templates",
@@ -108,7 +108,7 @@ export default function TemplatesListPage() {
                 shortMessage: "Error loading repo",
               });
               if (toastResult) {
-                const templatesRes = await retrieveDefaultTemplates();
+                const templatesRes = await retrieveTemplates();
                 const newTemplates = toastNullError({
                   result: templatesRes,
                   shortMessage: "Error retrieving templates",
@@ -143,7 +143,7 @@ export default function TemplatesListPage() {
   );
 
   return (
-    <TablePage<DefaultTemplateResult>
+    <TablePage<TemplateSummary>
       buttons={templateButtons}
       title="Detected Templates"
       data={templates}

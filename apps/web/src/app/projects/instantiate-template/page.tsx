@@ -13,7 +13,7 @@ import {
 } from "@/app/actions/instantiate";
 import { retrieveProject } from "@/app/actions/project";
 import {
-  retrieveDefaultTemplate,
+  retrieveTemplate,
   retrieveTemplateRevisionForProject,
 } from "@/app/actions/template";
 import CommitButton from "@/components/general/git/commit-dialog";
@@ -21,7 +21,7 @@ import { DiffVisualizerPage } from "@/components/general/git/diff-visualizer-pag
 import { TemplateSettingsForm } from "@/components/general/template-settings/template-settings-form";
 import { Button } from "@/components/ui/button";
 import {
-  DefaultTemplateResult,
+  TemplateSummary,
   NewTemplateDiffResult,
   ParsedFile,
   ProjectDTO,
@@ -117,13 +117,13 @@ const TemplateInstantiationPage: React.FC = () => {
       const [projectResult, revisionResult] = await Promise.all([
         retrieveProject(projectNameParam),
         selectedDirectoryIdParam
-          ? retrieveDefaultTemplate(templateNameParam!)
+          ? retrieveTemplate(templateNameParam!)
           : retrieveTemplateRevisionForProject(projectNameParam),
       ]);
 
       const revision = toastNullError({
         result: revisionResult as Result<
-          DefaultTemplateResult | TemplateDTO | null
+          TemplateSummary | TemplateDTO | null
         >,
         shortMessage: "Error retrieving template.",
         nullErrorMessage: `Template not found for project: ${projectNameParam}`,

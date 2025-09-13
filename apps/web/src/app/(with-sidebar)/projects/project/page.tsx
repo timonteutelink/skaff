@@ -3,7 +3,7 @@
 import { switchProjectBranch } from "@/app/actions/git";
 import { retrieveProject } from "@/app/actions/project";
 import {
-  retrieveDefaultTemplate,
+  retrieveTemplate,
   retrieveTemplateRevisionForProject,
 } from "@/app/actions/template";
 import { ProjectDetailsPanel } from "@/components/general/projects/project-details-panel";
@@ -211,7 +211,7 @@ export default function ProjectTemplateTreePage() {
   );
   const [project, setProject] = useState<ProjectDTO>();
   const [rootTemplate, setRootTemplate] = useState<TemplateDTO>(); // Specific revision for this project.
-  const [defaultTemplate, setDefaultTemplate] = useState<TemplateDTO>(); // Default revision
+  const [latestTemplate, setLatestTemplate] = useState<TemplateDTO>();
   const [projectTree, setProjectTree] = useState<ProjectTreeNode[]>([]);
   const [selectedNode, setSelectedNode] = useState<ProjectTreeNode | null>(
     null,
@@ -272,17 +272,17 @@ export default function ProjectTemplateTreePage() {
 
   useEffect(() => {
     if (rootTemplate) {
-      retrieveDefaultTemplate(rootTemplate.config.templateConfig.name).then(
-        (defaultTemplateResult) => {
-          const defaultTemplate = toastNullError({
-            result: defaultTemplateResult,
-            shortMessage: "Error retrieving default template.",
-            nullErrorMessage: `Default template not found for ${rootTemplate.config.templateConfig.name}.`,
+      retrieveTemplate(rootTemplate.config.templateConfig.name).then(
+        (templateResult) => {
+          const latest = toastNullError({
+            result: templateResult,
+            shortMessage: "Error retrieving template.",
+            nullErrorMessage: `Template not found for ${rootTemplate.config.templateConfig.name}.`,
           });
-          if (!defaultTemplate) {
+          if (!latest) {
             return;
           }
-          setDefaultTemplate(defaultTemplate.template);
+          setLatestTemplate(latest.template);
         },
       );
     }
@@ -330,7 +330,7 @@ export default function ProjectTemplateTreePage() {
     [projectNameParam],
   );
 
-  if (!project || !rootTemplate || !defaultTemplate) {
+  if (!project || !rootTemplate || !latestTemplate) {
     return (
       <div className="flex items-center justify-center h-screen">
         <p>Loading project...</p>
@@ -344,7 +344,7 @@ export default function ProjectTemplateTreePage() {
         <ProjectHeader
           project={project}
           onBranchChange={handleBranchChange}
-          defaultTemplate={defaultTemplate}
+          latestTemplate={latestTemplate}
         />
       )}
 
@@ -364,7 +364,7 @@ export default function ProjectTemplateTreePage() {
             selectedNode={selectedNode}
             project={project}
             rootTemplate={rootTemplate}
-            defaultTemplate={defaultTemplate}
+            latestTemplate={latestTemplate}
           />
         </div>
       </div>

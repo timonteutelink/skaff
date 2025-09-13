@@ -2,10 +2,10 @@
 
 import { findProject } from "@/lib/server-utils";
 import * as tempLib from "@timonteutelink/skaff-lib";
-import { DefaultTemplateResult, Result, TemplateDTO } from "@timonteutelink/skaff-lib";
+import { Result, TemplateDTO, TemplateSummary } from "@timonteutelink/skaff-lib";
 
 export async function runEraseCache(): Promise<
-  Result<DefaultTemplateResult[]>
+  Result<TemplateSummary[]>
 > {
   const result = await tempLib.eraseCache();
   if ('error' in result) {
@@ -31,7 +31,7 @@ export async function loadTemplateRepo(
 }
 
 export async function reloadTemplates(): Promise<
-  Result<DefaultTemplateResult[]>
+  Result<TemplateSummary[]>
 > {
   const result = await tempLib.reloadTemplates();
   if ('error' in result) {
@@ -45,11 +45,11 @@ export async function reloadTemplates(): Promise<
   };
 }
 
-export async function retrieveDefaultTemplates(): Promise<
-  Result<DefaultTemplateResult[]>
+export async function retrieveTemplates(): Promise<
+  Result<TemplateSummary[]>
 > {
-  const result = await tempLib.getDefaultTemplates();
-  if ('error' in result) {
+  const result = await tempLib.getTemplates();
+  if ("error" in result) {
     return { error: result.error };
   }
   return {
@@ -60,11 +60,11 @@ export async function retrieveDefaultTemplates(): Promise<
   };
 }
 
-export async function retrieveDefaultTemplate(
+export async function retrieveTemplate(
   templateName: string,
-): Promise<Result<DefaultTemplateResult | null>> {
-  const result = await tempLib.getDefaultTemplate(templateName);
-  if ('error' in result) {
+): Promise<Result<TemplateSummary | null>> {
+  const result = await tempLib.getTemplate(templateName);
+  if ("error" in result) {
     return { error: result.error };
   }
   if (!result.data) {

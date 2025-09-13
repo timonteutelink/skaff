@@ -18,7 +18,7 @@ export interface ProjectCreationResult {
   diff?: ParsedFile[];
 }
 
-export interface DefaultTemplateResult {
+export interface TemplateSummary {
   template: TemplateDTO;
   revisions: string[];
 }

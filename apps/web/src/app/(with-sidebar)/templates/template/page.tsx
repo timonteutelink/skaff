@@ -246,15 +246,9 @@ export default function TemplatePage() {
           return;
         }
         setAllTemplates(toastResult);
-        const defaultTemplate = toastResult.find((t) => t.isDefault);
-        if (!defaultTemplate) {
-          toastNullError({
-            shortMessage: "No default template found.",
-          });
-          router.push("/templates");
-          return;
+        if (toastResult.length > 0) {
+          setSelectedTemplate(toastResult[0]);
         }
-        setSelectedTemplate(defaultTemplate);
       },
     );
   }, [templateName, router]);
@@ -311,7 +305,6 @@ export default function TemplatePage() {
                         key={template.currentCommitHash}
                         value={template.currentCommitHash!}
                       >
-                        {template.isDefault ? "Default - " : ""}
                         {template.currentCommitHash!.substring(0, 8)}
                       </SelectItem>
                     ))}

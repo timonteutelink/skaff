@@ -32,4 +32,3 @@ export async function getTemplates(): Promise<
   return { data: result };
 }
 
-export { getTemplates as getDefaultTemplates };
