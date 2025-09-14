@@ -1,7 +1,7 @@
 {
   "name": "@timonteutelink/skaff",
   "description": "A CLI tool for managing code templates",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": "timonteutelink",
   "bin": {
     "skaff": "./bin/run.js"
@@ -18,7 +18,7 @@
     "@oclif/core": "^4.5.3",
     "@oclif/plugin-help": "^6.2.32",
     "@oclif/plugin-plugins": "^5.4.46",
-    "@timonteutelink/skaff-lib": "0.0.69",
+    "@timonteutelink/skaff-lib": "0.0.70",
     "@timonteutelink/template-types-lib": "0.0.47",
     "esbuild": "^0.25.9",
     "loglevel": "^1.9.2",

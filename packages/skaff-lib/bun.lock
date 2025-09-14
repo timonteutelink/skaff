@@ -6,7 +6,7 @@
       "dependencies": {
         "@langchain/langgraph": "^0.3.12",
         "@langchain/openai": "^0.5.18",
-        "@timonteutelink/template-types-lib": "0.0.46",
+        "@timonteutelink/template-types-lib": "0.0.47",
         "@types/node": "^22.18.0",
         "esbuild": "^0.25.9",
         "fs-extra": "^11.3.1",
@@ -252,7 +252,7 @@
 
     "@sinonjs/fake-timers": ["@sinonjs/fake-timers@10.3.0", "", { "dependencies": { "@sinonjs/commons": "^3.0.0" } }, "sha512-V4BG07kuYSUkTCSBHG8G8TNhM+F19jXFWnQtzj+we8DrkpSBCee9Z3Ms8yiGer/dlmhe35/Xdgyo3/0rQKg7YA=="],
 
-    "@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.46", "", { "peerDependencies": { "handlebars": "^4.7.8", "zod": "^3.25.76" } }, "sha512-nNt1x7yeA0MP4XKmu+ICO2LZHn3t7ZgAlXHxi1GC2/flImQiCLqRqMB9v68TXmnZeFVR3I59k/HqRWRQ4kq6pw=="],
+    "@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.47", "", { "peerDependencies": { "handlebars": "^4.7.8", "zod": "^3.25.76" } }, "sha512-dSweZsLsIgF+v9HUbhZfrT9kUNPQCPK9k0qbxRNLeohCzwTmhXZP929SUsTS7B3rO5j+YDO8EEAKQybJLgLUpQ=="],
 
     "@types/babel__core": ["@types/babel__core@7.20.5", "", { "dependencies": { "@babel/parser": "^7.20.7", "@babel/types": "^7.20.7", "@types/babel__generator": "*", "@types/babel__template": "*", "@types/babel__traverse": "*" } }, "sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA=="],
 
