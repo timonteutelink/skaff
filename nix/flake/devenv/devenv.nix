@@ -42,7 +42,7 @@ localFlake:
           deno.enable = true;
         };
 
-        pre-commit = {
+        git-hooks = {
           settings = {
             # eslint = {
             #   fix = true;#???

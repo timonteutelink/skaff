@@ -1,0 +1,7 @@
+.env
+.env.template
+docker
+.next
+.gitignore
+.git
+

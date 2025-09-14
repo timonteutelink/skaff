@@ -10,6 +10,8 @@ scripts
 .gitignore
 .env
 .env.template
+**/.env
+**/.env.template
 .npmrc
 Makefile
 bun.lock.clean

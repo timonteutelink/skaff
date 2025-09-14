@@ -2220,9 +2220,9 @@
   };
   "@timonteutelink/skaff-lib" = {
     out_path = "@timonteutelink/skaff-lib";
-    name = "@timonteutelink/skaff-lib@0.0.65";
-    url = "https://registry.npmjs.org/@timonteutelink/skaff-lib/-/skaff-lib-0.0.65.tgz";
-    hash = "sha512-YO2Rsn2z2VA31q1p6QxD7JXnE45ZN6DGjnoYFFIzlsFkvpOT0bJUq4ey7QFYU5QMNASkYtiLcRNDVG8Y7be1wQ==";
+    name = "@timonteutelink/skaff-lib@0.0.66";
+    url = "https://registry.npmjs.org/@timonteutelink/skaff-lib/-/skaff-lib-0.0.66.tgz";
+    hash = "sha512-cFGugrCgn1rNCkJzZ4uO2Or50PkrS9ldzIGn8K5kbwU0J2QJJmIW0g33vd7bEDJYPIoT4Vqx+MXkC6p0zVJ10Q==";
   };
   "@timonteutelink/skaff-lib/fs-extra" = {
     out_path = "@timonteutelink/skaff-lib/node_modules/fs-extra";

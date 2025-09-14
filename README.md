@@ -131,7 +131,7 @@ In addition to the CLI, skaff provides a Web UI. The Web interface makes it easy
 The recommended way to run the Web UI is via Docker. Pull the image and run it on port 3000:
 
 ```bash
-docker run -p 3000:3000 -v ~/projects/templated:/projects --env PROJECT_SEARCH_PATHS=/projects ghcr.io/timonteutelink/skaff:latest
+docker run -p 3000:3000 -v ~/projects/templated:/projects ghcr.io/timonteutelink/skaff:latest
 ```
 
 Now open **http://localhost:3000** in your browser. The volume mount allows the UI to read your `~/projects/templated` directory.
