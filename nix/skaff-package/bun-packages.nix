@@ -2224,6 +2224,12 @@
     url = "https://registry.npmjs.org/@timonteutelink/skaff-lib/-/skaff-lib-0.0.70.tgz";
     hash = "sha512-5ZRh0+cPcQUI6y4XaU/C1QCnLUOkYIk7Quw3b0gYRYohHouDuUzscyM48kFlpm/hUBPgVAwIQLPyOj2NITK3Rw==";
   };
+  "@timonteutelink/skaff-lib/@timonteutelink/template-types-lib" = {
+    out_path = "@timonteutelink/skaff-lib/node_modules/@timonteutelink/node_modules/template-types-lib";
+    name = "@timonteutelink/template-types-lib@0.0.47";
+    url = "https://registry.npmjs.org/@timonteutelink/template-types-lib/-/template-types-lib-0.0.47.tgz";
+    hash = "sha512-dSweZsLsIgF+v9HUbhZfrT9kUNPQCPK9k0qbxRNLeohCzwTmhXZP929SUsTS7B3rO5j+YDO8EEAKQybJLgLUpQ==";
+  };
   "@timonteutelink/skaff-lib/fs-extra" = {
     out_path = "@timonteutelink/skaff-lib/node_modules/fs-extra";
     name = "fs-extra@11.3.1";
@@ -2296,9 +2302,9 @@
   };
   "@timonteutelink/template-types-lib" = {
     out_path = "@timonteutelink/template-types-lib";
-    name = "@timonteutelink/template-types-lib@0.0.47";
-    url = "https://registry.npmjs.org/@timonteutelink/template-types-lib/-/template-types-lib-0.0.47.tgz";
-    hash = "sha512-dSweZsLsIgF+v9HUbhZfrT9kUNPQCPK9k0qbxRNLeohCzwTmhXZP929SUsTS7B3rO5j+YDO8EEAKQybJLgLUpQ==";
+    name = "@timonteutelink/template-types-lib@0.0.48";
+    url = "https://registry.npmjs.org/@timonteutelink/template-types-lib/-/template-types-lib-0.0.48.tgz";
+    hash = "sha512-7sGRWKCCz/awlGNmalTra7IFbsIjO16XjXRj+JNi1wZaPKTqWlOsQxB93rQPIszaFMva1XO7c6H9D8OutoOh5Q==";
   };
   "@tootallnate/quickjs-emscripten" = {
     out_path = "@tootallnate/quickjs-emscripten";
