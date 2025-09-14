@@ -89,3 +89,17 @@ dev-web:
 	@echo "Running web in dev mode!"
 
 dw: dev-web
+
+monorepo-dev:
+	./scripts/monorepo-dev.sh enable
+	$(MAKE) it il ir bt bl
+	@echo "Monorepo set to dev mode!"
+
+md: monorepo-dev
+
+monorepo-prod:
+	./scripts/monorepo-dev.sh disable
+	$(MAKE) it il ir bt bl
+	@echo "Monorepo set back to prod mode!"
+
+mp: monorepo-prod
