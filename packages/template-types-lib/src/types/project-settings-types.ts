@@ -13,6 +13,7 @@ export const instantiatedTemplateSchema = z.object({
   automaticallyInstantiatedByParent: z.boolean().optional(),
 
   lastMigration: z.string().optional(),
+  aiResults: z.record(z.string()).optional(),
 });
 
 export type InstantiatedTemplate = z.infer<typeof instantiatedTemplateSchema>;
@@ -32,6 +33,12 @@ export const projectSettingsSchema = z.object({
   rootTemplateName: z.string().min(1),
 
   instantiatedTemplates: z.array(instantiatedTemplateSchema),
+
+  /**
+   * Optional mapping of LLM provider names to environment variable keys
+   * that hold their credentials.
+   */
+  aiProviders: z.record(z.string(), z.string()).optional(),
 });
 
 export type ProjectSettings = z.infer<typeof projectSettingsSchema>;
