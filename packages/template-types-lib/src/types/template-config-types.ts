@@ -145,40 +145,41 @@ export type TemplateCommand<
   command: StringOrCallback<TFinalSettings>;
 };
 
-export type AiContext = {
-  description: string;
-  relevantFiles?: string[];
+export type AiMessage = {
+  role: "system" | "user" | "assistant";
+  content: string;
 };
 
-export type LLMTools = {
-  llm: (input: string) => Promise<string>;
-};
+export interface AiAgent {
+  auto: (prompt: string, context: string[]) => Promise<string>;
+  converse: (messages: AiMessage[], context: string[]) => Promise<string>;
+}
 
-//TODO: Ai settings will go in the tool env vars.
-export type AiCallbackFunction<
+export type BuildAiAgent<
   TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
-> = (
-  llmTools: LLMTools,
-  templateSettings: TFinalSettings,
-) => Promise<Record<string, string>>;
+> = (settings: TFinalSettings) => Promise<AiAgent>;
 
-export type AiAutoGenerateSettings<
+export type AiAutoGeneration<
   TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
 > = {
-  expectedKeys: AnyOrCallback<TFinalSettings, string[]>;
-  callback: AiCallbackFunction<TFinalSettings>;
-};
-
-export type AiUserConversationSettings<
-  TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
-> = {
-  expectedKeys: AnyOrCallback<TFinalSettings, string[]>;
-
-  expectedResults: AnyOrCallback<TFinalSettings, string[]>;
-
+  resultKey: string;
   prompt: StringOrCallback<TFinalSettings>;
+  contextPaths?: AnyOrCallback<TFinalSettings, string[]>;
+};
 
-  // tools?
+export type AiConversationalGeneration<
+  TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
+> = {
+  resultKey: string;
+  messages: AnyOrCallback<TFinalSettings, AiMessage[]>;
+  contextPaths?: AnyOrCallback<TFinalSettings, string[]>;
+};
+
+export type AiGeneration<
+  TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
+> = {
+  auto?: AiAutoGeneration<TFinalSettings>;
+  conversation?: AiConversationalGeneration<TFinalSettings>;
 };
 
 /**
@@ -274,23 +275,27 @@ export interface TemplateConfigModule<
   commands?: TemplateCommand<TFinalSettings>[];
 
   /**
-   * A description of this template. Usefull for the AI.
-   * When instantiating a child template this description will be used to describe the the things this template adds.
+   * A simple high level description of the template.
    */
-  aiContext?: AnyOrCallback<TFinalSettings, AiContext>;
+  aiDescription?: AnyOrCallback<TFinalSettings, string>;
 
   /**
-   * Ai auto generation settings.
-   * This is invoked to add ai generated vars to the template.
-   * Provides the expected keys the ai will produce.
-   * In the template ai_results will be a Record string string where the expected keys are the ones provided here.
-   * These have to be provided to generate the template so this function needs to return these keys.
+   * A very technical and in depth description of the files this template adds.
    */
-  aiAutoGenerate?: AiAutoGenerateSettings<TFinalSettings>;
+  aiTechnicalDescription?: AnyOrCallback<TFinalSettings, string>;
 
   /**
-   * Ai user conversation settings.
-   * These settings are used to start a conversation with the user. After the conversation is resolved the ai will call the final conversation ending tool and the ai should provide the expected keys otherwise generation will fail. Allow the user to retry a conversation if the ai doesnt provide the keys or if the user wants to modify the keys. Show all results to user before actually using the ai generated results in the template. All ai results will also go inside the templateSettings. Bit ugly but otherwise needs to go in a hidden file or a subdir.
+   * AI generation settings.
    */
-  aiUserConversationSettings?: AiUserConversationSettings<TFinalSettings>[];
+  aiGeneration?: AiGeneration<TFinalSettings>;
+
+  /**
+   * Optional builder to customize the ai-sdk agent behaviour.
+   */
+  buildAiAgent?: BuildAiAgent<TFinalSettings>;
+
+  /**
+   * File paths from parent templates to include as context.
+   */
+  parentContextPaths?: AnyOrCallback<TFinalSettings, string[]>;
 }

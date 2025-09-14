@@ -152,7 +152,7 @@ export class Project {
       fullProjectSettings: instantiatedProjectSettings,
       templateSettings: parsedUserProvidedSettingsSchema.data,
       parentSettings: parentSettings,
-      aiResults: {},
+      aiResults: projectTemplateSettings.aiResults || {},
     });
 
     return { data: finalSettings };

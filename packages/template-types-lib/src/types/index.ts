@@ -15,11 +15,12 @@ export type {
   AllowOverwrite,
   AutoInstantiatedSubtemplate,
   TemplateCommand,
-  LLMTools,
-  AiContext,
-  AiCallbackFunction,
-  AiAutoGenerateSettings,
-  AiUserConversationSettings,
+  AiMessage,
+  AiAgent,
+  BuildAiAgent,
+  AiAutoGeneration,
+  AiConversationalGeneration,
+  AiGeneration,
   TemplateConfigModule,
 } from "./template-config-types";
 
