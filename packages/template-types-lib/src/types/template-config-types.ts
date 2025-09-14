@@ -181,6 +181,13 @@ export type AiUserConversationSettings<
   // tools?
 };
 
+export interface TemplateMigration {
+  uuid: string;
+  previousMigration?: string;
+  description?: string;
+  migrate: (settings: UserTemplateSettings) => UserTemplateSettings;
+}
+
 /**
  * Interface representing the module to be exported from every templateConfig.ts file.
  * @template TSchemaType - The type of the schema used for template settings.
@@ -226,6 +233,8 @@ export interface TemplateConfigModule<
     parentSettings?: TParentFinalSettings;
     aiResults: TAiResultsObject;
   }) => TFinalSettings;
+
+  migrations?: TemplateMigration[];
 
   /**
    * Templates that when already existing in the project will disable the generation of this template.

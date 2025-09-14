@@ -28,6 +28,7 @@ import {
   writeNewProjectSettings,
   writeNewTemplateToSettings,
 } from "./project-settings-service";
+import { latestMigrationUuid } from "./template-migration-service";
 
 
 export interface GeneratorOptions {
@@ -674,6 +675,9 @@ export class TemplateGeneratorService {
     }
 
     const newProjectId = newUuid || crypto.randomUUID();
+    const lastMigration = latestMigrationUuid(
+      this.rootTemplate.config.migrations,
+    );
 
     this.destinationProjectSettings.instantiatedTemplates.push({
       id: newProjectId,
@@ -682,6 +686,7 @@ export class TemplateGeneratorService {
       templateBranch: this.rootTemplate.branch,
       templateName: this.rootTemplate.config.templateConfig.name,
       templateSettings: parsedUserSettings.data,
+      lastMigration,
     });
 
     return { data: newProjectId };
@@ -738,6 +743,7 @@ export class TemplateGeneratorService {
     }
 
     const newProjectId = newUuid || crypto.randomUUID();
+    const lastMigration = latestMigrationUuid(template.config.migrations);
 
     this.destinationProjectSettings.instantiatedTemplates.push({
       id: newProjectId,
@@ -748,6 +754,7 @@ export class TemplateGeneratorService {
       automaticallyInstantiatedByParent: autoInstantiated,
       templateName,
       templateSettings: parsedUserSettings.data,
+      lastMigration,
     });
 
     return { data: newProjectId };

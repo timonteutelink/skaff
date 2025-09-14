@@ -11,6 +11,8 @@ export const instantiatedTemplateSchema = z.object({
   templateBranch: z.string().optional(),
 
   automaticallyInstantiatedByParent: z.boolean().optional(),
+
+  lastMigration: z.string().optional(),
 });
 
 export type InstantiatedTemplate = z.infer<typeof instantiatedTemplateSchema>;
