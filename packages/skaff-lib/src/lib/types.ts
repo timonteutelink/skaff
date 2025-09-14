@@ -18,7 +18,7 @@ export interface ProjectCreationResult {
   diff?: ParsedFile[];
 }
 
-export interface DefaultTemplateResult {
+export interface TemplateSummary {
   template: TemplateDTO;
   revisions: string[];
 }
@@ -38,7 +38,9 @@ export interface TemplateDTO {
   templatesDir: string;
   subTemplates: Record<string, TemplateDTO[]>;
   currentCommitHash?: string; //always defined on root templates.
-  isDefault: boolean;
+  isLocal: boolean;
+  branch?: string;
+  repoUrl?: string;
   templatesThatDisableThis: TemplateDisablingThis[];
   templateCommands: { title: string; description: string }[];
   refDir?: string;

@@ -105,7 +105,10 @@ function createBunEsbuildShim() {
   async function stop() {
     /* esbuild.stop() closes a service process; Bun has nothing to stop */
   }
+	const api: any = { build, stop };
+  Object.defineProperty(api, "__esModule", { value: true });
+  api.default = api; // so esbuild.build and esbuild.default.build both work
 
-  return { build, stop };
+ return api;
 }
 

@@ -13,9 +13,11 @@ export default class TemplateEraseCache extends Base {
 
     this.output(
       res.data.map(({ revisions, template }) => ({
-        defaultRevision: template.commitHash,
+        revision: template.commitHash,
         name: template.config.templateConfig.name,
         totalRevisions: revisions.length,
+        isLocal: template.isLocal,
+        branch: template.branch,
       })),
     );
   }

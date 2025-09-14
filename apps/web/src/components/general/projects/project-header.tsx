@@ -22,12 +22,12 @@ import { useEffect, useState } from "react";
 interface ProjectHeaderProps {
   project: ProjectDTO;
   onBranchChange: (branch: string) => void;
-  defaultTemplate: TemplateDTO;
+  latestTemplate: TemplateDTO;
 }
 
 export function ProjectHeader({
   project,
-  defaultTemplate,
+  latestTemplate,
   onBranchChange,
 }: ProjectHeaderProps) {
   const router = useRouter();
@@ -77,7 +77,7 @@ export function ProjectHeader({
 
           {isDiffClean ? (
             <Badge className="bg-blue-100 text-blue-800">
-              No Changes from Default Template
+              No Changes from Template
             </Badge>
           ) : (
             <Badge className="bg-yellow-100 text-yellow-800">
@@ -155,7 +155,7 @@ export function ProjectHeader({
           disabled={!project.outdatedTemplate}
           onClick={() =>
             router.push(
-              `/projects/instantiate-template/?projectName=${project.settings.projectName}&newRevisionHash=${defaultTemplate.currentCommitHash}`,
+              `/projects/instantiate-template/?projectName=${project.settings.projectName}&newRevisionHash=${latestTemplate.currentCommitHash}`,
             )
           }
         >

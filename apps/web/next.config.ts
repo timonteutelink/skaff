@@ -8,7 +8,6 @@ const nextConfig: NextConfig = {
       config.resolve.alias = {
         ...config.resolve.alias,
         handlebars: "handlebars/dist/handlebars.js",
-        esbuild: false,
       };
     }
 

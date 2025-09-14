@@ -66,7 +66,7 @@ export async function instantiateProject(
   projectCreationOptions?: ProjectCreationOptions
 ): Promise<Result<ProjectCreationResult>> {
   const rootTemplateRepository = await getRootTemplateRepository();
-  const template = await rootTemplateRepository.findDefaultTemplate(rootTemplateName);
+  const template = await rootTemplateRepository.findTemplate(rootTemplateName);
 
   if ("error" in template) {
     return template;
@@ -106,8 +106,17 @@ export async function generateProjectFromTemplateSettings(
   projectCreationOptions?: ProjectCreationOptions,
 ): Promise<Result<ProjectCreationResult>> {
   const rootTemplateRepository = await getRootTemplateRepository();
-  const instantiatedRootTemplate =
-    projectSettings.instantiatedTemplates[0]?.templateCommitHash;
+  const rootInstantiated = projectSettings.instantiatedTemplates[0];
+  if (rootInstantiated?.templateRepoUrl) {
+    const addResult = await rootTemplateRepository.addRemoteRepo(
+      rootInstantiated.templateRepoUrl,
+      rootInstantiated.templateBranch ?? "main",
+    );
+    if ("error" in addResult) {
+      return addResult;
+    }
+  }
+  const instantiatedRootTemplate = rootInstantiated?.templateCommitHash;
 
   if (!instantiatedRootTemplate) {
     backendLogger.error(

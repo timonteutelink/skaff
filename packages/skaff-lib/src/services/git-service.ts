@@ -12,6 +12,25 @@ import { getConfig } from "../lib";
 const asyncExecFile = promisify(execFile);
 const asyncExec = promisify(exec);
 
+async function execScript(bashScript: string): Promise<Result<string>>{
+	const safeScript = bashScript.replace(/'/g, "'\\''");
+
+	try {
+		const result = await asyncExec(`bash -c '${safeScript}'`)
+		return { data: result.stdout.trim() }
+	}
+	catch (err: unknown){
+    logError({
+      shortMessage: "Script Failed",
+      error: err,
+    });
+    return {
+      error: `Error checking if path is a git repository: ${String(err)}`,
+    };
+	}
+}
+
+
 export async function isGitRepo(dir: string): Promise<Result<boolean>> {
   try {
     const { stdout } = await asyncExecFile(
@@ -69,6 +88,50 @@ export async function switchBranch(
     return {
       error: `Error switching branches: ${error}`,
     };
+  }
+}
+
+export async function cloneRepoBranchToCache(
+  repoUrl: string,
+  branch: string,
+): Promise<Result<string>> {
+  const repoName = path.basename(repoUrl).replace(/\.git$/, "");
+	const revisionHash = await getRemoteCommitHash(repoUrl, branch)
+	if ("error" in revisionHash) {
+    return revisionHash
+	}
+  const destDirName = `${repoName}-${branch}-${revisionHash.data}`;
+	console.log(destDirName);
+  const destPath = await pathInCache(destDirName);
+  if ("error" in destPath) {
+    return destPath;
+  }
+  try {
+    const stat = await fs.stat(destPath.data).catch(() => null);
+    if (stat && stat.isDirectory()) {
+      await asyncExec(
+        `cd ${destPath.data} && git fetch && git checkout ${branch} && git pull`,
+      );
+      const installResult = await npmInstall(destPath.data);
+      if ("error" in installResult) {
+        return { error: installResult.error };
+      }
+      return { data: destPath.data };
+    }
+    await asyncExec(
+      `git clone --branch ${branch} ${repoUrl} ${destPath.data}`,
+    );
+    const installResult = await npmInstall(destPath.data);
+    if ("error" in installResult) {
+      return { error: installResult.error };
+    }
+    return { data: destPath.data };
+  } catch (error) {
+    logError({
+      shortMessage: "Error cloning repo to cache",
+      error,
+    });
+    return { error: `Error cloning repo to cache: ${error}` };
   }
 }
 
@@ -173,6 +236,23 @@ export async function getCurrentBranch(
       error,
     });
     return { error: `Error getting current branch: ${error}` };
+  }
+}
+
+export async function getRemoteCommitHash(
+  repoUrl: string,
+  branch: string,
+): Promise<Result<string>> {
+  try {
+    const { stdout } = await asyncExec(`git ls-remote ${repoUrl} ${branch}`);
+    const hash = stdout.split("\t")[0]?.trim();
+    if (!hash) {
+      return { error: "Failed to retrieve remote commit hash" };
+    }
+    return { data: hash };
+  } catch (error) {
+    logError({ shortMessage: "Error getting remote commit hash", error });
+    return { error: `Error getting remote commit hash: ${error}` };
   }
 }
 
@@ -287,6 +367,7 @@ export async function isGitRepoClean(
     const status = (
       await asyncExec(`cd ${hostRepoPath} && git status --porcelain`)
     ).stdout.trim();
+		console.log(status)
     return { data: status.length === 0 };
   } catch (error) {
     logError({
@@ -358,20 +439,37 @@ export async function diffDirectories(
   absoluteNewProjectPath: string,
 ): Promise<Result<string>> {
   const config = await getConfig();
-  try {
-    const { stdout } = await asyncExecFile(
-      config.GENERATE_DIFF_SCRIPT_PATH,
-      [absoluteBaseProjectPath, absoluteNewProjectPath],
-    );
+	const bashScript = `
+set -e
 
-    return { data: stdout.trim() };
-  } catch (error) {
-    logError({
-      shortMessage: "Error generating diff",
-      error,
-    });
-    return { error: `Error generating diff: ${error}` };
-  }
+BASE_PROJECT=$(realpath "${absoluteBaseProjectPath}")
+CHANGED_PROJECT=$(realpath "${absoluteNewProjectPath}")
+
+TMP_DIR=$(mktemp -d)
+
+cleanup() {
+    rm -rf "$TMP_DIR"
+}
+
+trap cleanup EXIT
+
+# copies the new project to the base project directory and creates a diff.
+# Diff can be used in a real project
+cp -r "$BASE_PROJECT"/. "$TMP_DIR"
+cd "$TMP_DIR"
+git init -q
+git config commit.gpgsign false # TEMPORARELY BECAUSE NEED TO GENERATE NEW GPG KEY
+git add .
+git commit -m "Base version" -q
+
+rsync -a --delete --checksum --exclude='.git' "$CHANGED_PROJECT"/. .
+
+git add .
+git diff --staged --no-color --no-ext-diff
+
+
+	`
+	return await execScript(bashScript);
 }
 
 export function parseGitDiff(diffText: string): ParsedFile[] {

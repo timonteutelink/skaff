@@ -12,15 +12,25 @@ export async function loadProjectTemplateRevision(
 
   const rootTemplateName =
     project.instantiatedProjectSettings.rootTemplateName;
-  const commitHash =
-    project.instantiatedProjectSettings.instantiatedTemplates[0]
-      ?.templateCommitHash;
+  const rootInst =
+    project.instantiatedProjectSettings.instantiatedTemplates[0];
+  const commitHash = rootInst?.templateCommitHash;
 
   if (!commitHash) {
     logError({
       shortMessage: `No commit hash found for project ${project.instantiatedProjectSettings.projectName}`,
     });
     return { error: `No commit hash found for project ${project.instantiatedProjectSettings.projectName}` };
+  }
+
+  if (rootInst?.templateRepoUrl) {
+    const addResult = await rootTemplateRepository.addRemoteRepo(
+      rootInst.templateRepoUrl,
+      rootInst.templateBranch ?? "main",
+    );
+    if ("error" in addResult) {
+      return addResult;
+    }
   }
 
   return await rootTemplateRepository.loadRevision(

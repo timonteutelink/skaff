@@ -19,8 +19,9 @@ static description = 'List loaded revisions for a template';
     this.output(
       res.data.map(t => ({
         dir: t.absoluteDir,
-        isDefault: t.isDefault,
+        isLocal: t.isLocal,
         revision: t.commitHash,
+        branch: t.branch,
       })),
     );
   }

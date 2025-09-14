@@ -11,7 +11,11 @@ import {
 } from "../loaders/template-config-loader";
 import { glob } from "glob";
 import { getCacheDirPath } from "../services/cache-service";
-import { getCommitHash, isGitRepoClean } from "../services/git-service";
+import {
+  getCommitHash,
+  getCurrentBranch,
+  isGitRepoClean,
+} from "../services/git-service";
 import { TemplateGeneratorService } from "../services/template-generator-service";
 import {
   GenericTemplateConfigModule,
@@ -70,8 +74,12 @@ export class Template {
   // The commit hash of the template. Will only be defined for root templates or the root of referenced templates in the future.
   public commitHash?: string;
 
-  // If this is the template defined by the user or a revisions stored in the cache.
-  public isDefault: boolean = false;
+  // Whether this template originates from a local repo path (not cached).
+  public isLocal: boolean = false;
+  // Branch that was used when loading this template
+  public branch?: string;
+  // Repository URL if template was loaded from remote
+  public repoUrl?: string;
 
   private constructor(
     config: GenericTemplateConfigModule,
@@ -79,6 +87,8 @@ export class Template {
     absDir: string,
     templatesDir: string,
     commitHash?: string,
+    branch?: string,
+    repoUrl?: string,
     refDir?: string,
     partialsDir?: string,
   ) {
@@ -101,8 +111,10 @@ export class Template {
 
     this.commitHash = commitHash;
 
+    this.branch = branch;
+
     if (!this.absoluteBaseDir.startsWith(getCacheDirPath())) {
-      this.isDefault = true;
+      this.isLocal = true;
     }
   }
 
@@ -121,10 +133,22 @@ export class Template {
     absDir: string,
     templatesDir: string,
     commitHash?: string,
+    branch?: string,
+    repoUrl?: string,
     refDir?: string,
     partialsDir?: string,
   ) {
-    const template = new Template(config, baseDir, absDir, templatesDir, commitHash, refDir, partialsDir);
+    const template = new Template(
+      config,
+      baseDir,
+      absDir,
+      templatesDir,
+      commitHash,
+      branch,
+      repoUrl,
+      refDir,
+      partialsDir,
+    );
 
     await template.validate();
     return template
@@ -145,6 +169,8 @@ export class Template {
    */
   public static async createAllTemplates(
     rootTemplateDir: string,
+    repoUrl?: string,
+    branchOverride?: string,
   ): Promise<Result<Template>> {
     const absoluteRootDir = path.resolve(rootTemplateDir);
     const absoluteBaseDir = path.dirname(absoluteRootDir);
@@ -165,6 +191,12 @@ export class Template {
         error: commitHash.error,
       };
     }
+
+    const branchResult = await getCurrentBranch(absoluteRootDir);
+    if ("error" in branchResult) {
+      return { error: branchResult.error };
+    }
+    const branch = branchOverride ?? branchResult.data;
 
     let configs: Record<string, TemplateConfigWithFileInfo>;
     try {
@@ -212,6 +244,8 @@ export class Template {
           templateDir,
           templatesDir,
           rootCommitHash,
+          branch,
+          repoUrl,
           info.refDir,
           partialsDir,
         );
@@ -424,7 +458,9 @@ export class Template {
           title: command.title,
           description: command.description,
         })) || [],
-      isDefault: this.isDefault,
+      isLocal: this.isLocal,
+      branch: this.branch,
+      repoUrl: this.repoUrl,
     };
   }
 
@@ -509,15 +545,21 @@ export class Template {
 
   public async isValid(): Promise<boolean> {
     const isRepoClean = await isGitRepoClean(this.absoluteBaseDir);
+		console.log({isRepoClean})
     if ("error" in isRepoClean) {
       return false;
     }
 
     const commitResult = await getCommitHash(this.absoluteBaseDir);
+		console.log({commitResult})
     if ("error" in commitResult) {
       return false;
     }
+		
+		const foundCommitHash = this.findCommitHash()
 
-    return isRepoClean.data && commitResult.data === this.findCommitHash();
+		console.log(foundCommitHash)
+
+    return isRepoClean.data && commitResult.data === foundCommitHash
   }
 }

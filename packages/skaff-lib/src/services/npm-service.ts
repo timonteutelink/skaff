@@ -11,7 +11,7 @@ export async function npmInstall(dirPath: string): Promise<Result<void>> {
   try {
     await asyncExecFile(
       npmPath,
-      ["i", "--prefer-offline", "--prefer-frozen-lockfile"],
+      ["i", "--prefer-frozen-lockfile"],
       { cwd: dirPath },
     );
 

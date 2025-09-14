@@ -2,7 +2,7 @@ import { Result } from "../../lib";
 import { Template } from "../../models";
 import { getRootTemplateRepository } from "../../repositories";
 import { runEraseCache } from "../../services/cache-service";
-import { getDefaultTemplates } from "./get-default-templates";
+import { getTemplates } from "./get-templates";
 
 export async function eraseCache(): Promise<Result<{
   template: Template,
@@ -19,5 +19,5 @@ export async function eraseCache(): Promise<Result<{
     return { error: reloadResult.error };
   }
 
-  return await getDefaultTemplates();
+  return await getTemplates();
 }

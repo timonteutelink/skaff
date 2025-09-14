@@ -2,7 +2,10 @@ import * as fs from "node:fs/promises";
 import { Template } from "../models/template";
 import { Result } from "../lib/types";
 import path from "node:path";
-import { cloneRevisionToCache } from "../services/git-service";
+import {
+  cloneRepoBranchToCache,
+  cloneRevisionToCache,
+} from "../services/git-service";
 import { backendLogger } from "../lib/logger";
 import { logError } from "../lib/utils";
 
@@ -13,20 +16,42 @@ import { logError } from "../lib/utils";
 export class RootTemplateRepository {
   private loading: boolean = false;
   private templatePaths: string[] = [];
+  private remoteRepos: { url: string; branch: string; path: string }[] = [];
   public templates: Template[] = [];
 
   constructor(templatePaths: string[]) {
     this.templatePaths = templatePaths;
   }
 
-  // default templates are the template dirs defined by user. User decides which revision to use.
-  private async loadDefaultTemplates(): Promise<Result<void>> {
+  async addRemoteRepo(url: string, branch: string = "main"): Promise<Result<void>> {
+    const cloneResult = await cloneRepoBranchToCache(url, branch);
+    if ("error" in cloneResult) {
+      return { error: cloneResult.error };
+    }
+    const existing = this.remoteRepos.find(
+      (r) => r.url === url && r.branch === branch,
+    );
+    if (existing) {
+      existing.path = cloneResult.data;
+    } else {
+      this.remoteRepos.push({ url, branch, path: cloneResult.data });
+    }
+    return await this.loadTemplates();
+  }
+
+  // load templates from configured paths and cached remote repos
+  private async loadTemplates(): Promise<Result<void>> {
     if (this.loading) {
       return { error: "Templates are already loading" };
     }
     this.loading = true;
     this.templates = [];
-    for (const templatePath of this.templatePaths) {
+    const paths = [
+      ...this.templatePaths,
+      ...this.remoteRepos.map((r) => r.path),
+    ];
+    for (const templatePath of paths) {
+      const repoInfo = this.remoteRepos.find((r) => r.path === templatePath);
       const rootTemplateDirsPath = path.join(templatePath, "root-templates");
       let rootTemplateDirs: string[] = [];
       try {
@@ -58,7 +83,11 @@ export class RootTemplateRepository {
           continue;
         }
 
-        const template = await Template.createAllTemplates(rootTemplateDirPath);
+        const template = await Template.createAllTemplates(
+          rootTemplateDirPath,
+          repoInfo?.url,
+          repoInfo?.branch,
+        );
         if ("error" in template) {
           continue;
         }
@@ -72,46 +101,53 @@ export class RootTemplateRepository {
   }
 
   async reloadTemplates(): Promise<Result<void>> {
-    return await this.loadDefaultTemplates();
+    // refresh remote repos to latest commit on their branches
+    for (const repo of this.remoteRepos) {
+      const cloneResult = await cloneRepoBranchToCache(repo.url, repo.branch);
+      if ("error" in cloneResult) {
+        return { error: cloneResult.error };
+      }
+      repo.path = cloneResult.data;
+    }
+    return await this.loadTemplates();
   }
 
   async getAllTemplates(): Promise<Result<Template[]>> {
     if (!this.templates.length) {
-      const result = await this.loadDefaultTemplates();
+      const result = await this.loadTemplates();
       if ("error" in result) {
         return result;
       }
       if (!this.templates.length) {
-        logError({ shortMessage: "No templates found." });
-        return { error: "No templates found." };
+        logError({ level: "trace", shortMessage: "No templates found." });
+				return {data: []}
       }
     }
     return { data: this.templates };
   }
 
-  async findDefaultTemplate(
-    templateName: string,
-  ): Promise<Result<Template | null>> {
+  async findTemplate(templateName: string): Promise<Result<Template | null>> {
     if (!this.templates.length) {
-      const result = await this.loadDefaultTemplates();
+      const result = await this.loadTemplates();
       if ("error" in result) {
         return result;
       }
       if (!this.templates.length) {
-        logError({ shortMessage: "No templates found." });
-        return { error: "No templates found." };
+        logError({ shortMessage: "Template not found." });
+        return { error: "Template not found." };
       }
     }
 
-    for (const template of this.templates) {
-      if (
-        template.config.templateConfig.name === templateName &&
-        template.isDefault
-      ) {
-        return { data: template };
-      }
+    const local = this.templates.find(
+      (t) => t.config.templateConfig.name === templateName && t.isLocal,
+    );
+    if (local) {
+      return { data: local };
     }
-    return { data: null };
+    const any = this.templates.find(
+      (t) => t.config.templateConfig.name === templateName,
+    );
+    return { data: any ?? null };
   }
 
   async findAllTemplateRevisions(
@@ -148,25 +184,19 @@ export class RootTemplateRepository {
       return { data: null };
     }
 
-    let defaultTemplate: Template | undefined;
     for (const revision of revisions) {
       if (revision.commitHash === revisionHash) {
         return { data: revision };
       }
-      if (revision.isDefault) {
-        defaultTemplate = revision;
-      }
     }
 
-    if (!defaultTemplate) {
-      logError({
-        shortMessage: `No default template found for ${templateName}`,
-      });
+    const sourceTemplate = revisions[0];
+    if (!sourceTemplate) {
       return { data: null };
     }
 
     const saveRevisionInCacheResult = await cloneRevisionToCache(
-      defaultTemplate,
+      sourceTemplate,
       revisionHash,
     );
 
@@ -177,10 +207,14 @@ export class RootTemplateRepository {
     const newTemplatePath = path.join(
       saveRevisionInCacheResult.data,
       "root-templates",
-      path.basename(defaultTemplate.absoluteDir),
+      path.basename(sourceTemplate.absoluteDir),
     );
 
-    const newTemplate = await Template.createAllTemplates(newTemplatePath);
+    const newTemplate = await Template.createAllTemplates(
+      newTemplatePath,
+      sourceTemplate.repoUrl,
+      sourceTemplate.branch,
+    );
 
     if ("error" in newTemplate) {
       return newTemplate;
