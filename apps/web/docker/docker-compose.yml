@@ -10,4 +10,4 @@ services:
       PROJECT_SEARCH_PATHS: /skaff/projects
     volumes:
       - ~/Projects/MrBlueStudios/templated:/skaff/projects
-    entrypoint: ["ls", "-la"]
+    # entrypoint: ["ls", "-la"]

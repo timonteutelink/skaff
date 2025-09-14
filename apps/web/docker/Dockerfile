@@ -17,17 +17,20 @@ RUN bun install --no-save --frozen-lockfile
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+COPY package.json bun.lock* ./
 COPY apps/web ./apps/web
 COPY packages/typescript-config ./packages/typescript-config
 COPY packages/eslint-config ./packages/eslint-config
 COPY packages/tailwind-config ./packages/tailwind-config
+
+RUN ln -s /app/node_modules apps/web/node_modules
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN cd apps/web && bun run build
 
 # Production image, copy all the files and run next
-FROM node:20-alpine AS runner
+FROM base AS runner
 WORKDIR /app
 
 ENV NEXT_TELEMETRY_DISABLED=1\
@@ -49,4 +52,4 @@ USER nextjs
 
 EXPOSE 3000
 
-CMD ["node", "./server.js"]
+CMD ["bun", "./apps/web/server.js"]
