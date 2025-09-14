@@ -2220,15 +2220,9 @@
   };
   "@timonteutelink/skaff-lib" = {
     out_path = "@timonteutelink/skaff-lib";
-    name = "@timonteutelink/skaff-lib@0.0.70";
-    url = "https://registry.npmjs.org/@timonteutelink/skaff-lib/-/skaff-lib-0.0.70.tgz";
-    hash = "sha512-5ZRh0+cPcQUI6y4XaU/C1QCnLUOkYIk7Quw3b0gYRYohHouDuUzscyM48kFlpm/hUBPgVAwIQLPyOj2NITK3Rw==";
-  };
-  "@timonteutelink/skaff-lib/@timonteutelink/template-types-lib" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/@timonteutelink/node_modules/template-types-lib";
-    name = "@timonteutelink/template-types-lib@0.0.47";
-    url = "https://registry.npmjs.org/@timonteutelink/template-types-lib/-/template-types-lib-0.0.47.tgz";
-    hash = "sha512-dSweZsLsIgF+v9HUbhZfrT9kUNPQCPK9k0qbxRNLeohCzwTmhXZP929SUsTS7B3rO5j+YDO8EEAKQybJLgLUpQ==";
+    name = "@timonteutelink/skaff-lib@0.0.71";
+    url = "https://registry.npmjs.org/@timonteutelink/skaff-lib/-/skaff-lib-0.0.71.tgz";
+    hash = "sha512-SABWjmeI0M59gdM2QM/oIhfopmj9nr/0s4dvi4pzwcStRhoKoHNlnubcRHyosUczchRXPWMjMQPrsIpw3j3uUQ==";
   };
   "@timonteutelink/skaff-lib/fs-extra" = {
     out_path = "@timonteutelink/skaff-lib/node_modules/fs-extra";
