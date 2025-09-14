@@ -3,7 +3,11 @@ import {
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import path from "node:path";
-import { ProjectCreationResult, Result, ProjectCreationOptions } from "../lib/types";
+import {
+  ProjectCreationResult,
+  Result,
+  ProjectCreationOptions,
+} from "../lib/types";
 import { Project } from "../models/project";
 import {
   getProjectRepository,
@@ -15,13 +19,16 @@ import { backendLogger } from "../lib";
 
 export async function parseProjectCreationResult(
   projectPath: string,
-  projectCreationOptions?: ProjectCreationOptions
+  projectCreationOptions?: ProjectCreationOptions,
 ): Promise<Result<ProjectCreationResult>> {
   const projectRepository = await getProjectRepository();
   const newProjectName = path.basename(projectPath);
   const newProjectParentDir = path.dirname(projectPath);
 
-  const project = await projectRepository.findProjectByName(newProjectParentDir, newProjectName);
+  const project = await projectRepository.findProjectByName(
+    newProjectParentDir,
+    newProjectName,
+  );
 
   if ("error" in project) {
     return project;
@@ -41,12 +48,12 @@ export async function parseProjectCreationResult(
   }
 
   if (!projectCreationOptions?.git) {
-    return { data: { newProjectPath: projectPath, newProject: projectDto.data } };
+    return {
+      data: { newProjectPath: projectPath, newProject: projectDto.data },
+    };
   }
 
-  const diffResult = await addAllAndRetrieveDiff(
-    projectPath
-  );
+  const diffResult = await addAllAndRetrieveDiff(projectPath);
 
   if ("error" in diffResult) {
     return diffResult;
@@ -54,8 +61,13 @@ export async function parseProjectCreationResult(
 
   const processedDiff = parseGitDiff(diffResult.data);
 
-  return { data: { newProjectPath: projectPath, newProject: projectDto.data, diff: processedDiff } };
-
+  return {
+    data: {
+      newProjectPath: projectPath,
+      newProject: projectDto.data,
+      diff: processedDiff,
+    },
+  };
 }
 
 export async function instantiateProject(
@@ -63,7 +75,7 @@ export async function instantiateProject(
   parentDirPath: string,
   newProjectName: string,
   userTemplateSettings: UserTemplateSettings,
-  projectCreationOptions?: ProjectCreationOptions
+  projectCreationOptions?: ProjectCreationOptions,
 ): Promise<Result<ProjectCreationResult>> {
   const rootTemplateRepository = await getRootTemplateRepository();
   const template = await rootTemplateRepository.findTemplate(rootTemplateName);
@@ -81,19 +93,19 @@ export async function instantiateProject(
     userTemplateSettings,
     parentDirPath,
     newProjectName,
-    projectCreationOptions
+    projectCreationOptions,
   );
 }
 
 export async function generateProjectFromExistingProject(
   existingProject: Project,
   newProjectPath: string,
-  ProjectCreationOptions?: ProjectCreationOptions
+  ProjectCreationOptions?: ProjectCreationOptions,
 ): Promise<Result<ProjectCreationResult>> {
   return await generateProjectFromTemplateSettings(
     existingProject.instantiatedProjectSettings,
     newProjectPath,
-    ProjectCreationOptions
+    ProjectCreationOptions,
   );
 }
 
@@ -128,7 +140,10 @@ export async function generateProjectFromTemplateSettings(
     };
   }
 
-  const rootTemplate = await rootTemplateRepository.loadRevision(projectSettings.rootTemplateName, instantiatedRootTemplate);
+  const rootTemplate = await rootTemplateRepository.loadRevision(
+    projectSettings.rootTemplateName,
+    instantiatedRootTemplate,
+  );
 
   if ("error" in rootTemplate) {
     return rootTemplate;
@@ -139,6 +154,15 @@ export async function generateProjectFromTemplateSettings(
       `Root template not found: ${projectSettings.rootTemplateName}`,
     );
     return { error: "Root template not found" };
+  }
+
+  // Ensure the root instantiated template stores repo information
+  if (rootTemplate.data.repoUrl) {
+    const rootInst = projectSettings.instantiatedTemplates[0];
+    if (rootInst) {
+      rootInst.templateRepoUrl = rootTemplate.data.repoUrl;
+      rootInst.templateBranch = rootTemplate.data.branch;
+    }
   }
 
   const newProjectGenerator = new TemplateGeneratorService(
@@ -158,5 +182,8 @@ export async function generateProjectFromTemplateSettings(
     return projectCreationResult;
   }
 
-  return await parseProjectCreationResult(projectCreationResult.data, projectCreationOptions)
+  return await parseProjectCreationResult(
+    projectCreationResult.data,
+    projectCreationOptions,
+  );
 }

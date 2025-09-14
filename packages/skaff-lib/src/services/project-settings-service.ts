@@ -1,14 +1,16 @@
 import * as fs from "node:fs/promises";
 import path from "node:path";
 import { Template } from "../models/template";
-import {
-  Result,
-} from "../lib/types";
+import { Result } from "../lib/types";
 import { makeDir } from "./file-service";
 import { deepSortObject } from "../utils/shared-utils";
 import { logError } from "../lib/utils";
 import { getRootTemplateRepository } from "../repositories";
-import { InstantiatedTemplate, ProjectSettings, projectSettingsSchema } from "@timonteutelink/template-types-lib";
+import {
+  InstantiatedTemplate,
+  ProjectSettings,
+  projectSettingsSchema,
+} from "@timonteutelink/template-types-lib";
 
 export async function writeNewProjectSettings(
   absoluteProjectPath: string,
@@ -139,8 +141,7 @@ export async function loadProjectSettings(
   }
 
   // TODO here we would also load other reference template repos. For now all templates of a root template need to be in same repo.
-  const rootInstantiated =
-    finalProjectSettings.data.instantiatedTemplates[0];
+  const rootInstantiated = finalProjectSettings.data.instantiatedTemplates[0];
   const instantiatedRootTemplateCommitHash =
     rootInstantiated?.templateCommitHash;
 
@@ -179,6 +180,16 @@ export async function loadProjectSettings(
     return {
       error: `Root template ${finalProjectSettings.data.rootTemplateName} not found`,
     };
+  }
+
+  // Ensure project settings store the repo information of the root template
+  if (rootInstantiated) {
+    if (rootTemplate.data.repoUrl) {
+      rootInstantiated.templateRepoUrl = rootTemplate.data.repoUrl;
+    }
+    if (rootTemplate.data.branch) {
+      rootInstantiated.templateBranch = rootTemplate.data.branch;
+    }
   }
 
   for (const subTemplateSettings of finalProjectSettings.data
