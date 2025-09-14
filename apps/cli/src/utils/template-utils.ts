@@ -8,6 +8,7 @@ import { promptForSchema } from './zod-schema-prompt.js';
 async function promptUserTemplateSettings(
   rootTemplateName: string,
   templateName: string,
+  defaults?: UserTemplateSettings,
 ): Promise<UserTemplateSettings> {
   const rootTpl = await getTemplate(rootTemplateName);
   if ('error' in rootTpl) throw new Error(rootTpl.error);
@@ -20,7 +21,9 @@ async function promptUserTemplateSettings(
     );
   }
 
-  const result = await promptForSchema(subTpl.config.templateSettingsSchema);
+  const result = await promptForSchema(subTpl.config.templateSettingsSchema, {
+    defaults,
+  });
   if (Object.keys(result).length === 0) throw new Error('No settings provided.');
 
   return result as UserTemplateSettings;
@@ -30,8 +33,9 @@ export async function readUserTemplateSettings(
   rootTemplateName: string,
   templateName: string,
   arg?: string,
+  defaults?: UserTemplateSettings,
 ): Promise<UserTemplateSettings> {
-  if (!arg) return promptUserTemplateSettings(rootTemplateName, templateName);
+  if (!arg) return promptUserTemplateSettings(rootTemplateName, templateName, defaults);
   if (fs.existsSync(arg)) return JSON.parse(fs.readFileSync(arg, 'utf8'));
   return JSON.parse(arg);
 }

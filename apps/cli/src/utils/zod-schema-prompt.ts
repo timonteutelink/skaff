@@ -12,17 +12,21 @@ interface PromptContext {
   path: Path;
 }
 
-export async function promptForSchema<T extends ZodTypeAny>(
-  schema: T,
-  options?: {
-    rootName?: string;
-    skipValidation?: boolean;
-  }
-): Promise<z.infer<T>> {
+  export async function promptForSchema<T extends ZodTypeAny>(
+    schema: T,
+    options?: {
+      defaults?: unknown;
+      rootName?: string;
+      skipValidation?: boolean;
+    }
+  ): Promise<z.infer<T>> {
   const rootPath = options?.rootName ? [options.rootName] : ['root'];
 
   try {
-    const result = await promptNode(schema, { path: rootPath });
+    const result = await promptNode(schema, {
+      defaultValue: options?.defaults,
+      path: rootPath,
+    });
 
     if (!options?.skipValidation) {
       const parsed = schema.safeParse(result);
@@ -214,6 +218,9 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
 
     case 'ZodArray': {
       const itemSchema = def.type;
+      const defaults = Array.isArray(context.defaultValue)
+        ? context.defaultValue
+        : [];
       let min = 0;
       let max = Infinity;
 
@@ -230,6 +237,7 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
         : '';
 
       const count = await numberPrompt({
+        default: defaults.length,
         message: `📦 How many items for array "${pathStr}"${constraintInfo}${descriptionSuffix}?`,
         validate(value) {
           if (value === undefined || value === null) return 'Count is required';
@@ -243,7 +251,14 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
       for (let i = 0; i < (count || 0); i++) {
         console.log(`\n  📝 Item ${i + 1}/${count}:`);
         const itemPath = [...context.path, i];
-        items.push(await promptNode(itemSchema, { path: itemPath }));
+        const itemDefault = defaults[i];
+        items.push(
+          await promptNode(itemSchema, {
+            defaultValue: itemDefault,
+            hasDefault: itemDefault !== undefined,
+            path: itemPath,
+          }),
+        );
       }
 
       return items;
@@ -492,6 +507,7 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
       console.log(`\n🏗️  Building object for "${pathStr}"${descriptionSuffix}:`);
       const shape = def.shape();
       const result: Record<string, unknown> = {};
+      const defaults = (context.defaultValue ?? {}) as Record<string, unknown>;
 
       // Handle catchall
       const { catchall } = def;
@@ -501,7 +517,12 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
       for (const key of knownKeys) {
         const fieldSchema = shape[key] as ZodTypeAny;
         const fieldPath = [...context.path, key];
-        result[key] = await promptNode(fieldSchema, { path: fieldPath });
+        const fieldDefault = defaults[key];
+        result[key] = await promptNode(fieldSchema, {
+          defaultValue: fieldDefault,
+          hasDefault: fieldDefault !== undefined,
+          path: fieldPath,
+        });
       }
 
       // Handle catchall if present
