@@ -26,7 +26,7 @@
         "@oclif/core": "^4.5.3",
         "@oclif/plugin-help": "^6.2.32",
         "@oclif/plugin-plugins": "^5.4.46",
-        "@timonteutelink/skaff-lib": "0.0.64",
+        "@timonteutelink/skaff-lib": "0.0.65",
         "@timonteutelink/template-types-lib": "0.0.46",
         "@types/node": "^22.18.1",
         "esbuild": "^0.25.9",
@@ -87,7 +87,7 @@
         "@radix-ui/react-toggle-group": "^1.1.11",
         "@radix-ui/react-tooltip": "^1.2.8",
         "@tailwindcss/postcss": "^4.1.13",
-        "@timonteutelink/skaff-lib": "0.0.64",
+        "@timonteutelink/skaff-lib": "0.0.65",
         "@timonteutelink/template-types-lib": "0.0.46",
         "@types/node": "^22.18.1",
         "class-variance-authority": "^0.7.1",
@@ -800,7 +800,7 @@
 
     "@timonteutelink/skaff": ["@timonteutelink/skaff@workspace:apps/cli"],
 
-    "@timonteutelink/skaff-lib": ["@timonteutelink/skaff-lib@0.0.64", "", { "dependencies": { "@langchain/langgraph": "^0.3.12", "@langchain/openai": "^0.5.18", "@timonteutelink/template-types-lib": "0.0.46", "@types/node": "^22.18.0", "esbuild": "^0.25.9", "fs-extra": "^11.3.1", "glob": "^11.0.3", "handlebars": "^4.7.8", "langchain": "^0.3.31", "loglevel": "^1.9.2", "semver": "^7.7.2", "typescript": "5.8.3", "winston": "^3.17.0", "winston-daily-rotate-file": "^5.0.0", "yaml": "^2.8.1", "zod": "^3.25.76", "zod-to-json-schema": "^3.24.6" } }, "sha512-De7F33GOTgoXhLmjh2Y6pEAkzkRwtwdUdwQrgnTC9q1q042tEoKqg8KPSlkX+16RQaHACQ3uvJyWuBOBqsO4og=="],
+    "@timonteutelink/skaff-lib": ["@timonteutelink/skaff-lib@0.0.65", "", { "dependencies": { "@langchain/langgraph": "^0.3.12", "@langchain/openai": "^0.5.18", "@timonteutelink/template-types-lib": "0.0.46", "@types/node": "^22.18.0", "esbuild": "^0.25.9", "fs-extra": "^11.3.1", "glob": "^11.0.3", "handlebars": "^4.7.8", "langchain": "^0.3.31", "loglevel": "^1.9.2", "semver": "^7.7.2", "typescript": "5.8.3", "winston": "^3.17.0", "winston-daily-rotate-file": "^5.0.0", "yaml": "^2.8.1", "zod": "^3.25.76", "zod-to-json-schema": "^3.24.6" } }, "sha512-YO2Rsn2z2VA31q1p6QxD7JXnE45ZN6DGjnoYFFIzlsFkvpOT0bJUq4ey7QFYU5QMNASkYtiLcRNDVG8Y7be1wQ=="],
 
     "@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.46", "", { "peerDependencies": { "handlebars": "^4.7.8", "zod": "^3.25.76" } }, "sha512-nNt1x7yeA0MP4XKmu+ICO2LZHn3t7ZgAlXHxi1GC2/flImQiCLqRqMB9v68TXmnZeFVR3I59k/HqRWRQ4kq6pw=="],
 
