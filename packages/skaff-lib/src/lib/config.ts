@@ -62,13 +62,12 @@ async function loadFileSettings(): Promise<Partial<Settings>> {
 
 function expandPath(input: string): string {
   const expanded = input.startsWith("~")
-    ? path.join(os.homedir(), input.slice(1))
+    ? path.resolve(path.join(os.homedir(), input.slice(1)))
     : input;
-  return path.resolve(expanded);
+  return expanded;
 }
 
 function parseList(raw: string): string[] {
-  // split on path.delimiter or commas
   return raw
     .split(new RegExp(`[${path.delimiter},]`))
     .map((s) => expandPath(s.trim()))

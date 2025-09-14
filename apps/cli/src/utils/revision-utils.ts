@@ -1,8 +1,5 @@
-import { getRemoteCommitHash } from '@timonteutelink/skaff-lib/dist/services/git-service.js';
+import { getRemoteCommitHash } from '@timonteutelink/skaff-lib';
 
-/**
- * Resolve a branch name or commit hash to a commit hash.
- */
 export async function resolveRevision(repoUrl: string, branchOrHash: string): Promise<string> {
   if (/^[0-9a-f]{40}$/i.test(branchOrHash)) return branchOrHash;
   const res = await getRemoteCommitHash(repoUrl, branchOrHash);

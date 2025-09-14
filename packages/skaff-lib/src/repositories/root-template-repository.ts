@@ -120,7 +120,7 @@ export class RootTemplateRepository {
       }
       if (!this.templates.length) {
         logError({ level: "trace", shortMessage: "No templates found." });
-				return {data: []}
+        return { data: [] }
       }
     }
     return { data: this.templates };

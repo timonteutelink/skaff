@@ -12,14 +12,14 @@ import { getConfig } from "../lib";
 const asyncExecFile = promisify(execFile);
 const asyncExec = promisify(exec);
 
-async function execScript(bashScript: string): Promise<Result<string>>{
-	const safeScript = bashScript.replace(/'/g, "'\\''");
+async function execScript(bashScript: string): Promise<Result<string>> {
+  const safeScript = bashScript.replace(/'/g, "'\\''");
 
-	try {
-		const result = await asyncExec(`bash -c '${safeScript}'`)
-		return { data: result.stdout.trim() }
-	}
-	catch (err: unknown){
+  try {
+    const result = await asyncExec(`bash -c '${safeScript}'`)
+    return { data: result.stdout.trim() }
+  }
+  catch (err: unknown) {
     logError({
       shortMessage: "Script Failed",
       error: err,
@@ -27,7 +27,7 @@ async function execScript(bashScript: string): Promise<Result<string>>{
     return {
       error: `Error checking if path is a git repository: ${String(err)}`,
     };
-	}
+  }
 }
 
 
@@ -96,10 +96,10 @@ export async function cloneRepoBranchToCache(
   branch: string,
 ): Promise<Result<string>> {
   const repoName = path.basename(repoUrl).replace(/\.git$/, "");
-	const revisionHash = await getRemoteCommitHash(repoUrl, branch)
-	if ("error" in revisionHash) {
+  const revisionHash = await getRemoteCommitHash(repoUrl, branch)
+  if ("error" in revisionHash) {
     return revisionHash
-	}
+  }
   const destDirName = `${repoName}-${branch}-${revisionHash.data}`;
   const destPath = await pathInCache(destDirName);
   if ("error" in destPath) {
@@ -437,7 +437,7 @@ export async function diffDirectories(
   absoluteNewProjectPath: string,
 ): Promise<Result<string>> {
   const config = await getConfig();
-	const bashScript = `
+  const bashScript = `
 set -e
 
 BASE_PROJECT=$(realpath "${absoluteBaseProjectPath}")
@@ -467,7 +467,7 @@ git diff --staged --no-color --no-ext-diff
 
 
 	`
-	return await execScript(bashScript);
+  return await execScript(bashScript);
 }
 
 export function parseGitDiff(diffText: string): ParsedFile[] {

@@ -19,7 +19,7 @@ localFlake:
           TEMPLATE_DIR_PATHS = "";
           PROJECT_SEARCH_PATHS = "";
 
-          NPM_PATH = "${pkgs.pnpm}/bin/pnpm";
+          NPM_PATH = "${pkgs.bun}/bin/bun";
 
           NODE_OPTIONS = "--experimental-vm-modules";
           DENO_UNSTABLE_SLOPPY_IMPORTS = "1";
