@@ -187,7 +187,7 @@ export type AiAutoGenerationStep<
   contextPaths?: AnyOrCallback<TFinalSettings, string[]>;
   run?: (
     agent: AiAutoAgent,
-    settings: TFinalSettings,
+    settings: TFinalSettings & { aiResults: AiResultsObject },
     context: string[],
   ) => Promise<string>;
   dependsOn?: string[];
@@ -199,8 +199,13 @@ export type AiConversationGenerationStep<
   type: "conversation";
   resultKey: string;
   modelKey?: string;
-  messages: AnyOrCallback<TFinalSettings, AiMessage[]>;
+  messages?: AnyOrCallback<TFinalSettings, AiMessage[]>;
   contextPaths?: AnyOrCallback<TFinalSettings, string[]>;
+  run?: (
+    agent: AiConversationAgent,
+    settings: TFinalSettings & { aiResults: AiResultsObject },
+    context: string[],
+  ) => Promise<string>;
   dependsOn?: string[];
 };
 

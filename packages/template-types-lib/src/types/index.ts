@@ -22,6 +22,8 @@ export type {
   AiConversationAgent,
   BuildAutoAgent,
   BuildConversationAgent,
+  AiAutoGenerationStep,
+  AiConversationGenerationStep,
   AiGenerationStep,
   AiGeneration,
   TemplateConfigModule,

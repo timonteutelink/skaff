@@ -1,6 +1,7 @@
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
+import { confirm, input } from "@inquirer/prompts";
 import fs from "fs-extra";
 import path from "node:path";
 import {
@@ -23,21 +24,23 @@ import { Template } from "../models/template";
 import { Result } from "../lib/types";
 import { getApiKey } from "../config/ai-providers";
 
-function createModel(model?: AiModel) {
+function createModel(model?: AiModel): any {
   const provider = model?.provider || "openai";
   const name = model?.name || "gpt-4o-mini";
   const apiKey = getApiKey(provider);
+  if (!apiKey) return undefined;
   switch (provider) {
     case "anthropic":
-      return anthropic(name, { apiKey });
+      return anthropic(name) as any;
     case "openai":
     default:
-      return openai(name, { apiKey });
+      return openai(name) as any;
   }
 }
 
-function defaultAutoAgent(model?: AiModel): AiAutoAgent {
+function defaultAutoAgent(model?: AiModel): AiAutoAgent | undefined {
   const m = createModel(model);
+  if (!m) return undefined;
   return {
     run: async (prompt: string, context: string[]) => {
       const res = await generateText({
@@ -49,8 +52,11 @@ function defaultAutoAgent(model?: AiModel): AiAutoAgent {
   };
 }
 
-function defaultConversationAgent(model?: AiModel): AiConversationAgent {
+function defaultConversationAgent(
+  model?: AiModel,
+): AiConversationAgent | undefined {
   const m = createModel(model);
+  if (!m) return undefined;
   return {
     run: async (messages: AiMessage[], context: string[]) => {
       const res = await generateText({
@@ -93,23 +99,30 @@ export async function generateAiResults(
   const merged = { ...(parentSettings || {}), ...(templateSettings || {}) } as any;
   const parentCtx = anyOrCallbackToAny(
     template.config.parentContextPaths as AnyOrCallback<any, string[]>,
-    merged,
+    { ...merged, aiResults },
   );
   const parentPaths = "error" in parentCtx ? [] : parentCtx.data || [];
   const modelAssignments = (templateSettings as any).aiModels || {};
 
   async function runAutoStep(step: AiAutoGenerationStep<any>) {
     const model = step.modelKey ? modelAssignments[step.modelKey] : undefined;
-    let agent: AiAutoAgent;
+    let agent: AiAutoAgent | undefined;
+    if (step.modelKey && !model) {
+      return { data: undefined };
+    }
     if (template.config.buildAutoAgent) {
-      agent = await template.config.buildAutoAgent(merged, model);
+      agent = await template.config.buildAutoAgent(
+        { ...merged, aiResults },
+        model,
+      );
     } else {
       agent = defaultAutoAgent(model);
     }
+    if (!agent) return { data: undefined };
 
     const ctxRes = anyOrCallbackToAny(
       step.contextPaths as AnyOrCallback<any, string[]>,
-      merged,
+      { ...merged, aiResults },
     );
     if ("error" in ctxRes) {
       return ctxRes;
@@ -120,14 +133,18 @@ export async function generateAiResults(
     );
 
     if (step.run) {
-      const text = await step.run(agent, merged, context);
+      const text = await step.run(
+        agent,
+        { ...merged, aiResults },
+        context,
+      );
       aiResults[step.resultKey] = text;
       return { data: undefined };
     }
 
     const promptRes = stringOrCallbackToString(
       step.prompt as StringOrCallback<any>,
-      merged,
+      { ...merged, aiResults },
     );
     if ("error" in promptRes) {
       return promptRes;
@@ -139,16 +156,23 @@ export async function generateAiResults(
 
   async function runConversationStep(step: AiConversationGenerationStep<any>) {
     const model = step.modelKey ? modelAssignments[step.modelKey] : undefined;
-    let agent: AiConversationAgent;
+    let agent: AiConversationAgent | undefined;
+    if (step.modelKey && !model) {
+      return { data: undefined };
+    }
     if (template.config.buildConversationAgent) {
-      agent = await template.config.buildConversationAgent(merged, model);
+      agent = await template.config.buildConversationAgent(
+        { ...merged, aiResults },
+        model,
+      );
     } else {
       agent = defaultConversationAgent(model);
     }
+    if (!agent) return { data: undefined };
 
     const ctxRes = anyOrCallbackToAny(
       step.contextPaths as AnyOrCallback<any, string[]>,
-      merged,
+      { ...merged, aiResults },
     );
     if ("error" in ctxRes) {
       return ctxRes;
@@ -157,15 +181,46 @@ export async function generateAiResults(
       [...parentPaths, ...(ctxRes.data || [])],
       projectRoot,
     );
+    if (step.run) {
+      const text = await step.run(
+        agent,
+        { ...merged, aiResults },
+        context,
+      );
+      aiResults[step.resultKey] = text;
+      return { data: undefined };
+    }
     const msgRes = anyOrCallbackToAny(
       step.messages as AnyOrCallback<any, AiMessage[]>,
-      merged,
+      { ...merged, aiResults },
     );
     if ("error" in msgRes) {
       return msgRes;
     }
-    const text = await agent.run(msgRes.data || [], context);
-    aiResults[step.resultKey] = text;
+    let conversation = msgRes.data ? [...msgRes.data] : [];
+    if (
+      conversation.length === 0 ||
+      conversation[conversation.length - 1]?.role !== "user"
+    ) {
+      const userStart = await input({ message: "You:" });
+      conversation.push({ role: "user", content: userStart });
+    }
+    while (true) {
+      const reply = await agent.run(conversation, context);
+      console.log(reply);
+      conversation.push({ role: "assistant", content: reply });
+      const cont = await confirm({
+        message: "Continue conversation?",
+        default: false,
+      });
+      if (!cont) break;
+      const userMsg = await input({ message: "You:" });
+      conversation.push({ role: "user", content: userMsg });
+    }
+    const last = conversation
+      .filter((m) => m.role === "assistant")
+      .slice(-1)[0];
+    aiResults[step.resultKey] = last?.content || "";
     return { data: undefined };
   }
 
