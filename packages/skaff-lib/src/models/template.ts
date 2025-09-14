@@ -444,9 +444,34 @@ export class Template {
       dir: this.relativeDir,
       config: {
         templateConfig: this.config.templateConfig,
-        templateSettingsSchema: zodToJsonSchema(
-          this.config.templateSettingsSchema,
-        ),
+        templateSettingsSchema: (() => {
+          const schema = zodToJsonSchema(
+            this.config.templateSettingsSchema,
+          ) as any;
+          const categories = this.config.aiModelCategories || {};
+          if (Object.keys(categories).length) {
+            schema.properties = schema.properties || {};
+            schema.properties.aiModels = {
+              type: "object",
+              properties: {},
+            } as any;
+            for (const [key, cat] of Object.entries(categories)) {
+              (schema.properties.aiModels.properties as any)[key] = {
+                type: "object",
+                description: (cat as any).description,
+                properties: {
+                  provider: {
+                    type: "string",
+                    enum: ["openai", "anthropic"],
+                  },
+                  name: { type: "string" },
+                },
+                required: ["provider", "name"],
+              };
+            }
+          }
+          return schema;
+        })(),
       },
       templatesDir: this.relativeTemplatesDir,
       subTemplates,

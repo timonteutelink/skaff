@@ -11,6 +11,7 @@ export interface TemplateSettingsFormProps {
   action: (userSettings: any) => Promise<void>;
   cancel?: () => void;
   cancelButton?: ReactNode;
+  aiModelCategories?: Record<string, { description: string }>;
 }
 
 export interface SchemaResult {

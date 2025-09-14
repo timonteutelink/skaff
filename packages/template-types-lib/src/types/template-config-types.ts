@@ -159,22 +159,35 @@ export type AiModelCategory = {
 };
 
 export interface AiAutoAgent {
+  model?: unknown;
+  llms?: unknown[];
+  tools?: Record<string, unknown>;
+  agents?: Record<string, unknown>;
   run: (prompt: string, context: string[]) => Promise<string>;
 }
 
 export interface AiConversationAgent {
+  model?: unknown;
+  llms?: unknown[];
+  tools?: Record<string, unknown>;
+  agents?: Record<string, unknown>;
   run: (messages: AiMessage[], context: string[]) => Promise<string>;
 }
 
 export type BuildAutoAgent<
   TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
-> = (settings: TFinalSettings, model?: AiModel) => Promise<AiAutoAgent>;
+> = (
+  settings: TFinalSettings & { aiResults: AiResultsObject },
+  model: AiModel | undefined,
+  step: AiAutoGenerationStep<TFinalSettings>,
+) => Promise<AiAutoAgent>;
 
 export type BuildConversationAgent<
   TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
 > = (
-  settings: TFinalSettings,
-  model?: AiModel,
+  settings: TFinalSettings & { aiResults: AiResultsObject },
+  model: AiModel | undefined,
+  step: AiConversationGenerationStep<TFinalSettings>,
 ) => Promise<AiConversationAgent>;
 
 export type AiAutoGenerationStep<

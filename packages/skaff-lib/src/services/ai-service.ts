@@ -42,6 +42,10 @@ function defaultAutoAgent(model?: AiModel): AiAutoAgent | undefined {
   const m = createModel(model);
   if (!m) return undefined;
   return {
+    model: m,
+    tools: {},
+    agents: {},
+    llms: [],
     run: async (prompt: string, context: string[]) => {
       const res = await generateText({
         model: m,
@@ -58,6 +62,10 @@ function defaultConversationAgent(
   const m = createModel(model);
   if (!m) return undefined;
   return {
+    model: m,
+    tools: {},
+    agents: {},
+    llms: [],
     run: async (messages: AiMessage[], context: string[]) => {
       const res = await generateText({
         model: m,
@@ -114,6 +122,7 @@ export async function generateAiResults(
       agent = await template.config.buildAutoAgent(
         { ...merged, aiResults },
         model,
+        step,
       );
     } else {
       agent = defaultAutoAgent(model);
@@ -164,6 +173,7 @@ export async function generateAiResults(
       agent = await template.config.buildConversationAgent(
         { ...merged, aiResults },
         model,
+        step,
       );
     } else {
       agent = defaultConversationAgent(model);

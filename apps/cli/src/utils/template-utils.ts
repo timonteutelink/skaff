@@ -24,7 +24,7 @@ async function promptUserTemplateSettings(
   const result = await promptForSchema(subTpl.config.templateSettingsSchema);
   if (Object.keys(result).length === 0) throw new Error('No settings provided.');
 
-  const providerOptions = ['openai', 'anthropic'];
+  const providerOptions: string[] = ['openai', 'anthropic'];
   const categories = (subTpl.config as any).aiModelCategories || {};
   const aiModels: Record<string, { provider: string; name: string }> = {};
   for (const [key, cat] of Object.entries(categories)) {
