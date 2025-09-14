@@ -25,6 +25,7 @@ import { UnionFieldRenderer } from "./field-renderers/union-field-renderer";
 import { TupleFieldRenderer } from "./field-renderers/tuple-field-renderer";
 import { RecordFieldRenderer } from "./field-renderers/record-field-renderer";
 import { toastNullError } from "@/lib/utils";
+import { AiModelSelector } from "./ai-model-selector";
 
 export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
   projectName,
@@ -34,6 +35,7 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
   action,
   cancel,
   cancelButton,
+  aiModelCategories,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [zodSchema, setZodSchema] = useState<z.ZodType<any>>(z.object({}));
@@ -103,6 +105,7 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
 
     Object.entries(selectedTemplateSettingsSchema.properties).forEach(
       ([key, value]: [string, any]) => {
+        if (key === "aiModels") return;
         const category = value.category || "";
         if (!categories[category]) {
           categories[category] = [];
@@ -152,10 +155,11 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
     // Otherwise render fields directly
     return (
       <div className="grid gap-6">
-        {Object.entries(selectedTemplateSettingsSchema.properties).map(
-          ([key, value]: [string, any]) =>
+        {Object.entries(selectedTemplateSettingsSchema.properties)
+          .filter(([k]) => k !== "aiModels")
+          .map(([key, value]: [string, any]) =>
             renderFormField(key, value, "", requiredFields["root"] || []),
-        )}
+          )}
       </div>
     );
   };
@@ -291,6 +295,13 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="grid gap-6">{renderFormFields()}</div>
+
+            {aiModelCategories && (
+              <>
+                <Separator />
+                <AiModelSelector categories={aiModelCategories} form={form} />
+              </>
+            )}
 
             <Separator />
 
