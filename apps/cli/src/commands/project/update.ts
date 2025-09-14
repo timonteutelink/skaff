@@ -3,10 +3,14 @@ import { applyDiff, prepareUpdateDiff } from '@timonteutelink/skaff-lib';
 
 import Base from '../../base-command.js';
 import { getCurrentProject } from '../../utils/cli-utils.js';
+import { resolveRevision } from '../../utils/revision-utils.js';
 
 export default class ProjectUpdate extends Base {
   static args = {
-    newRevisionHash: Args.string({ required: true }),
+    revision: Args.string({
+      description: 'Branch name or commit hash to update to',
+      required: true,
+    }),
   };
 
   static description = 'Update current project to a new template revision and generate a diff';
@@ -28,7 +32,18 @@ export default class ProjectUpdate extends Base {
       this.error('No project is currently selected.', { exit: 1 });
     }
 
-    const res = await prepareUpdateDiff(proj.data, args.newRevisionHash);
+    const rootInst = proj.data.instantiatedProjectSettings.instantiatedTemplates[0];
+    if (!rootInst?.templateRepoUrl) {
+      this.error('Root template repository URL not found in project settings.', {
+        exit: 1,
+      });
+    }
+
+    const revisionHash = await resolveRevision(rootInst.templateRepoUrl, args.revision).catch(
+      e => this.error(String(e), { exit: 1 }),
+    );
+
+    const res = await prepareUpdateDiff(proj.data, revisionHash);
     if ('error' in res) this.error(res.error, { exit: 1 });
 
     if (flags.apply) {
@@ -36,7 +51,7 @@ export default class ProjectUpdate extends Base {
       if ('error' in applied) this.error(applied.error, { exit: 1 });
       this.output({ applied: true, files: applied.data });
     } else {
-      this.output({ diffHash: res.data.diffHash });
+      this.output({ diffHash: res.data.diffHash, revisionHash });
     }
   }
 }
