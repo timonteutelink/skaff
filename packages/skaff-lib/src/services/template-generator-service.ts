@@ -8,6 +8,7 @@ import {
   UserTemplateSettings,
   AiResultsObject,
 } from "@timonteutelink/template-types-lib";
+import z from "zod";
 import fs from "fs-extra";
 import { glob } from "glob";
 import Handlebars, { HelperDelegate } from "handlebars";
@@ -714,7 +715,9 @@ export class TemplateGeneratorService {
       };
     }
 
-    const parsed = template.config.templateSettingsSchema.safeParse(userSettings);
+    const parsed = template.config.templateSettingsSchema
+      .extend({ aiModels: z.any().optional() })
+      .safeParse(userSettings);
     if (!parsed.success) {
       backendLogger.error(`Failed to parse user settings: ${parsed.error}`);
       return { error: `Failed to parse user settings: ${parsed.error}` };
@@ -933,8 +936,9 @@ export class TemplateGeneratorService {
       };
     }
 
-    const parsedUserSettings =
-      this.rootTemplate.config.templateSettingsSchema.safeParse(userSettings);
+    const parsedUserSettings = this.rootTemplate.config.templateSettingsSchema
+      .extend({ aiModels: z.any().optional() })
+      .safeParse(userSettings);
     if (!parsedUserSettings.success) {
       backendLogger.error(
         `Failed to parse user settings: ${parsedUserSettings.error}`,
@@ -979,8 +983,9 @@ export class TemplateGeneratorService {
       };
     }
 
-    const parsedUserSettings =
-      template.config.templateSettingsSchema.safeParse(userSettings);
+    const parsedUserSettings = template.config.templateSettingsSchema
+      .extend({ aiModels: z.any().optional() })
+      .safeParse(userSettings);
     if (!parsedUserSettings.success) {
       backendLogger.error(
         `Failed to parse user settings: ${parsedUserSettings.error}`,
