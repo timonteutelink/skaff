@@ -32,6 +32,9 @@ export type Settings = {
 const APP_NAME = "skaff";
 
 function getSettingsFilePath(): string {
+  if (process.env.SKAFF_CONFIG_PATH) {
+    return path.join(path.resolve(process.env.SKAFF_CONFIG_PATH), "settings.json");
+  }
   const configHome =
     process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config");
   return path.join(configHome, APP_NAME, "settings.json");

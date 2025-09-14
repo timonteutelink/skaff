@@ -27,6 +27,7 @@ RUN ln -s /app/node_modules apps/web/node_modules
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV SKAFF_CACHE_PATH=/app/.cache/skaff
+ENV SKAFF_CONFIG_PATH=/app/.config/skaff
 
 RUN cd apps/web && bun run build
 
@@ -38,6 +39,7 @@ ENV NEXT_TELEMETRY_DISABLED=1\
     NODE_ENV=production \
     PORT=3000 \
     SKAFF_CACHE_PATH=/app/.cache/skaff \
+    SKAFF_CONFIG_PATH=/app/.config/skaff \
     HOSTNAME="0.0.0.0"
 
 RUN addgroup --system --gid 1001 nodejs && \
@@ -53,6 +55,7 @@ RUN chown -R nextjs:nodejs /app
 USER nextjs
 
 RUN mkdir -p /app/.cache/skaff
+RUN mkdir -p /app/.config/skaff
 
 WORKDIR /app/apps/web
 
