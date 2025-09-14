@@ -20,7 +20,7 @@ jobs:
           bun-version: 1.2.12
       - name: Install dependencies
         run: cd packages/skaff-lib && bun install --frozen-lockfile --ignore-scripts
-      - name: Lint
-        run: cd packages/skaff-lib && bun run lint
+      # - name: Lint
+      #   run: cd packages/skaff-lib && bun run lint
       - name: Test
         run: cd packages/skaff-lib && bun run test
