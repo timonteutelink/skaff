@@ -8,6 +8,4 @@ services:
       - "3000:3000"
     volumes:
       - ~/projects/templated:/projects
-    # entrypoint: ["which", "bun"]
-    # entrypoint: ["ls", "-la"]
-    # entrypoint: ["ls", "-la", "/app/node_modules/typescript/lib"]
+    entrypoint: ["ls", "-la", "/projects"]

@@ -36,7 +36,7 @@ RUN cd apps/web && bun run build
 FROM base AS runner
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y gosu git rsync && rm -rf /var/lib/apt/lists/*
 
 ENV NEXT_TELEMETRY_DISABLED=1\
     NODE_ENV=production \
@@ -55,15 +55,21 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 
-RUN chown -R nextjs:nodejs /app
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/typescript ./node_modules/typescript
 
-USER nextjs
+COPY apps/web/docker/entrypoint.sh /usr/local/bin/entrypoint
+RUN chmod +x /usr/local/bin/entrypoint
 
 RUN mkdir -p /app/.cache/skaff
 RUN mkdir -p /app/.config/skaff
+
+RUN chown -R nextjs:nodejs /app
+RUN git config --system user.name "Skaff Webui" \
+    && git config --system user.email "timon+skaff@teutelink.nl"
 
 WORKDIR /app/apps/web
 
 EXPOSE 3000
 
+ENTRYPOINT ["/usr/local/bin/entrypoint"]
 CMD ["bun", "./server.js"]
