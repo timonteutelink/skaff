@@ -16,10 +16,9 @@ localFlake:
 
           LD_LIBRARY_PATH = "${pkgs.stdenv.cc.cc.lib}/lib";
 
-          TEMPLATE_DIR_PATHS = "~/projects/timon/example-templates-dir/:~/projects/btc/mcp-templates/:~/projects/timon/timon-templates/";
-          PROJECT_SEARCH_PATHS = "~/projects/btc/:~/projects/timon/templated/:~/projects/kosmoy/";
+          TEMPLATE_DIR_PATHS = "";
+          PROJECT_SEARCH_PATHS = "";
 
-          GENERATE_DIFF_SCRIPT_PATH = "~/projects/timon/skaff/scripts/generate-diff-patch.sh";
           NPM_PATH = "${pkgs.pnpm}/bin/pnpm";
 
           NODE_OPTIONS = "--experimental-vm-modules";

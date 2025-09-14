@@ -273,7 +273,7 @@ export async function loadAllTemplateConfigs(
       js: `\n})`
     },
   });
-  if ("stop" in esbuild) await esbuild.stop();
+  if ("stop" in esbuild && esbuild.stop) await esbuild.stop();
   const bundle = outputFiles[0]?.text;
   if (!bundle) throw new Error("esbuild produced no output");
 

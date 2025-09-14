@@ -97,7 +97,7 @@ skaff --help
 - **Diff preview and patching.** skaff shows you exactly what will be created or changed. For existing projects it generates a git patch so you can inspect and commit the changes yourself.
 - **Multi‑platform distribution.** Use it instantly via `npx` or `bunx`, install globally with npm or bun, download a prebuilt binary, or run it as a reproducible Nix flake.
 - **Visual Web UI.** A Next.js powered interface allows you to browse templates, fill in form fields, preview the resulting file tree or diff, and apply patches without touching the terminal
-- **Flexible configuration.** Configure where your templates live and where to create projects through a simple JSON config or environment variables like `TEMPLATE_DIR_PATHS`, `PROJECT_SEARCH_PATHS` and `PROJECT_DIFF_SCRIPT_PATH`
+- **Flexible configuration.** Configure where your templates live and where to create projects through a simple JSON config or environment variables like `TEMPLATE_DIR_PATHS`, `PROJECT_SEARCH_PATHS`
 - **Language agnostic.** Templates can target any stack like FastAPI, React, Go and Rust as long as they ship a schema. Additional template repositories can be referenced with `--repo`, and GitHub template retrieval is on the roadmap.
 
 ## How it works
@@ -145,7 +145,6 @@ To override where templates and projects are stored, set the following environme
 
 - **`TEMPLATE_DIR_PATHS`**: colon‑separated directories containing your template repositories.
 - **`PROJECT_SEARCH_PATHS`**: colon‑separated directories where generated projects will live.
-- **`PROJECT_DIFF_SCRIPT_PATH`**: path to a diff script used for patching existing projects.
 
 You can mount directories into the container and specify these variables:
 
@@ -153,7 +152,6 @@ You can mount directories into the container and specify these variables:
 docker run -p 3000:3000 \
   -e TEMPLATE_DIR_PATHS=/templates:/extra-templates \
   -e PROJECT_SEARCH_PATHS=/projects \
-  -e PROJECT_DIFF_SCRIPT_PATH=/usr/local/bin/generate-diff-patch.sh \
   -v ~/templates:/templates \
   -v ~/projects:/projects \
   timonteutelink/skaff:latest

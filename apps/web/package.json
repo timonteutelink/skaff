@@ -67,7 +67,8 @@
     "winston-daily-rotate-file": "^5.0.0",
     "yaml": "^2.8.1",
     "zod": "^3.25.76",
-    "zod-to-json-schema": "^3.24.6"
+    "zod-to-json-schema": "^3.24.6",
+    "@types/node": "^22.18.1"
   },
   "peerDependencies": {
     "react": "^19.1.0",
@@ -78,7 +79,6 @@
     "@repo/eslint-config": "workspace:*",
     "@repo/tailwind-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^22.18.1",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
     "autoprefixer": "^10.4.21",

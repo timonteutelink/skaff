@@ -119,8 +119,8 @@ export class RootTemplateRepository {
         return result;
       }
       if (!this.templates.length) {
-        logError({ shortMessage: "No templates found." });
-        return { error: "No templates found." };
+        logError({ level: "trace", shortMessage: "No templates found." });
+				return {data: []}
       }
     }
     return { data: this.templates };
@@ -133,8 +133,8 @@ export class RootTemplateRepository {
         return result;
       }
       if (!this.templates.length) {
-        logError({ shortMessage: "No templates found." });
-        return { error: "No templates found." };
+        logError({ shortMessage: "Template not found." });
+        return { error: "Template not found." };
       }
     }
 

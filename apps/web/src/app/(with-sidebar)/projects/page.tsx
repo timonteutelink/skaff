@@ -96,7 +96,7 @@ export default function TemplatesListPage() {
         shortMessage: "Error retrieving projects",
       });
       if (!projects) {
-        return;
+        return [];
       }
       setProjects(projects || []);
     });
@@ -106,7 +106,7 @@ export default function TemplatesListPage() {
         shortMessage: "Error retrieving templates",
       });
       if (!templates) {
-        return;
+        return [];
       }
       setTemplates(templates.map((t) => t.template) || []);
     });

@@ -7,28 +7,13 @@ const SETTINGS_DEFINITIONS = [
     key: "TEMPLATE_DIR_PATHS",
     envVar: "TEMPLATE_DIRS",
     type: "string[]",
-    default: [
-      path.resolve(os.homedir(), "projects", "timon", "example-templates-dir"),
-    ],
+    default: [],
   },
   {
     key: "PROJECT_SEARCH_PATHS",
     envVar: "PROJECT_PATHS",
     type: "string[]",
-    default: [path.resolve(os.homedir(), "projects")],
-  },
-  {
-    key: "GENERATE_DIFF_SCRIPT_PATH",
-    envVar: "DIFF_SCRIPT_PATH",
-    type: "string",
-    default: path.resolve(
-      os.homedir(),
-      "projects",
-      "timon",
-      "skaff",
-      "scripts",
-      "generate-diff-patch.sh",
-    ),
+    default: [],
   },
   {
     key: "NPM_PATH",

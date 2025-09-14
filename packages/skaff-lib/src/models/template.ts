@@ -545,15 +545,21 @@ export class Template {
 
   public async isValid(): Promise<boolean> {
     const isRepoClean = await isGitRepoClean(this.absoluteBaseDir);
+		console.log({isRepoClean})
     if ("error" in isRepoClean) {
       return false;
     }
 
     const commitResult = await getCommitHash(this.absoluteBaseDir);
+		console.log({commitResult})
     if ("error" in commitResult) {
       return false;
     }
+		
+		const foundCommitHash = this.findCommitHash()
 
-    return isRepoClean.data && commitResult.data === this.findCommitHash();
+		console.log(foundCommitHash)
+
+    return isRepoClean.data && commitResult.data === foundCommitHash
   }
 }
