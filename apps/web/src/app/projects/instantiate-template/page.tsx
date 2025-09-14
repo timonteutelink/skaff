@@ -706,6 +706,9 @@ const TemplateInstantiationPage: React.FC = () => {
           subTemplate.data.config.templateSettingsSchema
         }
         formDefaultValues={templateSettingsDefaultValues}
+        aiModelCategories={
+          (subTemplate.data.config.templateConfig as any).aiModelCategories
+        }
         action={handleSubmitSettings}
         cancel={() => {
           router.push(
