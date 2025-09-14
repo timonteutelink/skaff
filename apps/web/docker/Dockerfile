@@ -49,9 +49,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 
 RUN chown -R nextjs:nodejs /app
-RUN mkdir -p /app/.cache/skaff
 
 USER nextjs
+
+RUN mkdir -p /app/.cache/skaff
 
 WORKDIR /app/apps/web
 
