@@ -20,3 +20,13 @@ export {
 export * from "./di/tokens";
 export { createTestContainer, withTestContainer } from "./di/testing";
 export type { CacheKey };
+export { llmProviderEnv, getConnectedProviders } from "./config/ai-providers";
+export {
+  advanceAiGeneration,
+  type ConversationStepData,
+} from "./services/ai-service";
+export {
+  resolveLanguageModel,
+  resolveModelChoice,
+} from "./services/ai-model-service";
+export { getDefaultModelName } from "./lib/ai-model-utils";

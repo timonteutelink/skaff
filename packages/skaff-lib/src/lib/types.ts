@@ -47,6 +47,7 @@ export interface TemplateDTO {
   refDir?: string;
   possibleParentTemplates?: TemplateParentReference[];
   isDetachedSubtreeRoot?: boolean;
+  aiGenerationStepCount: number;
 }
 
 export interface GitStatus {
