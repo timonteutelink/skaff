@@ -111,6 +111,7 @@ export class Template {
 
     this.commitHash = commitHash;
 
+    this.repoUrl = repoUrl;
     this.branch = branch;
 
     if (!this.absoluteBaseDir.startsWith(getCacheDirPath())) {
@@ -545,20 +546,16 @@ export class Template {
 
   public async isValid(): Promise<boolean> {
     const isRepoClean = await isGitRepoClean(this.absoluteBaseDir);
-		console.log({isRepoClean})
     if ("error" in isRepoClean) {
       return false;
     }
 
     const commitResult = await getCommitHash(this.absoluteBaseDir);
-		console.log({commitResult})
     if ("error" in commitResult) {
       return false;
     }
 		
-		const foundCommitHash = this.findCommitHash()
-
-		console.log(foundCommitHash)
+    const foundCommitHash = this.findCommitHash()
 
     return isRepoClean.data && commitResult.data === foundCommitHash
   }

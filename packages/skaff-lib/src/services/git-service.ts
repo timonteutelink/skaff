@@ -101,7 +101,6 @@ export async function cloneRepoBranchToCache(
     return revisionHash
 	}
   const destDirName = `${repoName}-${branch}-${revisionHash.data}`;
-	console.log(destDirName);
   const destPath = await pathInCache(destDirName);
   if ("error" in destPath) {
     return destPath;
@@ -367,7 +366,6 @@ export async function isGitRepoClean(
     const status = (
       await asyncExec(`cd ${hostRepoPath} && git status --porcelain`)
     ).stdout.trim();
-		console.log(status)
     return { data: status.length === 0 };
   } catch (error) {
     logError({

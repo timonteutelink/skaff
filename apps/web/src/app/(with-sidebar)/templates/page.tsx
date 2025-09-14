@@ -40,7 +40,6 @@ export default function TemplatesListPage() {
 			shortMessage: "Error loading repo",
 		});
 		const templatesRes = await retrieveTemplates();
-		console.log(templatesRes);
 		const newTemplates = toastNullError({
 			result: templatesRes,
 			shortMessage: "Error retrieving templates",
