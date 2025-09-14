@@ -6,6 +6,7 @@ import {
   RedirectFile,
   SideEffectFunction,
   UserTemplateSettings,
+  AiResultsObject,
 } from "@timonteutelink/template-types-lib";
 import fs from "fs-extra";
 import { glob } from "glob";
@@ -31,6 +32,7 @@ import {
   writeNewTemplateToSettings,
 } from "./project-settings-service";
 import { latestMigrationUuid } from "./template-migration-service";
+import { generateAiResults } from "./ai-service";
 
 
 function isBinaryContent(buffer: Buffer): boolean {
@@ -91,6 +93,7 @@ export class TemplateGeneratorService {
   private currentlyGeneratingTemplateParentInstanceId?: string;
   private currentlyGeneratingTemplateFinalSettings?: FinalTemplateSettings;
   private currentFileRollbackManager?: FileRollbackManager;
+  private currentAiResults: AiResultsObject = {};
 
   constructor(
     options: GeneratorOptions,
@@ -711,20 +714,47 @@ export class TemplateGeneratorService {
       };
     }
 
-    const result = Project.getFinalTemplateSettings(
+    const parsed = template.config.templateSettingsSchema.safeParse(userSettings);
+    if (!parsed.success) {
+      backendLogger.error(`Failed to parse user settings: ${parsed.error}`);
+      return { error: `Failed to parse user settings: ${parsed.error}` };
+    }
+
+    let parentFinalSettings: FinalTemplateSettings | undefined;
+    if (template.parentTemplate && parentInstanceId) {
+      const parentRes = Project.getFinalTemplateSettingsForInstantiatedTemplate(
+        template.parentTemplate,
+        parentInstanceId,
+        this.destinationProjectSettings,
+      );
+      if ("error" in parentRes) {
+        return parentRes;
+      }
+      parentFinalSettings = parentRes.data;
+    }
+
+    const aiRes = await generateAiResults(
       template,
-      this.destinationProjectSettings,
-      userSettings,
-      parentInstanceId,
+      parsed.data,
+      parentFinalSettings,
+      this.options.absoluteDestinationPath,
     );
 
-    if ("error" in result) {
-      return result;
+    if ("error" in aiRes) {
+      return aiRes;
     }
+
+    const finalSettings = template.config.mapFinalSettings({
+      fullProjectSettings: this.destinationProjectSettings,
+      templateSettings: parsed.data,
+      parentSettings: parentFinalSettings,
+      aiResults: aiRes.data,
+    });
 
     this.currentlyGeneratingTemplate = template;
     this.currentlyGeneratingTemplateParentInstanceId = parentInstanceId;
-    this.currentlyGeneratingTemplateFinalSettings = result.data;
+    this.currentlyGeneratingTemplateFinalSettings = finalSettings;
+    this.currentAiResults = aiRes.data;
 
     return { data: undefined };
   }
@@ -1087,6 +1117,8 @@ export class TemplateGeneratorService {
     if ("error" in result) {
       return fail(result);
     }
+
+    instantiatedTemplate.aiResults = this.currentAiResults;
     // TODO: disable every other action in project page when the commithash is not equal.
     // NO actually just make sure always before generating to git checkout the right template. I guess before every generation/copydirectory we need to git checkout the right commit hash, load the template again from this the newly checked out template. Run the generation and git checkout the old branch again. This needs to happen for every generation but also when displaying the template.
     // NO maybe we will NEED to make another copy of the templates dir and checkout there so we can just retrieve templates and get all versions not only the newest. So when retrieving projects if there is a oldtemplatehash used anywhere we call a function to copy the template dir to cache. There we checkout this commit hash and we load it from there. This way we can also display the other revisions of template in frontend on templates list since they will have been added. Then we can make it so the apps requires restart if you change and recommit the templates dir because before that all templates will be loaded in memory with a commit hash and will never be loaded again. So add checks everywhere if commit hash still the same and if git dir is clean before actually generating the template. So now to uniquely identify template should use everywhere name and commit hash and when searching template you have the newest one and then all revisions used for projects. Probaly store the copied revisions in the cachedir inside a dir with the commithash as name. This way we in generation we can reference files from any revision directly to use old and new templates and also to update from old to new template. When app starts and projects are loaded will check if revisions in cache else copy dir there and checkout right revision. Add error TEMPLATE DIR CHANGED and a button to manually reload all templates and then revisions and will delete all cached revisions. This way no restart of app is needed. So the registry will fill up with revisions while app is running and when user press reload will clean and load again.
@@ -1295,6 +1327,8 @@ export class TemplateGeneratorService {
     if ("error" in result) {
       return fail(result);
     }
+
+    instantiatedTemplate.aiResults = this.currentAiResults;
 
     if (!this.currentlyGeneratingTemplateFinalSettings) {
       backendLogger.error("Failed to parse user settings.");
