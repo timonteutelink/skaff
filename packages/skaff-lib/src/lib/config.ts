@@ -5,19 +5,16 @@ import * as path from "path";
 const SETTINGS_DEFINITIONS = [
   {
     key: "TEMPLATE_DIR_PATHS",
-    envVar: "TEMPLATE_DIRS",
     type: "string[]",
     default: [],
   },
   {
     key: "PROJECT_SEARCH_PATHS",
-    envVar: "PROJECT_PATHS",
     type: "string[]",
     default: [],
   },
   {
     key: "NPM_PATH",
-    envVar: "NPM_CMD",
     type: "string",
     default: "npm",
   },
@@ -82,7 +79,7 @@ function loadEnvSettings(): Partial<Settings> {
   const envSettings: Partial<Settings> = {};
 
   for (const def of SETTINGS_DEFINITIONS) {
-    const raw = process.env[def.envVar];
+    const raw = process.env[def.key];
     if (raw !== undefined) {
       if (def.type === "string[]") {
         (envSettings as any)[def.key] = parseList(raw);
