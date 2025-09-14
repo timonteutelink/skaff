@@ -16,7 +16,7 @@
     },
     "apps/cli": {
       "name": "@timonteutelink/skaff",
-      "version": "0.0.2",
+      "version": "0.0.3",
       "bin": {
         "skaff": "./bin/run.js",
       },
@@ -26,7 +26,7 @@
         "@oclif/core": "^4.5.3",
         "@oclif/plugin-help": "^6.2.32",
         "@oclif/plugin-plugins": "^5.4.46",
-        "@timonteutelink/skaff-lib": "0.0.69",
+        "@timonteutelink/skaff-lib": "0.0.70",
         "@timonteutelink/template-types-lib": "0.0.47",
         "@types/node": "^22.18.1",
         "esbuild": "^0.25.9",
@@ -57,7 +57,7 @@
     },
     "apps/web": {
       "name": "web",
-      "version": "0.0.1",
+      "version": "0.0.2",
       "dependencies": {
         "@hookform/resolvers": "^5.2.1",
         "@radix-ui/react-accordion": "^1.2.12",
@@ -87,7 +87,7 @@
         "@radix-ui/react-toggle-group": "^1.1.11",
         "@radix-ui/react-tooltip": "^1.2.8",
         "@tailwindcss/postcss": "^4.1.13",
-        "@timonteutelink/skaff-lib": "0.0.69",
+        "@timonteutelink/skaff-lib": "0.0.70",
         "@timonteutelink/template-types-lib": "0.0.47",
         "@types/node": "^22.18.1",
         "class-variance-authority": "^0.7.1",
@@ -800,7 +800,7 @@
 
     "@timonteutelink/skaff": ["@timonteutelink/skaff@workspace:apps/cli"],
 
-    "@timonteutelink/skaff-lib": ["@timonteutelink/skaff-lib@0.0.69", "", { "dependencies": { "@langchain/langgraph": "^0.3.12", "@langchain/openai": "^0.5.18", "@timonteutelink/template-types-lib": "0.0.46", "@types/node": "^22.18.0", "esbuild": "^0.25.9", "fs-extra": "^11.3.1", "glob": "^11.0.3", "handlebars": "^4.7.8", "langchain": "^0.3.31", "loglevel": "^1.9.2", "semver": "^7.7.2", "typescript": "5.8.3", "winston": "^3.17.0", "winston-daily-rotate-file": "^5.0.0", "yaml": "^2.8.1", "zod": "^3.25.76", "zod-to-json-schema": "^3.24.6" } }, "sha512-b4cfDnbTGoYU9zL3ihW+jdlxxZeoYOeLSQCSSzgAONnXvauN9miGDDXLEIWCNcnaGyGcD2zzMQa3fmNXZ1ddSw=="],
+    "@timonteutelink/skaff-lib": ["@timonteutelink/skaff-lib@0.0.70", "", { "dependencies": { "@langchain/langgraph": "^0.3.12", "@langchain/openai": "^0.5.18", "@timonteutelink/template-types-lib": "0.0.47", "@types/node": "^22.18.0", "esbuild": "^0.25.9", "fs-extra": "^11.3.1", "glob": "^11.0.3", "handlebars": "^4.7.8", "langchain": "^0.3.31", "loglevel": "^1.9.2", "semver": "^7.7.2", "typescript": "5.8.3", "winston": "^3.17.0", "winston-daily-rotate-file": "^5.0.0", "yaml": "^2.8.1", "zod": "^3.25.76", "zod-to-json-schema": "^3.24.6" } }, "sha512-5ZRh0+cPcQUI6y4XaU/C1QCnLUOkYIk7Quw3b0gYRYohHouDuUzscyM48kFlpm/hUBPgVAwIQLPyOj2NITK3Rw=="],
 
     "@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.47", "", { "peerDependencies": { "handlebars": "^4.7.8", "zod": "^3.25.76" } }, "sha512-dSweZsLsIgF+v9HUbhZfrT9kUNPQCPK9k0qbxRNLeohCzwTmhXZP929SUsTS7B3rO5j+YDO8EEAKQybJLgLUpQ=="],
 
@@ -2283,8 +2283,6 @@
     "@tailwindcss/oxide-wasm32-wasi/tslib": ["tslib@2.8.1", "", { "bundled": true }, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
 
     "@timonteutelink/skaff/typescript": ["typescript@5.9.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A=="],
-
-    "@timonteutelink/skaff-lib/@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.46", "", { "peerDependencies": { "handlebars": "^4.7.8", "zod": "^3.25.76" } }, "sha512-nNt1x7yeA0MP4XKmu+ICO2LZHn3t7ZgAlXHxi1GC2/flImQiCLqRqMB9v68TXmnZeFVR3I59k/HqRWRQ4kq6pw=="],
 
     "@timonteutelink/skaff-lib/fs-extra": ["fs-extra@11.3.1", "", { "dependencies": { "graceful-fs": "^4.2.0", "jsonfile": "^6.0.1", "universalify": "^2.0.0" } }, "sha512-eXvGGwZ5CL17ZSwHWd3bbgk7UUpF6IFHtP57NYYakPvHOs8GDgDe5KJI36jIJzDkJ6eJjuzRA8eBQb6SkKue0g=="],
 
