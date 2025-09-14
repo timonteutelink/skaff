@@ -21,6 +21,7 @@ export type {
   AiAutoGenerateSettings,
   AiUserConversationSettings,
   TemplateConfigModule,
+  TemplateMigration,
 } from "./template-config-types";
 
 export type {
