@@ -131,33 +131,10 @@ In addition to the CLI, skaff provides a Web UI. The Web interface makes it easy
 The recommended way to run the Web UI is via Docker. Pull the image and run it on port 3000:
 
 ```bash
-docker pull timonteutelink/skaff:latest
-docker run -p 3000:3000 \
-  -v ~/.config/skaff:/home/node/.config/skaff \
-  timonteutelink/skaff:latest
+docker run -p 3000:3000 -v ~/projects/templated:/projects --env PROJECT_SEARCH_PATHS=/projects ghcr.io/timonteutelink/skaff:latest
 ```
 
-Now open **http://localhost:3000** in your browser. The volume mount allows the UI to read your `templatePaths` and other settings.
-
-#### Customizing locations
-
-To override where templates and projects are stored, set the following environment variables:
-
-- **`TEMPLATE_DIR_PATHS`**: colon‑separated directories containing your template repositories.
-- **`PROJECT_SEARCH_PATHS`**: colon‑separated directories where generated projects will live.
-
-You can mount directories into the container and specify these variables:
-
-```bash
-docker run -p 3000:3000 \
-  -e TEMPLATE_DIR_PATHS=/templates:/extra-templates \
-  -e PROJECT_SEARCH_PATHS=/projects \
-  -v ~/templates:/templates \
-  -v ~/projects:/projects \
-  timonteutelink/skaff:latest
-```
-
-The `.env.template` file in this repository provides example values.
+Now open **http://localhost:3000** in your browser. The volume mount allows the UI to read your `~/projects/templated` directory.
 
 ### Running locally
 
