@@ -73,7 +73,7 @@ run-web:
 rw: run-web
 
 run-web-docker:
-	docker run -p 3000:3000 skaff-web:latest
+	docker run -p 3000:3000 -v ~/projects/templated:/projects --env PROJECT_SEARCH_PATHS=/projects ghcr.io/timonteutelink/skaff:latest
 	@echo "Ran web Docker image!"
 
 rwd: run-web-docker

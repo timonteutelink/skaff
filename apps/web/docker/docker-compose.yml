@@ -3,11 +3,11 @@ services:
     build:
       context: ../../..
       dockerfile: apps/web/docker/Dockerfile
-    # image: timonteutelink/skaff:latest
+    # image: ghcr.io/timonteutelink/skaff:latest
     ports:
       - "3000:3000"
     environment:
-      PROJECT_SEARCH_PATHS: /skaff/projects
+      PROJECT_SEARCH_PATHS: /projects
     volumes:
-      - ~/Projects/MrBlueStudios/templated:/skaff/projects
+      - ~/projects/templated:/projects
     # entrypoint: ["ls", "-la"]
