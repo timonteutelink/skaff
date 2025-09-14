@@ -81,9 +81,9 @@ function loadEnvSettings(): Partial<Settings> {
     const raw = process.env[def.key];
     if (raw !== undefined) {
       if (def.type === "string[]") {
-        (envSettings as any)[def.key] = parseList(raw);
+        envSettings[def.key] = parseList(raw);
       } else {
-        (envSettings as any)[def.key] = expandPath(raw);
+        envSettings[def.key] = expandPath(raw);
       }
     }
   }

@@ -2,7 +2,7 @@ import type { Config } from "jest";
 
 const config: Config = {
   testEnvironment: "node",
-  moduleFileExtensions: ["ts", "tsx"],
+  moduleFileExtensions: ["ts", "tsx", "js"],
   roots: ["<rootDir>/tests"],
   testMatch: ["**/?(*.)+(spec|test).[tj]s?(x)"],
 
