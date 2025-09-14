@@ -1,30 +1,51 @@
-FROM node:22-alpine AS builder
+FROM oven/bun:1 AS base
 
-RUN apk add --no-cache curl bash ca-certificates
+WORKDIR /app
 
-RUN curl -fsSL https://bun.sh/install | bash \
-    && mv /root/.bun/bin/bun /usr/local/bin/
+# Install dependencies with bun
+FROM base AS deps
+COPY package.json bun.lock* ./
+RUN mkdir -p apps/web apps/cli packages/typescript-config packages/eslint-config packages/tailwind-config
+COPY apps/web/package.json ./apps/web/package.json
+COPY apps/cli/package.json ./apps/cli/package.json
+COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
+COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
+COPY packages/tailwind-config/package.json ./packages/tailwind-config/package.json
+RUN bun install --no-save --frozen-lockfile
 
-WORKDIR /src
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY apps/web apps/web
+COPY packages/typescript-config ./packages/typescript-config
+COPY packages/eslint-config ./packages/eslint-config
+COPY packages/tailwind-config ./packages/tailwind-config
 
-COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile
-
-COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN cd apps/web && bun run build
 
-FROM nginx:1.25-alpine
+# Production image, copy all the files and run next
+FROM base AS runner
+WORKDIR /app
 
-WORKDIR /usr/share/nginx/html
-COPY apps/web/docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh \
-    && rm -rf ./*
+ENV NEXT_TELEMETRY_DISABLED=1
 
-COPY --from=builder /src/apps/web/out .
+ENV NODE_ENV=production \
+    PORT=3000 \
+    HOSTNAME="0.0.0.0"
 
-EXPOSE 80
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
 
-ENTRYPOINT [ "/entrypoint.sh" ]
-CMD [ "nginx", "-g", "daemon off;" ]
+COPY --from=builder /app/apps/web/public ./public
 
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+CMD ["bun", "./server.js"]
