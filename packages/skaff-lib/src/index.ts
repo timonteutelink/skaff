@@ -7,3 +7,4 @@ export { findTemplate, projectSearchPathKey } from "./utils/shared-utils";
 export { getCacheDirPath, getCacheDir, pathInCache, saveToCache } from "./services/cache-service";
 export { getRemoteCommitHash } from "./services/git-service";
 export type { CacheKey } from "./services/cache-service";
+export { llmProviderEnv } from "./config/ai-providers";
