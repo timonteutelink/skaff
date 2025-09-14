@@ -26,6 +26,7 @@ COPY packages/tailwind-config ./packages/tailwind-config
 RUN ln -s /app/node_modules apps/web/node_modules
 
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV SKAFF_CACHE_PATH=/app/.cache/skaff
 
 RUN cd apps/web && bun run build
 
@@ -36,20 +37,24 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1\
     NODE_ENV=production \
     PORT=3000 \
+    SKAFF_CACHE_PATH=/app/.cache/skaff \
     HOSTNAME="0.0.0.0"
 
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 
 RUN chown -R nextjs:nodejs /app
+RUN mkdir -p /app/.cache/skaff
 
 USER nextjs
 
+WORKDIR /app/apps/web
+
 EXPOSE 3000
 
-CMD ["bun", "./apps/web/server.js"]
+CMD ["bun", "./server.js"]

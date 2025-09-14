@@ -18,7 +18,7 @@ export function getHash(stringToHash: string): string {
 }
 
 export function getCacheDirPath(): string {
-  return path.join(tmpdir(), "skaff-cache");
+  return process.env.SKAFF_CACHE_PATH || path.join(tmpdir(), "skaff-cache");
 }
 
 export async function getCacheDir(): Promise<Result<string>> {
