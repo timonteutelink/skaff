@@ -5,6 +5,7 @@ import {
   getDefaultModelName,
   resolveLanguageModel,
   type ConversationStepData,
+  type Template,
 } from '@timonteutelink/skaff-lib';
 import {
   AiModel,
@@ -91,6 +92,98 @@ async function runCliConversation(
   return last?.content || '';
 }
 
+function assertAiAvailability(
+  hasAiGeneration: boolean,
+  connectedProviders: string[],
+): void {
+  if (hasAiGeneration && connectedProviders.length === 0) {
+    throw new Error(
+      'No AI providers configured. Please set an API key (e.g. OPENAI_API_KEY) before instantiating this template.',
+    );
+  }
+}
+
+async function selectModelsForCategories(
+  categories: Record<string, { description?: string }>,
+  connectedProviders: string[],
+): Promise<Record<string, AiModel>> {
+  const aiModels: Record<string, AiModel> = {};
+
+  for (const [key, category] of Object.entries(categories)) {
+    console.log(`\n🧠 Configure model for category "${key}"`);
+    if (category?.description) {
+      console.log(`ℹ️  ${category.description}`);
+    }
+
+    const provider = await select({
+      message: `LLM provider for "${key}":`,
+      choices: connectedProviders.map((p) => ({ name: p, value: p })),
+    });
+
+    const defaultName = getDefaultModelName(provider);
+    const name = await input({
+      message: `Model name for "${key}" (default ${defaultName}):`,
+      default: defaultName,
+    });
+
+    aiModels[key] = { provider, name };
+  }
+
+  return aiModels;
+}
+
+interface ConversationLoopOptions {
+  template: Template;
+  templateSettings: UserTemplateSettings;
+  connectedProviders: string[];
+  existingResults: AiResultsObject;
+  hasAiGeneration: boolean;
+}
+
+async function collectAiConversationResults({
+  template,
+  templateSettings,
+  connectedProviders,
+  existingResults,
+  hasAiGeneration,
+}: ConversationLoopOptions): Promise<AiResultsObject> {
+  if (!hasAiGeneration) {
+    return existingResults;
+  }
+
+  let aiResults = existingResults;
+
+  while (true) {
+    const progress = await advanceAiGeneration({
+      template,
+      templateSettings,
+      parentSettings: undefined,
+      projectRoot: process.cwd(),
+      existingResults: aiResults,
+    });
+
+    if ('error' in progress) {
+      throw new Error(progress.error);
+    }
+
+    aiResults = progress.data.aiResults;
+
+    if (!progress.data.nextConversation) {
+      return aiResults;
+    }
+
+    const reply = await runCliConversation(
+      progress.data.nextConversation,
+      connectedProviders,
+    );
+
+    aiResults = {
+      ...aiResults,
+      [progress.data.nextConversation.resultKey]: reply,
+    };
+  }
+}
+
 async function promptUserTemplateSettings(
   rootTemplateName: string,
   templateName: string,
@@ -115,66 +208,28 @@ async function promptUserTemplateSettings(
     ? subTpl.config.aiGeneration!.steps.length > 0
     : false;
 
-  if (hasAiGeneration && connectedProviders.length === 0) {
-    throw new Error(
-      'No AI providers configured. Please set an API key (e.g. OPENAI_API_KEY) before instantiating this template.',
-    );
-  }
+  assertAiAvailability(hasAiGeneration, connectedProviders);
 
-  const aiModels: Record<string, AiModel> = {};
-  for (const [key, cat] of Object.entries(categories)) {
-    console.log(`\n🧠 Configure model for category "${key}"`);
-    if ((cat as any)?.description) {
-      console.log(`ℹ️  ${(cat as any).description}`);
-    }
-    const provider = await select({
-      message: `LLM provider for "${key}":`,
-      choices: connectedProviders.map((p) => ({ name: p, value: p })),
-    });
-    const defaultName = getDefaultModelName(provider);
-    const name = await input({
-      message: `Model name for "${key}" (default ${defaultName}):`,
-      default: defaultName,
-    });
-    aiModels[key] = { provider, name };
-  }
+  const aiModels = await selectModelsForCategories(
+    categories,
+    connectedProviders,
+  );
 
-  if (Object.keys(aiModels).length) {
+  if (Object.keys(aiModels).length > 0) {
     (result as any).aiModels = aiModels;
   }
 
-  let aiResults: AiResultsObject = ((result as any).aiResults ?? {}) as AiResultsObject;
+  const existingResults = ((result as any).aiResults ?? {}) as AiResultsObject;
 
-  while (hasAiGeneration) {
-    const progress = await advanceAiGeneration({
-      template: subTpl,
-      templateSettings: { ...result, aiModels },
-      parentSettings: undefined,
-      projectRoot: process.cwd(),
-      existingResults: aiResults,
-    });
+  const aiResults = await collectAiConversationResults({
+    template: subTpl,
+    templateSettings: result as UserTemplateSettings,
+    connectedProviders,
+    existingResults,
+    hasAiGeneration,
+  });
 
-    if ('error' in progress) {
-      throw new Error(progress.error);
-    }
-
-    aiResults = progress.data.aiResults;
-
-    if (!progress.data.nextConversation) {
-      break;
-    }
-
-    const reply = await runCliConversation(
-      progress.data.nextConversation,
-      connectedProviders,
-    );
-    aiResults = {
-      ...aiResults,
-      [progress.data.nextConversation.resultKey]: reply,
-    };
-  }
-
-  if (Object.keys(aiResults).length) {
+  if (Object.keys(aiResults).length > 0) {
     (result as any).aiResults = aiResults;
   }
 

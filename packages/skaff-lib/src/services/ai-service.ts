@@ -12,6 +12,7 @@ import {
   AnyOrCallback,
   StringOrCallback,
   AiModel,
+  AiModelCategory,
   AiGenerationStep,
   AiAutoGenerationStep,
   AiConversationGenerationStep,
@@ -76,10 +77,19 @@ async function loadContext(paths: string[] = [], root: string): Promise<string[]
   return texts;
 }
 
-type EvaluationContext = Record<string, any>;
+type EvaluationContext = FinalTemplateSettings & { aiResults: AiResultsObject };
+type ModelAssignments = Record<string, AiModel>;
+type CategoryMap = Record<string, AiModelCategory | undefined>;
+type ContextSource = AnyOrCallback<EvaluationContext, string[]> | undefined;
 
-async function gatherContext(
-  contextSource: AnyOrCallback<any, string[]> | undefined,
+interface GenerationState {
+  aiResults: AiResultsObject;
+  evaluationContext: EvaluationContext;
+  finishedSteps: Set<string>;
+}
+
+async function resolveStepContext(
+  contextSource: ContextSource,
   evaluationContext: EvaluationContext,
   parentPaths: string[],
   projectRoot: string,
@@ -89,10 +99,7 @@ async function gatherContext(
     return { data: context };
   }
 
-  const ctxRes = anyOrCallbackToAny(
-    contextSource as AnyOrCallback<any, string[]>,
-    evaluationContext,
-  );
+  const ctxRes = anyOrCallbackToAny(contextSource, evaluationContext);
   if ("error" in ctxRes) {
     return ctxRes;
   }
@@ -106,12 +113,56 @@ function getCategoryLabel(step: { modelKey?: string }): string {
   return step.modelKey || "default";
 }
 
+function getCategoryDescription(
+  modelKey: string | undefined,
+  categories: CategoryMap,
+): string | undefined {
+  return modelKey ? categories[modelKey]?.description : undefined;
+}
+
+function createEvaluationContext(
+  templateSettings: UserTemplateSettings,
+  parentSettings: FinalTemplateSettings | undefined,
+  aiResults: AiResultsObject,
+): EvaluationContext {
+  return {
+    ...(parentSettings || {}),
+    ...(templateSettings || {}),
+    aiResults,
+  } as EvaluationContext;
+}
+
+function resolvePreferredModel(
+  step: { modelKey?: string },
+  modelAssignments: ModelAssignments,
+): Result<AiModel | undefined> {
+  let assignedModel = step.modelKey ? modelAssignments[step.modelKey] : undefined;
+  if (step.modelKey && !assignedModel) {
+    return { error: `Missing AI model assignment for "${step.modelKey}".` };
+  }
+
+  if (assignedModel) {
+    assignedModel = withDefaultModelName(assignedModel);
+  }
+
+  return { data: assignedModel ?? resolveModelChoice(undefined) };
+}
+
+function missingProviderError(
+  step: { resultKey: string; modelKey?: string },
+  kind: "auto" | "conversation",
+): string {
+  const category = getCategoryLabel(step);
+  const stepLabel = kind === "auto" ? "auto generation" : "conversation";
+  return `No connected AI provider available for ${stepLabel} step "${step.resultKey}". Please connect an AI provider for the "${category}" model category.`;
+}
+
 function resolveConversationMessages(
   step: AiConversationGenerationStep<any>,
   evaluationContext: EvaluationContext,
 ): Result<AiMessage[]> {
   const msgRes = anyOrCallbackToAny(
-    step.messages as AnyOrCallback<any, AiMessage[]>,
+    step.messages as AnyOrCallback<EvaluationContext, AiMessage[]>,
     evaluationContext,
   );
   if ("error" in msgRes) {
@@ -124,19 +175,15 @@ function resolveConversationMessages(
 async function resolveAutoAgent(
   template: Template,
   step: AiAutoGenerationStep<any>,
-  modelAssignments: Record<string, AiModel>,
+  modelAssignments: ModelAssignments,
   evaluationContext: EvaluationContext,
 ): Promise<Result<{ agent: AiAutoAgent; model?: AiModel }>> {
-  let assignedModel = step.modelKey ? modelAssignments[step.modelKey] : undefined;
-  if (step.modelKey && !assignedModel) {
-    return { error: `Missing AI model assignment for "${step.modelKey}".` };
+  const modelRes = resolvePreferredModel(step, modelAssignments);
+  if ("error" in modelRes) {
+    return modelRes;
   }
 
-  if (assignedModel) {
-    assignedModel = withDefaultModelName(assignedModel);
-  }
-
-  const preferredModel = assignedModel ?? resolveModelChoice(undefined);
+  const preferredModel = modelRes.data;
 
   if (template.config.buildAutoAgent) {
     const agent = await template.config.buildAutoAgent(
@@ -149,9 +196,7 @@ async function resolveAutoAgent(
 
   const resolved = resolveLanguageModel(preferredModel);
   if (!resolved) {
-    return {
-      error: `No connected AI provider available for auto generation step "${step.resultKey}". Please connect an AI provider for the "${getCategoryLabel(step)}" model category.`,
-    };
+    return { error: missingProviderError(step, "auto") };
   }
 
   return {
@@ -165,19 +210,15 @@ async function resolveAutoAgent(
 async function resolveConversationAgent(
   template: Template,
   step: AiConversationGenerationStep<any>,
-  modelAssignments: Record<string, AiModel>,
+  modelAssignments: ModelAssignments,
   evaluationContext: EvaluationContext,
 ): Promise<Result<{ agent: AiConversationAgent; model?: AiModel }>> {
-  let assignedModel = step.modelKey ? modelAssignments[step.modelKey] : undefined;
-  if (step.modelKey && !assignedModel) {
-    return { error: `Missing AI model assignment for "${step.modelKey}".` };
+  const modelRes = resolvePreferredModel(step, modelAssignments);
+  if ("error" in modelRes) {
+    return modelRes;
   }
 
-  if (assignedModel) {
-    assignedModel = withDefaultModelName(assignedModel);
-  }
-
-  const preferredModel = assignedModel ?? resolveModelChoice(undefined);
+  const preferredModel = modelRes.data;
 
   if (template.config.buildConversationAgent) {
     const agent = await template.config.buildConversationAgent(
@@ -190,9 +231,7 @@ async function resolveConversationAgent(
 
   const resolved = resolveLanguageModel(preferredModel);
   if (!resolved) {
-    return {
-      error: `No connected AI provider available for conversation step "${step.resultKey}". Please connect an AI provider for the "${getCategoryLabel(step)}" model category.`,
-    };
+    return { error: missingProviderError(step, "conversation") };
   }
 
   return {
@@ -210,6 +249,58 @@ export interface ConversationStepData {
   context: string[];
   messages: AiMessage[];
   categoryDescription?: string;
+}
+
+function buildConversationPrompt(
+  step: AiConversationGenerationStep<any>,
+  model: AiModel | undefined,
+  context: string[],
+  messages: AiMessage[],
+  categoryDescription?: string,
+): ConversationStepData {
+  return {
+    resultKey: step.resultKey,
+    modelKey: step.modelKey,
+    model,
+    context,
+    messages,
+    categoryDescription,
+  };
+}
+
+async function runInteractiveConversation(
+  agent: AiConversationAgent,
+  context: string[],
+  initialMessages: AiMessage[],
+): Promise<string> {
+  const conversation = [...initialMessages];
+
+  if (
+    conversation.length === 0 ||
+    conversation[conversation.length - 1]?.role !== "user"
+  ) {
+    const userStart = await input({ message: "You:" });
+    conversation.push({ role: "user", content: userStart });
+  }
+
+  while (true) {
+    const reply = await agent.run(conversation, context);
+    console.log(reply);
+    conversation.push({ role: "assistant", content: reply });
+    const cont = await confirm({
+      message: "Continue conversation?",
+      default: false,
+    });
+    if (!cont) break;
+    const userMsg = await input({ message: "You:" });
+    conversation.push({ role: "user", content: userMsg });
+  }
+
+  const lastAssistant = conversation
+    .filter((message) => message.role === "assistant")
+    .slice(-1)[0];
+
+  return lastAssistant?.content || "";
 }
 
 type ConversationHandler = (args: {
@@ -237,10 +328,91 @@ interface ExecuteResult {
   completed: boolean;
 }
 
+interface ProcessGenerationStepArgs {
+  template: Template;
+  step: AiGenerationStep<any>;
+  modelAssignments: ModelAssignments;
+  parentPaths: string[];
+  projectRoot: string;
+  evaluationContext: EvaluationContext;
+  aiResults: AiResultsObject;
+  stopOnConversation: boolean;
+  categoryDescription?: string;
+  onConversationStep?: ConversationHandler;
+}
+
+type StepOutcome =
+  | { status: "complete"; value: string }
+  | { status: "awaiting-conversation"; prompt: ConversationStepData };
+
+async function processGenerationStep(
+  args: ProcessGenerationStepArgs,
+): Promise<Result<StepOutcome>> {
+  const {
+    template,
+    step,
+    modelAssignments,
+    parentPaths,
+    projectRoot,
+    evaluationContext,
+    aiResults,
+    stopOnConversation,
+    categoryDescription,
+    onConversationStep,
+  } = args;
+
+  if (step.type === "auto") {
+    const autoStep = step as AiAutoGenerationStep<any>;
+    const res = await executeAutoStep(
+      template,
+      autoStep,
+      modelAssignments,
+      parentPaths,
+      projectRoot,
+      evaluationContext,
+    );
+
+    if ("error" in res) {
+      return res;
+    }
+
+    return { data: { status: "complete", value: res.data } };
+  }
+
+  const conversationStep = step as AiConversationGenerationStep<any>;
+  const convRes = await executeConversationStep(
+    template,
+    conversationStep,
+    modelAssignments,
+    parentPaths,
+    projectRoot,
+    evaluationContext,
+    aiResults,
+    stopOnConversation,
+    categoryDescription,
+    onConversationStep,
+  );
+
+  if ("error" in convRes) {
+    return convRes;
+  }
+
+  if (!convRes.data.handled) {
+    return {
+      data: {
+        status: "awaiting-conversation",
+        prompt: convRes.data.prompt,
+      },
+    };
+  }
+
+  return { data: { status: "complete", value: convRes.data.text } };
+}
+
 async function executeAutoStep(
   template: Template,
   step: AiAutoGenerationStep<any>,
-  modelAssignments: Record<string, AiModel>,
+  modelAssignments: ModelAssignments,
   parentPaths: string[],
   projectRoot: string,
   evaluationContext: EvaluationContext,
@@ -255,8 +427,8 @@ async function executeAutoStep(
     return agentRes;
   }
 
-  const contextRes = await gatherContext(
-    step.contextPaths as AnyOrCallback<any, string[]> | undefined,
+  const contextRes = await resolveStepContext(
+    step.contextPaths as ContextSource,
     evaluationContext,
     parentPaths,
     projectRoot,
@@ -274,7 +446,7 @@ async function executeAutoStep(
   }
 
   const promptRes = stringOrCallbackToString(
-    step.prompt as StringOrCallback<any>,
+    step.prompt as StringOrCallback<EvaluationContext>,
     evaluationContext,
   );
   if ("error" in promptRes) {
@@ -288,7 +460,7 @@ async function executeAutoStep(
 async function executeConversationStep(
   template: Template,
   step: AiConversationGenerationStep<any>,
-  modelAssignments: Record<string, AiModel>,
+  modelAssignments: ModelAssignments,
   parentPaths: string[],
   projectRoot: string,
   evaluationContext: EvaluationContext,
@@ -312,8 +484,8 @@ async function executeConversationStep(
     return agentRes;
   }
 
-  const contextRes = await gatherContext(
-    step.contextPaths as AnyOrCallback<any, string[]> | undefined,
+  const contextRes = await resolveStepContext(
+    step.contextPaths as ContextSource,
     evaluationContext,
     parentPaths,
     projectRoot,
@@ -342,14 +514,13 @@ async function executeConversationStep(
     return {
       data: {
         handled: false,
-        prompt: {
-          resultKey: step.resultKey,
-          modelKey: step.modelKey,
+        prompt: buildConversationPrompt(
+          step,
           model,
           context,
           messages,
           categoryDescription,
-        },
+        ),
       },
     };
   }
@@ -366,33 +537,9 @@ async function executeConversationStep(
     return { data: { handled: true, text } };
   }
 
-  let conversation = [...messages];
-  if (
-    conversation.length === 0 ||
-    conversation[conversation.length - 1]?.role !== "user"
-  ) {
-    const userStart = await input({ message: "You:" });
-    conversation.push({ role: "user", content: userStart });
-  }
+  const text = await runInteractiveConversation(agent, context, messages);
 
-  while (true) {
-    const reply = await agent.run(conversation, context);
-    console.log(reply);
-    conversation.push({ role: "assistant", content: reply });
-    const cont = await confirm({
-      message: "Continue conversation?",
-      default: false,
-    });
-    if (!cont) break;
-    const userMsg = await input({ message: "You:" });
-    conversation.push({ role: "user", content: userMsg });
-  }
-
-  const last = conversation
-    .filter((m) => m.role === "assistant")
-    .slice(-1)[0];
-
-  return { data: { handled: true, text: last?.content || "" } };
+  return { data: { handled: true, text } };
 }
 
 function findNextRunnableStep(
@@ -424,82 +571,76 @@ async function executeSteps(options: ExecuteOptions): Promise<Result<ExecuteResu
     return { data: { aiResults, completed: true } };
   }
 
-  const modelAssignments = (templateSettings as any).aiModels || {};
-  const categories = (template.config as any).aiModelCategories || {};
-  const evaluationBase = {
-    ...(parentSettings || {}),
-    ...(templateSettings || {}),
-  } as any;
-  const evaluationContext: EvaluationContext = { ...evaluationBase, aiResults };
-
-  const parentCtx = anyOrCallbackToAny(
-    template.config.parentContextPaths as AnyOrCallback<any, string[]>,
-    evaluationContext,
+  const modelAssignments: ModelAssignments = (
+    (templateSettings as any).aiModels || {}
+  ) as ModelAssignments;
+  const categories: CategoryMap = template.config.aiModelCategories ?? {};
+  const evaluationContext = createEvaluationContext(
+    templateSettings,
+    parentSettings,
+    aiResults,
   );
-  const parentPaths = "error" in parentCtx ? [] : parentCtx.data || [];
 
-  const finished = new Set<string>(Object.keys(aiResults));
+  const parentContextSource =
+    template.config.parentContextPaths as
+      | AnyOrCallback<EvaluationContext, string[]>
+      | undefined;
+  const parentPaths = parentContextSource
+    ? (() => {
+        const res = anyOrCallbackToAny(parentContextSource, evaluationContext);
+        return "error" in res ? [] : res.data || [];
+      })()
+    : [];
 
-  while (finished.size < generation.steps.length) {
-    const next = findNextRunnableStep(generation.steps, finished);
+  const state: GenerationState = {
+    aiResults,
+    evaluationContext,
+    finishedSteps: new Set<string>(Object.keys(aiResults)),
+  };
+
+  while (state.finishedSteps.size < generation.steps.length) {
+    const next = findNextRunnableStep(generation.steps, state.finishedSteps);
     if (!next) {
       return { error: "Circular ai generation dependencies" };
     }
 
-    if (aiResults[next.resultKey] !== undefined) {
-      finished.add(next.resultKey);
+    if (state.aiResults[next.resultKey] !== undefined) {
+      state.finishedSteps.add(next.resultKey);
       continue;
     }
 
-    if (next.type === "auto") {
-      const res = await executeAutoStep(
-        template,
-        next,
-        modelAssignments,
-        parentPaths,
-        projectRoot,
-        evaluationContext,
-      );
-      if ("error" in res) {
-        return res;
-      }
-      aiResults[next.resultKey] = res.data;
-      finished.add(next.resultKey);
-      continue;
+    const outcome = await processGenerationStep({
+      template,
+      step: next,
+      modelAssignments,
+      parentPaths,
+      projectRoot,
+      evaluationContext: state.evaluationContext,
+      aiResults: state.aiResults,
+      stopOnConversation,
+      categoryDescription: getCategoryDescription(next.modelKey, categories),
+      onConversationStep,
+    });
+
+    if ("error" in outcome) {
+      return outcome;
     }
 
-      const convRes = await executeConversationStep(
-        template,
-        next,
-        modelAssignments,
-        parentPaths,
-        projectRoot,
-        evaluationContext,
-        aiResults,
-        stopOnConversation,
-        categories[next.modelKey as string]?.description,
-        onConversationStep,
-      );
-
-    if ("error" in convRes) {
-      return convRes;
-    }
-
-    if (!convRes.data.handled) {
+    if (outcome.data.status === "awaiting-conversation") {
       return {
         data: {
-          aiResults,
-          nextConversation: convRes.data.prompt,
+          aiResults: state.aiResults,
+          nextConversation: outcome.data.prompt,
           completed: false,
         },
       };
     }
 
-    aiResults[next.resultKey] = convRes.data.text;
-    finished.add(next.resultKey);
+    state.aiResults[next.resultKey] = outcome.data.value;
+    state.finishedSteps.add(next.resultKey);
   }
 
-  return { data: { aiResults, completed: true } };
+  return { data: { aiResults: state.aiResults, completed: true } };
 }
 
 export interface AdvanceAiGenerationArgs {
