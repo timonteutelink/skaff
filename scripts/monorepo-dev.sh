@@ -4,6 +4,8 @@ cd "$(dirname "$0")/.." || exit 1
 
 set -e
 
+# TODO: read version numbers from package.json
+
 PATCH_CONTENT='
 diff --git a/apps/cli/package.json b/apps/cli/package.json
 index 514abfd..c203aaa 100644
