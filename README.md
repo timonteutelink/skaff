@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/skafflogo.png" alt="Skaff logo" width="220" height ="140">
+  <img src="assets/logo.svg" alt="Skaff logo" width="220" height ="140">
 </p>
 
 #

@@ -4,7 +4,7 @@ module.exports = {
   tagline: 'Generate, scaffold & ship code faster',
   url: 'https://timonteutelink.github.io',
   baseUrl: '/skaff/',
-  favicon: 'img/skafflogo.png',
+  favicon: 'img/favicon.svg',
   organizationName: 'timonteutelink',
   projectName: 'timonteutelink.github.io',
   organizationName: 'timonteutelink',
@@ -100,7 +100,7 @@ module.exports = {
 
   themeConfig: {
     navbar: {
-      logo: { src: 'img/skafflogo.png', alt: 'logo' },
+      logo: { src: 'img/logo.svg', alt: 'logo' },
       items: [
         { to: '/docs', label: 'Docs', position: 'left' },
         { to: '/skaff-lib', label: 'Lib Reference', position: 'left' },
