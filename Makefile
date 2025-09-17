@@ -73,7 +73,7 @@ run-web:
 rw: run-web
 
 run-web-docker:
-	docker run -p 3000:3000 -v ~/Projects/templated:/projects timonteutelink/skaff:latest
+	docker run -p 3000:3000 -v ~/projects/templated:/projects timonteutelink/skaff:latest
 	@echo "Ran web Docker image!"
 
 rwd: run-web-docker
