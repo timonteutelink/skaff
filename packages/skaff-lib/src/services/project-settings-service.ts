@@ -35,7 +35,7 @@ export async function writeNewProjectSettings(
   );
 }
 
-async function writeProjectSettings(
+export async function writeProjectSettings(
   absoluteProjectPath: string,
   projectSettings: ProjectSettings,
   overwrite?: boolean,
@@ -104,6 +104,39 @@ export async function writeNewTemplateToSettings(
   }
 
   return { data: undefined };
+}
+
+export async function removeTemplateFromSettings(
+  absoluteProjectPath: string,
+  templateInstanceId: string,
+): Promise<Result<void>> {
+  const projectSettingsPath = path.join(
+    absoluteProjectPath,
+    "templateSettings.json",
+  );
+
+  const projectSettingsResult = await loadProjectSettings(projectSettingsPath);
+
+  if ("error" in projectSettingsResult) {
+    return projectSettingsResult;
+  }
+
+  const projectSettings = projectSettingsResult.data.settings;
+  const filteredTemplates = projectSettings.instantiatedTemplates.filter(
+    (template) => template.id !== templateInstanceId,
+  );
+
+  if (filteredTemplates.length === projectSettings.instantiatedTemplates.length) {
+    return { data: undefined };
+  }
+
+  projectSettings.instantiatedTemplates = filteredTemplates;
+
+  return writeProjectSettings(
+    absoluteProjectPath,
+    projectSettings,
+    true,
+  );
 }
 
 interface LoadedProjectSettingsResult {
