@@ -1,5 +1,6 @@
 module.exports = {
   docs: [
+    'index',
     'introduction',
     {
       type: 'category',
