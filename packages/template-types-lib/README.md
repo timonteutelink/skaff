@@ -1,10 +1,44 @@
-Template-level configuration (for instantiating a new project) like a new deno project or a new rust project.
-If very framework-specific like spring boot or a nextjs turborepo we can have instead of a project type with the language template we have a specific template for project type and project feature 1 to 1 for example spring boot template and spring boot project type.
+# template-types-lib
 
-Project Type configuration (for framework-specific code) like fastapi, django, springboot, etc.
+This package provides the shared TypeScript types and Zod schemas used when authoring `templateConfig.ts` files, including `TemplateConfigModule`, project settings helpers, and other utilities template authors rely on.
 
-Project Feature configuration (for optional project features) like database, auth, etc. like alembic/sqlalchemy for a fastapi project
+## Key Exports
 
-Feature configuration (for optional features specific to the corresponding project feature) for example, a new entity for an alembic/sqlalchemy project feature (incorporate AI)
+- **`TemplateConfig`** – Strongly typed metadata describing a template (name, author, spec version, etc.).
+- **`TemplateConfigModule`** – The contract every `templateConfig.ts` module implements to expose settings schemas, helpers, and lifecycle hooks.
+- **`projectSettingsSchema`** – Zod schema (with matching `ProjectSettings` type) for validating the generated project's global metadata and instantiated templates.
 
-File-level configuration (for individual file templating) like a react component, a python class, etc. (incorporate AI)
+## Usage
+
+```ts
+import { z } from "zod";
+import type {
+  TemplateConfig,
+  TemplateConfigModule,
+  FinalTemplateSettings,
+} from "@timonteutelink/template-types-lib";
+
+const templateSettingsSchema = z.object({
+  greeting: z.string().default("hello"),
+});
+
+const templateConfig: TemplateConfig = {
+  name: "hello-world",
+  author: "Example Templates",
+  specVersion: "1.0.0",
+};
+
+const templateModule: TemplateConfigModule<
+  FinalTemplateSettings,
+  typeof templateSettingsSchema
+> = {
+  templateConfig,
+  templateSettingsSchema,
+  templateFinalSettingsSchema: templateSettingsSchema,
+  mapFinalSettings: ({ templateSettings }) => templateSettings,
+};
+
+export default templateModule;
+```
+
+For a deeper dive into advanced configuration patterns, AI helpers, and subtemplates, see the [Template Authoring Guide](../docs/src/docs/guides/template-authoring.mdx) in `packages/docs`.
