@@ -1,72 +1,139 @@
 ---
 title: Code Templator
+description: Generate new projects and keep them in sync across repos with Skaff's Code Templator.
+keywords:
+  - skaff
+  - code templator
+  - project templates
+  - scaffolding
+  - developer productivity
+image: /img/skafflogo.png
+hide_table_of_contents: true
 ---
 
-Welcome to **Code Templator**! This section provides a high-level overview of what Code Templator is and why it’s a game-changer for project scaffolding and boilerplate maintenance.
+import Link from '@docusaurus/Link';
+import CodeBlock from '@theme/CodeBlock';
 
-## What is Code Templator?
+<header className="hero hero--primary">
+  <div className="container">
+    <h1 className="hero__title">Code Templator</h1>
+    <p className="hero__subtitle">Generate new projects and keep them in sync across repos.</p>
+    <div className="margin-top--md">
+      <Link className="button button--lg button--secondary" to="/docs">Quick Start guide</Link>
+    </div>
+  </div>
+</header>
 
-Code Templator is a **universal project templating engine** – a tool to generate new projects or inject code into existing ones using configurable templates. It helps software teams enforce best practices by starting every project with a standard setup, and (crucially) it keeps those projects up-to-date as the standards evolve.
+<section className="container margin-vert--xl">
+  <div className="row">
+    <div className="col">
+      <h2>Launch in 30 seconds</h2>
+      <p>
+        Run the CLI with <code>npx</code>, pick a template, and ship your first project. Detailed install options live in the{' '}
+        <Link to="/docs">Getting Started guide</Link>.
+      </p>
+      <CodeBlock language="bash">{`npx @timonteutelink/skaff-cli template default
+npx @timonteutelink/skaff-cli project new my-app next-api
+cd my-app
+git status`}</CodeBlock>
+    </div>
+  </div>
+</section>
 
-At its core, Code Templator takes a template (a set of files with placeholders plus a schema of user options), renders it with your inputs, and produces a working project or code diff. It leverages **git** under the hood to apply changes, allowing for continuous updates and safe merging of template changes into your code.
+<section className="container margin-vert--xl">
+  <h2>Choose your path</h2>
+  <div className="row">
+    <div className="col col--4 margin-vert--md">
+      <div className="card shadow--md h-100">
+        <div className="card__header">
+          <h3>Use Code Templator</h3>
+        </div>
+        <div className="card__body">
+          <p>Generate, preview, and sync templates via the CLI or browser UI.</p>
+          <ul className="margin-bottom--md">
+            <li><Link to="/docs">CLI Quick Start</Link></li>
+            <li><Link to="/docs/web-interface">Launch the Web UI</Link></li>
+          </ul>
+        </div>
+        <div className="card__footer">
+          <Link className="button button--sm button--primary" to="/cli">
+            Browse CLI commands
+          </Link>
+        </div>
+      </div>
+    </div>
+    <div className="col col--4 margin-vert--md">
+      <div className="card shadow--md h-100">
+        <div className="card__header">
+          <h3>Author templates</h3>
+        </div>
+        <div className="card__body">
+          <p>Codify your standards with reusable templates and optional subtemplates.</p>
+        </div>
+        <div className="card__footer">
+          <Link className="button button--sm button--primary" to="/docs/template-authoring">
+            Read the authoring guide
+          </Link>
+        </div>
+      </div>
+    </div>
+    <div className="col col--4 margin-vert--md">
+      <div className="card shadow--md h-100">
+        <div className="card__header">
+          <h3>Integrate the library</h3>
+        </div>
+        <div className="card__body">
+          <p>Embed templating logic into your own automation with the TypeScript SDK.</p>
+        </div>
+        <div className="card__footer">
+          <Link className="button button--sm button--primary" to="/skaff-lib">
+            Explore the API reference
+          </Link>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-**Key capabilities:**
+<section className="container margin-vert--xl">
+  <div className="row">
+    <div className="col col--6">
+      <h2>Why teams pick Code Templator</h2>
+      <ul>
+        <li><strong>Consistent from day one.</strong> Every repo starts from the same proven baseline.</li>
+        <li><strong>Updates stay manageable.</strong> Reapply templates as standards evolve and merge the diff.</li>
+        <li><strong>Flexible delivery.</strong> Use the CLI, Web UI, or core library—whatever fits your workflow.</li>
+      </ul>
+    </div>
+    <div className="col col--6">
+      <h2>How it works</h2>
+      <ul>
+        <li>Connect template repositories (local paths or git remotes) and load their schema.</li>
+        <li>Render templates with your answers to produce ready-to-run files or diffs.</li>
+        <li>Apply updates through git patches so your own edits stay under your control.</li>
+      </ul>
+      <p className="margin-top--sm">
+        Want the full walkthrough? Dive into the{' '}
+        <Link to="/docs">Getting Started deep dive</Link>.
+      </p>
+    </div>
+  </div>
+</section>
 
-* **Project Scaffolding:** Rapidly bootstrap new applications, services, libraries, configs, etc., from predefined templates. No more copy-paste from the “last similar project” – get a clean, ready-to-run codebase in one command.
-* **Consistent Structure:** Templates encapsulate your conventions for project layout, scripts, CI/CD, dependencies, and more. Every project generated follows the same structure and standards, which makes cross-team code easier to understand and maintain.
-* **Continuous Sync:** Unlike traditional generators, Code Templator isn’t “one-and-done.” You can reapply the template to an already modified project to bring in updates. For example, if your company’s base template adds a new lint rule or upgrades a build tool, you can propagate those changes to existing projects with minimal effort.
-* **Modular Templates:** Through subtemplates, you can mix and match features. Templates can be parameterized not just with values (like project name), but also with optional components. This modularity means one template can cover many variations of a project. (E.g., one web app template could include optional subtemplates for adding Docker support, adding an auth module, switching between database options, etc.)
-* **Multi-Interface:** Whether you prefer CLI automation, a point-and-click UI, or integrating into scripts, Code Templator has you covered. The CLI is perfect for quick generation and CI usage, the Web UI offers a friendly form-based approach with live diff previews, and the core JS library lets you programmatically generate or diff templates in your own tools.
-
-## Why Use Code Templator?
-
-**1. Save time on setup.** Set up new projects in seconds, not hours. Developers can focus on writing unique application logic instead of fiddling with boilerplate and config. This is especially helpful in a microservices environment or any scenario where you spin up projects frequently.
-
-**2. Enforce best practices.** Templates codify what a “good” project looks like for your team. Things like coding style, folder layout, testing frameworks, CI pipelines, security checks – all can be baked into the template. New projects won’t skip these important steps because they come out-of-the-box.
-
-**3. Stay up-to-date easily.** When best practices change, Code Templator makes it easy to push those changes out. Traditional generated projects tend to **diverge** over time – each one becomes a snowflake. With Code Templator, you can keep them in sync by reapplying template diffs. It’s like having an **upgrade path** for your boilerplate.
-
-**4. Flexibility through composition.** You’re not locked into one static scaffold. Because templates are composable (with subtemplates and conditional logic), one generator can serve many needs. You can maintain fewer templates that cover more variants, rather than many slightly-different cookiecutters.
-
-**5. No runtime dependency or lock-in.** Code Templator does its job at generation/update time and then gets out of the way. The generated code has no special runtime requirements – it’s just normal files. You can stop using Code Templator at any point, and your project remains perfectly usable. (Of course, to continue benefiting from template updates you’d keep it around, but there’s no hard lock-in.)
-
-## How Does It Work?
-
-In brief, Code Templator treats templates like **mini Git repositories** of their own, and your project as a Git repo to patch. Here’s the typical workflow under the hood:
-
-1. **Template Loading:** Templates are stored in one or more Git repositories that you configure (for example, a central “templates repo” within your org, or just on your local disk). Code Templator loads the template’s files and its `templateConfig` (which defines the schema and behavior). Templates can also declare nested templates within their folder structure.
-2. **Project Generation:** When you generate a project, the tool creates a fresh directory and initializes it as a Git repo. It then renders the template files with your input. The rendering uses [Handlebars](https://handlebarsjs.com/) for templating, so in the files you’ll see placeholders like `{{projectName}}` or simple logic helpers. The result of the render is a set of real files (e.g., actual `package.json`, `README.md`, source code files, etc.). These are written into the new project directory. A `templateSettings.json` file is also created to record exactly which template (and which subtemplates) were applied and what inputs were given. Finally, all files are committed to git in the new repo’s initial commit.
-3. **Applying Updates (Diffing):** For an existing project that was generated with Code Templator, the magic lies in that recorded template state. If you run an update, Code Templator will:
-
-   * Load the template at the new version (since templates themselves are version-controlled, e.g., a specific git commit or latest main).
-   * Re-render the template with *the same inputs* you originally gave (from the saved `templateSettings.json`).
-   * Compare the re-rendered template against your current project files using a git diff. This diff essentially represents “what would change if we applied the new template version to your project.”
-   * Apply that diff as a patch to your project’s repository. Any new files, removed files, or content changes will appear as changes in your working copy. You can review these changes (just like a normal code review), test them, and then commit them. In case of conflicts (e.g., you modified a part of the code that the template also updated), git will mark conflicts for you to resolve manually. This way, you’re always in control of the merge process.
-4. **Adding/Removing Subtemplates:** This works similarly to an update. When you choose to add a subtemplate, Code Templator generates that subtemplate’s files (and any modifications it entails to existing files) in isolation, then produces a git patch and applies it to your repo. Removing is the inverse: the tool knows which files a subtemplate added and can generate a “removal patch”. The `templateSettings.json` is updated accordingly to reflect added or removed components.
-
-Throughout this process, **your edits are respected.** Because everything happens via git, any manual changes you made to your project remain intact unless a template change specifically touches the same lines – and even then, you get to merge conflicts by hand. There is no black-box overwrite.
-
-## Components of the System
-
-Code Templator is divided into a few pieces (all in this monorepo):
-
-* **CLI (`apps/cli`):** A command-line interface built with [oclif](https://oclif.io/). It provides commands to create projects, manage templates, apply diffs, etc. This is the primary way to use Code Templator in automation or for those who prefer terminals. (See **Using the CLI** in this documentation for common commands.)
-* **Web UI (`apps/web`):** A Next.js web application that provides an interactive experience. It’s mainly intended to run locally (or internally) – think of it as a UI client to the templating engine. You can browse available templates, fill out forms for the template inputs (with live validation thanks to Zod schemas), and preview the changes (diff) before applying them to your project. It’s great for newcomers who want guidance, or for visualizing what a template will do.
-* **Core Library (`packages/skaff-lib`):** A TypeScript library (published to npm as **`@timonteutelink/skaff-lib`**) that contains all the core logic: loading templates, diffing, applying patches, etc. Both the CLI and Web UI use this under the hood. You can also use it directly in your own Node.js scripts or CLI tools if you want to integrate templating into other workflows (for example, trigger template generation as part of a larger automation).
-* **Template Types Library (`packages/template-types-lib`):** This is a small library (published as **`@timonteutelink/template-types-lib`**) that provides TypeScript types and helper definitions for writing templates. It includes the definitions for things like `TemplateConfigModule` (the shape of a template’s config), various helper types for subtemplate definitions, and schema validators for the template settings file. Template authors will interact with this library when coding their `templateConfig.ts`.
-* **Docs (`packages/docs`):** The documentation site you’re reading is built with Docusaurus and lives here as well, so it stays up-to-date with the code.
-
-All these pieces versioned together ensure compatibility – for example, a CLI version will always be compatible with the corresponding library version.
-
-## Next Steps
-
-Now that you know what Code Templator is about, here are some good places to continue:
-
-* **Getting Started** – Jump in and create your first project using the CLI (or run the web UI). This guide will walk you through installation and basic usage.
-* **Using the Web Interface** – Learn how to launch and use the browser-based UI for Code Templator, which can make template exploration and selection easier.
-* **Template Authoring Guide** – If you want to create your own templates (which is one of the biggest benefits of Code Templator!), this guide explains how to structure templates, write the config, and leverage advanced features like subtemplates and side effects.
-* **CLI Command Reference** – A comprehensive list of CLI commands and options, for when you need details on specific operations (like updating projects, or listing available templates).
-* **Examples & Use Cases** – See real-world examples of what you can do with Code Templator. This section showcases example templates and ideas to inspire your own.
-
-Happy templating! 🎉
-
+<section className="container margin-vert--xl">
+  <h2>What&rsquo;s next &amp; support</h2>
+  <div className="row">
+    <div className="col col--6">
+      <ul>
+        <li><Link to="/docs/examples-usecases">See real-world templates in Examples &amp; Use Cases</Link></li>
+        <li><Link to="/docs/faq">Find quick answers in the FAQ</Link></li>
+      </ul>
+    </div>
+    <div className="col col--6">
+      <ul>
+        <li><a href="https://github.com/timonteutelink/skaff">Visit the project on GitHub</a></li>
+        <li><a href="https://github.com/timonteutelink/skaff/issues/new/choose">Report an issue or request a feature</a></li>
+      </ul>
+    </div>
+  </div>
+</section>

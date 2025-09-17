@@ -1,0 +1,19 @@
+---
+title: FAQ
+---
+
+## Do I need to install the CLI globally?
+
+No. Run commands with <code>npx @timonteutelink/skaff-cli</code> or <code>bunx @timonteutelink/skaff</code> whenever you need them. The Getting Started guide covers optional global, binary, and Nix installs if your team prefers them.
+
+## How do templates stay in sync after I customize a project?
+
+Each generated project stores its template metadata in <code>templateSettings.json</code>. When you reapply a template, Skaff renders it with the same inputs and delivers the changes as a git patch so you can review and merge without losing local edits.
+
+## Can I automate Skaff inside other tooling?
+
+Yes. Import <code>@timonteutelink/skaff-lib</code> in Node.js or Bun scripts to load templates, render projects, and apply diffs programmatically. The <a href="/skaff-lib">API reference</a> documents every entry point.
+
+## Where can I get help or share feedback?
+
+File an issue on <a href="https://github.com/timonteutelink/skaff/issues/new/choose">GitHub</a> or hop into the community <a href="https://discord.gg/efVC93Cr">Discord</a>. For usage questions, the <a href="https://github.com/timonteutelink/skaff/discussions">GitHub Discussions board</a> is a great place to start.
