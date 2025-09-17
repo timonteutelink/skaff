@@ -32,23 +32,31 @@ const columnMapping: FieldInfo<TemplateSummary>[] = [
 export default function TemplatesListPage() {
   const router = useRouter();
   const [templates, setTemplates] = useState<TemplateSummary[]>([]);
+  const handleLoadTemplateRepo = useCallback(
+    async (repoUrl: string, branch: string) => {
+      const loadResult = await loadTemplateRepo(repoUrl, branch);
+      const repoLoaded = toastNullError({
+        result: loadResult,
+        shortMessage: "Error loading repo",
+      });
+      if (repoLoaded === false) {
+        return;
+      }
 
-	const loadTheTemplateRepo = useCallback(async (repoUrl: string, branch: string) => {
-		const result = await loadTemplateRepo(repoUrl, branch);
-		toastNullError({
-			result,
-			shortMessage: "Error loading repo",
-		});
-		const templatesRes = await retrieveTemplates();
-		const newTemplates = toastNullError({
-			result: templatesRes,
-			shortMessage: "Error retrieving templates",
-		});
-		if (newTemplates) {
-			setTemplates(newTemplates);
-			toast.success("Repo loaded");
-		}
-	}, [])
+      const templatesResult = await retrieveTemplates();
+      const newTemplates = toastNullError({
+        result: templatesResult,
+        shortMessage: "Error retrieving templates",
+      });
+      if (!newTemplates) {
+        return;
+      }
+
+      setTemplates(newTemplates);
+      toast.success("Repo loaded");
+    },
+    [],
+  );
 
   useEffect(() => {
     retrieveTemplates().then((templatesResult) => {
@@ -102,12 +110,11 @@ export default function TemplatesListPage() {
   const templateButtons = useMemo(
     () => (
       <>
-			  <GitRepoSelectionDialog
-				  buttonText="Load from Github"
-				  actionText="Load Template Repo"
-					onConfirm={loadTheTemplateRepo}
-					onCancel={async () => {}}
-				/>
+        <GitRepoSelectionDialog
+          buttonText="Load from Github"
+          actionText="Load Template Repo"
+          onConfirm={handleLoadTemplateRepo}
+        />
         <ConfirmationDialog
           buttonText="Reload Templates"
           actionText="Reload"
@@ -124,7 +131,7 @@ export default function TemplatesListPage() {
         />
       </>
     ),
-    [handleReload, handleClearCache],
+    [handleLoadTemplateRepo, handleReload, handleClearCache],
   );
 
   return (

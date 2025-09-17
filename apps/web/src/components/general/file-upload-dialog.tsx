@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useState } from "react";
+import React, { FormEvent, useCallback, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -52,26 +52,36 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
     maxSize: 1 * 1024 * 1024, // max 1 mb
   });
 
-  const handleUpload = useCallback(async () => {
-    setUploading(true);
-    const jsons: JsonFile[] = await Promise.all(
-      files.map(async (f) => ({ name: f.name, text: await f.text() })),
-    );
+  const handleUpload = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      if (!files.length || uploading) {
+        return;
+      }
+      setUploading(true);
+      try {
+        const jsons: JsonFile[] = await Promise.all(
+          files.map(async (f) => ({ name: f.name, text: await f.text() })),
+        );
 
-    const result = await onUpload(jsons);
+        const result = await onUpload(jsons);
 
-    const uploadResult = toastNullError({
-      result,
-      shortMessage: "Failed to upload files",
-    });
+        const uploadResult = toastNullError({
+          result,
+          shortMessage: "Failed to upload files",
+        });
 
-    setUploading(false);
-    if (uploadResult === false) {
-      return;
-    }
+        if (uploadResult === false) {
+          return;
+        }
 
-    setFiles([]);
-  }, [files, onUpload]);
+        setFiles([]);
+      } finally {
+        setUploading(false);
+      }
+    },
+    [files, onUpload, uploading],
+  );
 
   const handleCancel = useCallback(async () => {
     const result = await onCancel();
@@ -89,7 +99,7 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
   const handleOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
-        handleCancel();
+        void handleCancel();
       }
     },
     [handleCancel],
@@ -112,39 +122,44 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div
-          {...getRootProps()}
-          className={cn(
-            "flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-sm transition",
-            isDragActive
-              ? "border-primary/50 bg-primary/5"
-              : "border-muted/40 hover:bg-muted/5",
+        <form onSubmit={handleUpload} className="space-y-4">
+          <div
+            {...getRootProps()}
+            className={cn(
+              "flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-sm transition",
+              isDragActive
+                ? "border-primary/50 bg-primary/5"
+                : "border-muted/40 hover:bg-muted/5",
+            )}
+          >
+            <input {...getInputProps()} />
+            <Label className="cursor-pointer select-none">
+              {isDragActive
+                ? "Release to drop the files"
+                : "Drop files or click to browse"}
+            </Label>
+          </div>
+
+          {!!files.length && (
+            <ul className="max-h-40 overflow-y-auto space-y-2 text-sm">
+              {files.map((f) => (
+                <li key={f.name} className="flex items-center gap-2">
+                  <FileJson className="size-4 shrink-0" />
+                  <span className="truncate">{f.name}</span>
+                </li>
+              ))}
+            </ul>
           )}
-        >
-          <input {...getInputProps()} />
-          <Label className="cursor-pointer select-none">
-            {isDragActive
-              ? "Release to drop the files"
-              : "Drop files or click to browse"}
-          </Label>
-        </div>
 
-        {!!files.length && (
-          <ul className="mt-4 max-h-40 overflow-y-auto space-y-2 text-sm">
-            {files.map((f) => (
-              <li key={f.name} className="flex items-center gap-2">
-                <FileJson className="size-4 shrink-0" />
-                <span className="truncate">{f.name}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <DialogFooter>
-          <Button onClick={handleUpload} disabled={!files.length || uploading}>
-            {uploading ? "Uploading…" : "Start upload"}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button
+              type="submit"
+              disabled={!files.length || uploading}
+            >
+              {uploading ? "Uploading…" : "Start upload"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

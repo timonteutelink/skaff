@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { FormEvent, useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,21 +28,54 @@ export default function CommitButton({
 }: CommitButtonProps) {
   const [open, setOpen] = useState(false);
   const [commitMessage, setCommitMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleCommit = useCallback(async () => {
-    await onCommit(commitMessage);
+  const resetForm = useCallback(() => {
     setCommitMessage("");
-    setOpen(false);
-  }, [commitMessage, onCommit]);
+  }, []);
+
+  const handleCommit = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      if (isSubmitting) {
+        return;
+      }
+      const trimmedMessage = commitMessage.trim();
+      if (!trimmedMessage) {
+        return;
+      }
+      setIsSubmitting(true);
+      try {
+        await onCommit(trimmedMessage);
+        resetForm();
+        setOpen(false);
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [commitMessage, isSubmitting, onCommit, resetForm],
+  );
 
   const handleCancel = useCallback(() => {
+    if (isSubmitting) {
+      return;
+    }
     onCancel();
-    setCommitMessage("");
+    resetForm();
     setOpen(false);
-  }, [onCancel]);
+  }, [isSubmitting, onCancel, resetForm]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          resetForm();
+          setIsSubmitting(false);
+        }
+        setOpen(nextOpen);
+      }}
+    >
       <DialogTrigger asChild>
         <Button>
           <GitCommit className="mr-2" />
@@ -56,7 +89,7 @@ export default function CommitButton({
             Enter a message describing the changes you've made.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <form onSubmit={handleCommit} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="commit-message" className="text-right">
               Message
@@ -68,17 +101,26 @@ export default function CommitButton({
               placeholder="feat: add new feature"
               className="col-span-3"
               autoFocus
+              required
             />
           </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button onClick={handleCommit} disabled={!commitMessage.trim()}>
-            Commit
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              type="button"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting || !commitMessage.trim()}
+            >
+              Commit
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
