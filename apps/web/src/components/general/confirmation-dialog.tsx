@@ -11,7 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useCallback, useState } from "react";
+import { FormEvent, useCallback, useState } from "react";
 import { Result } from "@timonteutelink/skaff-lib/browser";
 
 interface ConfirmationDialogProps {
@@ -35,16 +35,32 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   onCancel,
 }) => {
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleConfirmAction = useCallback(async () => {
-    const result = await onConfirm();
-    if ("error" in result) {
-      return;
-    }
-    setOpen(false);
-  }, [onConfirm]);
+  const handleConfirmAction = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      if (isSubmitting) {
+        return;
+      }
+      setIsSubmitting(true);
+      try {
+        const result = await onConfirm();
+        if ("error" in result) {
+          return;
+        }
+        setOpen(false);
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [isSubmitting, onConfirm],
+  );
 
   const handleCancel = useCallback(async () => {
+    if (isSubmitting) {
+      return;
+    }
     if (!onCancel) {
       setOpen(false);
       return;
@@ -54,10 +70,18 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
       return;
     }
     setOpen(false);
-  }, [onCancel]);
+  }, [isSubmitting, onCancel]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          setIsSubmitting(false);
+        }
+        setOpen(nextOpen);
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline">{buttonText}</Button>
       </DialogTrigger>
@@ -66,18 +90,26 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
           <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
-        <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={handleConfirmAction}
-            className="ml-2"
-          >
-            {actionText}
-          </Button>
-        </DialogFooter>
+        <form onSubmit={handleConfirmAction} className="mt-4">
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              type="button"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              type="submit"
+              className="ml-2"
+              disabled={isSubmitting}
+            >
+              {actionText}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
