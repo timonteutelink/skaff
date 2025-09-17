@@ -107,9 +107,21 @@ async function selectModelsForCategories(
   categories: Record<string, { description?: string }>,
   connectedProviders: string[],
 ): Promise<Record<string, AiModel>> {
+  const entries = Object.entries(categories);
+
+  if (entries.length === 0) {
+    return {};
+  }
+
+  if (connectedProviders.length === 0) {
+    throw new Error(
+      'No AI providers configured. Please set an API key (e.g. OPENAI_API_KEY) before instantiating this template.',
+    );
+  }
+
   const aiModels: Record<string, AiModel> = {};
 
-  for (const [key, category] of Object.entries(categories)) {
+  for (const [key, category] of entries) {
     console.log(`\n🧠 Configure model for category "${key}"`);
     if (category?.description) {
       console.log(`ℹ️  ${category.description}`);
