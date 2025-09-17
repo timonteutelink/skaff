@@ -1,0 +1,22 @@
+---
+title: TemplateConfig API
+authors: []
+sidebar_position: 3
+---
+
+`TemplateConfigModule` describes how Skaff should render your template. The table below lists the properties used most often. Consult the generated TypeDoc at `/skaff/template-types-lib` for complete signatures.
+
+| Property                       | Purpose                                                                                                 |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `templateConfig`               | Metadata for the template (`name`, `author`, `description`, optional `multiInstance`, etc.).            |
+| `templateSettingsSchema`       | Zod schema that defines prompts and validation rules. The inferred type drives TypeScript tooling.      |
+| `targetPath`                   | Absolute or relative path where rendered files are written. Accepts a string or callback.               |
+| `mapFinalSettings`             | Modify settings after validation and before rendering. Receives `{ templateSettings, parentSettings }`. |
+| `autoInstantiatedSubtemplates` | Declare subtemplates to run automatically. Can return a static list or compute it dynamically.          |
+| `sideEffects`                  | Apply programmatic edits to existing files. Each entry supplies a `filePath` and an `apply` function.   |
+| `allowOverwrite`               | Whitelist files that may be overwritten when a conflict occurs.                                         |
+| `redirectFiles`                | Redirect rendered files to alternative destinations. Useful for multi-instance templates.               |
+| `templateCommands`             | Surface helpful follow-up commands in the CLI and web UI (for example, `npm test`).                     |
+| `templateMigrations`           | Upgrade stored settings when schemas change between template revisions.                                 |
+
+Additional helpers in the package cover AI-assisted settings, caching hints, and migration utilities.

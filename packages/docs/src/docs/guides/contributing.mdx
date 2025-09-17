@@ -1,102 +1,38 @@
 ---
-title: Contributing Guide
+title: Contributing
+authors: []
+sidebar_position: 7
 ---
 
+Thanks for helping improve Skaff! The monorepo hosts the CLI, web app, shared libraries, and documentation. Start by reading the [project README](https://github.com/timonteutelink/skaff#readme) for installation commands and release context.
 
-First off, thank you for your interest in contributing to Code Templator! 🎉 We welcome contributions of all kinds – from code, to documentation, to example templates. This guide will help you get started with the development workflow and our project conventions.
+## Local setup
 
-## Development Setup
+1. Clone the repository and install dependencies: `bun install`.
+2. Build shared packages so apps have fresh artefacts: `bun run turbo run build`.
+3. Run formatters and tests before committing: `bun run format` and `bun test` (or package-level scripts).
+4. Work on a feature branch and open a pull request against `main` once checks pass.
 
-**Repository structure:** This is a monorepo containing multiple packages:
+Use `bun --filter apps/cli dev` or `bun --filter apps/web dev` when you need live reload for those surfaces.
 
-* `apps/cli` – the CLI tool (TypeScript, oclif based).
-* `apps/web` – the Next.js web interface.
-* `packages/skaff-lib` – the core logic library.
-* `packages/template-types-lib` – the types and interfaces for templates.
-* `packages/docs` – the documentation site (Docusaurus).
-* (Plus config files, CI workflows, etc.)
+## Documentation changes
 
-We use **pnpm** for package management (Yarn/npm should also work, but pnpm is recommended for its workspace features).
+Docs live under `packages/docs`. Preview them locally with:
 
-**Setting up:**
+```bash
+cd packages/docs
+bun install
+bun run dev
+```
 
-1. Fork and clone the repository.
-2. Run `pnpm install` at the root to install all dependencies.
-3. Build the core libraries: `pnpm build`. This compiles TypeScript in the packages so that the CLI and web can use them.
-4. You can run tests with `pnpm test` (we aim to have unit tests especially for the lib packages).
-5. To run the CLI in dev mode, you can use `pnpm --filter @timonteutelink/skaff-cli dev` or simply `cd apps/cli` and run it via `oclif` dev commands. Often, we use `pnpm link` or `yarn link` to link the CLI globally for local testing.
-6. To run the Web UI in dev, see the *Using the Web Interface* doc – essentially `pnpm --filter apps/web dev`.
+Keep pages concise, prefer task-oriented headings, and run `bunx prettier --check "packages/docs/src/**/*.mdx"` before committing.
 
-**Coding guidelines:**
+## Release overview
 
-* We use **Prettier** and **ESLint** to enforce coding style. Please run `pnpm format` before committing, and fix any lint issues (`pnpm lint`).
-* Our TypeScript config is strict. Pay attention to types – especially in the template-types-lib where types are exposed to template authors.
-* Commit messages: we’re not very strict on format, but try to be descriptive. If your change fixes an issue, include the issue number.
+Maintainers coordinate releases when features land:
 
-## Git Workflow
+1. Merge changes into `main` with passing CI.
+2. Bump versions across packages and tag the release (e.g. `v0.x.y`).
+3. GitHub Actions publishes npm packages, CLI binaries, the Docker image, and the updated docs site.
 
-We follow a standard *GitHub Flow / Feature Branch* workflow:
-
-* **Main branch:** The main branch contains the latest development code. We try to keep it in a deployable state (tests passing, etc.). All development is integrated here via PRs.
-* **Feature branches:** For any new feature or bugfix, create a branch off of main (e.g., `feat/add-x-option` or `fix/template-loading-bug`). Do your work there, then open a **Pull Request** back to main when ready.
-* **Pull Requests:** PRs will run our CI checks (lint, build, test). Ensure those pass. Add a clear description of the change. If it’s a big feature, mention why it’s needed and any design decisions. Tag any issues it closes.
-* We prefer squash merging PRs (to keep history tidy), but that’s up to maintainers.
-
-For larger changes, it’s a good idea to open an issue or discussion first to get feedback. This is especially true if changing core behavior, as we want to ensure it aligns with the project vision and doesn’t inadvertently break things.
-
-## Versioning and Releases
-
-Code Templator uses **semantic versioning** (SemVer). The monorepo is versioned as a whole for now – meaning we bump the version and publish all packages together to keep them in sync. The CLI and libs share the same version number (e.g., if we release v1.2.3, that applies to CLI, lib, etc.).
-
-Release process:
-
-* We use Git tags and GitHub releases. When main branch has accumulated changes ready for release, maintainers will bump the version (via a changeset or manually updating package.jsons), commit that, and tag the commit (e.g., `v1.2.3`).
-* GitHub Actions will detect the new tag and run workflows to publish:
-
-  * The CLI (apps/cli) to npm as `@timonteutelink/skaff-cli` (and we may also attach binaries or tarballs in the GitHub release for direct download).
-  * The core library to npm (`@timonteutelink/skaff-lib`).
-  * The template types lib to npm (`@timonteutelink/template-types-lib`).
-  * The web UI Docker image to GitHub Container Registry (and possibly Docker Hub) as `timonteutelink/skaff-web`.
-  * The documentation to GitHub Pages (published from `gh-pages` branch via Docusaurus build).
-
-As a contributor, you usually don’t need to worry about publishing – just know that once your changes are merged, they’ll go out in the next release, which might be coordinated by maintainers. If your contribution is time-sensitive or a hotfix, communicate that – we can do a quicker release if needed.
-
-## Contributing to Documentation
-
-We love doc improvements! The docs are in Markdown under `packages/docs/docs`. If you spot an issue or have knowledge to add:
-
-* Edit or add the appropriate `.md` files. Try to follow the style of existing docs (e.g., use similar heading levels and tone).
-* We use Docusaurus – you can run `pnpm start` in `packages/docs` to preview the docs site locally (it will open at localhost).
-* After your changes, build the docs `pnpm build` in docs to ensure no build errors (broken links, etc.).
-* For large documentation additions, feel free to discuss first or draft in a PR to get feedback on structure.
-
-Also, if you have a great **example template** that you think would benefit others, you can contribute to the `skaff-example-templates` repo. That repo will have its own contribution guidelines, but generally, adding well-documented template folders there via PR is welcome.
-
-## Issue Tracking and Bug Reports
-
-* If you’re here to fix a bug, thank you! Please check open issues to see if it’s already reported. If not, feel free to open one and mention you are working on a fix.
-* For new features, it’s often good to create an issue to discuss the idea before investing too much time coding.
-* When reporting bugs, provide as much detail as possible: OS, Node version, what you were doing, and ideally steps to reproduce or a minimal example template that triggers the issue.
-
-We label issues to help categorize them (e.g., `bug`, `enhancement`, `good first issue`, etc.). If you’re new to the project, a **good first issue** or any unassigned bug is a great place to start.
-
-## Community
-
-Feel free to reach out via GitHub Discussions if you have questions or want to brainstorm improvements. We aim to be a friendly community – all contributors are expected to follow the Contributor Covenant Code of Conduct. In short: be respectful and constructive.
-
-## Tips for Core Contributions
-
-* The core library (`skaff-lib`) is where most heavy lifting happens (applying diffs, managing the cache, etc.). If working here, try to add unit tests for new functions or scenarios. Look at existing tests for guidance.
-* The CLI is mostly a thin wrapper around library functions. When adding a new CLI command, implement the logic in `skaff-lib` if it could be reused or tested more easily, then call it from the CLI command.
-* The template-types-lib changes should maintain backward compatibility if possible, because template authors may depend on those types. If you change a type or interface in a breaking way, note it so we can mention in release notes.
-* Performance considerations: Template generation involves file I/O and git operations. Be mindful of performance (e.g., avoid unnecessary re-reading of files, etc.). In diff generation, we try to isolate diffs to relevant parts. If you find a slow spot, contributions to optimize are welcome.
-* Always test changes by actually running a generation or update in a sample scenario. Our automated tests might not cover every real-world scenario, so manual end-to-end testing is valuable.
-
-## Thank You
-
-Your contributions make Code Templator better for everyone. Whether it’s a small typo fix or a major feature, we appreciate it! 💙
-
-If you’re ever unsure about something, just ask. Maintainers and community members will do their best to help.
-
-Happy hacking, and thanks for helping build Code Templator!
-
+Discuss patch releases or larger roadmap topics in GitHub Discussions or Discord.

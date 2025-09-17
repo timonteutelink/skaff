@@ -1,0 +1,45 @@
+---
+title: Web app guide
+authors: []
+sidebar_position: 1
+---
+
+The web app wraps Skaff’s templating engine in a Next.js dashboard. Use it for demos, collaborative reviews, or when a form-driven workflow beats terminal prompts.
+
+## Run the app
+
+### Docker
+
+```bash
+docker run --rm \
+  -p 3000:3000 \
+  -v ~/.config/skaff:/home/node/.config/skaff \
+  -v ~/projects:/projects \
+  timonteutelink/skaff-web:latest
+```
+
+Mount the config directory so the web app reads the same `settings.json` and template cache as the CLI. Add extra mounts for any project folders you want to edit.
+
+### Local development
+
+```bash
+bun install
+bun --filter apps/web dev
+```
+
+The dev server listens on port 3000 and hot reloads as you edit the interface.
+
+## Use the workflow
+
+1. **Select a template.** The library lists every root template available via your configuration.
+2. **Fill in the form.** Fields and validation rules are derived from the template’s Zod schema.
+3. **Preview the diff.** Inspect new files, edits, and removals before applying changes.
+4. **Generate files.** Choose a destination directory and apply the patch. Skaff updates `templateSettings.json` automatically.
+
+Return later to add subtemplates, apply template updates, or run template-defined commands directly from the browser.
+
+## Troubleshooting
+
+- Templates not showing up? Verify the mount paths inside the container and ensure repositories are accessible.
+- Seeing stale content? Clear cached repositories with `skaff template erase-cache` and reload the app.
+- Patch failures? Resolve conflicts in your editor, then retry the action—the UI surfaces detailed errors in toast notifications.

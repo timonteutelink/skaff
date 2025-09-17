@@ -1,0 +1,26 @@
+---
+title: Introduction
+authors: []
+sidebar_position: 1
+---
+
+Skaff is a TypeScript-powered scaffolding toolkit that turns curated templates into ready-to-run projects.
+It combines a fast CLI, a web dashboard, and shared libraries so teams can ship consistent services without copying stale boilerplates.
+
+## What you get
+
+- **Guided project creation.** Render templates from the CLI or web UI, validate answers with Zod, and review a Git diff before anything touches your repository.
+- **Repeatable upgrades.** Save template settings once and rerun the template later to generate patch files that capture only upstream changes.
+- **Composable features.** Break large starters into subtemplates so optional modules, jobs, or stacks can be added on demand.
+- **Automation-friendly tooling.** Every workflow is scriptable and available as a library, making Skaff easy to embed in CI or internal developer platforms.
+
+## Components at a glance
+
+| Surface                                            | Role                                                                                                                         |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **CLI (`apps/cli`)**                               | Primary interface for project creation, diff preparation, and automation. Published on npm, Bun, and as standalone binaries. |
+| **Web app (`apps/web`)**                           | Next.js dashboard with schema-driven forms, diff previews, and project management for teams that prefer a GUI.               |
+| **Core runtime (`packages/skaff-lib`)**            | Shared rendering and diffing engine consumed by the CLI, web app, and custom integrations.                                   |
+| **Template types (`packages/template-types-lib`)** | Typed helpers for `templateConfig.ts` files, subtemplate wiring, migrations, and side effects.                               |
+
+For repository setup and release details, keep the [project README](https://github.com/timonteutelink/skaff#readme) nearby while using these docs.
