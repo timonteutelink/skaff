@@ -100,7 +100,6 @@ module.exports = {
 
   themeConfig: {
     navbar: {
-      title: 'Skaff',
       logo: { src: 'img/skafflogo.png', alt: 'logo' },
       items: [
         { to: '/docs', label: 'Docs', position: 'left' },
