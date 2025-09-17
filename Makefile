@@ -103,3 +103,16 @@ monorepo-prod:
 	@echo "Monorepo set back to prod mode!"
 
 mp: monorepo-prod
+
+build-all: it il ir bt bl bc
+
+ba: build-all
+
+build-all-all: build-all bw bwd
+
+baa: build-all-all
+
+clean-repo:
+	rm -rf bun.lock node_modules apps/cli/node_modules apps/web/node_modules packages/template-types-lib/node_modules packages/template-types-lib/bun.lock packages/skaff-lib/node_modules packages/skaff-lib/bun.lock 
+
+cr: clean-repo
