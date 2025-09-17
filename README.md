@@ -11,7 +11,7 @@
   <a href="https://www.npmjs.com/package/@timonteutelink/skaff"><img alt="@timonteutelink/skaff" src="https://img.shields.io/npm/v/%40timonteutelink%2Fskaff?label=%40timonteutelink%2Fskaff"></a>
   <a href="https://www.npmjs.com/package/@timonteutelink/skaff-lib"><img alt="@timonteutelink/skaff-lib" src="https://img.shields.io/npm/v/%40timonteutelink%2Fskaff-lib?label=%40timonteutelink%2Fskaff-lib"></a>
   <a href="https://www.npmjs.com/package/@timonteutelink/template-types-lib"><img alt="@timonteutelink/template-types-lib" src="https://img.shields.io/npm/v/%40timonteutelink%2Ftemplate-types-lib?label=%40timonteutelink%2Ftemplate-types-lib"></a>
-  <img alt="License: GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-blue">
+  <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue">
 </p>
 
 <p align="center">
