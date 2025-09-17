@@ -11,13 +11,18 @@ interface AiModelCategory { description: string }
 interface Props {
   categories: Record<string, AiModelCategory>;
   form: UseFormReturn<Record<string, any>>;
+  providers: string[];
 }
 
-export const AiModelSelector: React.FC<Props> = ({ categories, form }) => {
-  const providerOptions = [
-    { value: "openai", label: "OpenAI" },
-    { value: "anthropic", label: "Anthropic" },
-  ];
+export const AiModelSelector: React.FC<Props> = ({
+  categories,
+  form,
+  providers,
+}) => {
+  const providerOptions = providers.map((value) => ({
+    value,
+    label: value.charAt(0).toUpperCase() + value.slice(1),
+  }));
   return (
     <Accordion type="multiple" className="w-full" defaultValue={Object.keys(categories).map((_, i) => `model-${i}`)}>
       {Object.entries(categories).map(([key, cat], idx) => (

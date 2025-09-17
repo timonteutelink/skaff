@@ -44,6 +44,7 @@ export interface TemplateDTO {
   templatesThatDisableThis: TemplateDisablingThis[];
   templateCommands: { title: string; description: string }[];
   refDir?: string;
+  aiGenerationStepCount: number;
 }
 
 export interface GitStatus {

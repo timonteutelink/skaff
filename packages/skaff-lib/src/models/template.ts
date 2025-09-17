@@ -32,6 +32,7 @@ import * as semver from "semver";
 import { MAJOR_SPEC_VERSION } from "../lib/constants";
 import { getDocLink } from "../utils/shared-utils";
 import { checkMissingPartials, checkMissingSettings } from "../utils/handlebars-utils";
+import { llmProviderEnv } from "../config/ai-providers";
 
 export class InvalidTemplateSpecVersionError extends Error {
   constructor(templateName: string, templateSpecVersion: string) {
@@ -455,6 +456,7 @@ export class Template {
               type: "object",
               properties: {},
             } as any;
+            const providerOptions = Object.keys(llmProviderEnv);
             for (const [key, cat] of Object.entries(categories)) {
               (schema.properties.aiModels.properties as any)[key] = {
                 type: "object",
@@ -462,7 +464,7 @@ export class Template {
                 properties: {
                   provider: {
                     type: "string",
-                    enum: ["openai", "anthropic"],
+                    enum: providerOptions,
                   },
                   name: { type: "string" },
                 },
@@ -486,6 +488,7 @@ export class Template {
       isLocal: this.isLocal,
       branch: this.branch,
       repoUrl: this.repoUrl,
+      aiGenerationStepCount: this.config.aiGeneration?.steps?.length || 0,
     };
   }
 
