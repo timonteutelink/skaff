@@ -155,7 +155,7 @@ We appreciate contributions of all kinds. Please see [CONTRIBUTING.md](./CONTRIB
 
 ## License
 
-skaff is released under the **GNU General Public License v3.0**. This copyleft license ensures that any modifications and improvements you distribute must also be made available under the same terms, keeping the tooling free and open for everyone. See the [LICENSE](./LICENSE) file for the full text.
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
 
 ---
 
