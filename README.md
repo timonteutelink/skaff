@@ -1,10 +1,16 @@
 <p align="center">
-  <img src="assets/skafflogo.png" alt="Skaff logo" width="220" height ="140">
+  <img src="assets/skafflogo.png" alt="Skaff logo" width="220" height="140">
 </p>
 
-#
+# Skaff
 
-<p align="center"><strong>Modern scaffolding toolkit</strong> for bootstrapping consistent, reproducible projects from templates.</p>
+<p align="center"><strong>TypeScript-powered scaffolding toolkit</strong> for shipping consistent, reproducible projects from curated templates.</p>
+
+<p align="center">
+  <a href="https://timonteutelink.github.io/skaff">Documentation</a>
+  &nbsp;&nbsp;•&nbsp;&nbsp;
+  <a href="https://discord.gg/efVC93Cr">Discord</a>
+</p>
 
 <p align="center">
   <a href="https://github.com/timonteutelink/skaff/actions/workflows/releaseLib.yml"><img alt="CI Status" src="https://github.com/timonteutelink/skaff/actions/workflows/ci.yml/badge.svg?branch=main"></a>
@@ -14,18 +20,108 @@
   <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue">
 </p>
 
-<p align="center">
-  <a href="https://timonteutelink.github.io/skaff">Documentation</a>
-  &nbsp;&nbsp;•&nbsp;&nbsp;
-  <a href="https://discord.gg/efVC93Cr">Discord</a>
-</p>
+Skaff pairs a fast CLI, a Next.js web dashboard, and shared TypeScript libraries so teams can scaffold new services, replay template upgrades, and standardize setups. The [documentation site](https://timonteutelink.github.io/skaff) walks through each workflow in depth; this README highlights the essentials and points to the right guide.
 
+## Why Skaff
 
-## Installation
+Skaff focuses on developer ergonomics and reproducibility:
 
-The CLI can be used without a global install.
+- **Guided project creation.** Render templates from the CLI or web UI, validate answers with Zod, and review a Git diff before anything touches your repository. ([Introduction](https://timonteutelink.github.io/skaff/docs/introduction))
+- **Repeatable upgrades.** Save template settings once and rerun the template later to generate patch files that capture only upstream changes. ([Core concepts](https://timonteutelink.github.io/skaff/docs/getting-started/core-concepts))
+- **Composable features.** Break large starters into subtemplates so optional modules, jobs, or stacks can be added on demand. ([Template authoring guide](https://timonteutelink.github.io/skaff/docs/authoring))
+- **Automation-ready tooling.** Every workflow is scriptable and available as a library, making Skaff easy to embed in CI or internal developer platforms. ([CLI workflows](https://timonteutelink.github.io/skaff/docs/cli))
 
-### `bunx`
+![Preview of Skaff's diff viewer and patch workflow](assets/previewPatching.png)
+
+## Components at a glance
+
+| Surface                                            | Role                                                                                  |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| **CLI (`apps/cli`)**                               | Primary interface for project creation, diff preparation, and automation. Published on npm, Bun, and as standalone binaries. |
+| **Web app (`apps/web`)**                           | Next.js dashboard with schema-driven forms, diff previews, and project management for teams that prefer a GUI. |
+| **Core runtime (`packages/skaff-lib`)**            | Shared rendering and diffing engine consumed by the CLI, web app, and custom integrations. |
+| **Template types (`packages/template-types-lib`)** | Typed helpers for `templateConfig.ts` files, subtemplate wiring, migrations, and side effects. |
+
+Keep the [Introduction](https://timonteutelink.github.io/skaff/docs/introduction) open while exploring for extra context.
+
+## Get started
+
+The [Getting started](https://timonteutelink.github.io/skaff/docs/getting-started/) section of the docs walks you through the first run. The summaries below show what to expect.
+
+### CLI quickstart
+
+Follow the [CLI quickstart](https://timonteutelink.github.io/skaff/docs/getting-started/cli-quickstart) to render your first project:
+
+1. **Install the CLI.** Use `bunx`/`npx` for one-off runs or install globally if you prefer a persistent binary.
+   ```bash
+   bunx @timonteutelink/skaff --version
+   # or
+   npm install -g @timonteutelink/skaff
+   ```
+   Verify the installation with `skaff --help`.
+
+2. **Register template sources.** Skaff reads configuration from `~/.config/skaff/settings.json` (override with `SKAFF_CONFIG_PATH`). Point it at your template directories:
+   ```bash
+   skaff config add ~/skaff-example-templates TEMPLATE_DIR_PATHS
+   skaff config get TEMPLATE_DIR_PATHS --format table
+   ```
+   You can also render straight from a Git repository by passing `--repo <git-url>`.
+
+3. **Generate a project.** Name the destination folder, choose a template, and answer the schema-driven prompts.
+   ```bash
+   skaff project new my-service fastapi
+   ```
+   Inspect the diff viewer, then accept the patch to write files to disk.
+
+4. **Continue exploring.**
+   - List available templates with `skaff template list --format table`.
+   - Replay saved answers from `templateSettings.json` using `skaff project from-settings <path>`.
+   - Browse the [CLI workflows](https://timonteutelink.github.io/skaff/docs/cli) for automation, updates, and subtemplate runs.
+
+### Web quickstart
+
+Prefer a graphical workflow? The [Web quickstart](https://timonteutelink.github.io/skaff/docs/getting-started/web-quickstart) shows how to launch the Next.js interface.
+
+1. **Start the web app.** Run the Docker image for the fastest setup:
+   ```bash
+   docker run --rm -p 3000:3000 \
+     -v ~/.config/skaff:/app/.config/skaff \
+     -v ~/.cache/skaff:/app/.cache/skaff \
+     -v ~/projects:/projects \
+     timonteutelink/skaff-web:latest
+   ```
+   Or run it from source:
+   ```bash
+   bun install
+   bun --filter apps/web dev
+   ```
+
+2. **Confirm template access.** Use the CLI or the Templates view’s “Load from GitHub” action to add repositories. Both surfaces update the same configuration file, so changes are shared instantly.
+
+3. **Generate a project visually.**
+   - Pick a template from the library to open its generated form.
+   - Complete required and optional fields; validation hints appear inline.
+   - Click **Preview diff** to inspect every change before writing to disk.
+   - Choose a destination folder and click **Generate** to write the files.
+
+Return to the UI later to apply template updates, add subtemplates, or run template-defined commands without leaving the browser. The README and the [web guide](https://timonteutelink.github.io/skaff/docs/web) cover additional tips.
+
+### Learn the core concepts
+
+Understanding a few ideas from the [Core concepts](https://timonteutelink.github.io/skaff/docs/getting-started/core-concepts) guide makes every workflow easier:
+
+- **Templates and repositories.** Templates live in Git repositories under `root-templates/<name>/` and export a `templateConfig.ts` that defines prompts, files, and hooks.
+- **Template settings.** Skaff validates your answers with Zod and stores them as `templateSettings.json` so future runs can replay the exact same configuration.
+- **Instances and subtemplates.** Each template invocation is tracked with an instance ID, letting you add optional modules later or re-run only part of a project.
+- **Diffs and revisions.** Templates render inside a temporary Git repo and produce a patch before writing to disk, keeping upgrades transparent and reviewable.
+
+## Installation options
+
+Skaff ships through multiple channels so you can pick the best fit for your environment.
+
+### Run on demand
+
+Use `bunx` (or `npx`) to execute Skaff without a global install:
 
 ```bash
 bunx @timonteutelink/skaff --version
@@ -33,7 +129,7 @@ bunx @timonteutelink/skaff --version
 
 ### Global install
 
-If you prefer a permanent install:
+Install the CLI once and reuse it:
 
 ```bash
 npm install -g @timonteutelink/skaff
@@ -47,7 +143,7 @@ Prebuilt binaries for major platforms are attached to each GitHub release. Downl
 
 ### Nix flake
 
-skaff is packaged as a Nix flake. To run it:
+Skaff is packaged as a Nix flake. Run it directly from GitHub or from a local checkout:
 
 ```bash
 # run directly from GitHub
@@ -59,102 +155,49 @@ nix build         # build the package
 nix run           # execute the CLI
 ```
 
-## Quickstart
+## Workflow highlights
 
-To scaffold a new project from a template, call the `project new` command. This example generates a **FastAPI** service named `banana` from the [`example-templates` repository](https://github.com/timonteutelink/example-templates):
+### CLI workflows
 
-```bash
-bunx @timonteutelink/skaff project new banana \
-  --repo github:timonteutelink/example-templates \
-  fastapi
-```
+The [CLI guide](https://timonteutelink.github.io/skaff/docs/cli) covers everything from configuring template sources to automating upgrades. Key commands include:
 
-This will clone or fetch the `fastapi` template, prompt you for required values and options, then produce a ready‑to‑run FastAPI application. For an overview of available commands and options, run:
+- `skaff project new <name> [template]` — create a new project or subproject.
+- `skaff project apply <path>` — apply a generated diff to an existing workspace.
+- `skaff project add-subtemplate` — layer optional features onto an existing project.
+- `skaff help [command]` — print detailed help for any command.
 
-```bash
-skaff --help
+### Web app guide
 
-```
+The [web guide](https://timonteutelink.github.io/skaff/docs/web) explains how to collaborate through the Next.js dashboard, browse template catalogs, inspect diffs, and apply patches without leaving the browser.
 
-## Overview
+### Template authoring
 
-**skaff** helps teams standardize how they start new services, microservices and libraries. It codifies best practices into reusable templates, prompts you for the variables that matter, and writes out a ready‑to‑run project. Because templates are versioned and configured with Zod schemas, they remain type‑safe and upgradeable. The CLI runs anywhere Node or Bun can, prebuilt binaries can be downloaded from releases, and a Nix flake is provided for reproducible builds.
+Ready to build your own templates? The [template authoring docs](https://timonteutelink.github.io/skaff/docs/authoring) describe repository layout, schema authoring, migrations, and testing patterns so your starters remain upgradeable.
 
-## Features
+## Reference & additional resources
 
-- **One‑command scaffolding.** Generate a new project or apply a subtemplate with a single command or click. A guided prompt collects the name, options and feature flags and applies them consistently across all files and configs.
-- **Diff preview and patching.** skaff shows you exactly what will be created or changed. For existing projects it generates a git patch so you can inspect and commit the changes yourself.
-![Preview Patching](assets/previewPatching.png)
-- **Multi‑platform distribution.** Use it instantly via `npx` or `bunx`, install globally with npm or bun, download a prebuilt binary, or run it as a reproducible Nix flake.
-- **Visual Web UI.** A Next.js powered interface allows you to browse templates, fill in form fields, preview the resulting file tree or diff, and apply patches without touching the terminal
-- **Flexible configuration.** Configure where your templates live and where to create projects through a simple JSON config or environment variables like `TEMPLATE_DIR_PATHS`, `PROJECT_SEARCH_PATHS`
-- **Language agnostic.** Templates can target any stack like FastAPI, React, Go and Rust as long as they ship a schema. Additional template repositories can be referenced with `--repo`, and GitHub template retrieval is on the roadmap.
-
-## How it works
-
-When you invoke skaff, it will:
-
-1. Resolve the template source (local directory, configured paths or a remote repo).
-2. Read the template’s schema and definitions from `templateConfig.ts`.
-3. Prompt you for the required inputs, validating them with Zod.
-4. Generate files and configuration into the target directory.
-5. Produce a git diff or patch so you can review and commit the changes.
-
-Templates may also include tasks, linting and formatting setups so that your new project is productive out of the box.
-
-## CLI
-
-The CLI follows the standard `skaff <command> [options]` pattern. Common commands include:
-
-- `skaff project new <name> [template]` – create a new project or subproject.
-- `skaff help [command]` – print detailed help for a command.
-
-Run `skaff --help` to see the full list of commands and flags.
-
-## Web interface
-
-In addition to the CLI, skaff provides a Web UI. The Web interface makes it easy to browse templates, enter values through forms, preview the file tree or diff and apply the changes interactively
-
-### Using Docker
-
-The recommended way to run the Web UI is via Docker. Pull the image and run it on port 3000:
-
-```bash
-docker run -p 3000:3000 -v ~/projects/templated:/projects timonteutelink/skaff:latest
-```
-
-Now open **http://localhost:3000** in your browser. The volume mount allows the UI to read your `~/projects/templated` directory.
-
-### Running locally
-
-If you have Node.js and bun or Bun installed, you can run the Web UI from source:
-
-```bash
-bun install
-bun build
-bun --filter apps/web dev
-```
-
-Open http://localhost:3000 to access the interface. When running locally the app uses your home directory’s `~/.config/skaff` by default, and you can update the settings through the UI.
+- [Configuration reference](https://timonteutelink.github.io/skaff/docs/reference/configuration)
+- [TemplateConfig API](https://timonteutelink.github.io/skaff/docs/reference/template-config)
+- [CLI command reference](https://timonteutelink.github.io/skaff/cli/)
+- [skaff-lib API reference](https://timonteutelink.github.io/skaff/skaff-lib/)
+- [template-types-lib API reference](https://timonteutelink.github.io/skaff/template-types-lib/)
+- [Examples and recipes](https://timonteutelink.github.io/skaff/docs/examples)
+- [Contributing guide](https://timonteutelink.github.io/skaff/docs/contributing)
 
 ## Contributing
 
-We appreciate contributions of all kinds. Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for the full guide. In summary:
+We appreciate contributions of all kinds. Review [CONTRIBUTING.md](./CONTRIBUTING.md) and the [contributing docs](https://timonteutelink.github.io/skaff/docs/contributing) for the full process. In short:
 
-- Set up the monorepo with `bun install` and build the core libs
-- Use `bun test` to run unit tests, and run `bun format` / `bun lint` before committing
-- Work on a feature branch and open a Pull Request against `main`. PRs run continuous integration and should be kept focused
-- Releases are handled by maintainers via semantic versioning and GitHub Actions; you usually don’t need to publish packages yourself
+- Set up the monorepo with `bun install` and build the core libraries.
+- Run `bun test` for unit tests, and `bun format` / `bun lint` before committing.
+- Keep pull requests focused; CI runs automatically on every PR against `main`.
+- Releases follow semantic versioning and are handled by maintainers via GitHub Actions.
+
+## Community
+
+- **Documentation:** [timonteutelink.github.io/skaff](https://timonteutelink.github.io/skaff)
+- **Discord:** [https://discord.gg/efVC93Cr](https://discord.gg/efVC93Cr)
 
 ## License
 
-skaff is released under the **GNU General Public License v3.0**. This copyleft license ensures that any modifications and improvements you distribute must also be made available under the same terms, keeping the tooling free and open for everyone. See the [LICENSE](./LICENSE) file for the full text.
-
----
-
-## Documentation & community
-
-- **Documentation:** The full manual and API reference are hosted at [timonteutelink.github.io/skaff](https://timonteutelink.github.io/skaff).
-- **Community:** Join our Discord to ask questions and share ideas: [https://discord.gg/efVC93Cr](https://discord.gg/efVC93Cr).
-
----
+Skaff is released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
