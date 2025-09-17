@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="Skaff logo" width="220" height ="140">
+  <img src="assets/logo.svg" alt="Skaff logo" width="480" height ="240">
 </p>
 
 #
@@ -7,11 +7,18 @@
 <p align="center"><strong>Modern scaffolding toolkit</strong> for bootstrapping consistent, reproducible projects from templates.</p>
 
 <p align="center">
-  <a href="https://github.com/timonteutelink/skaff/actions/workflows/releaseLib.yml"><img alt="CI Status" src="https://github.com/timonteutelink/skaff/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/timonteutelink/skaff/actions/workflows/releaseCli.yml"><img alt="CI Status Cli" src="https://github.com/timonteutelink/skaff/actions/workflows/releaseCli.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/timonteutelink/skaff/actions/workflows/releaseWeb.yml"><img alt="CI Status Web" src="https://github.com/timonteutelink/skaff/actions/workflows/releaseWeb.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/timonteutelink/skaff/actions/workflows/releaseLib.yml"><img alt="CI Status Lib" src="https://github.com/timonteutelink/skaff/actions/workflows/releaseLib.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/timonteutelink/skaff/actions/workflows/releaseTypes.yml"><img alt="CI Status Types" src="https://github.com/timonteutelink/skaff/actions/workflows/releaseTypes.yml/badge.svg?branch=main"></a>
+</p>
+<p align="center">
   <a href="https://www.npmjs.com/package/@timonteutelink/skaff"><img alt="@timonteutelink/skaff" src="https://img.shields.io/npm/v/%40timonteutelink%2Fskaff?label=%40timonteutelink%2Fskaff"></a>
   <a href="https://www.npmjs.com/package/@timonteutelink/skaff-lib"><img alt="@timonteutelink/skaff-lib" src="https://img.shields.io/npm/v/%40timonteutelink%2Fskaff-lib?label=%40timonteutelink%2Fskaff-lib"></a>
   <a href="https://www.npmjs.com/package/@timonteutelink/template-types-lib"><img alt="@timonteutelink/template-types-lib" src="https://img.shields.io/npm/v/%40timonteutelink%2Ftemplate-types-lib?label=%40timonteutelink%2Ftemplate-types-lib"></a>
   <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue">
+</p>
+<p align="center">
 </p>
 
 <p align="center">
