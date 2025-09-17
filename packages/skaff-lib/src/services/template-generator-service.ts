@@ -294,8 +294,17 @@ export class TemplateGeneratorService {
       return handlebarHelpers;
     }
 
-    this.registerHandlebarHelpers(handlebarHelpers.data);
-    this.registerAllPartials();
+    const registerResult = this.registerHandlebarHelpers(handlebarHelpers.data);
+
+    if ("error" in registerResult) {
+      return registerResult;
+    }
+
+    const partialRegistrationResult = await this.registerAllPartials();
+
+    if ("error" in partialRegistrationResult) {
+      return partialRegistrationResult;
+    }
 
     await makeDir(dest.data);
 
@@ -328,8 +337,14 @@ export class TemplateGeneratorService {
             );
             if (!allowedOverwrite || allowedOverwrite.mode === "error") {
               backendLogger.error(`File: ${entry} at ${destPath} already exists.`);
-              this.registerHandlebarHelpers(handlebarHelpers.data, true);
-              this.registerAllPartials(true);
+              const handlebarsRegisterResult = this.registerHandlebarHelpers(handlebarHelpers.data, true);
+              if ("error" in handlebarsRegisterResult) {
+                return handlebarsRegisterResult;
+              }
+              const allPartialRegistrationResult = this.registerAllPartials(true);
+              if ("error" in allPartialRegistrationResult) {
+                return allPartialRegistrationResult;
+              }
               return { error: `File: ${entry} at ${destPath} already exists.` };
             }
 
@@ -361,7 +376,7 @@ export class TemplateGeneratorService {
           error,
         });
         this.registerHandlebarHelpers(handlebarHelpers.data, true);
-        this.registerAllPartials(true);
+        await this.registerAllPartials(true);
         return {
           error: `Error processing file ${srcPath}: ${error}`,
         };
@@ -369,7 +384,7 @@ export class TemplateGeneratorService {
     }
 
     this.registerHandlebarHelpers(handlebarHelpers.data, true);
-    this.registerAllPartials(true);
+    await this.registerAllPartials(true);
 
     return { data: undefined };
   }
@@ -472,7 +487,7 @@ export class TemplateGeneratorService {
     template: Template,
     parentInstanceId?: string,
   ): Promise<Result<void>> {
-    if (!template.isValid()) {
+    if (!await template.isValid()) {
       backendLogger.error(
         `Template repo is not clean or template commit hash is not valid.`,
       );
@@ -723,7 +738,7 @@ export class TemplateGeneratorService {
     for (const instantiatedTemplate of this.destinationProjectSettings
       .instantiatedTemplates) {
       if (
-        instantiatedTemplate.id === parentInstanceId &&
+        instantiatedTemplate.parentId === parentInstanceId &&
         instantiatedTemplate.templateName === templateName &&
         !template.config.templateConfig.multiInstance
       ) {

@@ -1,4 +1,4 @@
-import { HelperOptions } from "handlebars";
+import Handlebars, { HelperOptions } from "handlebars";
 
 const eqHelper = (a: any, b: any, options?: HelperOptions) => {
   // block form: options.fn is a function
