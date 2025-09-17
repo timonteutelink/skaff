@@ -107,7 +107,6 @@ Templates may also include tasks, linting and formatting setups so that your new
 The CLI follows the standard `skaff <command> [options]` pattern. Common commands include:
 
 - `skaff project new <name> [template]` – create a new project or subproject.
-- `skaff plugins` – list or manage oclif plugins.
 - `skaff help [command]` – print detailed help for a command.
 
 Run `skaff --help` to see the full list of commands and flags.
