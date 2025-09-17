@@ -4,7 +4,7 @@
 
 #
 
-<p align="center"><strong>Modern scaffolding toolkit</strong> for bootstrapping consistent, reproducible projects from templates.</p>
+<p align="center"><strong>TypeScript-powered scaffolding toolkit</strong> for shipping consistent, reproducible projects from curated templates.</p>
 
 <p align="center">
   <a href="https://github.com/timonteutelink/skaff/actions/workflows/releaseCli.yml"><img alt="CI Status Cli" src="https://github.com/timonteutelink/skaff/actions/workflows/releaseCli.yml/badge.svg?branch=cli-v0.0.4"></a>
