@@ -41,4 +41,25 @@ const templateModule: TemplateConfigModule<
 export default templateModule;
 ```
 
+## Template Layout Example
+
+Templates often follow a layered structure where the root `templateConfig.ts` defines global settings and delegates to optional
+subtemplates for stack-specific features. A simplified project might look like the following:
+
+```
+nextjs-app/
+├─ templateConfig.ts
+├─ templates/  (... base app files ...)
+└─ subtemplates/
+    ├─ tailwind/        # subtemplate for adding Tailwind CSS
+    │   ├─ templateConfig.ts
+    │   └─ templates/ (... tailwind config files ...)
+    └─ auth/
+        ├─ templateConfig.ts
+        └─ templates/  (... auth module files ...)
+```
+
+Each `templateConfig.ts` composes its own schemas and exports a `TemplateConfigModule`, letting template authors mix and match
+features (like Tailwind or auth) while reusing the shared types and validation helpers from this package.
+
 For a deeper dive into advanced configuration patterns, AI helpers, and subtemplates, see the [Template Authoring Guide](../docs/src/docs/guides/template-authoring.mdx) in `packages/docs`.
