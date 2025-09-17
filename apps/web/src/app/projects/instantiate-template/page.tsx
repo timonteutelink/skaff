@@ -38,6 +38,7 @@ import {
   JsonFile,
 } from "@/components/general/file-upload-dialog";
 import { ConfirmationDialog } from "@/components/general/confirmation-dialog";
+import { getConnectedAiProviders } from "@/app/actions/ai";
 
 // TODO: when updating to a new template version we should reiterate all settings of all templates for possible changes. Or we fully automate go directly to diff but require the template to setup sensible defaults for possible new options.
 
@@ -78,6 +79,8 @@ const TemplateInstantiationPage: React.FC = () => {
   const [appliedDiff, setAppliedDiff] = useState<ParsedFile[] | null>(null);
   const [storedFormData, setStoredFormData] =
     useState<UserTemplateSettings | null>(null);
+  const [connectedProviders, setConnectedProviders] = useState<string[]>([]);
+  const [providersLoaded, setProvidersLoaded] = useState(false);
 
   useEffect(() => {
     if (!projectNameParam) {
@@ -199,6 +202,20 @@ const TemplateInstantiationPage: React.FC = () => {
     existingTemplateInstanceIdParam,
     newRevisionHashParam,
   ]);
+
+  useEffect(() => {
+    const loadProviders = async () => {
+      try {
+        const providers = await getConnectedAiProviders();
+        setConnectedProviders(providers);
+      } catch (error) {
+        console.error("Failed to load AI providers", error);
+      } finally {
+        setProvidersLoaded(true);
+      }
+    };
+    loadProviders();
+  }, []);
 
   const subTemplate = useMemo(() => {
     if (!rootTemplate || !templateNameParam) {
@@ -701,6 +718,9 @@ const TemplateInstantiationPage: React.FC = () => {
       ) : null}
       <TemplateSettingsForm
         projectName={projectNameParam}
+        rootTemplateName={
+          rootTemplate?.config.templateConfig.name || templateNameParam || ""
+        }
         selectedTemplate={templateNameParam}
         selectedTemplateSettingsSchema={
           subTemplate.data.config.templateSettingsSchema
@@ -709,6 +729,11 @@ const TemplateInstantiationPage: React.FC = () => {
         aiModelCategories={
           (subTemplate.data.config.templateConfig as any).aiModelCategories
         }
+        aiGenerationStepCount={subTemplate.data.aiGenerationStepCount || 0}
+        connectedProviders={connectedProviders}
+        projectDirPathId={selectedDirectoryIdParam || undefined}
+        projectRoot={project?.absPath}
+        providersLoaded={providersLoaded}
         action={handleSubmitSettings}
         cancel={() => {
           router.push(

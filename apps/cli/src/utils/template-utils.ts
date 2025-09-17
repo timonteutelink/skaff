@@ -1,10 +1,95 @@
-import { getTemplate } from '@timonteutelink/skaff-lib';
-import { UserTemplateSettings } from '@timonteutelink/template-types-lib';
+import {
+  advanceAiGeneration,
+  getConnectedProviders,
+  getTemplate,
+  getDefaultModelName,
+  resolveLanguageModel,
+  type ConversationStepData,
+} from '@timonteutelink/skaff-lib';
+import {
+  AiModel,
+  AiResultsObject,
+  UserTemplateSettings,
+} from '@timonteutelink/template-types-lib';
 import { confirm, input, select } from '@inquirer/prompts';
+import { streamText } from 'ai';
 import fs from 'node:fs';
 
 import { promptForSchema } from './zod-schema-prompt.js';
 
+async function runCliConversation(
+  prompt: ConversationStepData,
+  connectedProviders: string[],
+): Promise<string> {
+  console.log(`\n💬 Starting conversation for "${prompt.resultKey}"`);
+  if (prompt.categoryDescription) {
+    console.log(`ℹ️  ${prompt.categoryDescription}`);
+  }
+
+  const resolved = resolveLanguageModel(prompt.model, connectedProviders);
+  if (!resolved) {
+    throw new Error(
+      'No AI providers connected. Please configure an AI API key before continuing.',
+    );
+  }
+
+  const { client: modelClient, model } = resolved;
+  if (!prompt.model) {
+    console.log(
+      `🧠 Using ${model.provider} model ${model.name} for this conversation.`,
+    );
+  }
+  let conversation = [...prompt.messages];
+  const systemContext = prompt.context
+    .map((chunk) => chunk.trim())
+    .filter((chunk) => chunk.length > 0)
+    .join('\n');
+  const systemMessages =
+    systemContext.length > 0
+      ? [{ role: 'system' as const, content: systemContext }]
+      : [];
+
+  if (
+    conversation.length === 0 ||
+    conversation[conversation.length - 1]?.role !== 'user'
+  ) {
+    const userStart = await input({ message: 'You:' });
+    conversation.push({ role: 'user', content: userStart });
+  }
+
+  while (true) {
+    const response = await streamText({
+      model: modelClient,
+      messages: [...systemMessages, ...conversation],
+    });
+
+    let reply = '';
+    process.stdout.write('\nAssistant: ');
+    for await (const delta of response.textStream) {
+      process.stdout.write(delta);
+      reply += delta;
+    }
+    process.stdout.write('\n');
+
+    conversation.push({ role: 'assistant', content: reply.trim() });
+
+    const cont = await confirm({
+      message: 'Continue conversation?',
+      default: false,
+    });
+    if (!cont) {
+      break;
+    }
+    const userMsg = await input({ message: 'You:' });
+    conversation.push({ role: 'user', content: userMsg });
+  }
+
+  const last = conversation
+    .filter((m) => m.role === 'assistant')
+    .slice(-1)[0];
+
+  return last?.content || '';
+}
 
 async function promptUserTemplateSettings(
   rootTemplateName: string,
@@ -27,26 +112,73 @@ async function promptUserTemplateSettings(
   });
   if (Object.keys(result).length === 0) throw new Error('No settings provided.');
 
-  const providerOptions: string[] = ['openai', 'anthropic'];
   const categories = (subTpl.config as any).aiModelCategories || {};
-  const aiModels: Record<string, { provider: string; name: string }> = {};
+  const connectedProviders = getConnectedProviders();
+  const hasAiGeneration = Array.isArray(subTpl.config.aiGeneration?.steps)
+    ? subTpl.config.aiGeneration!.steps.length > 0
+    : false;
+
+  if (hasAiGeneration && connectedProviders.length === 0) {
+    throw new Error(
+      'No AI providers configured. Please set an API key (e.g. OPENAI_API_KEY) before instantiating this template.',
+    );
+  }
+
+  const aiModels: Record<string, AiModel> = {};
   for (const [key, cat] of Object.entries(categories)) {
-    const useModel = await confirm({
-      message: `Configure model for "${key}"? (${(cat as any).description})`,
-      default: false,
-    });
-    if (!useModel) continue;
+    console.log(`\n🧠 Configure model for category "${key}"`);
+    if ((cat as any)?.description) {
+      console.log(`ℹ️  ${(cat as any).description}`);
+    }
     const provider = await select({
       message: `LLM provider for "${key}":`,
-      choices: providerOptions.map((p) => ({ name: p, value: p })),
+      choices: connectedProviders.map((p) => ({ name: p, value: p })),
     });
+    const defaultName = getDefaultModelName(provider);
     const name = await input({
-      message: `Model name for "${key}":`,
+      message: `Model name for "${key}" (default ${defaultName}):`,
+      default: defaultName,
     });
     aiModels[key] = { provider, name };
   }
+
   if (Object.keys(aiModels).length) {
     (result as any).aiModels = aiModels;
+  }
+
+  let aiResults: AiResultsObject = ((result as any).aiResults ?? {}) as AiResultsObject;
+
+  while (hasAiGeneration) {
+    const progress = await advanceAiGeneration({
+      template: subTpl,
+      templateSettings: { ...result, aiModels },
+      parentSettings: undefined,
+      projectRoot: process.cwd(),
+      existingResults: aiResults,
+    });
+
+    if ('error' in progress) {
+      throw new Error(progress.error);
+    }
+
+    aiResults = progress.data.aiResults;
+
+    if (!progress.data.nextConversation) {
+      break;
+    }
+
+    const reply = await runCliConversation(
+      progress.data.nextConversation,
+      connectedProviders,
+    );
+    aiResults = {
+      ...aiResults,
+      [progress.data.nextConversation.resultKey]: reply,
+    };
+  }
+
+  if (Object.keys(aiResults).length) {
+    (result as any).aiResults = aiResults;
   }
 
   return result as UserTemplateSettings;
@@ -62,4 +194,3 @@ export async function readUserTemplateSettings(
   if (fs.existsSync(arg)) return JSON.parse(fs.readFileSync(arg, 'utf8'));
   return JSON.parse(arg);
 }
-

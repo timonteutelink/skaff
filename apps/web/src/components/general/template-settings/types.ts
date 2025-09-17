@@ -5,6 +5,7 @@ import { ReactNode } from "react";
 
 export interface TemplateSettingsFormProps {
   projectName: string;
+  rootTemplateName: string;
   selectedTemplate: string;
   selectedTemplateSettingsSchema: any;
   formDefaultValues: Record<string, any>;
@@ -12,6 +13,11 @@ export interface TemplateSettingsFormProps {
   cancel?: () => void;
   cancelButton?: ReactNode;
   aiModelCategories?: Record<string, { description: string }>;
+  aiGenerationStepCount: number;
+  connectedProviders: string[];
+  projectDirPathId?: string;
+  projectRoot?: string;
+  providersLoaded: boolean;
 }
 
 export interface SchemaResult {
