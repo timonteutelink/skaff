@@ -382,6 +382,7 @@ export class Template {
 
     const resultPath = await generatorService.instantiateTemplateInProject(
       addTemplateResult.data,
+      { removeOnFailure: true },
     );
 
     if ("error" in resultPath) {

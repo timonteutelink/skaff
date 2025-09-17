@@ -23,7 +23,12 @@ export function getCacheDirPath(): string {
 
 export async function getCacheDir(): Promise<Result<string>> {
   const cacheDir = getCacheDirPath();
-  await makeDir(cacheDir);
+  const ensureDirResult = await makeDir(cacheDir);
+
+  if ("error" in ensureDirResult) {
+    return ensureDirResult;
+  }
+
   return { data: cacheDir };
 }
 

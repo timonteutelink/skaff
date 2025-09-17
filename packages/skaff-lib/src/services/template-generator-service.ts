@@ -25,10 +25,33 @@ import { isSubset } from "../utils/shared-utils";
 import { makeDir } from "./file-service";
 import { commitAll, createGitRepo } from "./git-service";
 import {
+  removeTemplateFromSettings,
   writeNewProjectSettings,
   writeNewTemplateToSettings,
 } from "./project-settings-service";
 import { latestMigrationUuid } from "./template-migration-service";
+
+
+function isBinaryContent(buffer: Buffer): boolean {
+  const length = Math.min(buffer.length, 512);
+  let suspicious = 0;
+
+  for (let i = 0; i < length; i++) {
+    const byte = buffer[i];
+    if (byte === 0) {
+      return true;
+    }
+
+    if (byte < 7 || (byte > 13 && byte < 32) || byte === 127) {
+      suspicious++;
+      if (suspicious / length > 0.1) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
 
 
 export interface GeneratorOptions {
@@ -106,9 +129,48 @@ export class TemplateGeneratorService {
       return pathResult;
     }
 
-    return {
-      data: path.join(this.options.absoluteDestinationPath, pathResult.data),
-    };
+    return this.resolveWithinDestinationRoot(pathResult.data);
+  }
+
+  private getProjectRoot(): string {
+    return path.resolve(this.options.absoluteDestinationPath);
+  }
+
+  private resolveWithinDestinationRoot(relativePath: string): Result<string> {
+    if (path.isAbsolute(relativePath)) {
+      const errorMessage =
+        `Absolute paths are not allowed inside templates: ${relativePath}`;
+      backendLogger.error(errorMessage);
+      return { error: errorMessage };
+    }
+
+    const normalizedRelativePath = path.normalize(relativePath);
+    const absolutePath = path.resolve(
+      this.options.absoluteDestinationPath,
+      normalizedRelativePath,
+    );
+
+    return this.ensurePathWithinProjectRoot(absolutePath);
+  }
+
+  private ensurePathWithinProjectRoot(absolutePath: string): Result<string> {
+    const projectRoot = this.getProjectRoot();
+    const normalizedTargetPath = path.resolve(absolutePath);
+    const rootWithSeparator = projectRoot.endsWith(path.sep)
+      ? projectRoot
+      : `${projectRoot}${path.sep}`;
+
+    if (
+      normalizedTargetPath !== projectRoot &&
+      !normalizedTargetPath.startsWith(rootWithSeparator)
+    ) {
+      const errorMessage =
+        `Resolved path ${normalizedTargetPath} escapes the project root ${projectRoot}`;
+      backendLogger.error(errorMessage);
+      return { error: errorMessage };
+    }
+
+    return { data: normalizedTargetPath };
   }
 
   private getRedirects(): Result<RedirectFile[]> {
@@ -306,7 +368,17 @@ export class TemplateGeneratorService {
       return partialRegistrationResult;
     }
 
-    await makeDir(dest.data);
+    const cleanup = async () => {
+      this.registerHandlebarHelpers(handlebarHelpers.data, true);
+      await this.registerAllPartials(true);
+    };
+
+    const ensureDestDirResult = await makeDir(dest.data);
+
+    if ("error" in ensureDestDirResult) {
+      await cleanup();
+      return ensureDestDirResult;
+    }
 
     const entries = await glob(`**/*`, { cwd: src, dot: true, nodir: true });
 
@@ -325,32 +397,36 @@ export class TemplateGeneratorService {
         }
       }
 
+      const normalizedDestPath = this.ensurePathWithinProjectRoot(destPath);
+
+      if ("error" in normalizedDestPath) {
+        await cleanup();
+        return normalizedDestPath;
+      }
+
+      const finalDestinationPath = normalizedDestPath.data;
+
       try {
         const srcStats = await fs.stat(srcPath);
         if (srcStats.isDirectory()) continue;
 
         try {
-          const destStats = await fs.stat(destPath);
+          const destStats = await fs.stat(finalDestinationPath);
           if (destStats.isFile()) {
             const allowedOverwrite = overwrites.data.find((overwrite) =>
               overwrite.srcRegex.test(entry),
             );
             if (!allowedOverwrite || allowedOverwrite.mode === "error") {
-              backendLogger.error(`File: ${entry} at ${destPath} already exists.`);
-              const handlebarsRegisterResult = this.registerHandlebarHelpers(handlebarHelpers.data, true);
-              if ("error" in handlebarsRegisterResult) {
-                return handlebarsRegisterResult;
-              }
-              const allPartialRegistrationResult = this.registerAllPartials(true);
-              if ("error" in allPartialRegistrationResult) {
-                return allPartialRegistrationResult;
-              }
-              return { error: `File: ${entry} at ${destPath} already exists.` };
+              backendLogger.error(`File: ${entry} at ${finalDestinationPath} already exists.`);
+              await cleanup();
+              return {
+                error: `File: ${entry} at ${finalDestinationPath} already exists.`,
+              };
             }
 
             if (allowedOverwrite.mode.endsWith("warn")) {
               backendLogger.warn(
-                `File: ${entry} at ${destPath} already exists. ${allowedOverwrite.mode.startsWith("ignore") ? "Ignoring" : "Overwriting"} it.`,
+                `File: ${entry} at ${finalDestinationPath} already exists. ${allowedOverwrite.mode.startsWith("ignore") ? "Ignoring" : "Overwriting"} it.`,
               );
             }
 
@@ -360,31 +436,41 @@ export class TemplateGeneratorService {
           }
         } catch { }
 
-        const content = await readFile(srcPath, { encoding: "utf-8" });
-        const compiled = Handlebars.compile(content, { strict: true });
-        const result = compiled(this.currentlyGeneratingTemplateFinalSettings);
+        const fileBuffer = await fs.readFile(srcPath);
+        const shouldTemplate =
+          srcPath.endsWith(".hbs") || !isBinaryContent(fileBuffer);
 
-        await fs.ensureDir(path.dirname(destPath));
-        await fs.writeFile(destPath, result, "utf-8");
+        await fs.ensureDir(path.dirname(finalDestinationPath));
 
-        await fs.chmod(destPath, srcStats.mode);
+        if (shouldTemplate) {
+          const compiled = Handlebars.compile(
+            fileBuffer.toString("utf-8"),
+            { strict: true },
+          );
+          const result = compiled(
+            this.currentlyGeneratingTemplateFinalSettings,
+          );
+          await fs.writeFile(finalDestinationPath, result, "utf-8");
+        } else {
+          await fs.writeFile(finalDestinationPath, fileBuffer);
+        }
 
-        backendLogger.debug(`Generated: ${destPath}`);
+        await fs.chmod(finalDestinationPath, srcStats.mode);
+
+        backendLogger.debug(`Generated: ${finalDestinationPath}`);
       } catch (error) {
         logError({
           shortMessage: `Error processing file ${srcPath}`,
           error,
         });
-        this.registerHandlebarHelpers(handlebarHelpers.data, true);
-        await this.registerAllPartials(true);
+        await cleanup();
         return {
           error: `Error processing file ${srcPath}: ${error}`,
         };
       }
     }
 
-    this.registerHandlebarHelpers(handlebarHelpers.data, true);
-    await this.registerAllPartials(true);
+    await cleanup();
 
     return { data: undefined };
   }
@@ -438,10 +524,13 @@ export class TemplateGeneratorService {
       backendLogger.error("No template is currently being generated.");
       return { error: "No template is currently being generated." };
     }
-    const absoluteFilePath = path.join(
-      this.options.absoluteDestinationPath,
-      filePath,
-    );
+    const absoluteFilePathResult = this.resolveWithinDestinationRoot(filePath);
+
+    if ("error" in absoluteFilePathResult) {
+      return absoluteFilePathResult;
+    }
+
+    const absoluteFilePath = absoluteFilePathResult.data;
 
     let oldFileContents = "";
     try {
@@ -470,6 +559,7 @@ export class TemplateGeneratorService {
     }
 
     try {
+      await fs.ensureDir(path.dirname(absoluteFilePath));
       await fs.writeFile(absoluteFilePath, sideEffectResult, "utf8");
     } catch (error) {
       logError({
@@ -480,6 +570,64 @@ export class TemplateGeneratorService {
     }
 
     return { data: undefined };
+  }
+
+  private collectTemplateTreeIds(rootInstanceId: string): Set<string> {
+    const idsToRemove = new Set<string>();
+    const queue: string[] = [rootInstanceId];
+
+    while (queue.length > 0) {
+      const currentId = queue.shift()!;
+
+      if (idsToRemove.has(currentId)) {
+        continue;
+      }
+
+      idsToRemove.add(currentId);
+
+      for (const templateSetting of this.destinationProjectSettings
+        .instantiatedTemplates) {
+        if (templateSetting.parentId === currentId) {
+          queue.push(templateSetting.id);
+        }
+      }
+    }
+
+    return idsToRemove;
+  }
+
+  private async removeTemplatesFromProjectSettings(
+    idsToRemove: Set<string>,
+    options?: { removeFromFile?: boolean },
+  ): Promise<void> {
+    if (idsToRemove.size === 0) {
+      return;
+    }
+
+    this.destinationProjectSettings.instantiatedTemplates =
+      this.destinationProjectSettings.instantiatedTemplates.filter(
+        (templateSetting) => !idsToRemove.has(templateSetting.id),
+      );
+
+    if (
+      this.options.dontGenerateTemplateSettings ||
+      !options?.removeFromFile
+    ) {
+      return;
+    }
+
+    for (const id of idsToRemove) {
+      const removalResult = await removeTemplateFromSettings(
+        this.options.absoluteDestinationPath,
+        id,
+      );
+
+      if ("error" in removalResult) {
+        backendLogger.error(
+          `Failed to remove template ${id} from templateSettings.json: ${removalResult.error}`,
+        );
+      }
+    }
   }
 
   private async setTemplateGenerationValues(
@@ -538,13 +686,6 @@ export class TemplateGeneratorService {
         return autoGeneratedTemplateUserSettings;
       }
 
-      const newFinalTemplateSettings = Project.getFinalTemplateSettings(
-        this.currentlyGeneratingTemplate,
-        this.destinationProjectSettings,
-        autoGeneratedTemplateUserSettings.data,
-        parentTemplateInstanceId,
-      );
-
       const nameOfTemplateToAutoInstantiate =
         templateToAutoInstantiate.subTemplateName;
 
@@ -575,6 +716,20 @@ export class TemplateGeneratorService {
         };
       }
 
+      const childFinalTemplateSettingsResult = Project.getFinalTemplateSettings(
+        templateToInstantiate,
+        this.destinationProjectSettings,
+        autoGeneratedTemplateUserSettings.data,
+        parentTemplateInstanceId,
+      );
+
+      if ("error" in childFinalTemplateSettingsResult) {
+        return childFinalTemplateSettingsResult;
+      }
+
+      const childFinalTemplateSettings =
+        childFinalTemplateSettingsResult.data;
+
       const addTemplateResult = this.addNewTemplate(
         autoGeneratedTemplateUserSettings.data,
         nameOfTemplateToAutoInstantiate,
@@ -595,6 +750,7 @@ export class TemplateGeneratorService {
 
       const instantiateTemplateResult = await this.instantiateTemplateInProject(
         addTemplateResult.data,
+        { removeOnFailure: true },
       );
 
       if ("error" in instantiateTemplateResult) {
@@ -611,7 +767,7 @@ export class TemplateGeneratorService {
 
       if (childrenTemplatesToAutoInstantiate) {
         const autoInstantiationResult = await this.autoInstantiateSubTemplates(
-          newFinalTemplateSettings,
+          childFinalTemplateSettings,
           addTemplateResult.data,
           childrenTemplatesToAutoInstantiate,
         );
@@ -637,19 +793,21 @@ export class TemplateGeneratorService {
         return templatesToAutoInstantiate;
       }
 
-      const autoInstantiationResult = await this.autoInstantiateSubTemplates(
-        newFinalTemplateSettings,
-        parentTemplateInstanceId,
-        templatesToAutoInstantiate.data,
-      );
+      if (templatesToAutoInstantiate.data?.length) {
+        const autoInstantiationResult = await this.autoInstantiateSubTemplates(
+          childFinalTemplateSettings,
+          addTemplateResult.data,
+          templatesToAutoInstantiate.data,
+        );
 
-      if ("error" in autoInstantiationResult) {
-        this.currentlyGeneratingTemplate = savedCurrentlyGeneratingTemplate;
-        this.currentlyGeneratingTemplateFinalSettings =
-          savedCurrentlyGeneratingTemplateFullSettings;
-        this.currentlyGeneratingTemplateParentInstanceId =
-          savedCurrentlyGeneratingTemplateParentInstanceId;
-        return autoInstantiationResult;
+        if ("error" in autoInstantiationResult) {
+          this.currentlyGeneratingTemplate = savedCurrentlyGeneratingTemplate;
+          this.currentlyGeneratingTemplateFinalSettings =
+            savedCurrentlyGeneratingTemplateFullSettings;
+          this.currentlyGeneratingTemplateParentInstanceId =
+            savedCurrentlyGeneratingTemplateParentInstanceId;
+          return autoInstantiationResult;
+        }
       }
 
       this.currentlyGeneratingTemplate = savedCurrentlyGeneratingTemplate;
@@ -784,28 +942,60 @@ export class TemplateGeneratorService {
   // TODO: adding ai will require some more state. Probably save to file and stream file content to frontend or something. Since we need to keep the result if connection were to close.
   public async instantiateTemplateInProject(
     newTemplateInstanceId: string,
+    options?: { removeOnFailure?: boolean },
   ): Promise<Result<string>> {
-    const instantiatedTemplate =
-      this.destinationProjectSettings.instantiatedTemplates.find(
+    const removeOnFailure = options?.removeOnFailure ?? false;
+
+    const instantiatedTemplateIndex =
+      this.destinationProjectSettings.instantiatedTemplates.findIndex(
         (template) => template.id === newTemplateInstanceId,
       );
 
-    if (!instantiatedTemplate) {
+    if (instantiatedTemplateIndex === -1) {
       backendLogger.error(`Template with id ${newTemplateInstanceId} not found.`);
       return { error: `Template with id ${newTemplateInstanceId} not found.` };
     }
+
+    const instantiatedTemplate =
+      this.destinationProjectSettings.instantiatedTemplates[
+        instantiatedTemplateIndex
+      ]!;
 
     const templateName = instantiatedTemplate.templateName;
     const userSettings = instantiatedTemplate.templateSettings;
     const parentInstanceId = instantiatedTemplate.parentId;
 
+    let templateSettingsPersisted = false;
+
+    const cleanupOnFailure = async (): Promise<void> => {
+      if (!removeOnFailure) {
+        return;
+      }
+
+      const idsToRemove = this.collectTemplateTreeIds(
+        newTemplateInstanceId,
+      );
+
+      await this.removeTemplatesFromProjectSettings(idsToRemove, {
+        removeFromFile: templateSettingsPersisted,
+      });
+    };
+
+    const fail = async <T>(result: Result<T>): Promise<Result<T>> => {
+      await cleanupOnFailure();
+      return result;
+    };
+
+    const failWithMessage = (message: string): Promise<Result<string>> =>
+      fail({ error: message });
+
     if (!parentInstanceId) {
       backendLogger.error(
         `Parent instance ID is required for template ${templateName}. Maybe you are trying to instantiate the root template?`,
       );
-      return {
-        error: `Parent instance ID is required for template ${templateName}. Maybe you are trying to instantiate the root template?`,
-      };
+      return failWithMessage(
+        `Parent instance ID is required for template ${templateName}. Maybe you are trying to instantiate the root template?`,
+      );
     }
 
     const template = this.rootTemplate.findSubTemplate(templateName);
@@ -813,9 +1003,9 @@ export class TemplateGeneratorService {
       backendLogger.error(
         `Template ${templateName} could not be found in rootTemplate ${this.rootTemplate.config.templateConfig.name}`,
       );
-      return {
-        error: `Template ${templateName} could not be found in rootTemplate ${this.rootTemplate.config.templateConfig.name}`,
-      };
+      return failWithMessage(
+        `Template ${templateName} could not be found in rootTemplate ${this.rootTemplate.config.templateConfig.name}`,
+      );
     }
 
     const result = await this.setTemplateGenerationValues(
@@ -825,14 +1015,14 @@ export class TemplateGeneratorService {
     );
 
     if ("error" in result) {
-      return result;
+      return fail(result);
     }
     // TODO: disable every other action in project page when the commithash is not equal.
     // NO actually just make sure always before generating to git checkout the right template. I guess before every generation/copydirectory we need to git checkout the right commit hash, load the template again from this the newly checked out template. Run the generation and git checkout the old branch again. This needs to happen for every generation but also when displaying the template.
     // NO maybe we will NEED to make another copy of the templates dir and checkout there so we can just retrieve templates and get all versions not only the newest. So when retrieving projects if there is a oldtemplatehash used anywhere we call a function to copy the template dir to cache. There we checkout this commit hash and we load it from there. This way we can also display the other revisions of template in frontend on templates list since they will have been added. Then we can make it so the apps requires restart if you change and recommit the templates dir because before that all templates will be loaded in memory with a commit hash and will never be loaded again. So add checks everywhere if commit hash still the same and if git dir is clean before actually generating the template. So now to uniquely identify template should use everywhere name and commit hash and when searching template you have the newest one and then all revisions used for projects. Probaly store the copied revisions in the cachedir inside a dir with the commithash as name. This way we in generation we can reference files from any revision directly to use old and new templates and also to update from old to new template. When app starts and projects are loaded will check if revisions in cache else copy dir there and checkout right revision. Add error TEMPLATE DIR CHANGED and a button to manually reload all templates and then revisions and will delete all cached revisions. This way no restart of app is needed. So the registry will fill up with revisions while app is running and when user press reload will clean and load again.
     if (!this.currentlyGeneratingTemplateFinalSettings) {
       backendLogger.error("Failed to parse user settings.");
-      return { error: "Failed to parse user settings." };
+      return failWithMessage("Failed to parse user settings.");
     }
 
     const templatesThatDisableThisTemplate = anyOrCallbackToAny(
@@ -841,7 +1031,7 @@ export class TemplateGeneratorService {
     );
 
     if ("error" in templatesThatDisableThisTemplate) {
-      return templatesThatDisableThisTemplate;
+      return fail(templatesThatDisableThisTemplate);
     }
 
     for (const instantiatedTemplate of this.destinationProjectSettings
@@ -864,9 +1054,9 @@ export class TemplateGeneratorService {
         backendLogger.error(
           `Template ${templateName} cannot be instantiated because ${instantiatedTemplate.templateName} is already instantiated.`,
         );
-        return {
-          error: `Template ${templateName} cannot be instantiated because ${instantiatedTemplate.templateName} is already instantiated.`,
-        };
+        return failWithMessage(
+          `Template ${templateName} cannot be instantiated because ${instantiatedTemplate.templateName} is already instantiated.`,
+        );
       }
     }
 
@@ -876,22 +1066,22 @@ export class TemplateGeneratorService {
     );
 
     if ("error" in assertions) {
-      return assertions;
+      return fail(assertions);
     }
 
     if (assertions.data !== undefined && !assertions.data) {
       backendLogger.error(`Template ${templateName} failed assertions.`);
-      return { error: `Template ${templateName} failed assertions.` };
+      return failWithMessage(`Template ${templateName} failed assertions.`);
     }
 
     try {
       const copyResult = await this.copyDirectory();
       if ("error" in copyResult) {
-        return copyResult;
+        return fail(copyResult);
       }
       const sideEffectResult = await this.applySideEffects();
       if ("error" in sideEffectResult) {
-        return sideEffectResult;
+        return fail(sideEffectResult);
       }
 
       if (!this.options.dontGenerateTemplateSettings) {
@@ -901,31 +1091,35 @@ export class TemplateGeneratorService {
         );
 
         if ("error" in newTemplateResult) {
-          return newTemplateResult;
+          return fail(newTemplateResult);
         }
+
+        templateSettingsPersisted = true;
       }
 
       const templatesToAutoInstantiate = this.getTemplatesToAutoInstantiate();
 
       if ("error" in templatesToAutoInstantiate) {
-        return templatesToAutoInstantiate;
+        return fail(templatesToAutoInstantiate);
       }
 
-      const result = await this.autoInstantiateSubTemplates(
-        this.currentlyGeneratingTemplateFinalSettings,
-        instantiatedTemplate.id,
-        templatesToAutoInstantiate.data,
-      );
+      if (templatesToAutoInstantiate.data?.length) {
+        const autoInstantiationResult = await this.autoInstantiateSubTemplates(
+          this.currentlyGeneratingTemplateFinalSettings,
+          instantiatedTemplate.id,
+          templatesToAutoInstantiate.data,
+        );
 
-      if ("error" in result) {
-        return result;
+        if ("error" in autoInstantiationResult) {
+          return fail(autoInstantiationResult);
+        }
       }
     } catch (error) {
       logError({
         shortMessage: `Failed to instantiate template`,
         error,
       });
-      return { error: `Failed to instantiate template: ${error}` };
+      return fail({ error: `Failed to instantiate template: ${error}` });
     }
 
     return this.getAbsoluteTargetPath();
@@ -949,12 +1143,17 @@ export class TemplateGeneratorService {
       };
     }
 
+    const projectRootInstanceId = instantiatedTemplate.id;
+
     if (
       instantiatedTemplate.templateName !==
       this.rootTemplate.config.templateConfig.name
     ) {
       backendLogger.error(
         `Root template name mismatch in project settings. Make sure root template is the first one in the list.`,
+      );
+      await this.removeTemplatesFromProjectSettings(
+        this.collectTemplateTreeIds(projectRootInstanceId),
       );
       return {
         error: `Root template name mismatch in project settings. Make sure root template is the first one in the list.`,
@@ -964,6 +1163,38 @@ export class TemplateGeneratorService {
     const template = this.rootTemplate;
     const userSettings = instantiatedTemplate.templateSettings;
 
+    let projectDirCreated = false;
+    let projectSettingsPersisted = false;
+
+    const cleanupOnFailure = async () => {
+      const idsToRemove = this.collectTemplateTreeIds(projectRootInstanceId);
+      await this.removeTemplatesFromProjectSettings(idsToRemove, {
+        removeFromFile: projectSettingsPersisted,
+      });
+
+      if (!projectDirCreated) {
+        return;
+      }
+
+      try {
+        await fs.rm(this.options.absoluteDestinationPath, {
+          recursive: true,
+          force: true,
+        });
+        projectDirCreated = false;
+      } catch (error) {
+        logError({
+          shortMessage: `Failed to clean up project directory ${this.options.absoluteDestinationPath}`,
+          error,
+        });
+      }
+    };
+
+    const fail = async <T>(result: Result<T>): Promise<Result<T>> => {
+      await cleanupOnFailure();
+      return result;
+    };
+
     const dirStat = await fs
       .stat(this.options.absoluteDestinationPath)
       .catch(() => null);
@@ -971,9 +1202,9 @@ export class TemplateGeneratorService {
       backendLogger.error(
         `Directory ${this.options.absoluteDestinationPath} already exists.`,
       );
-      return {
+      return fail({
         error: `Directory ${this.options.absoluteDestinationPath} already exists.`,
-      };
+      });
     }
 
     const result = await this.setTemplateGenerationValues(
@@ -982,27 +1213,29 @@ export class TemplateGeneratorService {
     );
 
     if ("error" in result) {
-      return result;
+      return fail(result);
     }
 
     if (!this.currentlyGeneratingTemplateFinalSettings) {
       backendLogger.error("Failed to parse user settings.");
-      return { error: "Failed to parse user settings." };
+      return fail({ error: "Failed to parse user settings." });
     }
 
     try {
-      await makeDir(this.options.absoluteDestinationPath);
+      const ensureProjectDirResult = await makeDir(
+        this.options.absoluteDestinationPath,
+      );
+
+      if ("error" in ensureProjectDirResult) {
+        return fail(ensureProjectDirResult);
+      }
+      projectDirCreated = true;
       if (!this.options.dontDoGit) {
         const createRepoResult = await createGitRepo(
           this.options.absoluteDestinationPath,
         );
-        if (!createRepoResult) {
-          backendLogger.error(
-            `Failed to create git repository in ${this.options.absoluteDestinationPath}`,
-          );
-          return {
-            error: `Failed to create git repository in ${this.options.absoluteDestinationPath}`,
-          };
+        if ("error" in createRepoResult) {
+          return fail(createRepoResult);
         }
       }
       if (!this.options.dontGenerateTemplateSettings) {
@@ -1012,30 +1245,28 @@ export class TemplateGeneratorService {
           false,
         );
         if ("error" in writeSettingsResult) {
-          return writeSettingsResult;
+          return fail(writeSettingsResult);
         }
+        projectSettingsPersisted = true;
       }
       if (!this.options.dontDoGit) {
         const commitResult = await commitAll(
           this.options.absoluteDestinationPath,
           `Initial commit for ${this.destinationProjectSettings.projectName}`,
         );
-        if (!commitResult) {
-          backendLogger.error(`Failed to commit project settings: ${commitResult}`);
-          return {
-            error: `Failed to commit project settings: ${commitResult}`,
-          };
+        if ("error" in commitResult) {
+          return fail(commitResult);
         }
       }
 
       const copyResult = await this.copyDirectory();
       if ("error" in copyResult) {
-        return copyResult;
+        return fail(copyResult);
       }
 
       const sideEffectResult = await this.applySideEffects();
       if ("error" in sideEffectResult) {
-        return sideEffectResult;
+        return fail(sideEffectResult);
       }
 
       // TODO: Revise this to be able to be called recursively so add this as a param to function and use getTemplatesToAutoInstantiate. Then call this function on the children list.
@@ -1043,7 +1274,7 @@ export class TemplateGeneratorService {
       const templatesToAutoInstantiate = this.getTemplatesToAutoInstantiate();
 
       if ("error" in templatesToAutoInstantiate) {
-        return templatesToAutoInstantiate;
+        return fail(templatesToAutoInstantiate);
       }
       const result = await this.autoInstantiateSubTemplates(
         this.currentlyGeneratingTemplateFinalSettings,
@@ -1051,9 +1282,10 @@ export class TemplateGeneratorService {
         templatesToAutoInstantiate.data,
       );
       if ("error" in result) {
-        return result;
+        return fail(result);
       }
     } catch (error) {
+      await cleanupOnFailure();
       logError({
         shortMessage: `Failed to instantiate new project`,
         error,
@@ -1061,7 +1293,7 @@ export class TemplateGeneratorService {
       return { error: `Failed to instantiate new project: ${error}` };
     }
 
-    return { data: this.options.absoluteDestinationPath }
+    return { data: this.options.absoluteDestinationPath };
 
   }
 

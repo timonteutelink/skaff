@@ -107,17 +107,18 @@ export class Project {
     instanceId: string,
     instantiatedProjectSettings: ProjectSettings,
   ): Result<FinalTemplateSettings> {
-    const instantiatedSettings: UserTemplateSettings = {};
     const projectTemplateSettings = instantiatedProjectSettings.instantiatedTemplates.find(
       (t) =>
         t.id === instanceId &&
         t.templateName === template.config.templateConfig.name,
     );
     if (!projectTemplateSettings) {
+      const errorMessage =
+        `Template ${template.config.templateConfig.name} with id ${instanceId} not found in project settings`;
       logError({
-        shortMessage: `Template ${template.config.templateConfig.name} with id ${instanceId} not found in project settings`,
+        shortMessage: errorMessage,
       });
-      return { data: instantiatedSettings };
+      return { error: errorMessage };
     }
 
     const parsedUserProvidedSettingsSchema = template.config.templateSettingsSchema.safeParse(
