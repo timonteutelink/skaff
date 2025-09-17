@@ -1,0 +1,25 @@
+---
+title: Configuration
+authors: []
+sidebar_position: 2
+---
+
+Skaff stores user configuration in JSON at `~/.config/skaff/settings.json`. Environment variables with matching names override the file at runtime. Use `skaff config` commands rather than editing the file manually.
+
+| Key                    | Type       | Description                                                                                                              |
+| ---------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `TEMPLATE_DIR_PATHS`   | `string[]` | Directories that contain template repositories. Skaff scans each for `root-templates/`.                                  |
+| `PROJECT_SEARCH_PATHS` | `string[]` | Locations Skaff inspects when running `skaff project ls`. Helpful when projects live in multiple workspaces.             |
+| `NPM_PATH`             | `string`   | Command used to execute template-defined scripts. Defaults to `npm`; set to `bunx`, `pnpm`, or another runner as needed. |
+
+Environment variable formats:
+
+```bash
+# multiple directories
+export TEMPLATE_DIR_PATHS="~/templates:/srv/templates"
+
+# custom config location
+export SKAFF_CONFIG_PATH="$PWD/.skaff/settings.json"
+```
+
+List the active configuration at any time with `skaff config get --format table`.

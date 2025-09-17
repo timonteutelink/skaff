@@ -1,0 +1,45 @@
+---
+title: Web quickstart
+authors: []
+sidebar_position: 3
+---
+
+Prefer a graphical workflow? Launch the Skaff web app and create a project from the browser.
+
+## 1. Start the web app
+
+Choose the option that matches your environment:
+
+### Docker (fastest)
+
+```bash
+docker run --rm -p 3000:3000 \
+  -v ~/.config/skaff:/app/.config/skaff \
+  -v ~/.cache/skaff:/app/.cache/skaff \
+  -v ~/projects:/projects \
+  timonteutelink/skaff-web:latest
+```
+
+Mounting your config and cache directories keeps the web app aligned with the CLI, and the `/projects` bind mount exposes a workspace for generated files. Open [http://localhost:3000](http://localhost:3000) once the container starts.
+
+### From source
+
+```bash
+bun install
+bun --filter apps/web dev
+```
+
+The dev server runs on port 3000 and uses your local `~/.config/skaff/settings.json`.
+
+## 2. Confirm template access
+
+Use the CLI or the **Templates** view’s “Load from Github” action to add repositories. Both surfaces update the same configuration file, so changes are shared instantly.
+
+## 3. Generate a project visually
+
+1. Pick a template from the library to open its generated form.
+2. Complete required and optional fields. Validation hints appear inline.
+3. Click **Preview diff** to inspect every change.
+4. Choose a destination folder and click **Generate** to write the files.
+
+Return to the UI later to apply template updates, add subtemplates, or run template-defined commands without leaving the browser. Keep the [project README](https://github.com/timonteutelink/skaff#readme) nearby for release processes and deeper repository context.
