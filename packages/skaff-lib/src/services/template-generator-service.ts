@@ -37,7 +37,7 @@ function isBinaryContent(buffer: Buffer): boolean {
   let suspicious = 0;
 
   for (let i = 0; i < length; i++) {
-    const byte = buffer[i];
+    const byte = buffer[i]!;
     if (byte === 0) {
       return true;
     }
