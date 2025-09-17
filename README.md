@@ -7,10 +7,10 @@
 <p align="center"><strong>Modern scaffolding toolkit</strong> for bootstrapping consistent, reproducible projects from templates.</p>
 
 <p align="center">
-  <a href="https://github.com/timonteutelink/skaff/actions/workflows/releaseCli.yml"><img alt="CI Status Cli" src="https://github.com/timonteutelink/skaff/actions/workflows/releaseCli.yml/badge.svg?branch=main"></a>
-  <a href="https://github.com/timonteutelink/skaff/actions/workflows/releaseWeb.yml"><img alt="CI Status Web" src="https://github.com/timonteutelink/skaff/actions/workflows/releaseWeb.yml/badge.svg?branch=main"></a>
-  <a href="https://github.com/timonteutelink/skaff/actions/workflows/releaseLib.yml"><img alt="CI Status Lib" src="https://github.com/timonteutelink/skaff/actions/workflows/releaseLib.yml/badge.svg?branch=main"></a>
-  <a href="https://github.com/timonteutelink/skaff/actions/workflows/releaseTypes.yml"><img alt="CI Status Types" src="https://github.com/timonteutelink/skaff/actions/workflows/releaseTypes.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/timonteutelink/skaff/actions/workflows/releaseCli.yml"><img alt="CI Status Cli" src="https://github.com/timonteutelink/skaff/actions/workflows/releaseCli.yml/badge.svg"></a>
+  <a href="https://github.com/timonteutelink/skaff/actions/workflows/releaseWeb.yml"><img alt="CI Status Web" src="https://github.com/timonteutelink/skaff/actions/workflows/releaseWeb.yml/badge.svg"></a>
+  <a href="https://github.com/timonteutelink/skaff/actions/workflows/releaseLib.yml"><img alt="CI Status Lib" src="https://github.com/timonteutelink/skaff/actions/workflows/releaseLib.yml/badge.svg"></a>
+  <a href="https://github.com/timonteutelink/skaff/actions/workflows/releaseTypes.yml"><img alt="CI Status Types" src="https://github.com/timonteutelink/skaff/actions/workflows/releaseTypes.yml/badge.svg"></a>
 </p>
 <p align="center">
   <a href="https://www.npmjs.com/package/@timonteutelink/skaff"><img alt="@timonteutelink/skaff" src="https://img.shields.io/npm/v/%40timonteutelink%2Fskaff?label=%40timonteutelink%2Fskaff"></a>
