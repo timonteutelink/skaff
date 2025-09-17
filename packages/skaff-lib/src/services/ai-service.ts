@@ -57,7 +57,7 @@ function createDefaultConversationAgent(
 
       const res = await generateText({
         model: modelClient,
-        messages: [...messages, ...systemMessage],
+        messages: [...systemMessage, ...messages],
       });
       return res.text;
     },
@@ -592,13 +592,22 @@ async function executeSteps(options: ExecuteOptions): Promise<Result<ExecuteResu
       })()
     : [];
 
+  const stepResultKeys = new Set(generation.steps.map((step) => step.resultKey));
+  const finishedSteps = new Set<string>();
+
+  for (const key of stepResultKeys) {
+    if (aiResults[key] !== undefined) {
+      finishedSteps.add(key);
+    }
+  }
+
   const state: GenerationState = {
     aiResults,
     evaluationContext,
-    finishedSteps: new Set<string>(Object.keys(aiResults)),
+    finishedSteps,
   };
 
-  while (state.finishedSteps.size < generation.steps.length) {
+  while (state.finishedSteps.size < stepResultKeys.size) {
     const next = findNextRunnableStep(generation.steps, state.finishedSteps);
     if (!next) {
       return { error: "Circular ai generation dependencies" };
