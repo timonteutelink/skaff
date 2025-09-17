@@ -1,19 +1,8 @@
-# skaff
-
 <p align="center">
-  <svg width="140" height="140" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="skaff logo">
-    <defs>
-      <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
-        <stop offset="0%" stop-color="#FFE36E"/>
-        <stop offset="100%" stop-color="#F7C948"/>
-      </linearGradient>
-    </defs>
-    <ellipse cx="70" cy="70" rx="56" ry="30" fill="url(#g)" transform="rotate(-25 70 70)"/>
-    <circle cx="44" cy="76" r="4" fill="#3F3D56"/>
-    <path d="M24 58c6 8 20 10 38 6 18-4 38-1 54 10" stroke="#3F3D56" stroke-width="4" fill="none" opacity=".15"/>
-    <text x="50%" y="118" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial" font-size="16" fill="#3F3D56">skaff</text>
-  </svg>
+  <img src="assets/skafflogo321.png" alt="Skaff logo" width="220" height ="140">
 </p>
+
+#
 
 <p align="center"><strong>Modern scaffolding toolkit</strong> for bootstrapping consistent, reproducible projects from templates.</p>
 
@@ -95,6 +84,7 @@ skaff --help
 
 - **One‑command scaffolding.** Generate a new project or apply a subtemplate with a single command or click. A guided prompt collects the name, options and feature flags and applies them consistently across all files and configs.
 - **Diff preview and patching.** skaff shows you exactly what will be created or changed. For existing projects it generates a git patch so you can inspect and commit the changes yourself.
+![Preview Patching](assets/previewPatching.png)
 - **Multi‑platform distribution.** Use it instantly via `npx` or `bunx`, install globally with npm or bun, download a prebuilt binary, or run it as a reproducible Nix flake.
 - **Visual Web UI.** A Next.js powered interface allows you to browse templates, fill in form fields, preview the resulting file tree or diff, and apply patches without touching the terminal
 - **Flexible configuration.** Configure where your templates live and where to create projects through a simple JSON config or environment variables like `TEMPLATE_DIR_PATHS`, `PROJECT_SEARCH_PATHS`

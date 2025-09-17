@@ -1,11 +1,6 @@
 {
-  # "packages/template-types-lib",
-  # "apps/web",
-  # "packages/notebook",
-  # "packages/skaff-lib",
-  # "packages/tailwind-config"
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     devenv.url = "github:cachix/devenv";
     flake-parts.url = "github:hercules-ci/flake-parts";
     bun2nix.url = "github:baileyluTCD/bun2nix";
