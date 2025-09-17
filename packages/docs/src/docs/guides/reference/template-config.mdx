@@ -6,17 +6,21 @@ sidebar_position: 3
 
 `TemplateConfigModule` describes how Skaff should render your template. The table below lists the properties used most often. Consult the generated TypeDoc at `/skaff/template-types-lib` for complete signatures.
 
-| Property                       | Purpose                                                                                                 |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| `templateConfig`               | Metadata for the template (`name`, `author`, `description`, optional `multiInstance`, etc.).            |
-| `templateSettingsSchema`       | Zod schema that defines prompts and validation rules. The inferred type drives TypeScript tooling.      |
-| `targetPath`                   | Absolute or relative path where rendered files are written. Accepts a string or callback.               |
-| `mapFinalSettings`             | Modify settings after validation and before rendering. Receives `{ templateSettings, parentSettings }`. |
-| `autoInstantiatedSubtemplates` | Declare subtemplates to run automatically. Can return a static list or compute it dynamically.          |
-| `sideEffects`                  | Apply programmatic edits to existing files. Each entry supplies a `filePath` and an `apply` function.   |
-| `allowOverwrite`               | Whitelist files that may be overwritten when a conflict occurs.                                         |
-| `redirectFiles`                | Redirect rendered files to alternative destinations. Useful for multi-instance templates.               |
-| `templateCommands`             | Surface helpful follow-up commands in the CLI and web UI (for example, `npm test`).                     |
-| `templateMigrations`           | Upgrade stored settings when schemas change between template revisions.                                 |
+| Property                       | Purpose                                                                                                                                 |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `templateConfig`               | Metadata for the template (`name`, `author`, `description`, `multiInstance`, etc.).                                                     |
+| `templateSettingsSchema`       | Zod schema that defines prompts and validation rules. The inferred type drives TypeScript tooling.                                      |
+| `templateFinalSettingsSchema`  | Schema that validates stored settings when Skaff reloads a template or applies migrations.                                              |
+| `mapFinalSettings`             | Modify settings after validation and before rendering. Receives `{ templateSettings, parentSettings, fullProjectSettings, aiResults }`. |
+| `targetPath`                   | Absolute or relative path where rendered files are written. Accepts a string or callback.                                               |
+| `autoInstantiatedSubtemplates` | Declare subtemplates to run automatically. Can return a static list or compute it dynamically.                                          |
+| `sideEffects`                  | Apply programmatic edits to existing files. Each entry supplies a `filePath` and an `apply` function.                                   |
+| `redirects`                    | Redirect rendered files to alternative destinations. Useful for multi-instance templates.                                               |
+| `allowedOverwrites`            | Whitelist files that may be overwritten when a conflict occurs.                                                                         |
+| `commands`                     | Surface helpful follow-up commands in the CLI and web UI (for example, `npm test`).                                                     |
+| `migrations`                   | Upgrade stored settings when schemas change between template revisions.                                                                 |
+| `templatesThatDisableThis`     | Prevent incompatible combinations by disabling a template when another instance is present.                                             |
+| `handlebarHelpers`             | Register additional Handlebars helpers before rendering templates.                                                                      |
+| `assertions`                   | Fail generation early if a predicate returns `false` (for example, when prerequisites are missing).                                     |
 
-Additional helpers in the package cover AI-assisted settings, caching hints, and migration utilities.
+Additional helpers cover AI-assisted settings through `aiAutoGenerate` and `aiUserConversationSettings`, plus caching hints and other utility types. Reference the README for repository-level conventions and release steps.

@@ -4,7 +4,7 @@ authors: []
 sidebar_position: 2
 ---
 
-A Skaff template is just a directory with a TypeScript config file and a set of files to render. Keep the layout predictable so contributors can find everything quickly.
+A Skaff template is a directory with a TypeScript config file and a set of files to render. Keep the layout predictable so contributors can find everything quickly.
 
 ## Directory layout
 
@@ -21,7 +21,7 @@ root-templates/
         templates/
 ```
 
-- **`templateConfig.ts`** exports a `TemplateConfigModule`. Define metadata (`name`, `description`, `specVersion`), the Zod schema for user input, and the `targetPath` that determines where files land.
+- **`templateConfig.ts`** exports a `TemplateConfigModule`. Define metadata (`name`, `description`, `specVersion`), the Zod schemas for user input (`templateSettingsSchema` and `templateFinalSettingsSchema`), and the `mapFinalSettings` function that produces the values used during rendering. Set `targetPath` so Skaff knows where files land.
 - **`templates/`** holds files to render. Append `.hbs` to process a file with Handlebars; omit it for plain copies. Skaff copies the directory structure relative to `targetPath`.
 - **`subtemplates/`** hosts optional modules. Structure them the same way as root templates so they can run independently.
 
@@ -31,7 +31,10 @@ Use Zod to describe every prompt. Each field becomes a CLI question and a form c
 
 ```ts title="templateConfig.ts"
 import z from "zod";
-import type { TemplateConfigModule } from "@timonteutelink/template-types-lib";
+import type {
+  FinalTemplateSettings,
+  TemplateConfigModule,
+} from "@timonteutelink/template-types-lib";
 
 const templateSettingsSchema = z.object({
   projectName: z.string().min(1).describe("NPM package name"),
@@ -41,8 +44,11 @@ const templateSettingsSchema = z.object({
     .describe("Generate auth routes and providers"),
 });
 
+type TemplateSettings = z.infer<typeof templateSettingsSchema>;
+
 const templateConfig: TemplateConfigModule<
-  z.infer<typeof templateSettingsSchema>,
+  FinalTemplateSettings,
+  typeof templateSettingsSchema,
   typeof templateSettingsSchema
 > = {
   templateConfig: {
@@ -52,15 +58,20 @@ const templateConfig: TemplateConfigModule<
     specVersion: "1.0.0",
   },
   templateSettingsSchema,
+  templateFinalSettingsSchema: templateSettingsSchema,
+  mapFinalSettings: ({ templateSettings }): TemplateSettings =>
+    templateSettings,
   targetPath: ".",
 };
 
 export default templateConfig;
 ```
 
+Adjust `mapFinalSettings` whenever you need to derive additional values—such as generated slugs, computed booleans, or data pulled from the parent settings.
+
 ## Wire up subtemplates
 
-Subtemplates let you keep optional features separate:
+Subtemplates keep optional features separate:
 
 - Use `autoInstantiatedSubtemplates` in the parent to include children automatically based on settings.
 - Mark subtemplates as `multiInstance` when they can be reused (for example, to add routes or jobs repeatedly). Make sure file paths include a unique identifier to avoid collisions.
