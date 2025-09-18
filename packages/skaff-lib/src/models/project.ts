@@ -89,14 +89,37 @@ export class Project {
       parentFinalSettings = newInstantiatedSettings.data;
     }
 
-    const finalSettings = template.config.mapFinalSettings({
-      fullProjectSettings: projectSettings,
-      templateSettings: parsedUserSettings.data,
-      parentSettings: parentFinalSettings,
-      aiResults: {},
-    });
+    const templateName = template.config.templateConfig.name;
+    let mappedSettings: FinalTemplateSettings;
+    try {
+      mappedSettings = template.config.mapFinalSettings({
+        fullProjectSettings: projectSettings,
+        templateSettings: parsedUserSettings.data,
+        parentSettings: parentFinalSettings,
+        aiResults: {},
+      });
+    } catch (error) {
+      logError({
+        shortMessage: `Failed to map final settings for template ${templateName}`,
+        error,
+      });
+      return {
+        error: `Failed to map final settings for template ${templateName}: ${error}`,
+      };
+    }
 
-    return { data: finalSettings };
+    const parsedFinalSettings =
+      template.config.templateFinalSettingsSchema.safeParse(mappedSettings);
+    if (!parsedFinalSettings.success) {
+      backendLogger.error(
+        `Invalid final template settings for template ${templateName}: ${parsedFinalSettings.error}`,
+      );
+      return {
+        error: `Invalid final template settings for template ${templateName}: ${parsedFinalSettings.error}`,
+      };
+    }
+
+    return { data: parsedFinalSettings.data };
   }
 
   /**
@@ -149,14 +172,37 @@ export class Project {
       parentSettings = finalParentSettings.data;
     }
 
-    const finalSettings = template.config.mapFinalSettings({
-      fullProjectSettings: instantiatedProjectSettings,
-      templateSettings: parsedUserProvidedSettingsSchema.data,
-      parentSettings: parentSettings,
-      aiResults: {},
-    });
+    const templateName = template.config.templateConfig.name;
+    let mappedSettings: FinalTemplateSettings;
+    try {
+      mappedSettings = template.config.mapFinalSettings({
+        fullProjectSettings: instantiatedProjectSettings,
+        templateSettings: parsedUserProvidedSettingsSchema.data,
+        parentSettings: parentSettings,
+        aiResults: {},
+      });
+    } catch (error) {
+      logError({
+        shortMessage: `Failed to map final settings for template ${templateName}`,
+        error,
+      });
+      return {
+        error: `Failed to map final settings for template ${templateName}: ${error}`,
+      };
+    }
 
-    return { data: finalSettings };
+    const parsedFinalSettings =
+      template.config.templateFinalSettingsSchema.safeParse(mappedSettings);
+    if (!parsedFinalSettings.success) {
+      backendLogger.error(
+        `Invalid final template settings for template ${templateName}: ${parsedFinalSettings.error}`,
+      );
+      return {
+        error: `Invalid final template settings for template ${templateName}: ${parsedFinalSettings.error}`,
+      };
+    }
+
+    return { data: parsedFinalSettings.data };
   }
 
   static async create(absDir: string): Promise<Result<Project>> {

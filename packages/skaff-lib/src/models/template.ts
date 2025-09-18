@@ -201,7 +201,10 @@ export class Template {
 
     let configs: Record<string, TemplateConfigWithFileInfo>;
     try {
-      configs = await loadAllTemplateConfigs(absoluteRootDir);
+      configs = await loadAllTemplateConfigs(
+        absoluteRootDir,
+        commitHash.data,
+      );
     } catch (error) {
       logError({
         error,
