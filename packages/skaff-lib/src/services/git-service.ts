@@ -1,52 +1,82 @@
-import { exec, execFile } from "node:child_process";
 import * as fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
-import { promisify } from "node:util";
+
+import fsExtra from "fs-extra";
+import simpleGit from "simple-git";
+
 import { DiffHunk, GitStatus, ParsedFile, Result } from "../lib/types";
 import { logError } from "../lib/utils";
 import { Template } from "../models/template";
 import { pathInCache } from "./cache-service";
 import { npmInstall } from "./npm-service";
-import { getConfig } from "../lib";
 
-const asyncExecFile = promisify(execFile);
-const asyncExec = promisify(exec);
-
-async function execScript(bashScript: string): Promise<Result<string>> {
-  const safeScript = bashScript.replace(/'/g, "'\\''");
-
-  try {
-    const result = await asyncExec(`bash -c '${safeScript}'`)
-    return { data: result.stdout.trim() }
-  }
-  catch (err: unknown) {
-    logError({
-      shortMessage: "Script Failed",
-      error: err,
-    });
-    return {
-      error: `Error checking if path is a git repository: ${String(err)}`,
-    };
-  }
+function gitClient(repoPath?: string) {
+  return repoPath ? simpleGit({ baseDir: repoPath }) : simpleGit();
 }
 
+function sanitizeBranchName(branchName: string): string {
+  return branchName.replace("*", "").trim();
+}
+
+function isNotRepoError(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+
+  const possibleGitError = error as { exitCode?: number; message?: string };
+
+  if (possibleGitError.exitCode === 128) {
+    return true;
+  }
+
+  if (typeof possibleGitError.message === "string") {
+    const message = possibleGitError.message.toLowerCase();
+    return (
+      message.includes("not a git repository") ||
+      message.includes("is not a git repository")
+    );
+  }
+
+  return false;
+}
+
+function createGitDirectoryFilter(sourceRoot: string): (src: string) => boolean {
+  const normalizedRoot = path.resolve(sourceRoot);
+
+  return (src: string): boolean => {
+    const absoluteSrc = path.resolve(src);
+    const relative = path.relative(normalizedRoot, absoluteSrc);
+
+    if (!relative || relative.startsWith("..")) {
+      return true;
+    }
+
+    return !relative.split(path.sep).includes(".git");
+  };
+}
+
+async function removeAllExceptGit(dir: string): Promise<void> {
+  const entries = await fs.readdir(dir);
+
+  await Promise.all(
+    entries.map(async (entry) => {
+      if (entry === ".git") {
+        return;
+      }
+
+      await fsExtra.remove(path.join(dir, entry));
+    }),
+  );
+}
 
 export async function isGitRepo(dir: string): Promise<Result<boolean>> {
   try {
-    const { stdout } = await asyncExecFile(
-      "git",
-      ["-C", dir, "rev-parse", "--is-inside-work-tree"],
-      { encoding: "utf8" }
-    );
-
-    return { data: stdout.trim() === "true" };
+    const git = gitClient(dir);
+    const isRepo = await git.checkIsRepo();
+    return { data: isRepo };
   } catch (err: unknown) {
-    if (
-      typeof err === "object" &&
-      err !== null &&
-      "code" in err &&
-      (err as { code?: number }).code === 128
-    ) {
+    if (isNotRepoError(err)) {
       return { data: false };
     }
 
@@ -64,21 +94,24 @@ export async function switchBranch(
   repoPath: string,
   branchName: string,
 ): Promise<Result<void>> {
+  const cleanResult = await isGitRepoClean(repoPath);
+
+  if ("error" in cleanResult) {
+    return { error: cleanResult.error };
+  }
+
+  if (!cleanResult.data) {
+    logError({
+      shortMessage: "Cannot switch branches with uncommitted changes.",
+    });
+    return {
+      error: "Cannot switch branches with uncommitted changes.",
+    };
+  }
+
   try {
-    const isClean = await isGitRepoClean(repoPath);
-
-    if (!isClean) {
-      logError({
-        shortMessage: "Cannot switch branches with uncommitted changes.",
-      });
-      return {
-        error: "Cannot switch branches with uncommitted changes.",
-      };
-    }
-
-    await asyncExec(
-      `cd ${repoPath} && git checkout ${branchName.replace("*", "").trim()}`,
-    );
+    const git = gitClient(repoPath);
+    await git.checkout(sanitizeBranchName(branchName));
     return { data: undefined };
   } catch (error) {
     logError({
@@ -96,9 +129,9 @@ export async function cloneRepoBranchToCache(
   branch: string,
 ): Promise<Result<string>> {
   const repoName = path.basename(repoUrl).replace(/\.git$/, "");
-  const revisionHash = await getRemoteCommitHash(repoUrl, branch)
+  const revisionHash = await getRemoteCommitHash(repoUrl, branch);
   if ("error" in revisionHash) {
-    return revisionHash
+    return revisionHash;
   }
   const destDirName = `${repoName}-${branch}-${revisionHash.data}`;
   const destPath = await pathInCache(destDirName);
@@ -107,19 +140,22 @@ export async function cloneRepoBranchToCache(
   }
   try {
     const stat = await fs.stat(destPath.data).catch(() => null);
+    const normalizedBranch = sanitizeBranchName(branch);
+
     if (stat && stat.isDirectory()) {
-      await asyncExec(
-        `cd ${destPath.data} && git fetch && git checkout ${branch} && git pull`,
-      );
+      const git = gitClient(destPath.data);
+      await git.fetch();
+      await git.checkout(normalizedBranch);
+      await git.pull();
       const installResult = await npmInstall(destPath.data);
       if ("error" in installResult) {
         return { error: installResult.error };
       }
       return { data: destPath.data };
     }
-    await asyncExec(
-      `git clone --branch ${branch} ${repoUrl} ${destPath.data}`,
-    );
+    await gitClient().clone(repoUrl, destPath.data, ["--branch", normalizedBranch]);
+    const git = gitClient(destPath.data);
+    await git.checkout(normalizedBranch);
     const installResult = await npmInstall(destPath.data);
     if ("error" in installResult) {
       return { error: installResult.error };
@@ -156,15 +192,14 @@ export async function cloneRevisionToCache(
   }
 
   try {
-    const stat = await fs.stat(destPath.data);
-    if (stat.isDirectory()) {
+    const stat = await fs.stat(destPath.data).catch(() => null);
+    if (stat && stat.isDirectory()) {
       return { data: destPath.data };
     }
-  } catch { }
 
-  try {
-    await asyncExec(`git clone ${repoDir} ${destPath.data}`);
-    await asyncExec(`cd ${destPath.data} && git checkout ${revisionHash}`);
+    await gitClient().clone(repoDir, destPath.data);
+    const git = gitClient(destPath.data);
+    await git.checkout(revisionHash);
     const installResult = await npmInstall(destPath.data);
     if ("error" in installResult) {
       return { error: installResult.error };
@@ -189,8 +224,9 @@ export async function cloneRevisionToCache(
 // Git hash is stored per template but retrieved for the entire template dir. This way in future a project can combine templates from different repos.
 export async function getCommitHash(repoPath: string): Promise<Result<string>> {
   try {
-    const { stdout } = await asyncExec(`cd ${repoPath} && git rev-parse HEAD`);
-    return { data: stdout.trim() };
+    const git = gitClient(repoPath);
+    const hash = await git.revparse(["HEAD"]);
+    return { data: hash.trim() };
   } catch (error) {
     logError({
       shortMessage: "Error getting commit hash",
@@ -204,13 +240,10 @@ export async function listBranches(
   repoPath: string,
 ): Promise<Result<string[]>> {
   try {
-    const { stdout } = await asyncExec(`cd ${repoPath} && git branch --list`);
+    const git = gitClient(repoPath);
+    const branches = await git.branchLocal();
     return {
-      data: stdout
-        .trim()
-        .split("\n")
-        .map((branch) => branch.trim())
-        .filter((branch) => branch.length > 0),
+      data: branches.all.map((branch) => branch.trim()).filter((branch) => branch.length > 0),
     };
   } catch (error) {
     logError({
@@ -225,10 +258,9 @@ export async function getCurrentBranch(
   repoPath: string,
 ): Promise<Result<string>> {
   try {
-    const { stdout } = await asyncExec(
-      `cd ${repoPath} && git rev-parse --abbrev-ref HEAD`,
-    );
-    return { data: stdout.trim() };
+    const git = gitClient(repoPath);
+    const branch = await git.revparse(["--abbrev-ref", "HEAD"]);
+    return { data: branch.trim() };
   } catch (error) {
     logError({
       shortMessage: "Error getting current branch",
@@ -243,7 +275,8 @@ export async function getRemoteCommitHash(
   branch: string,
 ): Promise<Result<string>> {
   try {
-    const { stdout } = await asyncExec(`git ls-remote ${repoUrl} ${branch}`);
+    const git = gitClient();
+    const stdout = await git.raw(["ls-remote", repoUrl, branch]);
     const hash = stdout.split("\t")[0]?.trim();
     if (!hash) {
       return { error: "Failed to retrieve remote commit hash" };
@@ -275,7 +308,7 @@ export async function loadGitStatus(
   }
 
   if ("error" in isClean) {
-    return isClean;
+    return { error: isClean.error };
   }
 
   if ("error" in currentBranch) {
@@ -301,8 +334,9 @@ export async function commitAll(
   commitMessage: string,
 ): Promise<Result<void>> {
   try {
-    await asyncExec(`cd ${repoPath} && git add .`);
-    await asyncExec(`cd ${repoPath} && git commit -m "${commitMessage}"`);
+    const git = gitClient(repoPath);
+    await git.add(".");
+    await git.commit(commitMessage);
     return { data: undefined };
   } catch (error) {
     logError({
@@ -317,11 +351,10 @@ export async function addAllAndRetrieveDiff(
   repoPath: string,
 ): Promise<Result<string>> {
   try {
-    await asyncExec(`cd ${repoPath} && git add .`);
-    const { stdout } = await asyncExec(
-      `cd ${repoPath} && git diff --staged --no-color --no-ext-diff`,
-    );
-    return { data: stdout.trim() };
+    const git = gitClient(repoPath);
+    await git.add(".");
+    const diff = await git.diff(["--staged", "--no-color", "--no-ext-diff"]);
+    return { data: diff.trim() };
   } catch (error) {
     logError({
       shortMessage: "Error adding files and generating diff",
@@ -346,9 +379,9 @@ export async function deleteRepo(repoPath: string): Promise<Result<void>> {
 
 export async function createGitRepo(repoPath: string): Promise<Result<void>> {
   try {
-    await asyncExec(
-      `cd ${repoPath} && git init && git config commit.gpgsign false`,
-    );
+    const git = gitClient(repoPath);
+    await git.init();
+    await git.addConfig("commit.gpgsign", "false");
     return { data: undefined };
   } catch (error) {
     logError({
@@ -363,10 +396,9 @@ export async function isGitRepoClean(
   hostRepoPath: string,
 ): Promise<Result<boolean>> {
   try {
-    const status = (
-      await asyncExec(`cd ${hostRepoPath} && git status --porcelain`)
-    ).stdout.trim();
-    return { data: status.length === 0 };
+    const git = gitClient(hostRepoPath);
+    const status = await git.status();
+    return { data: status.isClean() };
   } catch (error) {
     logError({
       shortMessage: "Error checking git status",
@@ -381,7 +413,8 @@ export async function applyDiffToGitRepo(
   diffPath: string,
 ): Promise<Result<void>> {
   try {
-    await asyncExec(`cd ${repoPath} && git apply ${diffPath}`);
+    const git = gitClient(repoPath);
+    await git.raw(["apply", diffPath]);
     return { data: undefined };
   } catch (error) {
     logError({
@@ -395,7 +428,8 @@ export async function applyDiffToGitRepo(
 // TODO: should add a question to the user if they want to reset all changes before they can go back from the applied diff to diff to apply. otherwise user might remove changes by accident
 export async function resetAllChanges(repoPath: string): Promise<Result<void>> {
   try {
-    await asyncExec(`cd ${repoPath} && git reset --hard`);
+    const git = gitClient(repoPath);
+    await git.raw(["reset", "--hard"]);
     return { data: undefined };
   } catch (error) {
     logError({
@@ -411,18 +445,9 @@ export async function isConflictAfterApply(
   repoPath: string,
 ): Promise<Result<boolean>> {
   try {
-    const { stdout } = await asyncExec(
-      `cd ${repoPath} && git status --porcelain`,
-    );
-    const lines = stdout.trim().split("\n");
-
-    for (const line of lines) {
-      if (line.startsWith("UU")) {
-        return { data: true };
-      }
-    }
-
-    return { data: false };
+    const git = gitClient(repoPath);
+    const status = await git.status();
+    return { data: status.conflicted.length > 0 };
   } catch (error) {
     logError({
       shortMessage: "Error checking for merge conflicts",
@@ -436,38 +461,43 @@ export async function diffDirectories(
   absoluteBaseProjectPath: string,
   absoluteNewProjectPath: string,
 ): Promise<Result<string>> {
-  const config = await getConfig();
-  const bashScript = `
-set -e
+  const baseProject = path.resolve(absoluteBaseProjectPath);
+  const changedProject = path.resolve(absoluteNewProjectPath);
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "skaff-diff-"));
 
-BASE_PROJECT=$(realpath "${absoluteBaseProjectPath}")
-CHANGED_PROJECT=$(realpath "${absoluteNewProjectPath}")
+  try {
+    await fsExtra.copy(baseProject, tempDir, {
+      overwrite: true,
+      errorOnExist: false,
+      filter: createGitDirectoryFilter(baseProject),
+    });
 
-TMP_DIR=$(mktemp -d)
+    const git = gitClient(tempDir);
+    await git.init();
+    await git.addConfig("commit.gpgsign", "false");
+    await git.add(".");
+    await git.commit("Base version");
 
-cleanup() {
-    rm -rf "$TMP_DIR"
-}
+    await removeAllExceptGit(tempDir);
+    await fsExtra.copy(changedProject, tempDir, {
+      overwrite: true,
+      errorOnExist: false,
+      filter: createGitDirectoryFilter(changedProject),
+    });
 
-trap cleanup EXIT
+    await git.add(".");
+    const diff = await git.diff(["--staged", "--no-color", "--no-ext-diff"]);
 
-# copies the new project to the base project directory and creates a diff.
-# Diff can be used in a real project
-cp -r "$BASE_PROJECT"/. "$TMP_DIR"
-cd "$TMP_DIR"
-git init -q
-git config commit.gpgsign false # TEMPORARELY BECAUSE NEED TO GENERATE NEW GPG KEY
-git add .
-git commit -m "Base version" -q
-
-rsync -a --delete --checksum --exclude='.git' "$CHANGED_PROJECT"/. .
-
-git add .
-git diff --staged --no-color --no-ext-diff
-
-
-	`
-  return await execScript(bashScript);
+    return { data: diff.trim() };
+  } catch (error) {
+    logError({
+      shortMessage: "Error generating diff between directories",
+      error,
+    });
+    return { error: `Error generating diff between directories: ${error}` };
+  } finally {
+    await fsExtra.remove(tempDir);
+  }
 }
 
 export function parseGitDiff(diffText: string): ParsedFile[] {

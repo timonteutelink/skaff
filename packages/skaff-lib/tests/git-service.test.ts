@@ -1,40 +1,45 @@
-jest.mock("node:child_process", () => ({
-  execFile: jest.fn(),
-  exec: jest.fn(),
+const mockCheckIsRepo = jest.fn();
+const mockSimpleGit = jest.fn();
+
+jest.mock("simple-git", () => ({
+  __esModule: true,
+  default: (...args: unknown[]) => mockSimpleGit(...args),
 }));
 
-jest.mock("../src/lib/logger", () => ({
-  backendLogger: { error: jest.fn(), info: jest.fn(), warn: jest.fn() },
+jest.mock("../src/lib/utils", () => ({
+  logError: jest.fn(),
 }));
 
 describe("git-service", () => {
   beforeEach(() => {
     jest.resetModules();
+    mockSimpleGit.mockReset();
+    mockCheckIsRepo.mockReset();
+    mockSimpleGit.mockImplementation(() => ({
+      checkIsRepo: mockCheckIsRepo,
+    }));
   });
 
   it("detects git repository", async () => {
-    const child = require("node:child_process");
-    child.execFile.mockImplementation((_c: any, _a: any, _o: any, cb: any) => cb(null, { stdout: "true" }));
     const { isGitRepo } = await import("../src/services/git-service");
+    mockCheckIsRepo.mockResolvedValue(true);
     const result = await isGitRepo(".");
     expect(result).toEqual({ data: true });
   });
 
   it("returns false when not a git repo", async () => {
-    const child = require("node:child_process");
     const err: any = new Error("not repo");
-    err.code = 128;
-    child.execFile.mockImplementation((_c: any, _a: any, _o: any, cb: any) => cb(err));
+    err.exitCode = 128;
+    mockCheckIsRepo.mockRejectedValue(err);
     const { isGitRepo } = await import("../src/services/git-service");
     const result = await isGitRepo(".");
     expect(result).toEqual({ data: false });
   });
 
   it("returns error for other failures", async () => {
-    const child = require("node:child_process");
     const err: any = new Error("boom");
-    err.code = 1;
-    child.execFile.mockImplementation((_c: any, _a: any, _o: any, cb: any) => cb(err));
+    err.exitCode = 1;
+    mockCheckIsRepo.mockRejectedValue(err);
     const { isGitRepo } = await import("../src/services/git-service");
     const result = await isGitRepo(".");
     expect(result).toHaveProperty("error");
