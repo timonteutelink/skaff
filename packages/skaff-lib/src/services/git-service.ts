@@ -19,22 +19,40 @@ function sanitizeBranchName(branchName: string): string {
   return branchName.replace("*", "").trim();
 }
 
+type PossibleGitError = {
+  exitCode?: number;
+  message?: string;
+  git?: {
+    exitCode?: number;
+    stderr?: string;
+    stdErr?: string;
+  };
+};
+
 function isNotRepoError(error: unknown): boolean {
   if (typeof error !== "object" || error === null) {
     return false;
   }
 
-  const possibleGitError = error as { exitCode?: number; message?: string };
+  const possibleGitError = error as PossibleGitError;
+  const exitCode =
+    possibleGitError.exitCode ?? possibleGitError.git?.exitCode ?? null;
 
-  if (possibleGitError.exitCode === 128) {
+  if (exitCode === 128) {
     return true;
   }
 
-  if (typeof possibleGitError.message === "string") {
-    const message = possibleGitError.message.toLowerCase();
+  const message =
+    possibleGitError.message ??
+    possibleGitError.git?.stderr ??
+    possibleGitError.git?.stdErr ??
+    "";
+
+  if (typeof message === "string" && message.length > 0) {
+    const normalizedMessage = message.toLowerCase();
     return (
-      message.includes("not a git repository") ||
-      message.includes("is not a git repository")
+      normalizedMessage.includes("not a git repository") ||
+      normalizedMessage.includes("is not a git repository")
     );
   }
 
@@ -129,18 +147,18 @@ export async function cloneRepoBranchToCache(
   branch: string,
 ): Promise<Result<string>> {
   const repoName = path.basename(repoUrl).replace(/\.git$/, "");
-  const revisionHash = await getRemoteCommitHash(repoUrl, branch);
+  const normalizedBranch = sanitizeBranchName(branch);
+  const revisionHash = await getRemoteCommitHash(repoUrl, normalizedBranch);
   if ("error" in revisionHash) {
     return revisionHash;
   }
-  const destDirName = `${repoName}-${branch}-${revisionHash.data}`;
+  const destDirName = `${repoName}-${normalizedBranch}-${revisionHash.data}`;
   const destPath = await pathInCache(destDirName);
   if ("error" in destPath) {
     return destPath;
   }
   try {
     const stat = await fs.stat(destPath.data).catch(() => null);
-    const normalizedBranch = sanitizeBranchName(branch);
 
     if (stat && stat.isDirectory()) {
       const git = gitClient(destPath.data);
@@ -276,7 +294,11 @@ export async function getRemoteCommitHash(
 ): Promise<Result<string>> {
   try {
     const git = gitClient();
-    const stdout = await git.raw(["ls-remote", repoUrl, branch]);
+    const stdout = await git.raw([
+      "ls-remote",
+      repoUrl,
+      sanitizeBranchName(branch),
+    ]);
     const hash = stdout.split("\t")[0]?.trim();
     if (!hash) {
       return { error: "Failed to retrieve remote commit hash" };
@@ -475,6 +497,8 @@ export async function diffDirectories(
     const git = gitClient(tempDir);
     await git.init();
     await git.addConfig("commit.gpgsign", "false");
+    await git.addConfig("user.name", "Skaff Diff Bot");
+    await git.addConfig("user.email", "skaff-diff@example.com");
     await git.add(".");
     await git.commit("Base version");
 
