@@ -205,18 +205,21 @@ async function evaluateBundledCode(
 
 export async function loadAllTemplateConfigs(
   rootDir: string,
+  commitHash: string,
 ): Promise<Record<string, TemplateConfigWithFileInfo>> {
+  if (!commitHash.trim()) {
+    throw new Error("commitHash is required to load template configurations");
+  }
   const files = await findTemplateConfigFiles(rootDir);
   if (files.length === 0) {
     throw new Error(`No templateConfig.ts files found under ${rootDir}`);
   }
 
-  const concat = await Promise.all(
-    files.map((f) => fs.readFile(f.configPath, "utf8")),
+  const cacheKey = getHash(
+    `${commitHash}:${path.resolve(rootDir)}`,
   );
-  const hash = getHash(concat.join(""));
 
-  const cached = await retrieveFromCache("template-config", hash, "cjs");
+  const cached = await retrieveFromCache("template-config", cacheKey, "cjs");
   if ("data" in cached && cached.data) {
     const code = await fs.readFile(cached.data.path, "utf8");
     return evaluateBundledCode(code);
@@ -277,7 +280,12 @@ export async function loadAllTemplateConfigs(
   const bundle = outputFiles[0]?.text;
   if (!bundle) throw new Error("esbuild produced no output");
 
-  const saved = await saveToCache("template-config", hash, "cjs", bundle);
+  const saved = await saveToCache(
+    "template-config",
+    cacheKey,
+    "cjs",
+    bundle,
+  );
   if ("error" in saved) {
     throw new Error(`Failed to cache bundle: ${saved.error}`);
   }

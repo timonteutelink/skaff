@@ -23,6 +23,7 @@ import { Project } from "../models";
 import { Template } from "../models/template";
 import { isSubset } from "../utils/shared-utils";
 import { makeDir } from "./file-service";
+import { FileRollbackManager } from "./file-rollback-service";
 import { commitAll, createGitRepo } from "./git-service";
 import {
   removeTemplateFromSettings,
@@ -89,6 +90,7 @@ export class TemplateGeneratorService {
   private currentlyGeneratingTemplate?: Template;
   private currentlyGeneratingTemplateParentInstanceId?: string;
   private currentlyGeneratingTemplateFinalSettings?: FinalTemplateSettings;
+  private currentFileRollbackManager?: FileRollbackManager;
 
   constructor(
     options: GeneratorOptions,
@@ -171,6 +173,59 @@ export class TemplateGeneratorService {
     }
 
     return { data: normalizedTargetPath };
+  }
+
+  private async ensureDirectoryWithRollback(
+    dirPath: string,
+  ): Promise<Result<void>> {
+    if (this.currentFileRollbackManager) {
+      const result = await this.currentFileRollbackManager.ensureDir(dirPath);
+      if ("error" in result) {
+        logError({
+          shortMessage: result.error,
+        });
+      }
+      return result;
+    }
+
+    try {
+      await fs.ensureDir(dirPath);
+    } catch (error) {
+      logError({
+        shortMessage: `Failed to ensure directory ${dirPath}`,
+        error,
+      });
+      return {
+        error: `Failed to ensure directory ${dirPath}: ${error}`,
+      };
+    }
+
+    return { data: undefined };
+  }
+
+  private async recordFileForRollback(filePath: string): Promise<Result<void>> {
+    if (!this.currentFileRollbackManager) {
+      return { data: undefined };
+    }
+
+    const result = await this.currentFileRollbackManager.trackFile(filePath);
+    if ("error" in result) {
+      logError({
+        shortMessage: result.error,
+      });
+    }
+    return result;
+  }
+
+  private async prepareFileForWrite(filePath: string): Promise<Result<void>> {
+    const dirResult = await this.ensureDirectoryWithRollback(
+      path.dirname(filePath),
+    );
+    if ("error" in dirResult) {
+      return dirResult;
+    }
+
+    return this.recordFileForRollback(filePath);
   }
 
   private getRedirects(): Result<RedirectFile[]> {
@@ -373,7 +428,9 @@ export class TemplateGeneratorService {
       await this.registerAllPartials(true);
     };
 
-    const ensureDestDirResult = await makeDir(dest.data);
+    const ensureDestDirResult = await this.ensureDirectoryWithRollback(
+      dest.data,
+    );
 
     if ("error" in ensureDestDirResult) {
       await cleanup();
@@ -436,11 +493,17 @@ export class TemplateGeneratorService {
           }
         } catch { }
 
+        const prepareResult = await this.prepareFileForWrite(
+          finalDestinationPath,
+        );
+        if ("error" in prepareResult) {
+          await cleanup();
+          return prepareResult;
+        }
+
         const fileBuffer = await fs.readFile(srcPath);
         const shouldTemplate =
           srcPath.endsWith(".hbs") || !isBinaryContent(fileBuffer);
-
-        await fs.ensureDir(path.dirname(finalDestinationPath));
 
         if (shouldTemplate) {
           const compiled = Handlebars.compile(
@@ -558,8 +621,12 @@ export class TemplateGeneratorService {
       return { data: undefined };
     }
 
+    const prepareResult = await this.prepareFileForWrite(absoluteFilePath);
+    if ("error" in prepareResult) {
+      return prepareResult;
+    }
+
     try {
-      await fs.ensureDir(path.dirname(absoluteFilePath));
       await fs.writeFile(absoluteFilePath, sideEffectResult, "utf8");
     } catch (error) {
       logError({
@@ -966,6 +1033,7 @@ export class TemplateGeneratorService {
     const parentInstanceId = instantiatedTemplate.parentId;
 
     let templateSettingsPersisted = false;
+    const rollbackManager = new FileRollbackManager();
 
     const cleanupOnFailure = async (): Promise<void> => {
       if (!removeOnFailure) {
@@ -982,6 +1050,8 @@ export class TemplateGeneratorService {
     };
 
     const fail = async <T>(result: Result<T>): Promise<Result<T>> => {
+      await rollbackManager.rollback();
+      this.currentFileRollbackManager = undefined;
       await cleanupOnFailure();
       return result;
     };
@@ -1024,6 +1094,8 @@ export class TemplateGeneratorService {
       backendLogger.error("Failed to parse user settings.");
       return failWithMessage("Failed to parse user settings.");
     }
+
+    this.currentFileRollbackManager = rollbackManager;
 
     const templatesThatDisableThisTemplate = anyOrCallbackToAny(
       template.config.templatesThatDisableThis,
@@ -1084,6 +1156,8 @@ export class TemplateGeneratorService {
         return fail(sideEffectResult);
       }
 
+      this.currentFileRollbackManager = undefined;
+
       if (!this.options.dontGenerateTemplateSettings) {
         const newTemplateResult = await writeNewTemplateToSettings(
           this.options.absoluteDestinationPath,
@@ -1121,6 +1195,9 @@ export class TemplateGeneratorService {
       });
       return fail({ error: `Failed to instantiate template: ${error}` });
     }
+
+    rollbackManager.clear();
+    this.currentFileRollbackManager = undefined;
 
     return this.getAbsoluteTargetPath();
   }
@@ -1165,6 +1242,7 @@ export class TemplateGeneratorService {
 
     let projectDirCreated = false;
     let projectSettingsPersisted = false;
+    const rollbackManager = new FileRollbackManager();
 
     const cleanupOnFailure = async () => {
       const idsToRemove = this.collectTemplateTreeIds(projectRootInstanceId);
@@ -1191,6 +1269,8 @@ export class TemplateGeneratorService {
     };
 
     const fail = async <T>(result: Result<T>): Promise<Result<T>> => {
+      await rollbackManager.rollback();
+      this.currentFileRollbackManager = undefined;
       await cleanupOnFailure();
       return result;
     };
@@ -1259,6 +1339,7 @@ export class TemplateGeneratorService {
         }
       }
 
+      this.currentFileRollbackManager = rollbackManager;
       const copyResult = await this.copyDirectory();
       if ("error" in copyResult) {
         return fail(copyResult);
@@ -1268,6 +1349,8 @@ export class TemplateGeneratorService {
       if ("error" in sideEffectResult) {
         return fail(sideEffectResult);
       }
+
+      this.currentFileRollbackManager = undefined;
 
       // TODO: Revise this to be able to be called recursively so add this as a param to function and use getTemplatesToAutoInstantiate. Then call this function on the children list.
       // maybe later we make sure adding every template to the projectSettings happens in the first step and then the instantiateTemplateInProject and instantiateNewProject functions can call this function which will retrieve everything from projectsettings which were already set before calling instantiateTemplateInProject and instantiateNewProject. So 2 seperate steps. Modify the templateSettings and then generate. HEre also force template to be direct child of currentlyGeneratingTemplate
@@ -1284,7 +1367,11 @@ export class TemplateGeneratorService {
       if ("error" in result) {
         return fail(result);
       }
+
+      rollbackManager.clear();
     } catch (error) {
+      await rollbackManager.rollback();
+      this.currentFileRollbackManager = undefined;
       await cleanupOnFailure();
       logError({
         shortMessage: `Failed to instantiate new project`,
