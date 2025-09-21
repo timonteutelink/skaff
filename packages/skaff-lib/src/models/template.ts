@@ -32,6 +32,7 @@ import * as semver from "semver";
 import { MAJOR_SPEC_VERSION } from "../lib/constants";
 import { getDocLink } from "../utils/shared-utils";
 import { checkMissingPartials, checkMissingSettings } from "../utils/handlebars-utils";
+import { llmProviderEnv } from "../config/ai-providers";
 
 export class InvalidTemplateSpecVersionError extends Error {
   constructor(templateName: string, templateSpecVersion: string) {
@@ -449,9 +450,35 @@ export class Template {
       dir: this.relativeDir,
       config: {
         templateConfig: this.config.templateConfig,
-        templateSettingsSchema: zodToJsonSchema(
-          this.config.templateSettingsSchema,
-        ),
+        templateSettingsSchema: (() => {
+          const schema = zodToJsonSchema(
+            this.config.templateSettingsSchema,
+          ) as any;
+          const categories = this.config.aiModelCategories || {};
+          if (Object.keys(categories).length) {
+            schema.properties = schema.properties || {};
+            schema.properties.aiModels = {
+              type: "object",
+              properties: {},
+            } as any;
+            const providerOptions = Object.keys(llmProviderEnv);
+            for (const [key, cat] of Object.entries(categories)) {
+              (schema.properties.aiModels.properties as any)[key] = {
+                type: "object",
+                description: (cat as any).description,
+                properties: {
+                  provider: {
+                    type: "string",
+                    enum: providerOptions,
+                  },
+                  name: { type: "string" },
+                },
+                required: ["provider", "name"],
+              };
+            }
+          }
+          return schema;
+        })(),
       },
       templatesDir: this.relativeTemplatesDir,
       subTemplates,
@@ -466,6 +493,7 @@ export class Template {
       isLocal: this.isLocal,
       branch: this.branch,
       repoUrl: this.repoUrl,
+      aiGenerationStepCount: this.config.aiGeneration?.steps?.length || 0,
     };
   }
 

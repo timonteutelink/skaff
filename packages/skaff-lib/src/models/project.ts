@@ -179,7 +179,7 @@ export class Project {
         fullProjectSettings: instantiatedProjectSettings,
         templateSettings: parsedUserProvidedSettingsSchema.data,
         parentSettings: parentSettings,
-        aiResults: {},
+        aiResults: projectTemplateSettings.aiResults || {}
       });
     } catch (error) {
       logError({

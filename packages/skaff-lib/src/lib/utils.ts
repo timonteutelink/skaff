@@ -1,8 +1,4 @@
-import {
-  AnyOrCallback,
-  FinalTemplateSettings,
-  UserTemplateSettings,
-} from "@timonteutelink/template-types-lib";
+import { AnyOrCallback, FinalTemplateSettings } from "@timonteutelink/template-types-lib";
 import { Result } from "./types";
 import { backendLogger, LevelName } from "./logger";
 
@@ -11,15 +7,13 @@ export function anyOrCallbackToAny<
   T,
 >(
   anyOrCallback: AnyOrCallback<TSettings, T>,
-  parsedUserSettings: TSettings,
+  settings: TSettings,
 ): Result<T> {
   try {
     return {
       data:
         typeof anyOrCallback === "function"
-          ? (anyOrCallback as (userSettings: UserTemplateSettings) => T)(
-            parsedUserSettings,
-          )
+          ? (anyOrCallback as (context: TSettings) => T)(settings)
           : anyOrCallback,
     };
   } catch (error) {
@@ -35,9 +29,9 @@ export function stringOrCallbackToString<
   TSettings extends FinalTemplateSettings,
 >(
   strOrCallback: AnyOrCallback<TSettings, string>,
-  parsedUserSettings: TSettings,
+  settings: TSettings,
 ): Result<string> {
-  return anyOrCallbackToAny(strOrCallback, parsedUserSettings);
+  return anyOrCallbackToAny(strOrCallback, settings);
 }
 
 export interface LogErrorOptions<T> {
