@@ -17,12 +17,10 @@ const snakeCaseHelper = (str: string) => {
     .replace(/\s+/g, "_")
     .toLowerCase();
 };
+function registerAll(handlebarsInstance: typeof Handlebars = Handlebars) {
+  handlebarsInstance.registerHelper("eq", eqHelper);
 
-
-function registerAll() {
-  Handlebars.registerHelper("eq", eqHelper);
-
-  Handlebars.registerHelper("snakeCase", snakeCaseHelper);
+  handlebarsInstance.registerHelper("snakeCase", snakeCaseHelper);
 }
 
 export { eqHelper, snakeCaseHelper, registerAll };
