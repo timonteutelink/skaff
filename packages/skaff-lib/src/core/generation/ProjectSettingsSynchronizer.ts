@@ -155,6 +155,23 @@ export class ProjectSettingsSynchronizer {
       };
     }
 
+    if (!template.config.templateConfig.multiInstance) {
+      for (const instantiatedTemplate of this.destinationProjectSettings
+        .instantiatedTemplates) {
+        if (
+          instantiatedTemplate.parentId === parentInstanceId &&
+          instantiatedTemplate.templateName === templateName
+        ) {
+          backendLogger.error(
+            `Template ${templateName} is already instantiated.`,
+          );
+          return {
+            error: `Template ${templateName} is already instantiated.`,
+          };
+        }
+      }
+    }
+
     if (
       !this.destinationProjectSettings.projectAuthor ||
       this.destinationProjectSettings.projectAuthor === "abc"

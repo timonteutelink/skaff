@@ -601,6 +601,18 @@ export class TemplateGeneratorService {
         if (instantiated.id === projectSettings.instantiatedTemplates[0]!.id) {
           continue;
         }
+
+        const subTemplate = this.rootTemplate.findSubTemplate(
+          instantiated.templateName,
+        );
+
+        if (!subTemplate) {
+          backendLogger.error(
+            `Subtemplate ${instantiated.templateName} not found. Skipping...`,
+          );
+          continue;
+        }
+
         const res = await this.instantiateTemplateInProject(instantiated.id);
         if ("error" in res) {
           return res;
