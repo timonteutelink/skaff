@@ -364,14 +364,16 @@ export class TemplateGeneratorService {
       return fail({ error: `Failed to instantiate template: ${error}` });
     }
 
-    rollbackManager.clear();
-    this.generationContext.clearCurrentState();
-
     const targetPathResult = this.pathResolver.getAbsoluteTargetPath();
 
     if ("error" in targetPathResult) {
+      rollbackManager.clear();
+      this.generationContext.clearCurrentState();
       return targetPathResult;
     }
+
+    rollbackManager.clear();
+    this.generationContext.clearCurrentState();
 
     return targetPathResult;
   }
