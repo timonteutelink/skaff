@@ -7,7 +7,7 @@ import simpleGit from "simple-git";
 
 import { DiffHunk, GitStatus, ParsedFile, Result } from "../lib/types";
 import { logError } from "../lib/utils";
-import { Template } from "../models/template";
+import type { Template } from "../core/templates";
 import { pathInCache } from "./cache-service";
 import { npmInstall } from "./npm-service";
 

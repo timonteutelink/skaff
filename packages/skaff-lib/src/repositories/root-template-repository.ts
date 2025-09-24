@@ -1,13 +1,18 @@
 import * as fs from "node:fs/promises";
-import { Template } from "../models/template";
-import { Result } from "../lib/types";
 import path from "node:path";
+
+import { backendLogger } from "../lib/logger";
+import { Result } from "../lib/types";
+import { logError } from "../lib/utils";
 import {
   cloneRepoBranchToCache,
   cloneRevisionToCache,
 } from "../services/git-service";
-import { backendLogger } from "../lib/logger";
-import { logError } from "../lib/utils";
+import {
+  TemplateRegistry,
+  TemplateTreeBuilder,
+} from "../core/templates";
+import type { Template } from "../core/templates";
 
 // TODO: findTemplate and loadRevision should only load that specific template not load all templates
 
@@ -17,6 +22,7 @@ export class RootTemplateRepository {
   private loading: boolean = false;
   private templatePaths: string[] = [];
   private remoteRepos: { url: string; branch: string; path: string }[] = [];
+  private readonly registry = new TemplateRegistry();
   public templates: Template[] = [];
 
   constructor(templatePaths: string[]) {
@@ -45,6 +51,7 @@ export class RootTemplateRepository {
       return { error: "Templates are already loading" };
     }
     this.loading = true;
+    this.registry.reset();
     this.templates = [];
     const paths = [
       ...this.templatePaths,
@@ -83,18 +90,21 @@ export class RootTemplateRepository {
           continue;
         }
 
-        const template = await Template.createAllTemplates(
+        const templateResult = await TemplateTreeBuilder.build(
           rootTemplateDirPath,
-          repoInfo?.url,
-          repoInfo?.branch,
+          {
+            repoUrl: repoInfo?.url,
+            branchOverride: repoInfo?.branch,
+          },
         );
-        if ("error" in template) {
+        if ("error" in templateResult) {
           continue;
         }
-        this.templates.push(template.data);
+        this.registry.registerRoot(templateResult.data);
       }
     }
 
+    this.templates = this.registry.getAllRootTemplates();
     this.loading = false;
 
     return { data: undefined };
@@ -137,33 +147,23 @@ export class RootTemplateRepository {
         return { error: "Template not found." };
       }
     }
-
-    const local = this.templates.find(
-      (t) => t.config.templateConfig.name === templateName && t.isLocal,
-    );
-    if (local) {
-      return { data: local };
-    }
-    const any = this.templates.find(
-      (t) => t.config.templateConfig.name === templateName,
-    );
-    return { data: any ?? null };
+    const template = this.registry.findRootTemplate(templateName);
+    return { data: template };
   }
 
   async findAllTemplateRevisions(
     templateName: string,
   ): Promise<Result<Template[] | null>> {
-    const template = await this.getAllTemplates();
-
-    if ("error" in template) {
-      return template;
+    if (!this.templates.length) {
+      const loadResult = await this.loadTemplates();
+      if ("error" in loadResult) {
+        return loadResult;
+      }
     }
 
-    const revisions = template.data.filter((template) => {
-      return template.config.templateConfig.name === templateName;
-    });
+    const revisions = this.registry.findAllRevisions(templateName);
 
-    if (revisions.length === 0) {
+    if (!revisions || revisions.length === 0) {
       backendLogger.warn(`No revisions found for template ${templateName}`);
       return { data: null };
     }
@@ -175,11 +175,11 @@ export class RootTemplateRepository {
     templateName: string,
     revisionHash: string,
   ): Promise<Result<Template | null>> {
-    const result = await this.findAllTemplateRevisions(templateName);
-    if ("error" in result) {
-      return result;
+    const revisionsResult = await this.findAllTemplateRevisions(templateName);
+    if ("error" in revisionsResult) {
+      return revisionsResult;
     }
-    const revisions = result.data;
+    const revisions = revisionsResult.data;
     if (!revisions || revisions.length === 0) {
       return { data: null };
     }
@@ -210,18 +210,21 @@ export class RootTemplateRepository {
       path.basename(sourceTemplate.absoluteDir),
     );
 
-    const newTemplate = await Template.createAllTemplates(
+    const newTemplateResult = await TemplateTreeBuilder.build(
       newTemplatePath,
-      sourceTemplate.repoUrl,
-      sourceTemplate.branch,
+      {
+        repoUrl: sourceTemplate.repoUrl,
+        branchOverride: sourceTemplate.branch,
+      },
     );
 
-    if ("error" in newTemplate) {
-      return newTemplate;
+    if ("error" in newTemplateResult) {
+      return newTemplateResult;
     }
 
-    this.templates.push(newTemplate.data);
+    this.registry.registerRoot(newTemplateResult.data);
+    this.templates = this.registry.getAllRootTemplates();
 
-    return { data: newTemplate.data };
+    return { data: newTemplateResult.data };
   }
 }
