@@ -2,20 +2,22 @@ import {
   ProjectSettings,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
+
 import {
   ProjectCreationOptions,
   ProjectCreationResult,
   Result,
-} from "../lib/types";
-import { Project } from "../models/project";
-import { ProjectLifecycle } from "../core/projects/ProjectLifecycle";
+} from "../../lib/types";
+import { Project } from "../../models/project";
+
+import { ProjectCreationManager } from "./ProjectCreationManager";
 
 export async function parseProjectCreationResult(
   projectPath: string,
   projectCreationOptions?: ProjectCreationOptions,
 ): Promise<Result<ProjectCreationResult>> {
-  const lifecycle = new ProjectLifecycle(projectCreationOptions);
-  return lifecycle.parseCreationResult(projectPath);
+  const manager = new ProjectCreationManager(projectCreationOptions);
+  return manager.parseCreationResult(projectPath);
 }
 
 export async function instantiateProject(
@@ -25,8 +27,8 @@ export async function instantiateProject(
   userTemplateSettings: UserTemplateSettings,
   projectCreationOptions?: ProjectCreationOptions,
 ): Promise<Result<ProjectCreationResult>> {
-  const lifecycle = new ProjectLifecycle(projectCreationOptions);
-  return lifecycle.instantiateProject(
+  const manager = new ProjectCreationManager(projectCreationOptions);
+  return manager.instantiateProject(
     rootTemplateName,
     parentDirPath,
     newProjectName,
@@ -37,10 +39,10 @@ export async function instantiateProject(
 export async function generateProjectFromExistingProject(
   existingProject: Project,
   newProjectPath: string,
-  ProjectCreationOptions?: ProjectCreationOptions,
+  projectCreationOptions?: ProjectCreationOptions,
 ): Promise<Result<ProjectCreationResult>> {
-  const lifecycle = new ProjectLifecycle(ProjectCreationOptions);
-  return lifecycle.generateFromExistingProject(existingProject, newProjectPath);
+  const manager = new ProjectCreationManager(projectCreationOptions);
+  return manager.generateFromExistingProject(existingProject, newProjectPath);
 }
 
 /**
@@ -51,6 +53,6 @@ export async function generateProjectFromTemplateSettings(
   newProjectPath: string,
   projectCreationOptions?: ProjectCreationOptions,
 ): Promise<Result<ProjectCreationResult>> {
-  const lifecycle = new ProjectLifecycle(projectCreationOptions);
-  return lifecycle.generateFromTemplateSettings(projectSettings, newProjectPath);
+  const manager = new ProjectCreationManager(projectCreationOptions);
+  return manager.generateFromTemplateSettings(projectSettings, newProjectPath);
 }
