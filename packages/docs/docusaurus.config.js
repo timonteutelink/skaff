@@ -99,6 +99,9 @@ module.exports = {
   ],
 
   themeConfig: {
+    metadata: [
+      { name: 'google-site-verification', content: 'yHZDx1a_TvuAyo3wPFQyqJpnYHDAMzendF881Vejwyo' }
+    ],
     navbar: {
       logo: { src: 'img/logo.svg', alt: 'logo' },
       items: [
