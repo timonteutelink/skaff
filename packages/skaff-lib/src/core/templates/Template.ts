@@ -18,7 +18,7 @@ import { backendLogger } from "../../lib/logger";
 import { logError } from "../../lib/utils";
 import { TemplateGeneratorService } from "../../services/template-generator-service";
 import { Project } from "../../models/project";
-import { parseProjectCreationResult } from "../../services/project-service";
+import { parseProjectCreationResult } from "../projects/ProjectCreationFacade";
 import { getCacheDirPath } from "../../services/cache-service";
 import {
   getCommitHash,

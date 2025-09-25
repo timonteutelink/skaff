@@ -22,10 +22,8 @@ import {
 } from "../../services/git-service";
 import { TemplateGeneratorService } from "../../services/template-generator-service";
 
-export class ProjectLifecycle {
-  constructor(
-    private readonly options?: ProjectCreationOptions,
-  ) {}
+export class ProjectCreationManager {
+  constructor(private readonly options?: ProjectCreationOptions) {}
 
   public async parseCreationResult(
     projectPath: string,

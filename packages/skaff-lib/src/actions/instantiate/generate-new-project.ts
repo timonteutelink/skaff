@@ -1,6 +1,6 @@
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { ProjectCreationOptions, ProjectCreationResult, Result } from "../../lib";
-import { instantiateProject } from "../../services/project-service";
+import { instantiateProject } from "../../core/projects/ProjectCreationFacade";
 
 export async function generateNewProject(
   projectName: string,

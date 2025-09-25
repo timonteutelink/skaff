@@ -1,7 +1,7 @@
 import path from "node:path";
 import { ProjectCreationOptions, ProjectCreationResult, Result } from "../../lib";
 import { Project } from "../../models";
-import { generateProjectFromTemplateSettings } from "../../services/project-service";
+import { generateProjectFromTemplateSettings } from "../../core/projects/ProjectCreationFacade";
 
 export async function generateNewProjectFromExisting(
   oldProject: Project,

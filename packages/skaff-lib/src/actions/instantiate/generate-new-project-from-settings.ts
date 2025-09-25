@@ -5,7 +5,7 @@ import {
   ProjectCreationOptions
 } from "../../lib";
 import { logError } from "../../lib/utils";
-import { generateProjectFromTemplateSettings } from "../../services/project-service";
+import { generateProjectFromTemplateSettings } from "../../core/projects/ProjectCreationFacade";
 import { ProjectSettings, projectSettingsSchema } from "@timonteutelink/template-types-lib";
 
 export async function generateNewProjectFromSettings(
