@@ -17,7 +17,7 @@ localFlake:
           LD_LIBRARY_PATH = "${pkgs.stdenv.cc.cc.lib}/lib";
 
           TEMPLATE_DIR_PATHS = "";
-          PROJECT_SEARCH_PATHS = "";
+          PROJECT_SEARCH_PATHS = "~/projects/templated";
 
           NPM_PATH = "${pkgs.bun}/bin/bun";
 
