@@ -12,10 +12,10 @@ import {
   getHash,
   retrieveFromCache,
   saveToCache,
-} from "../services/cache-service";
-import { initEsbuild } from "../utils/get-esbuild";
+} from "../../../services/cache-service";
+import { initEsbuild } from "../../../utils/get-esbuild";
 import { existsSync } from "node:fs";
-import { GenericTemplateConfigModule } from "../lib";
+import { GenericTemplateConfigModule } from "../../../lib";
 
 const { templateConfigSchema } = templateTypesLibNS;
 

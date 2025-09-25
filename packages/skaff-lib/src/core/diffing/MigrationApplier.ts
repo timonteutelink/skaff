@@ -4,9 +4,9 @@ import {
 } from "@timonteutelink/template-types-lib";
 
 import {
-  applyTemplateMigrations,
-  latestMigrationUuid,
-} from "../../services/template-migration-service";
+  applyTemplateMigrationSequence,
+  getLatestTemplateMigrationUuid,
+} from "../templates/TemplateMigration";
 
 export class MigrationApplier {
   public applyMigrations(
@@ -14,12 +14,12 @@ export class MigrationApplier {
     settings: UserTemplateSettings,
     fromMigration?: string,
   ): { settings: UserTemplateSettings; lastMigration?: string } {
-    return applyTemplateMigrations(migrations, settings, fromMigration);
+    return applyTemplateMigrationSequence(migrations, settings, fromMigration);
   }
 
   public getLatestMigration(
     migrations: TemplateMigration[] | undefined,
   ): string | undefined {
-    return latestMigrationUuid(migrations);
+    return getLatestTemplateMigrationUuid(migrations);
   }
 }

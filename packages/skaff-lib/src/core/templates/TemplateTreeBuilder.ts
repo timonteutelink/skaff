@@ -4,7 +4,7 @@ import path from "node:path";
 import {
   loadAllTemplateConfigs,
   TemplateConfigWithFileInfo,
-} from "../../loaders/template-config-loader";
+} from "./config/TemplateConfigLoader";
 import { backendLogger } from "../../lib/logger";
 import { Result } from "../../lib/types";
 import { logError } from "../../lib/utils";

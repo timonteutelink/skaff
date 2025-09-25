@@ -12,7 +12,7 @@ import { anyOrCallbackToAny } from "../../lib/utils";
 import { Project } from "../../models/project";
 import { Template } from "../../models/template";
 import { getRootTemplateRepository } from "../../repositories";
-import { latestMigrationUuid } from "../../services/template-migration-service";
+import { getLatestTemplateMigrationUuid } from "../templates/TemplateMigration";
 
 export class AutoInstantiationSettingsAdjuster {
   public async modifyAutoInstantiatedTemplates(
@@ -300,7 +300,9 @@ export class AutoInstantiationSettingsAdjuster {
         };
       }
 
-      const lastMigration = latestMigrationUuid(subTemplate.config.migrations);
+      const lastMigration = getLatestTemplateMigrationUuid(
+        subTemplate.config.migrations,
+      );
 
       projectSettings.instantiatedTemplates.push({
         id: autoInstantiatedTemplateInstanceId,
