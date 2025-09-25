@@ -12,7 +12,7 @@ import {
   getHash,
   retrieveFromCache,
   saveToCache,
-} from "../../../services/cache-service";
+} from "../../../core/infra/cache-service";
 import { initEsbuild } from "../../../utils/get-esbuild";
 import { existsSync } from "node:fs";
 import { GenericTemplateConfigModule } from "../../../lib";

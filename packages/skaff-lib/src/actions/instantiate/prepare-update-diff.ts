@@ -1,6 +1,6 @@
 import { NewTemplateDiffResult, Result } from "../../lib";
 import { Project } from "../../models";
-import { generateUpdateTemplateDiff } from "../../services/project-diff-service";
+import { generateUpdateTemplateDiff } from "../../core/diffing/project-diff-service";
 
 export async function prepareUpdateDiff(
   project: Project,

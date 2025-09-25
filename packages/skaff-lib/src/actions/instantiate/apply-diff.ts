@@ -1,6 +1,6 @@
 import { ParsedFile, Result } from "../../lib";
 import { Project } from "../../models";
-import { applyDiffToProject } from "../../services/project-diff-service";
+import { applyDiffToProject } from "../../core/diffing/project-diff-service";
 
 export async function applyDiff(
   project: Project,

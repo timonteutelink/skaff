@@ -19,8 +19,8 @@ import {
 import {
   addAllAndRetrieveDiff,
   parseGitDiff,
-} from "../../services/git-service";
-import { TemplateGeneratorService } from "../../services/template-generator-service";
+} from "../infra/git-service";
+import { TemplateGeneratorService } from "../generation/template-generator-service";
 
 export class ProjectCreationManager {
   constructor(private readonly options?: ProjectCreationOptions) {}

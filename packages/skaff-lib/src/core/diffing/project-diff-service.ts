@@ -1,8 +1,8 @@
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 
-import { NewTemplateDiffResult, ParsedFile, Result } from "../lib/types";
-import { Project } from "../models/project";
-import { ProjectDiffPlanner } from "../core/diffing/ProjectDiffPlanner";
+import { NewTemplateDiffResult, ParsedFile, Result } from "../../lib/types";
+import { Project } from "../../models/project";
+import { ProjectDiffPlanner } from "./ProjectDiffPlanner";
 
 const planner = new ProjectDiffPlanner();
 

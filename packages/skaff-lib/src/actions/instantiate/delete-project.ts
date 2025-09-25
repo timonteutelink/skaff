@@ -1,6 +1,6 @@
 import { Result } from "../../lib";
 import { Project } from "../../models";
-import { deleteRepo } from "../../services/git-service";
+import { deleteRepo } from "../../core/infra/git-service";
 
 export async function deleteProject(
   project: Project,

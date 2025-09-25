@@ -5,9 +5,9 @@ import path from "node:path";
 import fsExtra from "fs-extra";
 import simpleGit from "simple-git";
 
-import { DiffHunk, GitStatus, ParsedFile, Result } from "../lib/types";
-import { logError } from "../lib/utils";
-import type { Template } from "../core/templates";
+import { DiffHunk, GitStatus, ParsedFile, Result } from "../../lib/types";
+import { logError } from "../../lib/utils";
+import type { Template } from "../templates";
 import { pathInCache } from "./cache-service";
 import { npmInstall } from "./npm-service";
 

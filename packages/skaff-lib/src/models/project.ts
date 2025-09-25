@@ -6,9 +6,9 @@ import {
 import path from "node:path";
 import { GitStatus, ProjectDTO, Result } from "../lib/types";
 import { logError, stringOrCallbackToString } from "../lib/utils";
-import { isGitRepo, loadGitStatus, getRemoteCommitHash } from "../services/git-service";
-import { loadProjectSettings } from "../services/project-settings-service";
-import { executeCommand } from "../services/shell-service";
+import { isGitRepo, loadGitStatus, getRemoteCommitHash } from "../core/infra/git-service";
+import { loadProjectSettings } from "../core/projects/project-settings-service";
+import { executeCommand } from "../core/infra/shell-service";
 import { Template } from "./template";
 import { backendLogger } from "../lib";
 

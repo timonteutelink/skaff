@@ -1,5 +1,5 @@
 import { Result } from "../../lib/types";
-import { commitAll, createGitRepo } from "../../services/git-service";
+import { commitAll, createGitRepo } from "../infra/git-service";
 
 export class GitWorkflow {
   public async initializeRepository(projectPath: string): Promise<Result<void>> {

@@ -1,7 +1,7 @@
 import { Result } from "../../lib";
 import { Template } from "../../models";
 import { getRootTemplateRepository } from "../../repositories";
-import { runEraseCache } from "../../services/cache-service";
+import { runEraseCache } from "../../core/infra/cache-service";
 import { getTemplates } from "./get-templates";
 
 export async function eraseCache(): Promise<Result<{

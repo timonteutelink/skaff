@@ -12,7 +12,7 @@ import {
   getCommitHash,
   getCurrentBranch,
   isGitRepoClean,
-} from "../../services/git-service";
+} from "../infra/git-service";
 import { Template } from "./Template";
 import { validateTemplate } from "./TemplateValidation";
 

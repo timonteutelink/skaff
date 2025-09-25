@@ -3,22 +3,22 @@ import {
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import fs from "fs-extra";
-import { backendLogger } from "../lib/logger";
-import { Result } from "../lib/types";
-import { anyOrCallbackToAny, logError } from "../lib/utils";
-import { AutoInstantiationPlanner } from "../core/generation/AutoInstantiationPlanner";
-import { FileMaterializer } from "../core/generation/FileMaterializer";
-import { GenerationContext } from "../core/generation/GenerationContext";
-import { GitWorkflow } from "../core/generation/GitWorkflow";
-import { PathResolver } from "../core/generation/PathResolver";
-import { ProjectSettingsSynchronizer } from "../core/generation/ProjectSettingsSynchronizer";
-import { RollbackFileSystem } from "../core/generation/RollbackFileSystem";
-import { SideEffectExecutor } from "../core/generation/SideEffectExecutor";
-import { HandlebarsEnvironment } from "../core/shared/HandlebarsEnvironment";
-import { Template } from "../models/template";
-import { isSubset } from "../utils/shared-utils";
-import { makeDir } from "./file-service";
-import { FileRollbackManager } from "../core/shared/FileRollbackManager";
+import { backendLogger } from "../../lib/logger";
+import { Result } from "../../lib/types";
+import { anyOrCallbackToAny, logError } from "../../lib/utils";
+import { AutoInstantiationPlanner } from "./AutoInstantiationPlanner";
+import { FileMaterializer } from "./FileMaterializer";
+import { GenerationContext } from "./GenerationContext";
+import { GitWorkflow } from "./GitWorkflow";
+import { PathResolver } from "./PathResolver";
+import { ProjectSettingsSynchronizer } from "./ProjectSettingsSynchronizer";
+import { RollbackFileSystem } from "./RollbackFileSystem";
+import { SideEffectExecutor } from "./SideEffectExecutor";
+import { HandlebarsEnvironment } from "../shared/HandlebarsEnvironment";
+import { Template } from "../../models/template";
+import { isSubset } from "../../utils/shared-utils";
+import { makeDir } from "../infra/file-service";
+import { FileRollbackManager } from "../shared/FileRollbackManager";
 
 export interface GeneratorOptions {
   /**

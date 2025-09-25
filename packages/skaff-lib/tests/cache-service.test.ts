@@ -8,7 +8,7 @@ import {
   saveToCache,
   retrieveFromCache,
   runEraseCache,
-} from "../src/services/cache-service";
+} from "../src/core/infra/cache-service";
 
 describe("cache-service", () => {
   let cacheDir: string;
