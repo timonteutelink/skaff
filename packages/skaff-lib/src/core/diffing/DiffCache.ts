@@ -7,7 +7,7 @@ import {
   pathInCache,
   retrieveFromCache,
   saveToCache,
-} from "../../services/cache-service";
+} from "../infra/cache-service";
 
 export class DiffCache {
   public computeSettingsHash(settings: ProjectSettings): string {

@@ -1,7 +1,7 @@
 import { Result } from "../../lib";
 import { logError } from "../../lib/utils";
 import { Project } from "../../models";
-import { switchBranch } from "../../services/git-service";
+import { switchBranch } from "../../core/infra/git-service";
 
 export async function switchProjectBranch(
   project: Project,

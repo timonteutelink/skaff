@@ -1,6 +1,6 @@
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { NewTemplateDiffResult, Result } from "../../lib";
-import { generateModifyTemplateDiff } from "../../services/project-diff-service";
+import { generateModifyTemplateDiff } from "../../core/diffing/project-diff-service";
 import { Project } from "../../models";
 
 export async function prepareModificationDiff(

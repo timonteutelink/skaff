@@ -3,8 +3,8 @@ import path from "node:path";
 import { createLogger, format, transports } from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 import type { LevelName, LogJSON } from "./types";
-import { makeDir } from "../../services/file-service";
-import { getCacheDirPath } from "../../services/cache-service";
+import { makeDir } from "../../core/infra/file-service";
+import { getCacheDirPath } from "../../core/infra/cache-service";
 
 const customLevels = {
   levels: {

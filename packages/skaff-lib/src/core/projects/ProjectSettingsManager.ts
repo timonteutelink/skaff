@@ -12,7 +12,7 @@ import { logError } from "../../lib/utils";
 import { Template } from "../../models/template";
 import { getRootTemplateRepository } from "../../repositories";
 import { deepSortObject } from "../../utils/shared-utils";
-import { makeDir } from "../../services/file-service";
+import { makeDir } from "../infra/file-service";
 
 interface LoadedProjectSettingsResult {
   settings: ProjectSettings;

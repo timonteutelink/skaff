@@ -1,7 +1,7 @@
 import path from "node:path";
 import * as fs from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { makeDir } from "../src/services/file-service";
+import { makeDir } from "../src/core/infra/file-service";
 
 jest.mock("../src/lib/logger", () => ({
   backendLogger: { error: jest.fn(), info: jest.fn() },

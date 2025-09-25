@@ -1,6 +1,6 @@
 import * as fs from "node:fs/promises";
-import { Result } from "../lib/types";
-import { backendLogger } from "../lib/logger";
+import { Result } from "../../lib/types";
+import { backendLogger } from "../../lib/logger";
 
 export async function makeDir(path: string): Promise<Result<void>> {
   try {

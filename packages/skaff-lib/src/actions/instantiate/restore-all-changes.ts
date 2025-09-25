@@ -1,6 +1,6 @@
 import { Result } from "../../lib";
 import { Project } from "../../models";
-import { resetAllChanges } from "../../services/git-service";
+import { resetAllChanges } from "../../core/infra/git-service";
 
 export async function restoreAllChanges(
   project: Project

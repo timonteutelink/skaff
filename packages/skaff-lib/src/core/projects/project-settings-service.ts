@@ -1,7 +1,7 @@
 import path from "node:path";
-import { Result } from "../lib/types";
+import { Result } from "../../lib/types";
 import { ProjectSettings } from "@timonteutelink/template-types-lib";
-import { ProjectSettingsManager } from "../core/projects/ProjectSettingsManager";
+import { ProjectSettingsManager } from "./ProjectSettingsManager";
 
 export async function writeNewProjectSettings(
   absoluteProjectPath: string,

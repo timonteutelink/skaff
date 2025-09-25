@@ -3,7 +3,7 @@ import { Project } from "../../models";
 import {
   addAllAndRetrieveDiff,
   parseGitDiff,
-} from "../../services/git-service";
+} from "../../core/infra/git-service";
 
 export async function addAllAndDiff(
   project: Project

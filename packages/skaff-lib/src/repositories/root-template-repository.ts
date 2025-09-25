@@ -7,7 +7,7 @@ import { logError } from "../lib/utils";
 import {
   cloneRepoBranchToCache,
   cloneRevisionToCache,
-} from "../services/git-service";
+} from "../core/infra/git-service";
 import {
   TemplateRegistry,
   TemplateTreeBuilder,

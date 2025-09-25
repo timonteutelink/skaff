@@ -1,7 +1,7 @@
 import { Result } from "../../lib";
 import { logError } from "../../lib/utils";
 import { Project } from "../../models";
-import { commitAll } from "../../services/git-service";
+import { commitAll } from "../../core/infra/git-service";
 
 /**
  * @public

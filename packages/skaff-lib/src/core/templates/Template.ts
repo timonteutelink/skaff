@@ -16,14 +16,14 @@ import {
 } from "../../lib/types";
 import { backendLogger } from "../../lib/logger";
 import { logError } from "../../lib/utils";
-import { TemplateGeneratorService } from "../../services/template-generator-service";
+import { TemplateGeneratorService } from "../generation/template-generator-service";
 import { Project } from "../../models/project";
 import { parseProjectCreationResult } from "../projects/ProjectCreationFacade";
-import { getCacheDirPath } from "../../services/cache-service";
+import { getCacheDirPath } from "../infra/cache-service";
 import {
   getCommitHash,
   isGitRepoClean,
-} from "../../services/git-service";
+} from "../infra/git-service";
 
 export interface TemplateInit {
   config: GenericTemplateConfigModule;

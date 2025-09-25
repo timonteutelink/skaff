@@ -21,7 +21,7 @@ describe("git-service", () => {
   });
 
   it("detects git repository", async () => {
-    const { isGitRepo } = await import("../src/services/git-service");
+    const { isGitRepo } = await import("../src/core/infra/git-service");
     mockCheckIsRepo.mockResolvedValue(true);
     const result = await isGitRepo(".");
     expect(result).toEqual({ data: true });
@@ -31,7 +31,7 @@ describe("git-service", () => {
     const err: any = new Error("not repo");
     err.exitCode = 128;
     mockCheckIsRepo.mockRejectedValue(err);
-    const { isGitRepo } = await import("../src/services/git-service");
+    const { isGitRepo } = await import("../src/core/infra/git-service");
     const result = await isGitRepo(".");
     expect(result).toEqual({ data: false });
   });
@@ -40,7 +40,7 @@ describe("git-service", () => {
     const err: any = new Error("boom");
     err.exitCode = 1;
     mockCheckIsRepo.mockRejectedValue(err);
-    const { isGitRepo } = await import("../src/services/git-service");
+    const { isGitRepo } = await import("../src/core/infra/git-service");
     const result = await isGitRepo(".");
     expect(result).toHaveProperty("error");
   });

@@ -1,8 +1,8 @@
 import { promisify } from "node:util";
-import { Result } from "../lib/types";
+import { Result } from "../../lib/types";
 import { execFile } from "node:child_process";
-import { logError } from "../lib/utils";
-import { getConfig } from "../lib";
+import { logError } from "../../lib/utils";
+import { getConfig } from "../../lib";
 
 const asyncExecFile = promisify(execFile);
 

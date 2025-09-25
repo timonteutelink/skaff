@@ -2,10 +2,10 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import * as fs from "node:fs/promises";
 import { makeDir } from "./file-service";
-import { Result } from "../lib/types";
+import { Result } from "../../lib/types";
 import { createHash } from "node:crypto";
-import { backendLogger } from "../lib/logger";
-import { logError } from "../lib/utils";
+import { backendLogger } from "../../lib/logger";
+import { logError } from "../../lib/utils";
 
 export type CacheKey =
   | "template-config"

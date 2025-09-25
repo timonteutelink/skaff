@@ -16,7 +16,7 @@ import {
   diffDirectories,
   isConflictAfterApply,
   parseGitDiff,
-} from "../../services/git-service";
+} from "../infra/git-service";
 import { MigrationApplier } from "./MigrationApplier";
 import { DiffCache } from "./DiffCache";
 import { AutoInstantiationSettingsAdjuster } from "./AutoInstantiationSettingsAdjuster";
