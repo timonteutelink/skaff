@@ -1,6 +1,6 @@
 import { TemplateMigration, UserTemplateSettings } from "@timonteutelink/template-types-lib";
 
-export function applyTemplateMigrations(
+export function applyTemplateMigrationSequence(
   migrations: TemplateMigration[] | undefined,
   settings: UserTemplateSettings,
   fromMigration?: string,
@@ -24,7 +24,7 @@ export function applyTemplateMigrations(
   return { settings: currentSettings, lastMigration: currentId };
 }
 
-export function latestMigrationUuid(
+export function getLatestTemplateMigrationUuid(
   migrations: TemplateMigration[] | undefined,
 ): string | undefined {
   if (!migrations || migrations.length === 0) {

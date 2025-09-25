@@ -13,7 +13,7 @@ import {
   writeNewProjectSettings,
   writeNewTemplateToSettings,
 } from "../../services/project-settings-service";
-import { latestMigrationUuid } from "../../services/template-migration-service";
+import { getLatestTemplateMigrationUuid } from "../templates/TemplateMigration";
 import { GeneratorOptions } from "../../services/template-generator-service";
 
 export class ProjectSettingsSynchronizer {
@@ -110,7 +110,7 @@ export class ProjectSettingsSynchronizer {
     }
 
     const newProjectId = newUuid || crypto.randomUUID();
-    const lastMigration = latestMigrationUuid(
+    const lastMigration = getLatestTemplateMigrationUuid(
       this.rootTemplate.config.migrations,
     );
 
@@ -183,7 +183,9 @@ export class ProjectSettingsSynchronizer {
     }
 
     const newProjectId = newUuid || crypto.randomUUID();
-    const lastMigration = latestMigrationUuid(template.config.migrations);
+    const lastMigration = getLatestTemplateMigrationUuid(
+      template.config.migrations,
+    );
 
     this.destinationProjectSettings.instantiatedTemplates.push({
       id: newProjectId,

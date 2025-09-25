@@ -9,3 +9,7 @@ export {
 } from "./TemplateValidation";
 export { TemplateTreeBuilder } from "./TemplateTreeBuilder";
 export type { TemplateTreeBuilderOptions } from "./TemplateTreeBuilder";
+export {
+  applyTemplateMigrationSequence,
+  getLatestTemplateMigrationUuid,
+} from "./TemplateMigration";
