@@ -37,6 +37,73 @@ export type TemplateConfigWithFileInfo = {
   templateConfig: GenericTemplateConfigModule
 } & TemplateConfigFileInfo;
 
+type TemplateRefEntry =
+  | { type: "local"; path: string }
+  | { type: "remote"; path: string; repoUrl: string; branch?: string };
+
+export interface RemoteTemplateReference {
+  refDir: string;
+  repoUrl: string;
+  branch?: string;
+  templatePath: string;
+}
+
+interface TemplateDiscoveryResult {
+  configs: TemplateConfigFileInfo[];
+  remoteRefs: RemoteTemplateReference[];
+}
+
+function extractTemplateRefEntries(raw: unknown): TemplateRefEntry[] {
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    return trimmed ? [{ type: "local", path: trimmed }] : [];
+  }
+
+  if (Array.isArray(raw)) {
+    return raw.flatMap((entry) => extractTemplateRefEntries(entry));
+  }
+
+  if (!raw || typeof raw !== "object") {
+    return [];
+  }
+
+  const record = raw as Record<string, unknown>;
+
+  if ("subTemplates" in record) {
+    return extractTemplateRefEntries(record.subTemplates);
+  }
+
+  if ("references" in record) {
+    return extractTemplateRefEntries(record.references);
+  }
+
+  if ("repoUrl" in record || "repo" in record) {
+    const repoUrl = record.repoUrl ?? record.repo;
+    const pathValue = record.path ?? record.templatePath;
+    if (typeof repoUrl === "string" && typeof pathValue === "string") {
+      const branch =
+        typeof record.branch === "string" ? record.branch : undefined;
+      return [
+        {
+          type: "remote",
+          repoUrl,
+          branch,
+          path: pathValue,
+        },
+      ];
+    }
+    return [];
+  }
+
+  if ("path" in record && typeof record.path === "string") {
+    return [{ type: "local", path: record.path }];
+  }
+
+  return Object.values(record).flatMap((value) =>
+    extractTemplateRefEntries(value),
+  );
+}
+
 async function readTsConfig(): Promise<any> {
   return {
     "compilerOptions": {
@@ -126,43 +193,65 @@ async function typeCheckFile(filePath: string): Promise<void> {
 // TODO NEW add extra templateloader step that checks all "templates" and checks if all values used in templates are provided in FinalTemplateSettings
 async function findTemplateConfigFilesInSubdirs(
   dir: string,
-): Promise<TemplateConfigFileInfo[]> {
-  const out: TemplateConfigFileInfo[] = [];
+  rootDir: string,
+): Promise<TemplateDiscoveryResult> {
+  const aggregate: TemplateDiscoveryResult = { configs: [], remoteRefs: [] };
   for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
     const sub = path.join(dir, entry.name);
-    out.push(...(await findTemplateConfigFiles(sub)));
+    const nested = await findTemplateConfigFiles(sub, rootDir);
+    aggregate.configs.push(...nested.configs);
+    aggregate.remoteRefs.push(...nested.remoteRefs);
   }
-  return out;
+  return aggregate;
 }
 
 async function findTemplateConfigFiles(
   dir: string,
-): Promise<TemplateConfigFileInfo[]> {
-  const results: TemplateConfigFileInfo[] = [];
+  rootDir: string,
+): Promise<TemplateDiscoveryResult> {
+  const results: TemplateDiscoveryResult = { configs: [], remoteRefs: [] };
 
   const candidate = path.join(dir, "templateConfig.ts");
   if ((await fs.stat(candidate).catch(() => null))?.isFile()) {
-    results.push({ configPath: candidate });
+    results.configs.push({ configPath: candidate });
   }
 
   for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
     if (!entry.isDirectory()) continue;
 
-    /* templateRef.json indirection */
     const refJson = path.join(full, "templateRef.json");
     if ((await fs.stat(refJson).catch(() => null))?.isFile()) {
       try {
-        const rel = Object.values(
-          JSON.parse(await fs.readFile(refJson, "utf8")),
-        )[0];
-        if (typeof rel === "string") {
-          const refDir = path.join(full, rel);
+        const parsed = JSON.parse(await fs.readFile(refJson, "utf8"));
+        const references = extractTemplateRefEntries(parsed);
+
+        if (!references.length) {
+          console.warn(`No valid template references found in ${refJson}`);
+        }
+
+        for (const reference of references) {
+          if (reference.type === "remote") {
+            results.remoteRefs.push({
+              refDir: path.relative(rootDir, full),
+              repoUrl: reference.repoUrl,
+              branch: reference.branch,
+              templatePath: reference.path,
+            });
+            continue;
+          }
+
+          const refDir = path.join(full, reference.path);
           const refCfg = path.join(refDir, "templateConfig.ts");
           if ((await fs.stat(refCfg).catch(() => null))?.isFile()) {
-            results.push({ configPath: refCfg, refDir: full });
-            results.push(...(await findTemplateConfigFilesInSubdirs(refDir)));
+            results.configs.push({ configPath: refCfg, refDir: full });
+            const nested = await findTemplateConfigFilesInSubdirs(
+              refDir,
+              rootDir,
+            );
+            results.configs.push(...nested.configs);
+            results.remoteRefs.push(...nested.remoteRefs);
           } else {
             console.warn(`Referenced templateConfig.ts not found at ${refCfg}`);
           }
@@ -170,9 +259,12 @@ async function findTemplateConfigFiles(
       } catch (e) {
         console.warn(`Error parsing ${refJson}: ${(e as Error).message}`);
       }
-    } else {
-      results.push(...(await findTemplateConfigFiles(full)));
+      continue;
     }
+
+    const nested = await findTemplateConfigFiles(full, rootDir);
+    results.configs.push(...nested.configs);
+    results.remoteRefs.push(...nested.remoteRefs);
   }
   return results;
 }
@@ -206,11 +298,15 @@ async function evaluateBundledCode(
 export async function loadAllTemplateConfigs(
   rootDir: string,
   commitHash: string,
-): Promise<Record<string, TemplateConfigWithFileInfo>> {
+): Promise<{
+  configs: Record<string, TemplateConfigWithFileInfo>;
+  remoteRefs: RemoteTemplateReference[];
+}> {
   if (!commitHash.trim()) {
     throw new Error("commitHash is required to load template configurations");
   }
-  const files = await findTemplateConfigFiles(rootDir);
+  const discovery = await findTemplateConfigFiles(rootDir, rootDir);
+  const files = discovery.configs;
   if (files.length === 0) {
     throw new Error(`No templateConfig.ts files found under ${rootDir}`);
   }
@@ -222,7 +318,8 @@ export async function loadAllTemplateConfigs(
   const cached = await retrieveFromCache("template-config", cacheKey, "cjs");
   if ("data" in cached && cached.data) {
     const code = await fs.readFile(cached.data.path, "utf8");
-    return evaluateBundledCode(code);
+    const configs = await evaluateBundledCode(code);
+    return { configs, remoteRefs: discovery.remoteRefs };
   }
 
   const imports: string[] = [];
@@ -304,5 +401,5 @@ export async function loadAllTemplateConfigs(
     }
     mod.templateConfig.templateConfig = parsed.data;
   }
-  return configs;
+  return { configs, remoteRefs: discovery.remoteRefs };
 }
