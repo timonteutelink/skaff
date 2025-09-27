@@ -4,6 +4,7 @@ import path from "node:path";
 import {
   loadAllTemplateConfigs,
   TemplateConfigWithFileInfo,
+  RemoteTemplateReference,
 } from "./config/TemplateConfigLoader";
 import { backendLogger } from "../../lib/logger";
 import { Result } from "../../lib/types";
@@ -12,6 +13,7 @@ import {
   getCommitHash,
   getCurrentBranch,
   isGitRepoClean,
+  cloneRepoBranchToCache,
 } from "../infra/git-service";
 import { Template } from "./Template";
 import { validateTemplate } from "./TemplateValidation";
@@ -195,6 +197,78 @@ function linkByDirectoryContainment(templatesMap: Record<string, Template>): voi
   }
 }
 
+async function attachRemoteReferences(
+  remoteRefs: RemoteTemplateReference[],
+  context: TemplateBuildContext,
+  templatesMap: Record<string, Template>,
+): Promise<Result<void>> {
+  for (const remoteRef of remoteRefs) {
+    const refAbsolute = path.resolve(context.absoluteRootDir, remoteRef.refDir);
+    const intendedParentDir = path.dirname(refAbsolute);
+    const parent = templatesMap[intendedParentDir];
+
+    if (!parent) {
+      backendLogger.warn(
+        `Unable to attach remote template for ref at ${refAbsolute}: parent template not found.`,
+      );
+      continue;
+    }
+
+    const branch = remoteRef.branch ?? "main";
+    const cloneResult = await cloneRepoBranchToCache(
+      remoteRef.repoUrl,
+      branch,
+    );
+
+    if ("error" in cloneResult) {
+      return { error: cloneResult.error };
+    }
+
+    const remoteTemplateDir = path.resolve(
+      cloneResult.data,
+      remoteRef.templatePath,
+    );
+
+    const remoteTemplateResult = await TemplateTreeBuilder.build(
+      remoteTemplateDir,
+      {
+        repoUrl: remoteRef.repoUrl,
+        branchOverride: branch,
+      },
+    );
+
+    if ("error" in remoteTemplateResult) {
+      return remoteTemplateResult;
+    }
+
+    const remoteTemplate = remoteTemplateResult.data;
+    remoteTemplate.parentTemplate = parent;
+    remoteTemplate.relativeRefDir = path.relative(
+      context.absoluteRootDir,
+      refAbsolute,
+    );
+
+    const registerTemplate = (template: Template): void => {
+      templatesMap[template.absoluteDir] = template;
+      for (const childList of Object.values(template.subTemplates)) {
+        for (const child of childList) {
+          registerTemplate(child);
+        }
+      }
+    };
+
+    registerTemplate(remoteTemplate);
+
+    const key = path.basename(refAbsolute);
+    if (!parent.subTemplates[key]) {
+      parent.subTemplates[key] = [];
+    }
+    parent.subTemplates[key].push(remoteTemplate);
+  }
+
+  return { data: undefined };
+}
+
 function findRootTemplate(templatesMap: Record<string, Template>): Result<Template> {
   const allTemplates = Object.values(templatesMap);
   const rootTemplates = allTemplates.filter((template) => !template.parentTemplate);
@@ -273,7 +347,12 @@ async function buildContext(
 async function loadTemplateConfigs(
   absoluteRootDir: string,
   commitHash: string,
-): Promise<Result<Record<string, TemplateConfigWithFileInfo>>> {
+): Promise<
+  Result<{
+    configs: Record<string, TemplateConfigWithFileInfo>;
+    remoteRefs: RemoteTemplateReference[];
+  }>
+> {
   try {
     const configs = await loadAllTemplateConfigs(absoluteRootDir, commitHash);
     return { data: configs };
@@ -317,7 +396,7 @@ export class TemplateTreeBuilder {
     }
 
     const templatesResult = await loadTemplateCandidates(
-      configsResult.data,
+      configsResult.data.configs,
       contextResult.data,
     );
     if ("error" in templatesResult) {
@@ -328,6 +407,15 @@ export class TemplateTreeBuilder {
 
     linkExplicitReferences(templatesMap, contextResult.data.absoluteRootDir);
     linkByDirectoryContainment(templatesMap);
+
+    const remoteLinkResult = await attachRemoteReferences(
+      configsResult.data.remoteRefs,
+      contextResult.data,
+      templatesMap,
+    );
+    if ("error" in remoteLinkResult) {
+      return remoteLinkResult;
+    }
 
     const rootTemplateResult = findRootTemplate(templatesMap);
     if ("error" in rootTemplateResult) {

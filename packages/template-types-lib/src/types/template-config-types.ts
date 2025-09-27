@@ -234,6 +234,12 @@ export interface TemplateConfigModule<
     aiResults: TAiResultsObject;
   }) => TFinalSettings;
 
+  /**
+   * Schema describing the expected final settings from the parent template.
+   * Required when this template is referenced from a different repository.
+   */
+  parentFinalSettingsSchema?: z.ZodType<TParentFinalSettings>;
+
   migrations?: TemplateMigration[];
 
   /**

@@ -15,6 +15,54 @@ import { backendLogger } from "../lib";
 // every project name inside a root project should be unique.
 // The root project can be uniquely identified by its name and author.(and version)
 
+function isCrossRepoChild(template: Template): boolean {
+  if (!template.parentTemplate) {
+    return false;
+  }
+
+  return (
+    path.resolve(template.absoluteBaseDir) !==
+    path.resolve(template.parentTemplate.absoluteBaseDir)
+  );
+}
+
+function validateParentFinalSettings(
+  template: Template,
+  parentSettings?: FinalTemplateSettings,
+): Result<FinalTemplateSettings | undefined> {
+  const requiresSchema = isCrossRepoChild(template);
+  const schema = template.config.parentFinalSettingsSchema;
+
+  if (requiresSchema && !schema) {
+    const errorMessage =
+      `Template ${template.config.templateConfig.name} cannot be used as a child of a template from another repository because it does not define parentFinalSettingsSchema.`;
+    backendLogger.error(errorMessage);
+    return { error: errorMessage };
+  }
+
+  if (!schema) {
+    return { data: parentSettings };
+  }
+
+  if (parentSettings === undefined) {
+    const errorMessage =
+      `Template ${template.config.templateConfig.name} requires parent final settings but none were provided.`;
+    backendLogger.error(errorMessage);
+    return { error: errorMessage };
+  }
+
+  const parsed = schema.safeParse(parentSettings);
+
+  if (!parsed.success) {
+    const errorMessage =
+      `Parent final settings validation failed for template ${template.config.templateConfig.name}: ${parsed.error}`;
+    backendLogger.error(errorMessage);
+    return { error: errorMessage };
+  }
+
+  return { data: parsed.data };
+}
+
 export class Project {
   public absoluteRootDir: string;
 
@@ -86,7 +134,16 @@ export class Project {
         return newInstantiatedSettings;
       }
 
-      parentFinalSettings = newInstantiatedSettings.data;
+      const validatedParentSettings = validateParentFinalSettings(
+        template,
+        newInstantiatedSettings.data,
+      );
+
+      if ("error" in validatedParentSettings) {
+        return validatedParentSettings;
+      }
+
+      parentFinalSettings = validatedParentSettings.data;
     }
 
     const templateName = template.config.templateConfig.name;
@@ -169,7 +226,22 @@ export class Project {
         return { error: finalParentSettings.error };
       }
 
-      parentSettings = finalParentSettings.data;
+      const validatedParentSettings = validateParentFinalSettings(
+        template,
+        finalParentSettings.data,
+      );
+
+      if ("error" in validatedParentSettings) {
+        return { error: validatedParentSettings.error };
+      }
+
+      parentSettings = validatedParentSettings.data;
+    } else if (parentTemplate) {
+      const validation = validateParentFinalSettings(template, undefined);
+      if ("error" in validation) {
+        return { error: validation.error };
+      }
+      parentSettings = validation.data;
     }
 
     const templateName = template.config.templateConfig.name;
