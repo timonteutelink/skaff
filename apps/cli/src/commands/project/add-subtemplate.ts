@@ -11,7 +11,8 @@ export default class ProjectAddSubtemplate extends Base {
     rootTemplateName: Args.string({ required: true }),
     templateName: Args.string({ required: true }),
   };
-  static description = 'Add a subtemplate to the current project and generate a diff';
+  static description =
+    'Add a subtemplate to the current project and generate a diff (use --project PATH to override auto-discovery)';
   static flags = {
     ...Base.flags,
     apply: Flags.boolean({ char: 'a', default: false }),
@@ -21,7 +22,7 @@ export default class ProjectAddSubtemplate extends Base {
   async run() {
     const { args, flags } = await this.parse(ProjectAddSubtemplate);
 
-    const proj = await getCurrentProject();
+    const proj = await getCurrentProject(flags.project);
     if ('error' in proj) {
       this.error(proj.error, { exit: 1 });
     }

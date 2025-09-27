@@ -7,7 +7,7 @@ import { viewExistingPatchWithGit } from '../../../utils/diff-utils.js';
 
 export default class InstantiationDiffFromTemplate extends Base {
   static description =
-    'Generate a diff from the current project to a clean template';
+    'Generate a diff from the current project to a clean template (use --project PATH to override auto-discovery)';
 static flags = {
     ...Base.flags,
     json: Flags.boolean({ description: 'Output raw JSON' }),
@@ -20,7 +20,7 @@ static flags = {
   async run() {
     const { flags } = await this.parse(InstantiationDiffFromTemplate);
 
-    const proj = await getCurrentProject();
+    const proj = await getCurrentProject(flags.project);
     if ('error' in proj) {
       this.error(proj.error, { exit: 1 });
     }

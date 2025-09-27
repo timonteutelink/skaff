@@ -4,7 +4,8 @@ import Base from '../../base-command.js';
 import { getCurrentProject } from '../../utils/cli-utils.js';
 
 export default class ProjectRun extends Base {
-  static description = 'Execute a template command inside a project';
+  static description =
+    'Execute a template command inside a project (use --project PATH to override auto-discovery)';
 static flags = {
     ...Base.flags,
     command: Flags.string({
@@ -22,7 +23,7 @@ static flags = {
   async run() {
     const { flags } = await this.parse(ProjectRun);
 
-    const proj = await getCurrentProject();
+    const proj = await getCurrentProject(flags.project);
     if ('error' in proj)
       this.error(proj.error, {
         exit: 1,

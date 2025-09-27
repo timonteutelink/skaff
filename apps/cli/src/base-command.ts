@@ -12,6 +12,11 @@ export default abstract class BaseCommand extends Command {
       options: ['json', 'ndjson', 'tsv', 'table'],
     }),
     help: Flags.help({ char: 'h' }),
+    project: Flags.string({
+      description:
+        'Path to a project directory to operate on (overrides auto-discovery)',
+      helpValue: 'path',
+    }),
   };
 
   /** Convenience helper for children */
