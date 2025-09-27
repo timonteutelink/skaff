@@ -27,7 +27,7 @@
         "@oclif/plugin-help": "^6.2.32",
         "@oclif/plugin-plugins": "^5.4.46",
         "@timonteutelink/skaff-lib": "0.0.72",
-        "@timonteutelink/template-types-lib": "0.0.48",
+        "@timonteutelink/template-types-lib": "0.0.49",
         "@types/node": "^22.18.1",
         "esbuild": "^0.25.9",
         "loglevel": "^1.9.2",
@@ -88,7 +88,7 @@
         "@radix-ui/react-tooltip": "^1.2.8",
         "@tailwindcss/postcss": "^4.1.13",
         "@timonteutelink/skaff-lib": "0.0.72",
-        "@timonteutelink/template-types-lib": "0.0.48",
+        "@timonteutelink/template-types-lib": "0.0.49",
         "@types/node": "^22.18.1",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
@@ -838,7 +838,7 @@
 
     "@timonteutelink/skaff-lib": ["@timonteutelink/skaff-lib@0.0.72", "", { "dependencies": { "@langchain/langgraph": "^0.3.12", "@langchain/openai": "^0.5.18", "@timonteutelink/template-types-lib": "0.0.48", "@types/node": "^22.18.0", "esbuild": "^0.25.9", "fs-extra": "^11.3.1", "glob": "^11.0.3", "handlebars": "^4.7.8", "langchain": "^0.3.31", "loglevel": "^1.9.2", "semver": "^7.7.2", "simple-git": "^3.27.0", "typescript": "5.8.3", "winston": "^3.17.0", "winston-daily-rotate-file": "^5.0.0", "yaml": "^2.8.1", "zod": "^3.25.76", "zod-to-json-schema": "^3.24.6" } }, "sha512-a3JJkx+Akvw5cyJp3+GaF1BTi24RaTXOn1Rh9dSVLl9cnVv9pNq68rchcTDc6tb0I1X+rdQYPsrlVbFRtZco5A=="],
 
-    "@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.48", "", { "peerDependencies": { "handlebars": "^4.7.8", "zod": "^3.25.76" } }, "sha512-7sGRWKCCz/awlGNmalTra7IFbsIjO16XjXRj+JNi1wZaPKTqWlOsQxB93rQPIszaFMva1XO7c6H9D8OutoOh5Q=="],
+    "@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.49", "", { "peerDependencies": { "handlebars": "^4.7.8", "zod": "^3.25.76" } }, "sha512-evUQ5WHbSA+VFwZQ1/LPXE0D5p1SniEO+L3y27Tqi5OHf12McKEIX4fmL3ftPl2c5g95K+M6otmixqM7bLAOgQ=="],
 
     "@tootallnate/quickjs-emscripten": ["@tootallnate/quickjs-emscripten@0.23.0", "", {}, "sha512-C5Mc6rdnsaJDjO3UpGW/CQTHtCKaYlScZTly4JIu97Jxo/odCiH0ITnDXSJPTOrEKk/ycSZ0AOgTmkDtkOsvIA=="],
 
@@ -2319,6 +2319,8 @@
     "@tailwindcss/oxide-wasm32-wasi/tslib": ["tslib@2.8.1", "", { "bundled": true }, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
 
     "@timonteutelink/skaff/typescript": ["typescript@5.9.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A=="],
+
+    "@timonteutelink/skaff-lib/@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.48", "", { "peerDependencies": { "handlebars": "^4.7.8", "zod": "^3.25.76" } }, "sha512-7sGRWKCCz/awlGNmalTra7IFbsIjO16XjXRj+JNi1wZaPKTqWlOsQxB93rQPIszaFMva1XO7c6H9D8OutoOh5Q=="],
 
     "@timonteutelink/skaff-lib/fs-extra": ["fs-extra@11.3.2", "", { "dependencies": { "graceful-fs": "^4.2.0", "jsonfile": "^6.0.1", "universalify": "^2.0.0" } }, "sha512-Xr9F6z6up6Ws+NjzMCZc6WXg2YFRlrLP9NQDO3VQrWrfiojdhS56TzueT88ze0uBdCTwEIhQ3ptnmKeWGFAe0A=="],
 
