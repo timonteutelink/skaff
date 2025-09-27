@@ -8,7 +8,8 @@ export default class InstantiationDiffPrepareUpdate extends Base {
   static args = {
     newRevisionHash: Args.string({ required: true }),
   };
-static description = 'Prepare a project-wide template update diff';
+  static description =
+    'Prepare a project-wide template update diff (use --project PATH to override auto-discovery)';
 static flags = {
     ...Base.flags,
     apply: Flags.boolean({ char: 'a', default: false }),
@@ -17,7 +18,7 @@ static flags = {
   async run() {
     const { args, flags } = await this.parse(InstantiationDiffPrepareUpdate);
 
-    const proj = await getCurrentProject();
+    const proj = await getCurrentProject(flags.project);
     if ('error' in proj) {
       this.error(proj.error, { exit: 1 });
     }

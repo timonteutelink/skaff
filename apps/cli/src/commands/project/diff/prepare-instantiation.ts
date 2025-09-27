@@ -14,7 +14,8 @@ export default class InstantiationDiffPrepareInstantiation extends Base {
     rootTemplateName: Args.string({ required: true }),
     templateName: Args.string({ required: true }),
   };
-static description = 'Prepare a diff for adding a sub-template instance';
+  static description =
+    'Prepare a diff for adding a sub-template instance (use --project PATH to override auto-discovery)';
 static flags = {
     ...Base.flags,
     apply: Flags.boolean({ char: 'a', default: false }),
@@ -26,7 +27,7 @@ static flags = {
       InstantiationDiffPrepareInstantiation,
     );
 
-    const proj = await getCurrentProject();
+    const proj = await getCurrentProject(flags.project);
     if ('error' in proj) {
       this.error(proj.error, { exit: 1 });
     }

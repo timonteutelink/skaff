@@ -5,12 +5,12 @@ import { getCurrentProject } from '../../utils/cli-utils.js';
 
 export default class GitDiffTemplate extends Base {
   static description =
-    'Show the diff between a project and the template revision it was instantiated from';
+    'Show the diff between a project and the template revision it was instantiated from (use --project PATH to override auto-discovery)';
 
   async run() {
-    await this.parse(GitDiffTemplate); // ensures global flags (e.g. --format) are parsed
+    const { flags } = await this.parse(GitDiffTemplate); // ensures global flags (e.g. --format) are parsed
 
-    const project = await getCurrentProject();
+    const project = await getCurrentProject(flags.project);
     if ('error' in project) {
       this.error(project.error, { exit: 1 });
     }

@@ -12,9 +12,8 @@ export default class ProjectUpdate extends Base {
       required: true,
     }),
   };
-
-  static description = 'Update current project to a new template revision and generate a diff';
-
+  static description =
+    'Update current project to a new template revision and generate a diff (use --project PATH to override auto-discovery)';
   static flags = {
     ...Base.flags,
     apply: Flags.boolean({ char: 'a', default: false }),
@@ -23,7 +22,7 @@ export default class ProjectUpdate extends Base {
   async run() {
     const { args, flags } = await this.parse(ProjectUpdate);
 
-    const proj = await getCurrentProject();
+    const proj = await getCurrentProject(flags.project);
     if ('error' in proj) {
       this.error(proj.error ?? 'No project in the current directory.', { exit: 1 });
     }
@@ -40,7 +39,7 @@ export default class ProjectUpdate extends Base {
     }
 
     const revisionHash = await resolveRevision(rootInst.templateRepoUrl, args.revision).catch(
-      e => this.error(String(e), { exit: 1 }),
+      error => this.error(String(error), { exit: 1 }),
     );
 
     const res = await prepareUpdateDiff(proj.data, revisionHash);

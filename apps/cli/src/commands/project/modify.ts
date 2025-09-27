@@ -10,7 +10,8 @@ export default class ProjectModify extends Base {
   static args = {
     templateInstanceId: Args.string({ required: true }),
   };
-  static description = 'Modify a template instance and generate a diff';
+  static description =
+    'Modify a template instance and generate a diff (use --project PATH to override auto-discovery)';
   static flags = {
     ...Base.flags,
     apply: Flags.boolean({ char: 'a', default: false }),
@@ -20,7 +21,7 @@ export default class ProjectModify extends Base {
   async run() {
     const { args, flags } = await this.parse(ProjectModify);
 
-    const proj = await getCurrentProject();
+    const proj = await getCurrentProject(flags.project);
     if ('error' in proj) {
       this.error(proj.error ?? 'No project in the current directory.', { exit: 1 });
     }

@@ -2,12 +2,13 @@ import Base from '../../base-command.js';
 import { getCurrentProject } from '../../utils/cli-utils.js';
 
 export default class ProjectShow extends Base {
-  static description = 'Display details for the current project';
+  static description =
+    'Display details for the current project (use --project PATH to override auto-discovery)';
 
   async run() {
-    await this.parse(ProjectShow); // ensures global --format is parsed
+    const { flags } = await this.parse(ProjectShow); // ensures global --format is parsed
 
-    const res = await getCurrentProject();
+    const res = await getCurrentProject(flags.project);
     if ('error' in res) {
       this.error(res.error, { exit: 1 });
     }

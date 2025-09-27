@@ -12,8 +12,8 @@ export default class InstantiationDiffPrepareModification extends Base {
   static args = {
     templateInstanceId: Args.string({ required: true }),
   };
-static description =
-    'Prepare a diff for modifying an existing template instance';
+  static description =
+    'Prepare a diff for modifying an existing template instance (use --project PATH to override auto-discovery)';
 static flags = {
     ...Base.flags,
     apply: Flags.boolean({ char: 'a', default: false }),
@@ -25,7 +25,7 @@ static flags = {
       InstantiationDiffPrepareModification,
     );
 
-    const proj = await getCurrentProject();
+    const proj = await getCurrentProject(flags.project);
     if ('error' in proj) {
       this.error(proj.error ?? 'No project in the current directory.', { exit: 1 });
     }

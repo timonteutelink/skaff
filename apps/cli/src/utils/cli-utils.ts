@@ -63,11 +63,14 @@ export async function findProjectDirPath(startDir?: string): Promise<null | stri
   return null;
 }
 
-export async function getCurrentProject(): Promise<Result<null | Project>> {
-  const projectDir = await findProjectDirPath();
+export async function getCurrentProject(
+  projectPath?: string,
+  loader: typeof getProjectFromPath = getProjectFromPath,
+): Promise<Result<null | Project>> {
+  const projectDir = await findProjectDirPath(projectPath);
   if (!projectDir) {
     return { error: "No project found in the current directory or its parents." };
   }
 
-  return getProjectFromPath(projectDir);
+  return loader(projectDir);
 }
