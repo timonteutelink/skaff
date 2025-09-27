@@ -8,12 +8,13 @@ export default class InstantiationDiffApply extends Base {
   static args = {
     diffHash: Args.string({ required: true }),
   };
-static description = 'Apply a previously prepared diff by its hash';
+  static description =
+    'Apply a previously prepared diff by its hash (use --project PATH to override auto-discovery)';
 
   async run() {
-    const { args } = await this.parse(InstantiationDiffApply);
+    const { args, flags } = await this.parse(InstantiationDiffApply);
 
-    const proj = await getCurrentProject();
+    const proj = await getCurrentProject(flags.project);
     if ('error' in proj) {
       this.error(proj.error, { exit: 1 });
     }
@@ -30,11 +31,18 @@ static description = 'Apply a previously prepared diff by its hash';
       return;
     }
 
-    this.output(res.data.map(d => ({
-      diff: d.hunks.length > 0 ? d.hunks.reduce<string>((prev, curr, index, hunks) => `${prev}\n\n${hunks[index].lines.join('\n')}`, '') : '',
-      file: d.path,
-      status: d.status,
-    })))
+    this.output(
+      res.data.map(d => ({
+        diff:
+          d.hunks.length > 0
+            ? d.hunks
+                .map(hunk => hunk.lines.join('\n'))
+                .join('\n\n')
+            : '',
+        file: d.path,
+        status: d.status,
+      })),
+    );
   }
 }
 

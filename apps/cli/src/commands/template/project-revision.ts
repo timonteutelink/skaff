@@ -5,12 +5,12 @@ import { getCurrentProject } from '../../utils/cli-utils.js';
 
 export default class TemplateProjectRevision extends Base {
   static description =
-    'Show the template revision that was instantiated for this project';
+    'Show the template revision that was instantiated for this project (use --project PATH to override auto-discovery)';
 
   async run() {
-    await this.parse(TemplateProjectRevision);
+    const { flags } = await this.parse(TemplateProjectRevision);
 
-    const project = await getCurrentProject();
+    const project = await getCurrentProject(flags.project);
     if ('error' in project)
       this.error(
         project.error ??
