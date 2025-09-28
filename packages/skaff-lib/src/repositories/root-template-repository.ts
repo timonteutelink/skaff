@@ -28,11 +28,61 @@ export const defaultTemplatePathsProvider: TemplatePathsProvider = async () => {
 
 // now only stores the root templates at: <templateDirPath>/root-templates/*
 // later also store reference to files and generic templates to allow direct instantiation without saving state of subtemplates
+type RemoteRepoSource = "config" | "manual";
+
+interface RemoteRepoEntry {
+  url: string;
+  branch: string;
+  path: string;
+  source: RemoteRepoSource;
+}
+
+type TemplatePathEntry =
+  | { kind: "local"; path: string }
+  | { kind: "remote"; repoUrl: string; branch?: string };
+
+function normalizeGithubRepoUrl(spec: string): string {
+  const repoPath = spec.replace(/\.git$/, "");
+  return `https://github.com/${repoPath}.git`;
+}
+
+function parseTemplatePathEntry(raw: string): TemplatePathEntry | null {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  if (trimmed.startsWith("github:")) {
+    const remainder = trimmed.slice("github:".length);
+    const branchSeparator = remainder.search(/[@#]/);
+    const repoSpec =
+      branchSeparator === -1
+        ? remainder
+        : remainder.slice(0, branchSeparator);
+    const branch =
+      branchSeparator === -1
+        ? undefined
+        : remainder.slice(branchSeparator + 1).trim() || undefined;
+    const normalizedRepo = repoSpec.trim();
+    if (!normalizedRepo) {
+      return null;
+    }
+    const repoUrl = normalizeGithubRepoUrl(normalizedRepo);
+    return { kind: "remote", repoUrl, branch };
+  }
+
+  if (/^(https?:\/\/|git@|ssh:\/\/)/i.test(trimmed)) {
+    return { kind: "remote", repoUrl: trimmed };
+  }
+
+  return { kind: "local", path: trimmed };
+}
+
 @injectable()
 export class RootTemplateRepository {
   private loading: boolean = false;
   private readonly templatePathsProvider: TemplatePathsProvider;
-  private remoteRepos: { url: string; branch: string; path: string }[] = [];
+  private remoteRepos: RemoteRepoEntry[] = [];
   private readonly registry = new TemplateRegistry();
   public templates: Template[] = [];
 
@@ -56,8 +106,14 @@ export class RootTemplateRepository {
     );
     if (existing) {
       existing.path = cloneResult.data;
+      existing.source = existing.source ?? "manual";
     } else {
-      this.remoteRepos.push({ url, branch, path: cloneResult.data });
+      this.remoteRepos.push({
+        url,
+        branch,
+        path: cloneResult.data,
+        source: "manual",
+      });
     }
     return await this.loadTemplates();
   }
@@ -70,6 +126,12 @@ export class RootTemplateRepository {
     this.loading = true;
     this.registry.reset();
     this.templates = [];
+
+    // Drop config-sourced repositories; the active configuration below will
+    // rehydrate them so removals take effect without clearing manual loads.
+    this.remoteRepos = this.remoteRepos.filter(
+      (repo) => repo.source === "manual",
+    );
 
     let baseTemplatePaths: string[];
     try {
@@ -85,8 +147,47 @@ export class RootTemplateRepository {
       };
     }
 
+    const localTemplatePaths: string[] = [];
+
+    for (const basePath of baseTemplatePaths) {
+      const parsed = parseTemplatePathEntry(basePath);
+      if (!parsed) {
+        continue;
+      }
+
+      if (parsed.kind === "remote") {
+        const branch = parsed.branch ?? "main";
+        const cloneResult = await this.gitService.cloneRepoBranchToCache(
+          parsed.repoUrl,
+          branch,
+        );
+        if ("error" in cloneResult) {
+          backendLogger.warn(
+            `Failed to load remote template repository ${parsed.repoUrl} (${branch}): ${cloneResult.error}`,
+          );
+          continue;
+        }
+
+        const existing = this.remoteRepos.find(
+          (repo) => repo.url === parsed.repoUrl && repo.branch === branch,
+        );
+        if (existing) {
+          existing.path = cloneResult.data;
+        } else {
+          this.remoteRepos.push({
+            url: parsed.repoUrl,
+            branch,
+            path: cloneResult.data,
+            source: "config",
+          });
+        }
+      } else {
+        localTemplatePaths.push(parsed.path);
+      }
+    }
+
     const paths = [
-      ...baseTemplatePaths,
+      ...localTemplatePaths,
       ...this.remoteRepos.map((r) => r.path),
     ];
     for (const templatePath of paths) {
