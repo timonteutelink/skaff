@@ -1,4 +1,5 @@
 *-debug.log
+logs
 *-error.log
 **/.DS_Store
 /.idea
