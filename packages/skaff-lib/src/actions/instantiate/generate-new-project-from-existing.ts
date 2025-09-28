@@ -1,7 +1,7 @@
 import path from "node:path";
 import { ProjectCreationOptions, ProjectCreationResult, Result } from "../../lib";
 import { Project } from "../../models";
-import { generateProjectFromTemplateSettings } from "../../core/projects/ProjectCreationFacade";
+import { resolveProjectCreationManager } from "../../core/projects/ProjectCreationManager";
 
 export async function generateNewProjectFromExisting(
   oldProject: Project,
@@ -11,7 +11,9 @@ export async function generateNewProjectFromExisting(
 ): Promise<Result<ProjectCreationResult>> {
   const newSettings = { ...oldProject.instantiatedProjectSettings, projectName: newProjectName };
 
-  const result = await generateProjectFromTemplateSettings(
+  const projectCreationManager = resolveProjectCreationManager();
+
+  const result = await projectCreationManager.generateFromTemplateSettings(
     newSettings,
     path.join(newProjectDestinationDirPath, newProjectName),
     projectCreationOptions

@@ -45,11 +45,16 @@ jest.mock("../src/core/diffing/DiffCache", () => ({
   }),
 }));
 
-jest.mock("../src/core/projects/ProjectCreationFacade", () => ({
-  parseProjectCreationResult: jest.fn(),
+const mockProjectCreationManager = {
+  parseCreationResult: jest.fn(),
   instantiateProject: jest.fn(),
-  generateProjectFromExistingProject: jest.fn(),
-  generateProjectFromTemplateSettings: jest.fn(),
+  generateFromExistingProject: jest.fn(),
+  generateFromTemplateSettings: jest.fn(),
+};
+
+jest.mock("../src/core/projects/ProjectCreationManager", () => ({
+  ProjectCreationManager: class {},
+  resolveProjectCreationManager: () => mockProjectCreationManager,
 }));
 
 const { Project } = require("../src/models/project") as typeof import("../src/models/project");
