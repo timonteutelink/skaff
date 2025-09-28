@@ -1,12 +1,16 @@
 import type { CacheKey } from "@timonteutelink/skaff-lib";
 
-import { DiffHunk, ParsedFile, pathInCache, saveToCache } from '@timonteutelink/skaff-lib';
+import {
+  DiffHunk,
+  ParsedFile,
+  resolveCacheService,
+} from "@timonteutelink/skaff-lib";
 import { exec } from "node:child_process";
 import nodeCrypto from "node:crypto";
-import fs from "node:fs/promises";
 import { promisify } from "node:util";
 
 const asyncExec = promisify(exec);
+const cacheService = resolveCacheService();
 
 async function execWithInheritedStdio(command: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -81,16 +85,22 @@ export async function viewParsedDiffWithGit(
 
   const cacheId = hashDiffText(diffText);
 
-  const tempFile = await saveToCache('temp-diff', cacheId, 'patch', diffText);
-  if ('error' in tempFile) {
-    console.error('Error saving diff to cache:', tempFile.error);
+  const tempFileResult = await cacheService.saveToCache(
+    "temp-diff",
+    cacheId,
+    "patch",
+    diffText,
+  );
+
+  if ("error" in tempFileResult) {
+    console.error('Error saving diff to cache:', tempFileResult.error);
     return;
   }
 
-  await fs.writeFile(tempFile.data, diffText, "utf8");
+  const tempFile = tempFileResult.data;
 
   try {
-    await openWithTool(tempFile.data, options.tool);
+    await openWithTool(tempFile, options.tool);
   } catch (error) {
     console.error("Error opening diff:", error);
     console.log("Fallback: cat", tempFile);
@@ -102,17 +112,24 @@ export async function viewExistingPatchWithGit(cacheKey: CacheKey, projectCommit
   output?: string;
   tool?: string
 } = {}): Promise<void> {
-  const patchFile = await pathInCache(`${cacheKey}-${projectCommitHash}.patch`);
-  if ('error' in patchFile) {
-    console.error('Error getting patch file path:', patchFile.error);
+  const patchFileResult = await cacheService.pathInCache(
+    `${cacheKey}-${projectCommitHash}.patch`,
+  );
+
+  if ("error" in patchFileResult) {
+    console.error('Error getting patch file path:', patchFileResult.error);
     return;
   }
 
+  const patchFile = patchFileResult.data;
+
   try {
-    await (options.tool ? openWithTool(patchFile.data, options.tool) : openWithTool(patchFile.data));
+    await (options.tool
+      ? openWithTool(patchFile, options.tool)
+      : openWithTool(patchFile));
   } catch (error) {
     console.error('Error opening patch file:', error);
-    console.log(`Patch file saved to: ${patchFile.data}`);
+    console.log(`Patch file saved to: ${patchFile}`);
     console.log('You can view it with: git apply --check <file> or any diff viewer');
   }
 }
@@ -141,13 +158,13 @@ async function openWithTool(patchFile: string, tool?: string): Promise<void> {
       throw new Error(`Problem occured`);
     }
 
-    execWithInheritedStdio(cmd.cmd);
+    return execWithInheritedStdio(cmd.cmd);
   }
 
   for (const tool of tools) {
     if (await isCommandAvailable(tool.name)) {
       console.log(`Opening diff with ${tool.name}...`);
-      execWithInheritedStdio(tool.cmd);
+      await execWithInheritedStdio(tool.cmd);
       return;
     }
   }

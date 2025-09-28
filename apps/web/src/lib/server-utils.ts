@@ -1,9 +1,15 @@
-import { getConfig, getProjectRepository, backendLogger, Project, Result } from "@timonteutelink/skaff-lib";
+import {
+  backendLogger,
+  Project,
+  Result,
+  getConfig,
+  resolveProjectRepository,
+} from "@timonteutelink/skaff-lib";
 
 export async function findProject(
   projectName: string,
 ): Promise<Result<Project>> {
-  const projectRepository = await getProjectRepository();
+  const projectRepository = resolveProjectRepository();
   const config = await getConfig();
 
   let project: Project | null = null;
@@ -28,7 +34,7 @@ export async function findProject(
 }
 
 export async function listProjects(): Promise<Result<Project[]>> {
-  const projectRepository = await getProjectRepository();
+  const projectRepository = resolveProjectRepository();
   const config = await getConfig();
 
   const projectSearchPaths = config.PROJECT_SEARCH_PATHS;
