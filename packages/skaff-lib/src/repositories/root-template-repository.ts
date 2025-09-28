@@ -239,10 +239,14 @@ export class RootTemplateRepository {
       return saveRevisionInCacheResult;
     }
 
+    const templateRelativePath = path.relative(
+      path.dirname(sourceTemplate.absoluteBaseDir),
+      sourceTemplate.absoluteDir,
+    );
+
     const newTemplatePath = path.join(
       saveRevisionInCacheResult.data,
-      "root-templates",
-      templateName,
+      templateRelativePath,
     );
 
     const templateResult = await this.templateTreeBuilder.build(
