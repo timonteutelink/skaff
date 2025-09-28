@@ -5,7 +5,7 @@ import {
   ProjectCreationOptions
 } from "../../lib";
 import { logError } from "../../lib/utils";
-import { generateProjectFromTemplateSettings } from "../../core/projects/ProjectCreationFacade";
+import { resolveProjectCreationManager } from "../../core/projects/ProjectCreationManager";
 import { ProjectSettings, projectSettingsSchema } from "@timonteutelink/template-types-lib";
 
 export async function generateNewProjectFromSettings(
@@ -30,7 +30,9 @@ export async function generateNewProjectFromSettings(
 
   parsedProjectSettings.projectName = newProjectDirName;
 
-  return await generateProjectFromTemplateSettings(
+  const projectCreationManager = resolveProjectCreationManager();
+
+  return await projectCreationManager.generateFromTemplateSettings(
     parsedProjectSettings,
     path.join(newProjectDirPath, newProjectDirName),
     projectCreationOptions

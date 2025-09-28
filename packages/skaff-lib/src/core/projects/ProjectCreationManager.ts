@@ -152,37 +152,39 @@ export class ProjectCreationManager {
 
     const instantiatedRootTemplate = rootInstantiated?.templateCommitHash;
 
-    if (!instantiatedRootTemplate) {
-      backendLogger.error(
-        `No instantiated root template commit hash found in project settings`,
-      );
-      return {
-        error:
-          "No instantiated root template commit hash found in project settings",
-      };
+    const rootTemplateResult = instantiatedRootTemplate
+      ? await this.rootTemplateRepository.loadRevision(
+          projectSettings.rootTemplateName,
+          instantiatedRootTemplate,
+        )
+      : await this.rootTemplateRepository.findTemplate(
+          projectSettings.rootTemplateName,
+        );
+
+    if ("error" in rootTemplateResult) {
+      return rootTemplateResult;
     }
 
-    const rootTemplate = await this.rootTemplateRepository.loadRevision(
-      projectSettings.rootTemplateName,
-      instantiatedRootTemplate,
-    );
-
-    if ("error" in rootTemplate) {
-      return rootTemplate;
-    }
-
-    if (!rootTemplate.data) {
+    if (!rootTemplateResult.data) {
       backendLogger.error(
         `Root template not found: ${projectSettings.rootTemplateName}`,
       );
       return { error: "Root template not found" };
     }
 
-    if (rootTemplate.data.repoUrl) {
+    if (!instantiatedRootTemplate) {
+      backendLogger.warn(
+        `No instantiated root template commit hash found in project settings for ${projectSettings.rootTemplateName}. Using latest available revision.`,
+      );
+    }
+
+    const rootTemplate = rootTemplateResult.data;
+
+    if (rootTemplate.repoUrl) {
       const rootInst = projectSettings.instantiatedTemplates[0];
       if (rootInst) {
-        rootInst.templateRepoUrl = rootTemplate.data.repoUrl;
-        rootInst.templateBranch = rootTemplate.data.branch;
+        rootInst.templateRepoUrl = rootTemplate.repoUrl;
+        rootInst.templateBranch = rootTemplate.branch;
       }
     }
 
@@ -192,7 +194,7 @@ export class ProjectCreationManager {
         dontAutoInstantiate: true,
         absoluteDestinationPath: newProjectPath,
       },
-      rootTemplate.data,
+      rootTemplate,
       projectSettings,
     );
 

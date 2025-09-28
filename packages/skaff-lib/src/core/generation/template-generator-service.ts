@@ -9,7 +9,6 @@ import { anyOrCallbackToAny, logError } from "../../lib/utils";
 import { AutoInstantiationPlanner } from "./AutoInstantiationPlanner";
 import { FileMaterializer } from "./FileMaterializer";
 import { GenerationContext } from "./GenerationContext";
-import { GitWorkflow } from "./GitWorkflow";
 import { PathResolver } from "./PathResolver";
 import { ProjectSettingsSynchronizer } from "./ProjectSettingsSynchronizer";
 import { RollbackFileSystem } from "./RollbackFileSystem";
@@ -56,7 +55,7 @@ export class TemplateGenerationSession {
   private readonly fileMaterializer: FileMaterializer;
   private readonly sideEffectExecutor: SideEffectExecutor;
   private readonly projectSettingsSynchronizer: ProjectSettingsSynchronizer;
-  private readonly gitWorkflow: GitWorkflow;
+  private readonly gitService: GitService;
   private readonly autoInstantiationPlanner: AutoInstantiationPlanner;
   private readonly rootTemplate: Template;
 
@@ -90,7 +89,7 @@ export class TemplateGenerationSession {
       this.destinationProjectSettings,
       this.rootTemplate,
     );
-    this.gitWorkflow = new GitWorkflow(gitService);
+    this.gitService = gitService;
     this.autoInstantiationPlanner = new AutoInstantiationPlanner(
       this.options,
       this.generationContext,
@@ -488,7 +487,7 @@ export class TemplateGenerationSession {
       projectDirCreated = true;
 
       if (!this.options.dontDoGit) {
-        const createRepoResult = await this.gitWorkflow.initializeRepository(
+        const createRepoResult = await this.gitService.createGitRepo(
           this.options.absoluteDestinationPath,
         );
         if ("error" in createRepoResult) {
@@ -506,7 +505,7 @@ export class TemplateGenerationSession {
       }
 
       if (!this.options.dontDoGit) {
-        const commitResult = await this.gitWorkflow.commitAllChanges(
+        const commitResult = await this.gitService.commitAll(
           this.options.absoluteDestinationPath,
           `Initial commit for ${projectSettings.projectName}`,
         );

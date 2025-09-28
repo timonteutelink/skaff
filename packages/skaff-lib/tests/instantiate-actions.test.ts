@@ -9,6 +9,12 @@ const mockPlanner = {
 
 const mockInstantiateProject = jest.fn();
 const mockGenerateProjectFromTemplateSettings = jest.fn();
+const mockProjectCreationManager = {
+  instantiateProject: (...args: unknown[]) => mockInstantiateProject(...args),
+  generateFromTemplateSettings: (
+    ...args: unknown[]
+  ) => mockGenerateProjectFromTemplateSettings(...args),
+};
 
 const mockGitService = {
   addAllAndRetrieveDiff: jest.fn(),
@@ -24,11 +30,8 @@ jest.mock("../src/core/diffing/ProjectDiffPlanner", () => ({
   resolveProjectDiffPlanner: jest.fn(() => mockPlanner),
 }));
 
-jest.mock("../src/core/projects/ProjectCreationFacade", () => ({
-  instantiateProject: (...args: unknown[]) => mockInstantiateProject(...args),
-  generateProjectFromTemplateSettings: (
-    ...args: unknown[]
-  ) => mockGenerateProjectFromTemplateSettings(...args),
+jest.mock("../src/core/projects/ProjectCreationManager", () => ({
+  resolveProjectCreationManager: jest.fn(() => mockProjectCreationManager),
 }));
 
 jest.mock("../src/core/infra/git-service", () => ({

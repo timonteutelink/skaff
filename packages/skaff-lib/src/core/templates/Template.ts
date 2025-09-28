@@ -21,7 +21,7 @@ import {
   resolveTemplateGeneratorService,
 } from "../generation/template-generator-service";
 import { Project } from "../../models/project";
-import { parseProjectCreationResult } from "../projects/ProjectCreationFacade";
+import { resolveProjectCreationManager } from "../projects/ProjectCreationManager";
 import { resolveCacheService } from "../infra/cache-service";
 import { resolveGitService } from "../infra/git-service";
 
@@ -31,6 +31,10 @@ function getCacheService() {
 
 function getGitService() {
   return resolveGitService();
+}
+
+function getProjectCreationManager() {
+  return resolveProjectCreationManager();
 }
 
 export interface TemplateInit {
@@ -170,7 +174,10 @@ export class Template {
     }
 
     backendLogger.info(`New project created at: ${result.data}`);
-    return await parseProjectCreationResult(result.data, projectCreationOptions);
+    return await getProjectCreationManager().parseCreationResult(
+      result.data,
+      projectCreationOptions,
+    );
   }
 
   public mapToDTO(): TemplateDTO {
