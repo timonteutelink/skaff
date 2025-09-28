@@ -4,7 +4,7 @@ import {
 } from "@timonteutelink/template-types-lib";
 import crypto from "node:crypto";
 
-import { injectable } from "tsyringe";
+import { inject, injectable } from "tsyringe";
 
 import { getSkaffContainer } from "../../di/container";
 import { backendLogger } from "../../lib/logger";
@@ -12,40 +12,41 @@ import { Result, NewTemplateDiffResult, ParsedFile } from "../../lib/types";
 import { logError } from "../../lib/utils";
 import { Project } from "../../models/project";
 import { Template } from "../../models/template";
-import { resolveRootTemplateRepository } from "../../repositories";
-import { GitService, resolveGitService } from "../infra/git-service";
-import { MigrationApplier, resolveMigrationApplier } from "./MigrationApplier";
-import { DiffCache, resolveDiffCache } from "./DiffCache";
+import { RootTemplateRepository } from "../../repositories/root-template-repository";
+import { GitService } from "../infra/git-service";
+import { DiffCache } from "./DiffCache";
+import { AutoInstantiationSettingsAdjuster } from "./AutoInstantiationSettingsAdjuster";
+import { TemporaryProjectFactory } from "./TemporaryProjectFactory";
 import {
-  AutoInstantiationSettingsAdjuster,
-  resolveAutoInstantiationSettingsAdjuster,
-} from "./AutoInstantiationSettingsAdjuster";
-import {
-  TemporaryProjectFactory,
-  resolveTemporaryProjectFactory,
-} from "./TemporaryProjectFactory";
+  applyTemplateMigrationSequence,
+  getLatestTemplateMigrationUuid,
+} from "../templates/TemplateMigration";
 
 @injectable()
 export class ProjectDiffPlanner {
   private readonly cache: DiffCache;
   private readonly autoInstantiationAdjuster: AutoInstantiationSettingsAdjuster;
   private readonly tempProjectFactory: TemporaryProjectFactory;
-  private readonly migrationApplier: MigrationApplier;
   private readonly gitService: GitService;
+  private readonly rootTemplateRepository: RootTemplateRepository;
 
   constructor(
-    cache: DiffCache = resolveDiffCache(),
-    autoInstantiationAdjuster: AutoInstantiationSettingsAdjuster =
-      resolveAutoInstantiationSettingsAdjuster(),
-    tempProjectFactory: TemporaryProjectFactory = resolveTemporaryProjectFactory(),
-    migrationApplier: MigrationApplier = resolveMigrationApplier(),
-    gitService: GitService = resolveGitService(),
+    @inject(DiffCache)
+    cache: DiffCache,
+    @inject(AutoInstantiationSettingsAdjuster)
+    autoInstantiationAdjuster: AutoInstantiationSettingsAdjuster,
+    @inject(TemporaryProjectFactory)
+    tempProjectFactory: TemporaryProjectFactory,
+    @inject(RootTemplateRepository)
+    rootTemplateRepository: RootTemplateRepository,
+    @inject(GitService)
+    gitService: GitService,
   ) {
     this.cache = cache;
     this.autoInstantiationAdjuster = autoInstantiationAdjuster;
     this.tempProjectFactory = tempProjectFactory;
-    this.migrationApplier = migrationApplier;
     this.gitService = gitService;
+    this.rootTemplateRepository = rootTemplateRepository;
   }
 
   private async diffProjectSettings(
@@ -134,8 +135,7 @@ export class ProjectDiffPlanner {
     rootTemplateName: string,
     commitHash: string,
   ): Promise<Result<Template>> {
-    const repository = resolveRootTemplateRepository();
-    const template = await repository.loadRevision(
+    const template = await this.rootTemplateRepository.loadRevision(
       rootTemplateName,
       commitHash,
     );
@@ -239,10 +239,9 @@ export class ProjectDiffPlanner {
     userTemplateSettings: UserTemplateSettings,
     destinationProject: Project,
   ): Promise<Result<NewTemplateDiffResult>> {
-    const rootTemplateRepository = resolveRootTemplateRepository();
     const rootTemplateName =
       destinationProject.rootTemplate.config.templateConfig.name;
-    const rootTemplate = await rootTemplateRepository.loadRevision(
+    const rootTemplate = await this.rootTemplateRepository.loadRevision(
       rootTemplateName,
       destinationProject.instantiatedProjectSettings.instantiatedTemplates[0]!
         .templateCommitHash!,
@@ -277,7 +276,7 @@ export class ProjectDiffPlanner {
           templateBranch: template.branch,
           templateName: template.config.templateConfig.name,
           templateSettings: userTemplateSettings,
-          lastMigration: this.migrationApplier.getLatestMigration(
+          lastMigration: getLatestTemplateMigrationUuid(
             template.config.migrations,
           ),
         },
@@ -306,9 +305,8 @@ export class ProjectDiffPlanner {
     project: Project,
     newTemplateRevisionHash: string,
   ): Promise<Result<NewTemplateDiffResult>> {
-    const rootProjectRepository = resolveRootTemplateRepository();
     const rootTemplateName = project.rootTemplate.config.templateConfig.name;
-    const template = await rootProjectRepository.loadRevision(
+    const template = await this.rootTemplateRepository.loadRevision(
       rootTemplateName,
       newTemplateRevisionHash,
     );
@@ -354,7 +352,7 @@ export class ProjectDiffPlanner {
         return { error: `Template ${instantiated.templateName} not found` };
       }
 
-      const migrationResult = this.migrationApplier.applyMigrations(
+      const migrationResult = applyTemplateMigrationSequence(
         tmpl.config.migrations,
         instantiated.templateSettings,
         instantiated.lastMigration,

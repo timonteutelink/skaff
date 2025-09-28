@@ -10,14 +10,15 @@ import {
 } from "../../lib/types";
 import { Project } from "../../models/project";
 
-import { ProjectCreationManager } from "./ProjectCreationManager";
-
 export async function parseProjectCreationResult(
   projectPath: string,
   projectCreationOptions?: ProjectCreationOptions,
 ): Promise<Result<ProjectCreationResult>> {
-  const manager = new ProjectCreationManager(projectCreationOptions);
-  return manager.parseCreationResult(projectPath);
+  const { resolveProjectCreationManager } = await import(
+    "./ProjectCreationManager"
+  );
+  const manager = resolveProjectCreationManager();
+  return manager.parseCreationResult(projectPath, projectCreationOptions);
 }
 
 export async function instantiateProject(
@@ -27,12 +28,16 @@ export async function instantiateProject(
   userTemplateSettings: UserTemplateSettings,
   projectCreationOptions?: ProjectCreationOptions,
 ): Promise<Result<ProjectCreationResult>> {
-  const manager = new ProjectCreationManager(projectCreationOptions);
+  const { resolveProjectCreationManager } = await import(
+    "./ProjectCreationManager"
+  );
+  const manager = resolveProjectCreationManager();
   return manager.instantiateProject(
     rootTemplateName,
     parentDirPath,
     newProjectName,
     userTemplateSettings,
+    projectCreationOptions,
   );
 }
 
@@ -41,8 +46,15 @@ export async function generateProjectFromExistingProject(
   newProjectPath: string,
   projectCreationOptions?: ProjectCreationOptions,
 ): Promise<Result<ProjectCreationResult>> {
-  const manager = new ProjectCreationManager(projectCreationOptions);
-  return manager.generateFromExistingProject(existingProject, newProjectPath);
+  const { resolveProjectCreationManager } = await import(
+    "./ProjectCreationManager"
+  );
+  const manager = resolveProjectCreationManager();
+  return manager.generateFromExistingProject(
+    existingProject,
+    newProjectPath,
+    projectCreationOptions,
+  );
 }
 
 /**
@@ -53,6 +65,13 @@ export async function generateProjectFromTemplateSettings(
   newProjectPath: string,
   projectCreationOptions?: ProjectCreationOptions,
 ): Promise<Result<ProjectCreationResult>> {
-  const manager = new ProjectCreationManager(projectCreationOptions);
-  return manager.generateFromTemplateSettings(projectSettings, newProjectPath);
+  const { resolveProjectCreationManager } = await import(
+    "./ProjectCreationManager"
+  );
+  const manager = resolveProjectCreationManager();
+  return manager.generateFromTemplateSettings(
+    projectSettings,
+    newProjectPath,
+    projectCreationOptions,
+  );
 }

@@ -5,9 +5,9 @@ import { ProjectSettings } from "@timonteutelink/template-types-lib";
 import { Result } from "../../lib/types";
 import { Project } from "../../models/project";
 import { ProjectCreationManager } from "../projects/ProjectCreationManager";
-import { DiffCache, resolveDiffCache } from "./DiffCache";
+import { DiffCache } from "./DiffCache";
 import { getSkaffContainer } from "../../di/container";
-import { injectable } from "tsyringe";
+import { inject, injectable } from "tsyringe";
 
 interface TemporaryProject {
   path: string;
@@ -17,10 +17,10 @@ interface TemporaryProject {
 @injectable()
 export class TemporaryProjectFactory {
   constructor(
-    private readonly cache: DiffCache = resolveDiffCache(),
-    private readonly manager: ProjectCreationManager = new ProjectCreationManager({
-      git: false,
-    }),
+    @inject(DiffCache)
+    private readonly cache: DiffCache,
+    @inject(ProjectCreationManager)
+    private readonly manager: ProjectCreationManager,
   ) {}
 
   public async createFromSettings(
@@ -39,6 +39,7 @@ export class TemporaryProjectFactory {
     const generationResult = await this.manager.generateFromTemplateSettings(
       projectSettings,
       tempPathResult.data,
+      { git: false },
     );
 
     if ("error" in generationResult) {
@@ -70,6 +71,7 @@ export class TemporaryProjectFactory {
     const generationResult = await this.manager.generateFromExistingProject(
       project,
       tempPathResult.data,
+      { git: false },
     );
 
     if ("error" in generationResult) {
