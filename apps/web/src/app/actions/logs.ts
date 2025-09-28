@@ -3,7 +3,17 @@
 import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
-import { LevelName, LogFilter, LogJSON, Result, getCacheDirPath, getCacheDir, logError, serverLogger } from "@timonteutelink/skaff-lib";
+import {
+  LevelName,
+  LogFilter,
+  LogJSON,
+  Result,
+  logError,
+  resolveCacheService,
+  serverLogger,
+} from "@timonteutelink/skaff-lib";
+
+const cacheService = resolveCacheService();
 
 export async function logFromClient(data: {
   level: LevelName;
@@ -41,7 +51,11 @@ export async function fetchLogs(filter: LogFilter): Promise<Result<LogJSON[] | s
   const fromMs = from ? Date.parse(from) : null;
   const toMs = to ? Date.parse(to) : null;
 
-  const logPath = path.join(getCacheDirPath(), "logs", `skaff.${file}.log`);
+  const logPath = path.join(
+    cacheService.getCacheDirPath(),
+    "logs",
+    `skaff.${file}.log`,
+  );
 
   try {
     await fs.promises.access(logPath, fs.constants.R_OK);
@@ -89,7 +103,7 @@ export async function fetchLogs(filter: LogFilter): Promise<Result<LogJSON[] | s
 }
 
 export async function getAvailableLogDates(): Promise<Result<string[]>> {
-  const logDir = await getCacheDir();
+  const logDir = await cacheService.getCacheDir();
 
   if ("error" in logDir) {
     logError({ shortMessage: "Failed to get cache directory", error: logDir.error });
