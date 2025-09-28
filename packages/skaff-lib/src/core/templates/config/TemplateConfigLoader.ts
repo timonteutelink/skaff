@@ -8,16 +8,15 @@ import * as handlebarsNS from "handlebars";
 import * as yamlNS from "yaml";
 import * as zodNS from "zod"; // full namespace object
 
-import { CacheService, resolveCacheService } from "../../../core/infra/cache-service";
+import { inject, injectable, delay } from "tsyringe";
+
+import { CacheService } from "../../../core/infra/cache-service";
 import { initEsbuild } from "../../../utils/get-esbuild";
 import { existsSync } from "node:fs";
 import { GenericTemplateConfigModule } from "../../../lib";
+import { getSkaffContainer } from "../../../di/container";
 
 const { templateConfigSchema } = templateTypesLibNS;
-
-function getCacheService(): CacheService {
-  return resolveCacheService();
-}
 
 const SANDBOX_LIBS: Record<string, unknown> = {
   "@timonteutelink/template-types-lib": templateTypesLibNS,
@@ -295,116 +294,129 @@ async function evaluateBundledCode(
   return (contextModule.exports as any).configs;
 }
 
-export async function loadAllTemplateConfigs(
-  rootDir: string,
-  commitHash: string,
-): Promise<{
-  configs: Record<string, TemplateConfigWithFileInfo>;
-  remoteRefs: RemoteTemplateReference[];
-}> {
-  if (!commitHash.trim()) {
-    throw new Error("commitHash is required to load template configurations");
-  }
-  const discovery = await findTemplateConfigFiles(rootDir, rootDir);
-  const files = discovery.configs;
-  if (files.length === 0) {
-    throw new Error(`No templateConfig.ts files found under ${rootDir}`);
-  }
+@injectable()
+export class TemplateConfigLoader {
+  constructor(
+    @inject(delay(() => CacheService))
+    private readonly cacheService: CacheService,
+  ) {}
 
-  const cacheService = getCacheService();
-  const cacheKey = cacheService.hash(
-    `${commitHash}:${path.resolve(rootDir)}`,
-  );
+  public async loadAllTemplateConfigs(
+    rootDir: string,
+    commitHash: string,
+  ): Promise<{
+    configs: Record<string, TemplateConfigWithFileInfo>;
+    remoteRefs: RemoteTemplateReference[];
+  }> {
+    if (!commitHash.trim()) {
+      throw new Error("commitHash is required to load template configurations");
+    }
+    const discovery = await findTemplateConfigFiles(rootDir, rootDir);
+    const files = discovery.configs;
+    if (files.length === 0) {
+      throw new Error(`No templateConfig.ts files found under ${rootDir}`);
+    }
 
-  const cached = await cacheService.retrieveFromCache(
-    "template-config",
-    cacheKey,
-    "cjs",
-  );
-  if ("data" in cached && cached.data) {
-    const code = await fs.readFile(cached.data.path, "utf8");
-    const configs = await evaluateBundledCode(code);
+    const cacheKey = this.cacheService.hash(
+      `${commitHash}:${path.resolve(rootDir)}`,
+    );
+
+    const cached = await this.cacheService.retrieveFromCache(
+      "template-config",
+      cacheKey,
+      "cjs",
+    );
+    if ("data" in cached && cached.data) {
+      const code = await fs.readFile(cached.data.path, "utf8");
+      const configs = await evaluateBundledCode(code);
+      return { configs, remoteRefs: discovery.remoteRefs };
+    }
+
+    const imports: string[] = [];
+    const exports: string[] = [];
+    files
+      .sort((a, b) => a.configPath.localeCompare(b.configPath))
+      .forEach((fi, i) => {
+        const rel = path.relative(rootDir, fi.configPath).replace(/\\/g, "/");
+        const alias = `cfg${i}`;
+        imports.push(`import ${alias} from "./${rel.slice(0, -3)}";`);
+        let entry = `"${rel}": { templateConfig: ${alias}, configPath: "${rel}"`;
+        if (fi.refDir) {
+          const refRel = path
+            .relative(rootDir, fi.refDir)
+            .replace(/\\/g, "/");
+          entry += `, refDir: "${refRel}"`;
+        }
+        exports.push(entry + "}");
+      });
+    // add type info for full type checks. Probably something like Record<string, TemplateConfigModule<any>>
+    const indexTs = `${imports.join("\n")}\nexport const configs = {${exports.join(",")}};`;
+
+    const tmp = path.join(rootDir, `.__temp_index_${randomUUID()}.ts`);
+    await fs.writeFile(tmp, indexTs, "utf8");
+    try {
+      await typeCheckFile(tmp);
+    } finally {
+      await fs.unlink(tmp);
+    }
+
+    const esbuild = await initEsbuild();
+    if (!esbuild) {
+      throw new Error("Failed to initialize esbuild");
+    }
+    const { outputFiles } = await esbuild.build({
+      stdin: {
+        contents: indexTs,
+        resolveDir: rootDir,
+        sourcefile: "index.ts",
+        loader: "ts",
+      },
+      bundle: true,
+      format: "cjs",
+      platform: "neutral",
+      target: "es2022",
+      external: Object.keys(SANDBOX_LIBS),
+      write: false,
+      minify: true,
+      banner: {
+        js: `;(function(exports, require, module, __filename, __dirname) {`
+      },
+      footer: {
+        js: `\n})`
+      },
+    });
+    if ("stop" in esbuild && esbuild.stop) await esbuild.stop();
+    const bundle = outputFiles[0]?.text;
+    if (!bundle) throw new Error("esbuild produced no output");
+
+    const saved = await this.cacheService.saveToCache(
+      "template-config",
+      cacheKey,
+      "cjs",
+      bundle,
+    );
+    if ("error" in saved) {
+      throw new Error(`Failed to cache bundle: ${saved.error}`);
+    }
+
+    const configs = await evaluateBundledCode(bundle);
+
+    for (const key of Object.keys(configs)) {
+      const mod = configs[key]!;
+      const parsed = templateConfigSchema.safeParse(
+        mod.templateConfig.templateConfig,
+      );
+      if (!parsed.success) {
+        throw new Error(
+          `Invalid template configuration in ${key}: ${parsed.error}`,
+        );
+      }
+      mod.templateConfig.templateConfig = parsed.data;
+    }
     return { configs, remoteRefs: discovery.remoteRefs };
   }
+}
 
-  const imports: string[] = [];
-  const exports: string[] = [];
-  files
-    .sort((a, b) => a.configPath.localeCompare(b.configPath))
-    .forEach((fi, i) => {
-      const rel = path.relative(rootDir, fi.configPath).replace(/\\/g, "/");
-      const alias = `cfg${i}`;
-      imports.push(`import ${alias} from "./${rel.slice(0, -3)}";`);
-      let entry = `"${rel}": { templateConfig: ${alias}, configPath: "${rel}"`;
-      if (fi.refDir) {
-        const refRel = path.relative(rootDir, fi.refDir).replace(/\\/g, "/");
-        entry += `, refDir: "${refRel}"`;
-      }
-      exports.push(entry + "}");
-    });
-  // add type info for full type checks. Probably something like Record<string, TemplateConfigModule<any>>
-  const indexTs = `${imports.join("\n")}\nexport const configs = {${exports.join(",")}};`;
-
-  const tmp = path.join(rootDir, `.__temp_index_${randomUUID()}.ts`);
-  await fs.writeFile(tmp, indexTs, "utf8");
-  try {
-    await typeCheckFile(tmp);
-  } finally {
-    await fs.unlink(tmp);
-  }
-
-  const esbuild = await initEsbuild();
-  if (!esbuild) {
-    throw new Error("Failed to initialize esbuild");
-  }
-  const { outputFiles } = await esbuild.build({
-    stdin: {
-      contents: indexTs,
-      resolveDir: rootDir,
-      sourcefile: "index.ts",
-      loader: "ts",
-    },
-    bundle: true,
-    format: "cjs",
-    platform: "neutral",
-    target: "es2022",
-    external: Object.keys(SANDBOX_LIBS),
-    write: false,
-    minify: true,
-    banner: {
-      js: `;(function(exports, require, module, __filename, __dirname) {`
-    },
-    footer: {
-      js: `\n})`
-    },
-  });
-  if ("stop" in esbuild && esbuild.stop) await esbuild.stop();
-  const bundle = outputFiles[0]?.text;
-  if (!bundle) throw new Error("esbuild produced no output");
-
-  const saved = await cacheService.saveToCache(
-    "template-config",
-    cacheKey,
-    "cjs",
-    bundle,
-  );
-  if ("error" in saved) {
-    throw new Error(`Failed to cache bundle: ${saved.error}`);
-  }
-
-  const configs = await evaluateBundledCode(bundle);
-
-  for (const key of Object.keys(configs)) {
-    const mod = configs[key]!;
-    const parsed = templateConfigSchema.safeParse(
-      mod.templateConfig.templateConfig,
-    );
-    if (!parsed.success) {
-      throw new Error(
-        `Invalid template configuration in ${key}: ${parsed.error}`,
-      );
-    }
-    mod.templateConfig.templateConfig = parsed.data;
-  }
-  return { configs, remoteRefs: discovery.remoteRefs };
+export function resolveTemplateConfigLoader(): TemplateConfigLoader {
+  return getSkaffContainer().resolve(TemplateConfigLoader);
 }

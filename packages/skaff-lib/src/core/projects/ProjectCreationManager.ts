@@ -13,18 +13,19 @@ import type {
 } from "../../lib/types";
 import { Project } from "../../models/project";
 import { ProjectRepository } from "../../repositories/project-repository";
-import { RootTemplateRepository } from "../../repositories/root-template-repository";
+import type { RootTemplateRepository } from "../../repositories/root-template-repository";
 import { GitService } from "../infra/git-service";
 import { inject, injectable, delay } from "tsyringe";
 import { TemplateGeneratorService } from "../generation/template-generator-service";
 import { getSkaffContainer } from "../../di/container";
+import { ROOT_TEMPLATE_REPOSITORY_TOKEN } from "../../repositories/tokens";
 
 @injectable()
 export class ProjectCreationManager {
   constructor(
     @inject(delay(() => ProjectRepository))
     private readonly projectRepository: ProjectRepository,
-    @inject(delay(() => RootTemplateRepository))
+    @inject(ROOT_TEMPLATE_REPOSITORY_TOKEN)
     private readonly rootTemplateRepository: RootTemplateRepository,
     @inject(GitService)
     private readonly gitService: GitService,

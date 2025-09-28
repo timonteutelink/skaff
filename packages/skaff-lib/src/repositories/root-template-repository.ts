@@ -1,25 +1,25 @@
 import * as fs from "node:fs/promises";
 import path from "node:path";
 
-import { injectable } from "tsyringe";
+import { delay, inject, injectable } from "tsyringe";
 
 import { getConfig } from "../lib";
 import { backendLogger } from "../lib/logger";
 import { Result } from "../lib/types";
 import { logError } from "../lib/utils";
-import { GitService, resolveGitService } from "../core/infra/git-service";
-import {
-  TemplateRegistry,
-  TemplateTreeBuilder,
-} from "../core/templates";
-import type { Template } from "../core/templates";
+import { GitService } from "../core/infra/git-service";
+import { TemplateRegistry } from "../core/templates/TemplateRegistry";
+import { TemplateTreeBuilder } from "../core/templates/TemplateTreeBuilder";
+import type { Template } from "../core/templates/Template";
 
-type TemplatePathsProvider = () => Promise<string[]>;
+export type TemplatePathsProvider = () => Promise<string[]>;
 
-async function defaultTemplatePathsProvider(): Promise<string[]> {
+export const TEMPLATE_PATHS_PROVIDER = Symbol("TemplatePathsProvider");
+
+export const defaultTemplatePathsProvider: TemplatePathsProvider = async () => {
   const config = await getConfig();
   return config.TEMPLATE_DIR_PATHS;
-}
+};
 
 // TODO: findTemplate and loadRevision should only load that specific template not load all templates
 
@@ -32,16 +32,15 @@ export class RootTemplateRepository {
   private remoteRepos: { url: string; branch: string; path: string }[] = [];
   private readonly registry = new TemplateRegistry();
   public templates: Template[] = [];
-  private readonly gitService: GitService;
 
   constructor(
-    templatePaths: string[] | TemplatePathsProvider = defaultTemplatePathsProvider,
-    gitService: GitService = resolveGitService(),
+    @inject(delay(() => TemplateTreeBuilder))
+    private readonly templateTreeBuilder: TemplateTreeBuilder,
+    @inject(delay(() => GitService)) private readonly gitService: GitService,
+    @inject(TEMPLATE_PATHS_PROVIDER)
+    templatePathsProvider: TemplatePathsProvider = defaultTemplatePathsProvider,
   ) {
-    this.templatePathsProvider = Array.isArray(templatePaths)
-      ? async () => templatePaths
-      : templatePaths;
-    this.gitService = gitService;
+    this.templatePathsProvider = templatePathsProvider;
   }
 
   async addRemoteRepo(url: string, branch: string = "main"): Promise<Result<void>> {
@@ -120,7 +119,7 @@ export class RootTemplateRepository {
           continue;
         }
 
-        const templateResult = await TemplateTreeBuilder.build(
+        const templateResult = await this.templateTreeBuilder.build(
           rootTemplateDirPath,
           {
             repoUrl: repoInfo?.url,
@@ -243,7 +242,7 @@ export class RootTemplateRepository {
       path.basename(sourceTemplate.absoluteDir),
     );
 
-    const newTemplateResult = await TemplateTreeBuilder.build(
+    const newTemplateResult = await this.templateTreeBuilder.build(
       newTemplatePath,
       {
         repoUrl: sourceTemplate.repoUrl,

@@ -12,7 +12,7 @@ import { Result, NewTemplateDiffResult, ParsedFile } from "../../lib/types";
 import { logError } from "../../lib/utils";
 import { Project } from "../../models/project";
 import { Template } from "../../models/template";
-import { RootTemplateRepository } from "../../repositories/root-template-repository";
+import type { RootTemplateRepository } from "../../repositories/root-template-repository";
 import { GitService } from "../infra/git-service";
 import { DiffCache } from "./DiffCache";
 import { AutoInstantiationSettingsAdjuster } from "./AutoInstantiationSettingsAdjuster";
@@ -21,6 +21,7 @@ import {
   applyTemplateMigrationSequence,
   getLatestTemplateMigrationUuid,
 } from "../templates/TemplateMigration";
+import { ROOT_TEMPLATE_REPOSITORY_TOKEN } from "../../repositories/tokens";
 
 @injectable()
 export class ProjectDiffPlanner {
@@ -37,7 +38,7 @@ export class ProjectDiffPlanner {
     autoInstantiationAdjuster: AutoInstantiationSettingsAdjuster,
     @inject(TemporaryProjectFactory)
     tempProjectFactory: TemporaryProjectFactory,
-    @inject(RootTemplateRepository)
+    @inject(ROOT_TEMPLATE_REPOSITORY_TOKEN)
     rootTemplateRepository: RootTemplateRepository,
     @inject(GitService)
     gitService: GitService,
