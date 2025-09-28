@@ -1,36 +1,51 @@
 import * as fs from "node:fs/promises";
 import path from "node:path";
 
+import { injectable } from "tsyringe";
+
+import { getConfig } from "../lib";
 import { backendLogger } from "../lib/logger";
 import { Result } from "../lib/types";
 import { logError } from "../lib/utils";
-import {
-  cloneRepoBranchToCache,
-  cloneRevisionToCache,
-} from "../core/infra/git-service";
+import { GitService, resolveGitService } from "../core/infra/git-service";
 import {
   TemplateRegistry,
   TemplateTreeBuilder,
 } from "../core/templates";
 import type { Template } from "../core/templates";
 
+type TemplatePathsProvider = () => Promise<string[]>;
+
+async function defaultTemplatePathsProvider(): Promise<string[]> {
+  const config = await getConfig();
+  return config.TEMPLATE_DIR_PATHS;
+}
+
 // TODO: findTemplate and loadRevision should only load that specific template not load all templates
 
 // now only stores the root templates at: <templateDirPath>/root-templates/*
 // later also store reference to files and generic templates to allow direct instantiation without saving state of subtemplates
+@injectable()
 export class RootTemplateRepository {
   private loading: boolean = false;
-  private templatePaths: string[] = [];
+  private readonly templatePathsProvider: TemplatePathsProvider;
   private remoteRepos: { url: string; branch: string; path: string }[] = [];
   private readonly registry = new TemplateRegistry();
   public templates: Template[] = [];
+  private readonly gitService: GitService;
 
-  constructor(templatePaths: string[]) {
-    this.templatePaths = templatePaths;
+  constructor(
+    templatePaths: string[] | TemplatePathsProvider = defaultTemplatePathsProvider,
+    gitService: GitService = resolveGitService(),
+  ) {
+    this.templatePathsProvider = Array.isArray(templatePaths)
+      ? async () => templatePaths
+      : templatePaths;
+    this.gitService = gitService;
   }
 
   async addRemoteRepo(url: string, branch: string = "main"): Promise<Result<void>> {
-    const cloneResult = await cloneRepoBranchToCache(url, branch);
+    const cloneResult = await this.gitService.cloneRepoBranchToCache(url, branch);
     if ("error" in cloneResult) {
       return { error: cloneResult.error };
     }
@@ -53,8 +68,23 @@ export class RootTemplateRepository {
     this.loading = true;
     this.registry.reset();
     this.templates = [];
+
+    let baseTemplatePaths: string[];
+    try {
+      baseTemplatePaths = await this.templatePathsProvider();
+    } catch (error) {
+      this.loading = false;
+      logError({
+        error,
+        shortMessage: "Failed to resolve template directory paths",
+      });
+      return {
+        error: `Failed to resolve template directory paths: ${error}`,
+      };
+    }
+
     const paths = [
-      ...this.templatePaths,
+      ...baseTemplatePaths,
       ...this.remoteRepos.map((r) => r.path),
     ];
     for (const templatePath of paths) {
@@ -113,7 +143,10 @@ export class RootTemplateRepository {
   async reloadTemplates(): Promise<Result<void>> {
     // refresh remote repos to latest commit on their branches
     for (const repo of this.remoteRepos) {
-      const cloneResult = await cloneRepoBranchToCache(repo.url, repo.branch);
+      const cloneResult = await this.gitService.cloneRepoBranchToCache(
+        repo.url,
+        repo.branch,
+      );
       if ("error" in cloneResult) {
         return { error: cloneResult.error };
       }
@@ -195,7 +228,7 @@ export class RootTemplateRepository {
       return { data: null };
     }
 
-    const saveRevisionInCacheResult = await cloneRevisionToCache(
+    const saveRevisionInCacheResult = await this.gitService.cloneRevisionToCache(
       sourceTemplate,
       revisionHash,
     );

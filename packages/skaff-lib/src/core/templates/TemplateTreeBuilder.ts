@@ -9,14 +9,13 @@ import {
 import { backendLogger } from "../../lib/logger";
 import { Result } from "../../lib/types";
 import { logError } from "../../lib/utils";
-import {
-  getCommitHash,
-  getCurrentBranch,
-  isGitRepoClean,
-  cloneRepoBranchToCache,
-} from "../infra/git-service";
+import { resolveGitService } from "../infra/git-service";
 import { Template } from "./Template";
 import { validateTemplate } from "./TemplateValidation";
+
+function getGitService() {
+  return resolveGitService();
+}
 
 interface TemplateBuildContext {
   absoluteRootDir: string;
@@ -215,7 +214,8 @@ async function attachRemoteReferences(
     }
 
     const branch = remoteRef.branch ?? "main";
-    const cloneResult = await cloneRepoBranchToCache(
+    const gitService = getGitService();
+    const cloneResult = await gitService.cloneRepoBranchToCache(
       remoteRef.repoUrl,
       branch,
     );
@@ -300,7 +300,8 @@ async function resolveBranch(
     return { data: branchOverride };
   }
 
-  const branchResult = await getCurrentBranch(absoluteRootDir);
+  const gitService = getGitService();
+  const branchResult = await gitService.getCurrentBranch(absoluteRootDir);
   if ("error" in branchResult) {
     return { error: branchResult.error };
   }
@@ -314,7 +315,8 @@ async function buildContext(
   branchOverride?: string,
 ): Promise<Result<TemplateBuildContext>> {
   const absoluteBaseDir = path.dirname(absoluteRootDir);
-  const isRepoCleanResult = await isGitRepoClean(absoluteBaseDir);
+  const gitService = getGitService();
+  const isRepoCleanResult = await gitService.isGitRepoClean(absoluteBaseDir);
   if ("error" in isRepoCleanResult) {
     return { error: isRepoCleanResult.error };
   }
@@ -323,7 +325,7 @@ async function buildContext(
     return { error: "Template dir is not clean" };
   }
 
-  const commitHashResult = await getCommitHash(absoluteRootDir);
+  const commitHashResult = await gitService.getCommitHash(absoluteRootDir);
   if ("error" in commitHashResult) {
     return { error: commitHashResult.error };
   }

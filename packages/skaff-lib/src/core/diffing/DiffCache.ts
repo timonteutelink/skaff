@@ -1,17 +1,17 @@
 import { ProjectSettings } from "@timonteutelink/template-types-lib";
 
-import { Result } from "../../lib/types";
-import {
-  CacheKey,
-  getHash,
-  pathInCache,
-  retrieveFromCache,
-  saveToCache,
-} from "../infra/cache-service";
+import { injectable } from "tsyringe";
 
+import { getSkaffContainer } from "../../di/container";
+import { Result } from "../../lib/types";
+import { CacheKey, CacheService } from "../infra/cache-service";
+
+@injectable()
 export class DiffCache {
+  constructor(private readonly cacheService: CacheService) {}
+
   public computeSettingsHash(settings: ProjectSettings): string {
-    return getHash(JSON.stringify(settings));
+    return this.cacheService.hash(JSON.stringify(settings));
   }
 
   public async getCachedDiff(
@@ -19,7 +19,7 @@ export class DiffCache {
     hash: string,
     extension: string,
   ): Promise<Result<{ data: string; path: string } | null>> {
-    return retrieveFromCache(cacheKey, hash, extension);
+    return this.cacheService.retrieveFromCache(cacheKey, hash, extension);
   }
 
   public async saveDiff(
@@ -28,10 +28,14 @@ export class DiffCache {
     extension: string,
     content: string,
   ): Promise<Result<string>> {
-    return saveToCache(cacheKey, hash, extension, content);
+    return this.cacheService.saveToCache(cacheKey, hash, extension, content);
   }
 
   public async resolveTempPath(name: string): Promise<Result<string>> {
-    return pathInCache(name);
+    return this.cacheService.pathInCache(name);
   }
+}
+
+export function resolveDiffCache(): DiffCache {
+  return getSkaffContainer().resolve(DiffCache);
 }

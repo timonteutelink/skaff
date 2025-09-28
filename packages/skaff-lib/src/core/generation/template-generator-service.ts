@@ -17,8 +17,12 @@ import { SideEffectExecutor } from "./SideEffectExecutor";
 import { HandlebarsEnvironment } from "../shared/HandlebarsEnvironment";
 import { Template } from "../../models/template";
 import { isSubset } from "../../utils/shared-utils";
-import { makeDir } from "../infra/file-service";
+import { resolveFileSystemService } from "../infra/file-service";
 import { FileRollbackManager } from "../shared/FileRollbackManager";
+
+function getFileSystemService() {
+  return resolveFileSystemService();
+}
 
 export interface GeneratorOptions {
   /**
@@ -478,7 +482,7 @@ export class TemplateGeneratorService {
     }
 
     try {
-      const ensureProjectDirResult = await makeDir(
+      const ensureProjectDirResult = await getFileSystemService().makeDir(
         this.options.absoluteDestinationPath,
       );
 

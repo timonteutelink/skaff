@@ -19,11 +19,16 @@ import { logError } from "../../lib/utils";
 import { TemplateGeneratorService } from "../generation/template-generator-service";
 import { Project } from "../../models/project";
 import { parseProjectCreationResult } from "../projects/ProjectCreationFacade";
-import { getCacheDirPath } from "../infra/cache-service";
-import {
-  getCommitHash,
-  isGitRepoClean,
-} from "../infra/git-service";
+import { resolveCacheService } from "../infra/cache-service";
+import { resolveGitService } from "../infra/git-service";
+
+function getCacheService() {
+  return resolveCacheService();
+}
+
+function getGitService() {
+  return resolveGitService();
+}
 
 export interface TemplateInit {
   config: GenericTemplateConfigModule;
@@ -85,7 +90,7 @@ export class Template {
     this.branch = init.branch;
     this.repoUrl = init.repoUrl;
 
-    if (!this.absoluteBaseDir.startsWith(getCacheDirPath())) {
+    if (!this.absoluteBaseDir.startsWith(getCacheService().getCacheDirPath())) {
       this.isLocal = true;
     }
   }
@@ -270,12 +275,13 @@ export class Template {
   }
 
   public async isValid(): Promise<boolean> {
-    const isRepoClean = await isGitRepoClean(this.absoluteBaseDir);
+    const gitService = getGitService();
+    const isRepoClean = await gitService.isGitRepoClean(this.absoluteBaseDir);
     if ("error" in isRepoClean) {
       return false;
     }
 
-    const commitResult = await getCommitHash(this.absoluteBaseDir);
+    const commitResult = await gitService.getCommitHash(this.absoluteBaseDir);
     if ("error" in commitResult) {
       return false;
     }

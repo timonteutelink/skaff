@@ -1,11 +1,11 @@
 import { Result } from "../../lib";
 import { Project } from "../../models";
-import { getProjectRepository } from "../../repositories";
+import { resolveProjectRepository } from "../../repositories";
 
 export async function getProjectFromPath(
   projectPath: string
 ): Promise<Result<Project | null>> {
-  const projectRepository = await getProjectRepository();
+  const projectRepository = resolveProjectRepository();
   return await projectRepository.loadProject(projectPath);
 }
 

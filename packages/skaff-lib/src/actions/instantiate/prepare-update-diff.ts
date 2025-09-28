@@ -1,12 +1,13 @@
 import { NewTemplateDiffResult, Result } from "../../lib";
+import { resolveProjectDiffPlanner } from "../../core/diffing/ProjectDiffPlanner";
 import { Project } from "../../models";
-import { generateUpdateTemplateDiff } from "../../core/diffing/project-diff-service";
 
 export async function prepareUpdateDiff(
   project: Project,
   newTemplateRevisionCommitHash: string,
 ): Promise<Result<NewTemplateDiffResult>> {
-  const result = await generateUpdateTemplateDiff(
+  const planner = resolveProjectDiffPlanner();
+  const result = await planner.generateUpdateTemplateDiff(
     project,
     newTemplateRevisionCommitHash,
   );

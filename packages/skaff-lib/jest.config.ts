@@ -7,7 +7,25 @@ const config: Config = {
   testMatch: ["**/?(*.)+(spec|test).[tj]s?(x)"],
 
   // Use SWC (much faster than ts‑jest)
-  transform: { "^.+\\.(t|j)sx?$": "@swc/jest" },
+  transform: {
+    "^.+\\.(t|j)sx?$": [
+      "@swc/jest",
+      {
+        jsc: {
+          parser: {
+            syntax: "typescript",
+            tsx: false,
+            decorators: true,
+          },
+          transform: {
+            legacyDecorator: true,
+            decoratorMetadata: true,
+          },
+        },
+      },
+    ],
+  },
+  setupFiles: ["reflect-metadata"],
 
   collectCoverage: true,
   coverageDirectory: "coverage",

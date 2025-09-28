@@ -12,6 +12,8 @@
       "DOM",
       "DOM.Iterable"
     ],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "module": "NodeNext",
     "moduleDetection": "force",
     "moduleResolution": "NodeNext",

@@ -5,17 +5,23 @@ import { ProjectSettings } from "@timonteutelink/template-types-lib";
 import { Result } from "../../lib/types";
 import { Project } from "../../models/project";
 import { ProjectCreationManager } from "../projects/ProjectCreationManager";
-import { DiffCache } from "./DiffCache";
+import { DiffCache, resolveDiffCache } from "./DiffCache";
+import { getSkaffContainer } from "../../di/container";
+import { injectable } from "tsyringe";
 
 interface TemporaryProject {
   path: string;
   cleanup: () => Promise<void>;
 }
 
+@injectable()
 export class TemporaryProjectFactory {
-  private readonly manager = new ProjectCreationManager({ git: false });
-
-  constructor(private readonly cache = new DiffCache()) {}
+  constructor(
+    private readonly cache: DiffCache = resolveDiffCache(),
+    private readonly manager: ProjectCreationManager = new ProjectCreationManager({
+      git: false,
+    }),
+  ) {}
 
   public async createFromSettings(
     projectSettings: ProjectSettings,
@@ -78,4 +84,8 @@ export class TemporaryProjectFactory {
       },
     };
   }
+}
+
+export function resolveTemporaryProjectFactory(): TemporaryProjectFactory {
+  return getSkaffContainer().resolve(TemporaryProjectFactory);
 }

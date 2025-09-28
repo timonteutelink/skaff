@@ -6,9 +6,9 @@ import {
 import path from "node:path";
 import { GitStatus, ProjectDTO, Result } from "../lib/types";
 import { logError, stringOrCallbackToString } from "../lib/utils";
-import { isGitRepo, loadGitStatus, getRemoteCommitHash } from "../core/infra/git-service";
+import { resolveGitService } from "../core/infra/git-service";
 import { loadProjectSettings } from "../core/projects/project-settings-service";
-import { executeCommand } from "../core/infra/shell-service";
+import { resolveShellService } from "../core/infra/shell-service";
 import { Template } from "./template";
 import { backendLogger } from "../lib";
 
@@ -285,7 +285,8 @@ export class Project {
       return { error: projectSettings.error };
     }
 
-    const isGitRepoResult = await isGitRepo(absDir);
+    const gitService = resolveGitService();
+    const isGitRepoResult = await gitService.isGitRepo(absDir);
 
     if ("error" in isGitRepoResult) {
       return { error: isGitRepoResult.error };
@@ -294,7 +295,7 @@ export class Project {
     let gitStatus: GitStatus | undefined
 
     if (isGitRepoResult.data) {
-      const gitStatusResult = await loadGitStatus(absDir);
+      const gitStatusResult = await gitService.loadGitStatus(absDir);
       if ("error" in gitStatusResult) {
         return { error: gitStatusResult.error };
       }
@@ -308,7 +309,7 @@ export class Project {
       rootInstantiated.templateBranch &&
       rootInstantiated.templateCommitHash
     ) {
-      const remote = await getRemoteCommitHash(
+      const remote = await gitService.getRemoteCommitHash(
         rootInstantiated.templateRepoUrl,
         rootInstantiated.templateBranch,
       );
@@ -394,7 +395,7 @@ export class Project {
       templateCommand.path || ".",
     );
 
-    const commandResult = await executeCommand(
+    const commandResult = await resolveShellService().execute(
       commandCwdPath,
       commandToExecute.data,
     );

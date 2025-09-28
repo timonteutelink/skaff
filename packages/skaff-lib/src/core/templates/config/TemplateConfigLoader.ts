@@ -8,16 +8,16 @@ import * as handlebarsNS from "handlebars";
 import * as yamlNS from "yaml";
 import * as zodNS from "zod"; // full namespace object
 
-import {
-  getHash,
-  retrieveFromCache,
-  saveToCache,
-} from "../../../core/infra/cache-service";
+import { CacheService, resolveCacheService } from "../../../core/infra/cache-service";
 import { initEsbuild } from "../../../utils/get-esbuild";
 import { existsSync } from "node:fs";
 import { GenericTemplateConfigModule } from "../../../lib";
 
 const { templateConfigSchema } = templateTypesLibNS;
+
+function getCacheService(): CacheService {
+  return resolveCacheService();
+}
 
 const SANDBOX_LIBS: Record<string, unknown> = {
   "@timonteutelink/template-types-lib": templateTypesLibNS,
@@ -311,11 +311,16 @@ export async function loadAllTemplateConfigs(
     throw new Error(`No templateConfig.ts files found under ${rootDir}`);
   }
 
-  const cacheKey = getHash(
+  const cacheService = getCacheService();
+  const cacheKey = cacheService.hash(
     `${commitHash}:${path.resolve(rootDir)}`,
   );
 
-  const cached = await retrieveFromCache("template-config", cacheKey, "cjs");
+  const cached = await cacheService.retrieveFromCache(
+    "template-config",
+    cacheKey,
+    "cjs",
+  );
   if ("data" in cached && cached.data) {
     const code = await fs.readFile(cached.data.path, "utf8");
     const configs = await evaluateBundledCode(code);
@@ -377,7 +382,7 @@ export async function loadAllTemplateConfigs(
   const bundle = outputFiles[0]?.text;
   if (!bundle) throw new Error("esbuild produced no output");
 
-  const saved = await saveToCache(
+  const saved = await cacheService.saveToCache(
     "template-config",
     cacheKey,
     "cjs",

@@ -1,7 +1,7 @@
 import { Result } from "../../lib";
 import { logError } from "../../lib/utils";
 import { Project } from "../../models";
-import { commitAll } from "../../core/infra/git-service";
+import { resolveGitService } from "../../core/infra/git-service";
 
 /**
  * @public
@@ -20,7 +20,8 @@ export async function addAllAndCommit(
     return { error: "No changes to commit" };
   }
 
-  const commitResult = await commitAll(
+  const gitService = resolveGitService();
+  const commitResult = await gitService.commitAll(
     project.absoluteRootDir,
     commitMessage,
   );

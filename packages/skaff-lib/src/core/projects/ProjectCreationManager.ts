@@ -6,29 +6,35 @@ import {
 } from "@timonteutelink/template-types-lib";
 
 import { backendLogger } from "../../lib";
-import {
+import type {
   ProjectCreationOptions,
   ProjectCreationResult,
   Result,
 } from "../../lib/types";
 import { Project } from "../../models/project";
 import {
-  getProjectRepository,
-  getRootTemplateRepository,
+  resolveProjectRepository,
+  resolveRootTemplateRepository,
 } from "../../repositories";
-import {
-  addAllAndRetrieveDiff,
-  parseGitDiff,
-} from "../infra/git-service";
+import { GitService, resolveGitService } from "../infra/git-service";
+import { injectable } from "tsyringe";
 import { TemplateGeneratorService } from "../generation/template-generator-service";
 
+@injectable()
 export class ProjectCreationManager {
-  constructor(private readonly options?: ProjectCreationOptions) {}
+  private readonly gitService: GitService;
+
+  constructor(
+    private readonly options?: ProjectCreationOptions,
+    gitService?: GitService,
+  ) {
+    this.gitService = gitService ?? resolveGitService();
+  }
 
   public async parseCreationResult(
     projectPath: string,
   ): Promise<Result<ProjectCreationResult>> {
-    const projectRepository = await getProjectRepository();
+    const projectRepository = resolveProjectRepository();
     const newProjectName = path.basename(projectPath);
     const newProjectParentDir = path.dirname(projectPath);
 
@@ -60,13 +66,13 @@ export class ProjectCreationManager {
       };
     }
 
-    const diffResult = await addAllAndRetrieveDiff(projectPath);
+    const diffResult = await this.gitService.addAllAndRetrieveDiff(projectPath);
 
     if ("error" in diffResult) {
       return diffResult;
     }
 
-    const processedDiff = parseGitDiff(diffResult.data);
+    const processedDiff = this.gitService.parseGitDiff(diffResult.data);
 
     return {
       data: {
@@ -83,7 +89,7 @@ export class ProjectCreationManager {
     newProjectName: string,
     userTemplateSettings: UserTemplateSettings,
   ): Promise<Result<ProjectCreationResult>> {
-    const rootTemplateRepository = await getRootTemplateRepository();
+    const rootTemplateRepository = resolveRootTemplateRepository();
     const template = await rootTemplateRepository.findTemplate(rootTemplateName);
 
     if ("error" in template) {
@@ -117,7 +123,7 @@ export class ProjectCreationManager {
     projectSettings: ProjectSettings,
     newProjectPath: string,
   ): Promise<Result<ProjectCreationResult>> {
-    const rootTemplateRepository = await getRootTemplateRepository();
+    const rootTemplateRepository = resolveRootTemplateRepository();
     const rootInstantiated = projectSettings.instantiatedTemplates[0];
 
     if (rootInstantiated?.templateRepoUrl) {
@@ -186,3 +192,4 @@ export class ProjectCreationManager {
     return this.parseCreationResult(projectCreationResult.data);
   }
 }
+
