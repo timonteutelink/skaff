@@ -221,6 +221,7 @@ function findRootTemplate(templatesMap: Record<string, Template>): Result<Templa
 export interface TemplateTreeBuilderOptions {
   repoUrl?: string;
   branchOverride?: string;
+  commitHash?: string;
 }
 
 @injectable()
@@ -241,6 +242,7 @@ export class TemplateTreeBuilder {
       absoluteRootDir,
       options.repoUrl,
       options.branchOverride,
+      options.commitHash,
     );
     if ("error" in contextResult) {
       return contextResult;
@@ -373,6 +375,7 @@ export class TemplateTreeBuilder {
     absoluteRootDir: string,
     repoUrl?: string,
     branchOverride?: string,
+    commitHashOverride?: string,
   ): Promise<Result<TemplateBuildContext>> {
     const absoluteBaseDir = path.dirname(absoluteRootDir);
     const isRepoCleanResult = await this.gitService.isGitRepoClean(
@@ -386,7 +389,9 @@ export class TemplateTreeBuilder {
       return { error: "Template dir is not clean" };
     }
 
-    const commitHashResult = await this.gitService.getCommitHash(absoluteRootDir);
+    const commitHashResult = commitHashOverride
+      ? { data: commitHashOverride }
+      : await this.gitService.getCommitHash(absoluteRootDir);
     if ("error" in commitHashResult) {
       return { error: commitHashResult.error };
     }
