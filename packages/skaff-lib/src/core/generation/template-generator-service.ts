@@ -17,8 +17,12 @@ import { SideEffectExecutor } from "./SideEffectExecutor";
 import { HandlebarsEnvironment } from "../shared/HandlebarsEnvironment";
 import { Template } from "../../models/template";
 import { isSubset } from "../../utils/shared-utils";
-import { makeDir } from "../infra/file-service";
+import type { FileSystemService } from "../infra/file-service";
 import { FileRollbackManager } from "../shared/FileRollbackManager";
+import { getSkaffContainer } from "../../di/container";
+import { inject, injectable } from "tsyringe";
+import { FileSystemServiceToken, GitServiceToken, TemplateGeneratorServiceToken } from "../../di/tokens";
+import type { GitService } from "../infra/git-service";
 
 export interface GeneratorOptions {
   /**
@@ -45,11 +49,7 @@ export interface GeneratorOptions {
   absoluteDestinationPath: string;
 }
 
-export class TemplateGeneratorService {
-  public options: GeneratorOptions;
-  public destinationProjectSettings: ProjectSettings;
-  public rootTemplate: Template;
-
+export class TemplateGenerationSession {
   private readonly generationContext: GenerationContext;
   private readonly pathResolver: PathResolver;
   private readonly fileSystem: RollbackFileSystem;
@@ -58,15 +58,15 @@ export class TemplateGeneratorService {
   private readonly projectSettingsSynchronizer: ProjectSettingsSynchronizer;
   private readonly gitWorkflow: GitWorkflow;
   private readonly autoInstantiationPlanner: AutoInstantiationPlanner;
+  private readonly rootTemplate: Template;
 
   constructor(
-    options: GeneratorOptions,
+    private readonly options: GeneratorOptions,
     rootTemplate: Template,
-    destinationProjectSettings: ProjectSettings,
+    private readonly destinationProjectSettings: ProjectSettings,
+    private readonly fileSystemService: FileSystemService,
+    gitService: GitService,
   ) {
-    this.options = options;
-    this.destinationProjectSettings = destinationProjectSettings;
-
     this.generationContext = new GenerationContext(rootTemplate);
     this.rootTemplate = this.generationContext.getRootTemplate();
     this.pathResolver = new PathResolver(
@@ -90,7 +90,7 @@ export class TemplateGeneratorService {
       this.destinationProjectSettings,
       this.rootTemplate,
     );
-    this.gitWorkflow = new GitWorkflow();
+    this.gitWorkflow = new GitWorkflow(gitService);
     this.autoInstantiationPlanner = new AutoInstantiationPlanner(
       this.options,
       this.generationContext,
@@ -478,7 +478,7 @@ export class TemplateGeneratorService {
     }
 
     try {
-      const ensureProjectDirResult = await makeDir(
+      const ensureProjectDirResult = await this.fileSystemService.makeDir(
         this.options.absoluteDestinationPath,
       );
 
@@ -632,4 +632,32 @@ export class TemplateGeneratorService {
       };
     }
   }
+}
+
+@injectable()
+export class TemplateGeneratorService {
+  constructor(
+    @inject(FileSystemServiceToken)
+    private readonly fileSystemService: FileSystemService,
+    @inject(GitServiceToken)
+    private readonly gitService: GitService,
+  ) {}
+
+  public createSession(
+    options: GeneratorOptions,
+    rootTemplate: Template,
+    destinationProjectSettings: ProjectSettings,
+  ): TemplateGenerationSession {
+    return new TemplateGenerationSession(
+      options,
+      rootTemplate,
+      destinationProjectSettings,
+      this.fileSystemService,
+      this.gitService,
+    );
+  }
+}
+
+export function resolveTemplateGeneratorService(): TemplateGeneratorService {
+  return getSkaffContainer().resolve(TemplateGeneratorServiceToken);
 }

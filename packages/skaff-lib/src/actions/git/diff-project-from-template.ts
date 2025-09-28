@@ -1,9 +1,10 @@
 import { ParsedFile, Result } from "../../lib";
 import { Project } from "../../models";
-import { diffProjectFromItsTemplate } from "../../core/diffing/project-diff-service";
+import { resolveProjectDiffPlanner } from "../../core/diffing/ProjectDiffPlanner";
 
 export async function diffProjectFromTemplate(
   project: Project
 ): Promise<Result<{ files: ParsedFile[], hash: string }>> {
-  return diffProjectFromItsTemplate(project);
+  const planner = resolveProjectDiffPlanner();
+  return planner.diffProjectFromTemplate(project);
 }

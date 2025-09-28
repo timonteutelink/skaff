@@ -16,14 +16,22 @@ import {
 } from "../../lib/types";
 import { backendLogger } from "../../lib/logger";
 import { logError } from "../../lib/utils";
-import { TemplateGeneratorService } from "../generation/template-generator-service";
+import {
+  TemplateGeneratorService,
+  resolveTemplateGeneratorService,
+} from "../generation/template-generator-service";
 import { Project } from "../../models/project";
 import { parseProjectCreationResult } from "../projects/ProjectCreationFacade";
-import { getCacheDirPath } from "../infra/cache-service";
-import {
-  getCommitHash,
-  isGitRepoClean,
-} from "../infra/git-service";
+import { resolveCacheService } from "../infra/cache-service";
+import { resolveGitService } from "../infra/git-service";
+
+function getCacheService() {
+  return resolveCacheService();
+}
+
+function getGitService() {
+  return resolveGitService();
+}
 
 export interface TemplateInit {
   config: GenericTemplateConfigModule;
@@ -85,7 +93,7 @@ export class Template {
     this.branch = init.branch;
     this.repoUrl = init.repoUrl;
 
-    if (!this.absoluteBaseDir.startsWith(getCacheDirPath())) {
+    if (!this.absoluteBaseDir.startsWith(getCacheService().getCacheDirPath())) {
       this.isLocal = true;
     }
   }
@@ -95,13 +103,14 @@ export class Template {
     destinationProject: Project,
     parentInstanceId: string,
   ): Promise<Result<string>> {
-    const generatorService = new TemplateGeneratorService(
+    const generatorService = resolveTemplateGeneratorService();
+    const generatorSession = generatorService.createSession(
       { absoluteDestinationPath: destinationProject.absoluteRootDir },
       this,
       destinationProject.instantiatedProjectSettings,
     );
 
-    const addTemplateResult = generatorService.addNewTemplate(
+    const addTemplateResult = generatorSession.addNewTemplate(
       userSettings,
       this.config.templateConfig.name,
       parentInstanceId,
@@ -111,7 +120,7 @@ export class Template {
       return addTemplateResult;
     }
 
-    const resultPath = await generatorService.instantiateTemplateInProject(
+    const resultPath = await generatorSession.instantiateTemplateInProject(
       addTemplateResult.data,
       { removeOnFailure: true },
     );
@@ -129,6 +138,7 @@ export class Template {
     destinationDir: string,
     projectName: string,
     projectCreationOptions?: ProjectCreationOptions,
+    templateGeneratorService?: TemplateGeneratorService,
   ): Promise<Result<ProjectCreationResult>> {
     const newProjectSettings: ProjectSettings = {
       projectName,
@@ -137,7 +147,9 @@ export class Template {
       instantiatedTemplates: [],
     };
 
-    const generatorService = new TemplateGeneratorService(
+    const generatorService =
+      templateGeneratorService ?? resolveTemplateGeneratorService();
+    const generatorSession = generatorService.createSession(
       {
         absoluteDestinationPath: path.join(destinationDir, projectName),
         dontDoGit: !projectCreationOptions?.git,
@@ -146,13 +158,13 @@ export class Template {
       newProjectSettings,
     );
     const addProjectResult =
-      generatorService.addNewProject(rootTemplateSettings);
+      generatorSession.addNewProject(rootTemplateSettings);
 
     if ("error" in addProjectResult) {
       return addProjectResult;
     }
 
-    const result = await generatorService.instantiateNewProject();
+    const result = await generatorSession.instantiateNewProject();
     if ("error" in result) {
       return result;
     }
@@ -270,12 +282,13 @@ export class Template {
   }
 
   public async isValid(): Promise<boolean> {
-    const isRepoClean = await isGitRepoClean(this.absoluteBaseDir);
+    const gitService = getGitService();
+    const isRepoClean = await gitService.isGitRepoClean(this.absoluteBaseDir);
     if ("error" in isRepoClean) {
       return false;
     }
 
-    const commitResult = await getCommitHash(this.absoluteBaseDir);
+    const commitResult = await gitService.getCommitHash(this.absoluteBaseDir);
     if ("error" in commitResult) {
       return false;
     }

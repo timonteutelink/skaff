@@ -1,10 +1,13 @@
 import * as fs from "node:fs/promises";
 import path from "node:path";
+import { injectable } from "tsyringe";
+
 import { backendLogger } from "../lib/logger";
 import { Result } from "../lib/types";
 import { Project } from "../models/project";
 import { logError } from "../lib";
 
+@injectable()
 export class ProjectRepository {
   private projectsCache: Map<string, Project> = new Map();
 

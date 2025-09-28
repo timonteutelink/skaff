@@ -1,17 +1,17 @@
 import { Result } from "../../lib";
 import { logError } from "../../lib/utils";
 import { Project } from "../../models";
-import { switchBranch } from "../../core/infra/git-service";
+import { resolveGitService } from "../../core/infra/git-service";
 
 export async function switchProjectBranch(
   project: Project,
   branch: string,
 ): Promise<Result<void>> {
   if (!project.gitStatus) {
-    logError({shortMessage: "no git status"})
+    logError({ shortMessage: "no git status" });
     return {
-      error: "No gitstatus on project"
-    }
+      error: "No gitstatus on project",
+    };
   }
   const branchExists = project.gitStatus.branches.includes(branch);
 
@@ -27,7 +27,8 @@ export async function switchProjectBranch(
     return { error: "Cannot switch branches with uncommitted changes" };
   }
 
-  const result = await switchBranch(project.absoluteRootDir, branch);
+  const gitService = resolveGitService();
+  const result = await gitService.switchBranch(project.absoluteRootDir, branch);
 
   if ("error" in result) {
     return { error: result.error };

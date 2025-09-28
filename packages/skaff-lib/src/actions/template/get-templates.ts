@@ -1,11 +1,11 @@
 import { Result } from "../../lib";
 import { Template } from "../../models";
-import { getRootTemplateRepository } from "../../repositories";
+import { resolveRootTemplateRepository } from "../../repositories";
 
 export async function getTemplates(): Promise<
   Result<{ template: Template; revisions: string[] }[]>
 > {
-  const rootTemplateRepository = await getRootTemplateRepository();
+  const rootTemplateRepository = resolveRootTemplateRepository();
   const templates = await rootTemplateRepository.getAllTemplates();
   if ("error" in templates) {
     return { error: templates.error };

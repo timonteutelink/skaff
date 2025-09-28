@@ -1,10 +1,10 @@
 import { Result } from "../../lib";
 import { Template } from "../../models";
-import { getRootTemplateRepository } from "../../repositories";
+import { resolveRootTemplateRepository } from "../../repositories";
 
 export async function getLoadedRevisions(
   templateName: string,
 ): Promise<Result<Template[] | null>> {
-  const rootTemplateRepository = await getRootTemplateRepository();
+  const rootTemplateRepository = resolveRootTemplateRepository();
   return await rootTemplateRepository.findAllTemplateRevisions(templateName);
 }

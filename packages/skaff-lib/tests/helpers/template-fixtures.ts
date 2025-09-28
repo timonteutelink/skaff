@@ -12,6 +12,7 @@ import { TemplateTreeBuilder } from "../../src/core/templates/TemplateTreeBuilde
 import { Template } from "../../src/core/templates/Template";
 import { Project } from "../../src/models/project";
 import { GitStatus } from "../../src/lib/types";
+import { getSkaffContainer } from "../../src/di/container";
 
 /**
  * Utility helpers for tests that need real template trees and project settings on disk.
@@ -247,7 +248,8 @@ export async function createTestTemplate(
   await writeTemplateFiles(tempRoot, options);
 
   const templateDir = path.join(tempRoot, options.name);
-  const buildResult = await TemplateTreeBuilder.build(templateDir);
+  const templateTreeBuilder = getSkaffContainer().resolve(TemplateTreeBuilder);
+  const buildResult = await templateTreeBuilder.build(templateDir);
   if ("error" in buildResult) {
     restoreGitMocks();
     restoreCachePath();

@@ -4,40 +4,56 @@ import {
 } from "@timonteutelink/template-types-lib";
 import crypto from "node:crypto";
 
+import { inject, injectable } from "tsyringe";
+
+import { getSkaffContainer } from "../../di/container";
+import {
+  AutoInstantiationSettingsAdjusterToken,
+  DiffCacheToken,
+  GitServiceToken,
+  ProjectDiffPlannerToken,
+  RootTemplateRepositoryToken,
+  TemporaryProjectFactoryToken,
+} from "../../di/tokens";
 import { backendLogger } from "../../lib/logger";
 import { Result, NewTemplateDiffResult, ParsedFile } from "../../lib/types";
 import { logError } from "../../lib/utils";
 import { Project } from "../../models/project";
 import { Template } from "../../models/template";
-import { getRootTemplateRepository } from "../../repositories";
+import type { RootTemplateRepository } from "../../repositories/root-template-repository";
+import type { GitService } from "../infra/git-service";
+import type { DiffCache } from "./DiffCache";
+import type { AutoInstantiationSettingsAdjuster } from "./AutoInstantiationSettingsAdjuster";
+import type { TemporaryProjectFactory } from "./TemporaryProjectFactory";
 import {
-  addAllAndRetrieveDiff,
-  applyDiffToGitRepo,
-  diffDirectories,
-  isConflictAfterApply,
-  parseGitDiff,
-} from "../infra/git-service";
-import { MigrationApplier } from "./MigrationApplier";
-import { DiffCache } from "./DiffCache";
-import { AutoInstantiationSettingsAdjuster } from "./AutoInstantiationSettingsAdjuster";
-import { TemporaryProjectFactory } from "./TemporaryProjectFactory";
-
+  applyTemplateMigrationSequence,
+  getLatestTemplateMigrationUuid,
+} from "../templates/TemplateMigration";
+@injectable()
 export class ProjectDiffPlanner {
   private readonly cache: DiffCache;
   private readonly autoInstantiationAdjuster: AutoInstantiationSettingsAdjuster;
   private readonly tempProjectFactory: TemporaryProjectFactory;
-  private readonly migrationApplier: MigrationApplier;
+  private readonly gitService: GitService;
+  private readonly rootTemplateRepository: RootTemplateRepository;
 
   constructor(
-    cache = new DiffCache(),
-    autoInstantiationAdjuster = new AutoInstantiationSettingsAdjuster(),
-    tempProjectFactory = new TemporaryProjectFactory(cache),
-    migrationApplier = new MigrationApplier(),
+    @inject(DiffCacheToken)
+    cache: DiffCache,
+    @inject(AutoInstantiationSettingsAdjusterToken)
+    autoInstantiationAdjuster: AutoInstantiationSettingsAdjuster,
+    @inject(TemporaryProjectFactoryToken)
+    tempProjectFactory: TemporaryProjectFactory,
+    @inject(RootTemplateRepositoryToken)
+    rootTemplateRepository: RootTemplateRepository,
+    @inject(GitServiceToken)
+    gitService: GitService,
   ) {
     this.cache = cache;
     this.autoInstantiationAdjuster = autoInstantiationAdjuster;
     this.tempProjectFactory = tempProjectFactory;
-    this.migrationApplier = migrationApplier;
+    this.gitService = gitService;
+    this.rootTemplateRepository = rootTemplateRepository;
   }
 
   private async diffProjectSettings(
@@ -62,7 +78,7 @@ export class ProjectDiffPlanner {
       return {
         data: {
           diffHash: diffCacheKey,
-          parsedDiff: parseGitDiff(existingDiff.data.data),
+          parsedDiff: this.gitService.parseGitDiff(existingDiff.data.data),
         },
       };
     }
@@ -90,7 +106,7 @@ export class ProjectDiffPlanner {
     }
 
     try {
-      const diff = await diffDirectories(
+      const diff = await this.gitService.diffDirectories(
         tempOldResult.data.path,
         tempNewResult.data.path,
       );
@@ -113,7 +129,7 @@ export class ProjectDiffPlanner {
       return {
         data: {
           diffHash: diffCacheKey,
-          parsedDiff: parseGitDiff(diff.data),
+          parsedDiff: this.gitService.parseGitDiff(diff.data),
         },
       };
     } finally {
@@ -126,8 +142,7 @@ export class ProjectDiffPlanner {
     rootTemplateName: string,
     commitHash: string,
   ): Promise<Result<Template>> {
-    const repository = await getRootTemplateRepository();
-    const template = await repository.loadRevision(
+    const template = await this.rootTemplateRepository.loadRevision(
       rootTemplateName,
       commitHash,
     );
@@ -231,10 +246,9 @@ export class ProjectDiffPlanner {
     userTemplateSettings: UserTemplateSettings,
     destinationProject: Project,
   ): Promise<Result<NewTemplateDiffResult>> {
-    const rootTemplateRepository = await getRootTemplateRepository();
     const rootTemplateName =
       destinationProject.rootTemplate.config.templateConfig.name;
-    const rootTemplate = await rootTemplateRepository.loadRevision(
+    const rootTemplate = await this.rootTemplateRepository.loadRevision(
       rootTemplateName,
       destinationProject.instantiatedProjectSettings.instantiatedTemplates[0]!
         .templateCommitHash!,
@@ -269,7 +283,7 @@ export class ProjectDiffPlanner {
           templateBranch: template.branch,
           templateName: template.config.templateConfig.name,
           templateSettings: userTemplateSettings,
-          lastMigration: this.migrationApplier.getLatestMigration(
+          lastMigration: getLatestTemplateMigrationUuid(
             template.config.migrations,
           ),
         },
@@ -298,9 +312,8 @@ export class ProjectDiffPlanner {
     project: Project,
     newTemplateRevisionHash: string,
   ): Promise<Result<NewTemplateDiffResult>> {
-    const rootProjectRepository = await getRootTemplateRepository();
     const rootTemplateName = project.rootTemplate.config.templateConfig.name;
-    const template = await rootProjectRepository.loadRevision(
+    const template = await this.rootTemplateRepository.loadRevision(
       rootTemplateName,
       newTemplateRevisionHash,
     );
@@ -346,7 +359,7 @@ export class ProjectDiffPlanner {
         return { error: `Template ${instantiated.templateName} not found` };
       }
 
-      const migrationResult = this.migrationApplier.applyMigrations(
+      const migrationResult = applyTemplateMigrationSequence(
         tmpl.config.migrations,
         instantiated.templateSettings,
         instantiated.lastMigration,
@@ -364,13 +377,15 @@ export class ProjectDiffPlanner {
   public async resolveConflictsAndRetrieveAppliedDiff(
     project: Project,
   ): Promise<Result<ParsedFile[]>> {
-    const addAllResult = await addAllAndRetrieveDiff(project.absoluteRootDir);
+    const addAllResult = await this.gitService.addAllAndRetrieveDiff(
+      project.absoluteRootDir,
+    );
 
     if ("error" in addAllResult) {
       return addAllResult;
     }
 
-    return { data: parseGitDiff(addAllResult.data) };
+    return { data: this.gitService.parseGitDiff(addAllResult.data) };
   }
 
   public async applyDiffToProject(
@@ -392,7 +407,7 @@ export class ProjectDiffPlanner {
       return { error: "Diff not found" };
     }
 
-    const applyResult = await applyDiffToGitRepo(
+    const applyResult = await this.gitService.applyDiffToGitRepo(
       project.absoluteRootDir,
       diff.data.path,
     );
@@ -402,7 +417,9 @@ export class ProjectDiffPlanner {
       return { error: "Failed to apply diff" };
     }
 
-    const isConflict = await isConflictAfterApply(project.absoluteRootDir);
+    const isConflict = await this.gitService.isConflictAfterApply(
+      project.absoluteRootDir,
+    );
     if ("error" in isConflict) {
       return isConflict;
     }
@@ -410,13 +427,15 @@ export class ProjectDiffPlanner {
       return { data: { resolveBeforeContinuing: true } };
     }
 
-    const addAllResult = await addAllAndRetrieveDiff(project.absoluteRootDir);
+    const addAllResult = await this.gitService.addAllAndRetrieveDiff(
+      project.absoluteRootDir,
+    );
 
     if ("error" in addAllResult) {
       return addAllResult;
     }
 
-    return { data: parseGitDiff(addAllResult.data) };
+    return { data: this.gitService.parseGitDiff(addAllResult.data) };
   }
 
   public async diffProjectFromTemplate(
@@ -447,7 +466,7 @@ export class ProjectDiffPlanner {
     if (existingDiff.data) {
       return {
         data: {
-          files: parseGitDiff(existingDiff.data.data),
+          files: this.gitService.parseGitDiff(existingDiff.data.data),
           hash: projectCommitHash,
         },
       };
@@ -464,7 +483,7 @@ export class ProjectDiffPlanner {
     }
 
     try {
-      const diff = await diffDirectories(
+      const diff = await this.gitService.diffDirectories(
         tempProjectResult.data.path,
         project.absoluteRootDir,
       );
@@ -486,7 +505,7 @@ export class ProjectDiffPlanner {
 
       return {
         data: {
-          files: parseGitDiff(diff.data),
+          files: this.gitService.parseGitDiff(diff.data),
           hash: projectCommitHash,
         },
       };
@@ -494,4 +513,8 @@ export class ProjectDiffPlanner {
       await tempProjectResult.data.cleanup();
     }
   }
+}
+
+export function resolveProjectDiffPlanner(): ProjectDiffPlanner {
+  return getSkaffContainer().resolve(ProjectDiffPlannerToken);
 }

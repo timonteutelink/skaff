@@ -1,6 +1,6 @@
 import { Result } from "../../lib";
 import { Template } from "../../models";
-import { getRootTemplateRepository } from "../../repositories";
+import { resolveRootTemplateRepository } from "../../repositories";
 import { getTemplates } from "./get-templates";
 
 export async function reloadTemplates(): Promise<
@@ -9,7 +9,7 @@ export async function reloadTemplates(): Promise<
     revisions: string[];
   }[]>
 > {
-  const rootTemplateRepository = await getRootTemplateRepository();
+  const rootTemplateRepository = resolveRootTemplateRepository();
   const result = await rootTemplateRepository.reloadTemplates();
 
   if ("error" in result) {

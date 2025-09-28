@@ -1,15 +1,17 @@
 import { Result } from "../../lib/types";
-import { commitAll, createGitRepo } from "../infra/git-service";
+import { GitService } from "../infra/git-service";
 
 export class GitWorkflow {
+  constructor(private readonly gitService: GitService) {}
+
   public async initializeRepository(projectPath: string): Promise<Result<void>> {
-    return createGitRepo(projectPath);
+    return this.gitService.createGitRepo(projectPath);
   }
 
   public async commitAllChanges(
     projectPath: string,
     message: string,
   ): Promise<Result<void>> {
-    return commitAll(projectPath, message);
+    return this.gitService.commitAll(projectPath, message);
   }
 }

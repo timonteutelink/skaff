@@ -6,29 +6,44 @@ import {
 } from "@timonteutelink/template-types-lib";
 
 import { backendLogger } from "../../lib";
-import {
+import type {
   ProjectCreationOptions,
   ProjectCreationResult,
   Result,
 } from "../../lib/types";
 import { Project } from "../../models/project";
+import type { ProjectRepository } from "../../repositories/project-repository";
+import type { RootTemplateRepository } from "../../repositories/root-template-repository";
+import type { GitService } from "../infra/git-service";
+import { inject, injectable } from "tsyringe";
+import type { TemplateGeneratorService } from "../generation/template-generator-service";
+import { getSkaffContainer } from "../../di/container";
 import {
-  getProjectRepository,
-  getRootTemplateRepository,
-} from "../../repositories";
-import {
-  addAllAndRetrieveDiff,
-  parseGitDiff,
-} from "../infra/git-service";
-import { TemplateGeneratorService } from "../generation/template-generator-service";
+  GitServiceToken,
+  ProjectCreationManagerToken,
+  ProjectRepositoryToken,
+  RootTemplateRepositoryToken,
+  TemplateGeneratorServiceToken,
+} from "../../di/tokens";
 
+@injectable()
 export class ProjectCreationManager {
-  constructor(private readonly options?: ProjectCreationOptions) {}
+  constructor(
+    @inject(ProjectRepositoryToken)
+    private readonly projectRepository: ProjectRepository,
+    @inject(RootTemplateRepositoryToken)
+    private readonly rootTemplateRepository: RootTemplateRepository,
+    @inject(GitServiceToken)
+    private readonly gitService: GitService,
+    @inject(TemplateGeneratorServiceToken)
+    private readonly templateGenerator: TemplateGeneratorService,
+  ) {}
 
   public async parseCreationResult(
     projectPath: string,
+    options?: ProjectCreationOptions,
   ): Promise<Result<ProjectCreationResult>> {
-    const projectRepository = await getProjectRepository();
+    const projectRepository = this.projectRepository;
     const newProjectName = path.basename(projectPath);
     const newProjectParentDir = path.dirname(projectPath);
 
@@ -54,19 +69,19 @@ export class ProjectCreationManager {
       return { error: projectDto.error };
     }
 
-    if (!this.options?.git) {
+    if (!options?.git) {
       return {
         data: { newProjectPath: projectPath, newProject: projectDto.data },
       };
     }
 
-    const diffResult = await addAllAndRetrieveDiff(projectPath);
+    const diffResult = await this.gitService.addAllAndRetrieveDiff(projectPath);
 
     if ("error" in diffResult) {
       return diffResult;
     }
 
-    const processedDiff = parseGitDiff(diffResult.data);
+    const processedDiff = this.gitService.parseGitDiff(diffResult.data);
 
     return {
       data: {
@@ -82,9 +97,11 @@ export class ProjectCreationManager {
     parentDirPath: string,
     newProjectName: string,
     userTemplateSettings: UserTemplateSettings,
+    projectCreationOptions?: ProjectCreationOptions,
   ): Promise<Result<ProjectCreationResult>> {
-    const rootTemplateRepository = await getRootTemplateRepository();
-    const template = await rootTemplateRepository.findTemplate(rootTemplateName);
+    const template = await this.rootTemplateRepository.findTemplate(
+      rootTemplateName,
+    );
 
     if ("error" in template) {
       return template;
@@ -99,29 +116,32 @@ export class ProjectCreationManager {
       userTemplateSettings,
       parentDirPath,
       newProjectName,
-      this.options,
+      projectCreationOptions,
+      this.templateGenerator,
     );
   }
 
   public async generateFromExistingProject(
     existingProject: Project,
     newProjectPath: string,
+    projectCreationOptions?: ProjectCreationOptions,
   ): Promise<Result<ProjectCreationResult>> {
     return this.generateFromTemplateSettings(
       existingProject.instantiatedProjectSettings,
       newProjectPath,
+      projectCreationOptions,
     );
   }
 
   public async generateFromTemplateSettings(
     projectSettings: ProjectSettings,
     newProjectPath: string,
+    projectCreationOptions?: ProjectCreationOptions,
   ): Promise<Result<ProjectCreationResult>> {
-    const rootTemplateRepository = await getRootTemplateRepository();
     const rootInstantiated = projectSettings.instantiatedTemplates[0];
 
     if (rootInstantiated?.templateRepoUrl) {
-      const addResult = await rootTemplateRepository.addRemoteRepo(
+      const addResult = await this.rootTemplateRepository.addRemoteRepo(
         rootInstantiated.templateRepoUrl,
         rootInstantiated.templateBranch ?? "main",
       );
@@ -142,7 +162,7 @@ export class ProjectCreationManager {
       };
     }
 
-    const rootTemplate = await rootTemplateRepository.loadRevision(
+    const rootTemplate = await this.rootTemplateRepository.loadRevision(
       projectSettings.rootTemplateName,
       instantiatedRootTemplate,
     );
@@ -166,9 +186,9 @@ export class ProjectCreationManager {
       }
     }
 
-    const generator = new TemplateGeneratorService(
+    const generatorSession = this.templateGenerator.createSession(
       {
-        dontDoGit: !this.options?.git,
+        dontDoGit: !projectCreationOptions?.git,
         dontAutoInstantiate: true,
         absoluteDestinationPath: newProjectPath,
       },
@@ -177,12 +197,20 @@ export class ProjectCreationManager {
     );
 
     const projectCreationResult =
-      await generator.instantiateFullProjectFromSettings();
+      await generatorSession.instantiateFullProjectFromSettings();
 
     if ("error" in projectCreationResult) {
       return projectCreationResult;
     }
 
-    return this.parseCreationResult(projectCreationResult.data);
+    return this.parseCreationResult(
+      projectCreationResult.data,
+      projectCreationOptions,
+    );
   }
 }
+
+export function resolveProjectCreationManager(): ProjectCreationManager {
+  return getSkaffContainer().resolve(ProjectCreationManagerToken);
+}
+

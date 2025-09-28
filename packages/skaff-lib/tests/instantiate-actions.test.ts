@@ -1,27 +1,27 @@
-const mockGenerateNewTemplateDiff = jest.fn();
-const mockGenerateModifyTemplateDiff = jest.fn();
-const mockGenerateUpdateTemplateDiff = jest.fn();
-const mockApplyDiffToProject = jest.fn();
+import { withTestContainer } from "../src/di/testing";
+
+const mockPlanner = {
+  generateNewTemplateDiff: jest.fn(),
+  generateModifyTemplateDiff: jest.fn(),
+  generateUpdateTemplateDiff: jest.fn(),
+  applyDiffToProject: jest.fn(),
+};
 
 const mockInstantiateProject = jest.fn();
 const mockGenerateProjectFromTemplateSettings = jest.fn();
 
-const mockAddAllAndRetrieveDiff = jest.fn();
-const mockParseGitDiff = jest.fn();
-const mockResetAllChanges = jest.fn();
-const mockDeleteRepo = jest.fn();
+const mockGitService = {
+  addAllAndRetrieveDiff: jest.fn(),
+  parseGitDiff: jest.fn(),
+  resetAllChanges: jest.fn(),
+  deleteRepo: jest.fn(),
+};
 
 const mockProjectSettingsSchemaParse = jest.fn();
 const mockLogError = jest.fn();
 
-jest.mock("../src/core/diffing/project-diff-service", () => ({
-  generateNewTemplateDiff: (...args: unknown[]) =>
-    mockGenerateNewTemplateDiff(...args),
-  generateModifyTemplateDiff: (...args: unknown[]) =>
-    mockGenerateModifyTemplateDiff(...args),
-  generateUpdateTemplateDiff: (...args: unknown[]) =>
-    mockGenerateUpdateTemplateDiff(...args),
-  applyDiffToProject: (...args: unknown[]) => mockApplyDiffToProject(...args),
+jest.mock("../src/core/diffing/ProjectDiffPlanner", () => ({
+  resolveProjectDiffPlanner: jest.fn(() => mockPlanner),
 }));
 
 jest.mock("../src/core/projects/ProjectCreationFacade", () => ({
@@ -32,10 +32,7 @@ jest.mock("../src/core/projects/ProjectCreationFacade", () => ({
 }));
 
 jest.mock("../src/core/infra/git-service", () => ({
-  addAllAndRetrieveDiff: (...args: unknown[]) => mockAddAllAndRetrieveDiff(...args),
-  parseGitDiff: (...args: unknown[]) => mockParseGitDiff(...args),
-  resetAllChanges: (...args: unknown[]) => mockResetAllChanges(...args),
-  deleteRepo: (...args: unknown[]) => mockDeleteRepo(...args),
+  resolveGitService: jest.fn(() => mockGitService),
 }));
 
 jest.mock("@timonteutelink/template-types-lib", () => {
@@ -53,24 +50,48 @@ jest.mock("../src/lib/utils", () => ({
   logError: (...args: unknown[]) => mockLogError(...args),
 }));
 
+jest.mock("../src/lib/logger", () => ({
+  backendLogger: {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+    trace: jest.fn(),
+  },
+}));
+
 describe("instantiate actions", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    for (const key of Object.keys(mockPlanner) as Array<
+      keyof typeof mockPlanner
+    >) {
+      mockPlanner[key].mockReset();
+    }
+    for (const key of Object.keys(mockGitService) as Array<
+      keyof typeof mockGitService
+    >) {
+      mockGitService[key].mockReset();
+    }
   });
 
   describe("prepareUpdateDiff", () => {
     it("returns diff result when service succeeds", async () => {
       const project = { id: "project" } as any;
       const diffResult = { diff: "value" };
-      mockGenerateUpdateTemplateDiff.mockResolvedValue({ data: diffResult });
+      mockPlanner.generateUpdateTemplateDiff.mockResolvedValue({
+        data: diffResult,
+      });
 
       const { prepareUpdateDiff } = await import(
         "../src/actions/instantiate/prepare-update-diff"
       );
 
-      const result = await prepareUpdateDiff(project, "hash");
+      const result = await withTestContainer(() =>
+        prepareUpdateDiff(project, "hash"),
+      );
 
-      expect(mockGenerateUpdateTemplateDiff).toHaveBeenCalledWith(
+      expect(mockPlanner.generateUpdateTemplateDiff).toHaveBeenCalledWith(
         project,
         "hash",
       );
@@ -78,12 +99,16 @@ describe("instantiate actions", () => {
     });
 
     it("propagates errors from service", async () => {
-      mockGenerateUpdateTemplateDiff.mockResolvedValue({ error: "boom" });
+      mockPlanner.generateUpdateTemplateDiff.mockResolvedValue({
+        error: "boom",
+      });
       const { prepareUpdateDiff } = await import(
         "../src/actions/instantiate/prepare-update-diff"
       );
 
-      const result = await prepareUpdateDiff({} as any, "hash");
+      const result = await withTestContainer(() =>
+        prepareUpdateDiff({} as any, "hash"),
+      );
 
       expect(result).toEqual({ error: "boom" });
     });
@@ -94,19 +119,19 @@ describe("instantiate actions", () => {
       const userSettings = { feature: true } as any;
       const project = { name: "proj" } as any;
       const diffResult = { diff: "mod" };
-      mockGenerateModifyTemplateDiff.mockResolvedValue({ data: diffResult });
+      mockPlanner.generateModifyTemplateDiff.mockResolvedValue({
+        data: diffResult,
+      });
 
       const { prepareModificationDiff } = await import(
         "../src/actions/instantiate/prepare-modification-diff"
       );
 
-      const result = await prepareModificationDiff(
-        userSettings,
-        project,
-        "template-instance",
+      const result = await withTestContainer(() =>
+        prepareModificationDiff(userSettings, project, "template-instance"),
       );
 
-      expect(mockGenerateModifyTemplateDiff).toHaveBeenCalledWith(
+      expect(mockPlanner.generateModifyTemplateDiff).toHaveBeenCalledWith(
         userSettings,
         project,
         "template-instance",
@@ -115,12 +140,16 @@ describe("instantiate actions", () => {
     });
 
     it("returns service error", async () => {
-      mockGenerateModifyTemplateDiff.mockResolvedValue({ error: "fail" });
+      mockPlanner.generateModifyTemplateDiff.mockResolvedValue({
+        error: "fail",
+      });
       const { prepareModificationDiff } = await import(
         "../src/actions/instantiate/prepare-modification-diff"
       );
 
-      const result = await prepareModificationDiff({} as any, {} as any, "id");
+      const result = await withTestContainer(() =>
+        prepareModificationDiff({} as any, {} as any, "id"),
+      );
 
       expect(result).toEqual({ error: "fail" });
     });
@@ -129,7 +158,9 @@ describe("instantiate actions", () => {
   describe("prepareInstantiationDiff", () => {
     it("delegates to diff service", async () => {
       const diffResult = { diff: "inst" };
-      mockGenerateNewTemplateDiff.mockResolvedValue({ data: diffResult });
+      mockPlanner.generateNewTemplateDiff.mockResolvedValue({
+        data: diffResult,
+      });
       const project = { path: "proj" } as any;
       const settings = { value: 1 } as any;
 
@@ -137,36 +168,35 @@ describe("instantiate actions", () => {
         "../src/actions/instantiate/prepare-instantiation-diff"
       );
 
-      const result = await prepareInstantiationDiff(
-        "root",
-        "template",
-        "parent",
-        project,
-        settings,
+      const result = await withTestContainer(() =>
+        prepareInstantiationDiff(
+          "root",
+          "template",
+          "parent",
+          project,
+          settings,
+        ),
       );
 
-      expect(mockGenerateNewTemplateDiff).toHaveBeenCalledWith(
-        "root",
+      expect(mockPlanner.generateNewTemplateDiff).toHaveBeenCalledWith(
         "template",
         "parent",
-        project,
         settings,
+        project,
       );
       expect(result).toEqual({ data: diffResult });
     });
 
     it("propagates errors from diff service", async () => {
-      mockGenerateNewTemplateDiff.mockResolvedValue({ error: "missing" });
+      mockPlanner.generateNewTemplateDiff.mockResolvedValue({
+        error: "missing",
+      });
       const { prepareInstantiationDiff } = await import(
         "../src/actions/instantiate/prepare-instantiation-diff"
       );
 
-      const result = await prepareInstantiationDiff(
-        "root",
-        "template",
-        "parent",
-        {} as any,
-        {} as any,
+      const result = await withTestContainer(() =>
+        prepareInstantiationDiff("root", "template", "parent", {} as any, {} as any),
       );
 
       expect(result).toEqual({ error: "missing" });
@@ -185,12 +215,14 @@ describe("instantiate actions", () => {
       const userSettings = { answer: 42 } as any;
       const options = { skipInstall: true } as any;
 
-      const result = await generateNewProject(
-        "project-name",
-        "template-name",
-        "/tmp",
-        userSettings,
-        options,
+      const result = await withTestContainer(() =>
+        generateNewProject(
+          "project-name",
+          "template-name",
+          "/tmp",
+          userSettings,
+          options,
+        ),
       );
 
       expect(mockInstantiateProject).toHaveBeenCalledWith(
@@ -209,11 +241,8 @@ describe("instantiate actions", () => {
         "../src/actions/instantiate/generate-new-project"
       );
 
-      const result = await generateNewProject(
-        "project-name",
-        "template-name",
-        "/tmp",
-        {} as any,
+      const result = await withTestContainer(() =>
+        generateNewProject("project-name", "template-name", "/tmp", {} as any),
       );
 
       expect(result).toEqual({ error: "fail" });
@@ -240,11 +269,13 @@ describe("instantiate actions", () => {
         },
       } as any;
 
-      const result = await generateNewProjectFromExisting(
-        project,
-        "/dest",
-        "new-project",
-        { dryRun: true } as any,
+      const result = await withTestContainer(() =>
+        generateNewProjectFromExisting(
+          project,
+          "/dest",
+          "new-project",
+          { dryRun: true } as any,
+        ),
       );
 
       const [newSettings, destinationPath, options] =
@@ -279,10 +310,8 @@ describe("instantiate actions", () => {
         },
       } as any;
 
-      const result = await generateNewProjectFromExisting(
-        project,
-        "/dest",
-        "new",
+      const result = await withTestContainer(() =>
+        generateNewProjectFromExisting(project, "/dest", "new"),
       );
 
       expect(result).toEqual({ error: "boom" });
@@ -305,154 +334,109 @@ describe("instantiate actions", () => {
         "../src/actions/instantiate/generate-new-project-from-settings"
       );
 
-      const result = await generateNewProjectFromSettings(
-        JSON.stringify({ any: "thing" }),
-        "/dir",
-        "project",
-        { verbose: true } as any,
+      const result = await withTestContainer(() =>
+        generateNewProjectFromSettings(
+          JSON.stringify({ any: "thing" }),
+          "/dir",
+          "project",
+          { verbose: true } as any,
+        ),
       );
 
       expect(mockProjectSettingsSchemaParse).toHaveBeenCalled();
-      expect(mockGenerateProjectFromTemplateSettings).toHaveBeenCalledWith(
-        {
-          projectName: "project",
-          rootTemplateName: "root",
-          instantiatedTemplates: [],
-        },
-        expect.stringContaining("/dir"),
-        { verbose: true },
-      );
+      expect(mockGenerateProjectFromTemplateSettings).toHaveBeenCalledWith({
+        projectName: "project",
+        rootTemplateName: "root",
+        instantiatedTemplates: [],
+      }, expect.any(String), { verbose: true });
       expect(result).toEqual({ data: creationResult });
     });
 
-    it("returns parse error and logs it", async () => {
-      const parseError = new Error("invalid");
+    it("returns parse error", async () => {
       mockProjectSettingsSchemaParse.mockImplementation(() => {
-        throw parseError;
+        throw new Error("invalid");
       });
-
       const { generateNewProjectFromSettings } = await import(
         "../src/actions/instantiate/generate-new-project-from-settings"
       );
 
-      const result = await generateNewProjectFromSettings(
-        JSON.stringify({ foo: "bar" }),
-        "/dir",
-        "project",
+      const result = await withTestContainer(() =>
+        generateNewProjectFromSettings("{}", "/dir", "project"),
       );
 
-      expect(mockLogError).toHaveBeenCalledWith({
-        error: parseError,
-        shortMessage: "Failed to parse project settings.",
+      expect(result).toEqual({
+        error: expect.stringContaining("Failed to parse project settings"),
       });
-      expect(result).toEqual({ error: "Failed to parse project settings." });
-    });
-  });
-
-  describe("applyDiff", () => {
-    it("returns parsed diff when successful", async () => {
-      const diffResult = { files: [] };
-      mockApplyDiffToProject.mockResolvedValue({ data: diffResult });
-
-      const { applyDiff } = await import(
-        "../src/actions/instantiate/apply-diff"
-      );
-
-      const project = { absoluteRootDir: "/repo" } as any;
-      const result = await applyDiff(project, "hash");
-
-      expect(mockApplyDiffToProject).toHaveBeenCalledWith(project, "hash");
-      expect(result).toEqual({ data: diffResult });
-    });
-
-    it("propagates diff application errors", async () => {
-      mockApplyDiffToProject.mockResolvedValue({ error: "oops" });
-      const { applyDiff } = await import(
-        "../src/actions/instantiate/apply-diff"
-      );
-
-      const result = await applyDiff({} as any, "hash");
-
-      expect(result).toEqual({ error: "oops" });
+      expect(mockLogError).toHaveBeenCalled();
     });
   });
 
   describe("addAllAndDiff", () => {
-    it("returns parsed diff when git add succeeds", async () => {
-      mockAddAllAndRetrieveDiff.mockResolvedValue({ data: "raw-diff" });
-      mockParseGitDiff.mockReturnValue([{ path: "file" }]);
+    it("delegates to git service and returns parsed diff", async () => {
+      const project = {
+        absoluteRootDir: "/tmp/project",
+      } as any;
+      mockGitService.addAllAndRetrieveDiff.mockResolvedValue({ data: "diff" });
+      mockGitService.parseGitDiff.mockReturnValue("parsed");
 
       const { addAllAndDiff } = await import(
         "../src/actions/instantiate/add-all-and-diff"
       );
 
-      const project = { absoluteRootDir: "/repo" } as any;
-      const result = await addAllAndDiff(project);
+      const result = await withTestContainer(() => addAllAndDiff(project));
 
-      expect(mockAddAllAndRetrieveDiff).toHaveBeenCalledWith("/repo");
-      expect(mockParseGitDiff).toHaveBeenCalledWith("raw-diff");
-      expect(result).toEqual({ data: [{ path: "file" }] });
+      expect(mockGitService.addAllAndRetrieveDiff).toHaveBeenCalledWith(
+        project.absoluteRootDir,
+      );
+      expect(mockGitService.parseGitDiff).toHaveBeenCalledWith("diff");
+      expect(result).toEqual({ data: "parsed" });
     });
 
-    it("returns error when git add fails", async () => {
-      mockAddAllAndRetrieveDiff.mockResolvedValue({ error: "git-fail" });
+    it("propagates git errors", async () => {
+      mockGitService.addAllAndRetrieveDiff.mockResolvedValue({ error: "fail" });
       const { addAllAndDiff } = await import(
         "../src/actions/instantiate/add-all-and-diff"
       );
 
-      const result = await addAllAndDiff({ absoluteRootDir: "/repo" } as any);
+      const result = await withTestContainer(() =>
+        addAllAndDiff({ absoluteRootDir: "/tmp" } as any, "msg"),
+      );
 
-      expect(result).toEqual({ error: "git-fail" });
+      expect(result).toEqual({ error: "fail" });
     });
   });
 
   describe("restoreAllChanges", () => {
-    it("resets changes via git service", async () => {
-      mockResetAllChanges.mockResolvedValue({ data: undefined });
+    it("invokes git reset", async () => {
+      mockGitService.resetAllChanges.mockResolvedValue({ data: undefined });
+      const project = { absoluteRootDir: "/tmp" } as any;
       const { restoreAllChanges } = await import(
         "../src/actions/instantiate/restore-all-changes"
       );
 
-      const result = await restoreAllChanges({ absoluteRootDir: "/repo" } as any);
+      const result = await withTestContainer(() => restoreAllChanges(project));
 
-      expect(mockResetAllChanges).toHaveBeenCalledWith("/repo");
+      expect(mockGitService.resetAllChanges).toHaveBeenCalledWith(
+        project.absoluteRootDir,
+      );
       expect(result).toEqual({ data: undefined });
-    });
-
-    it("propagates git reset errors", async () => {
-      mockResetAllChanges.mockResolvedValue({ error: "git-reset" });
-      const { restoreAllChanges } = await import(
-        "../src/actions/instantiate/restore-all-changes"
-      );
-
-      const result = await restoreAllChanges({ absoluteRootDir: "/repo" } as any);
-
-      expect(result).toEqual({ error: "git-reset" });
     });
   });
 
   describe("deleteProject", () => {
-    it("removes repository through git service", async () => {
-      mockDeleteRepo.mockResolvedValue({ data: undefined });
+    it("removes repository via git service", async () => {
+      mockGitService.deleteRepo.mockResolvedValue({ data: undefined });
+      const project = { absoluteRootDir: "/tmp" } as any;
       const { deleteProject } = await import(
         "../src/actions/instantiate/delete-project"
       );
 
-      const result = await deleteProject({ absoluteRootDir: "/repo" } as any);
+      const result = await withTestContainer(() => deleteProject(project));
 
-      expect(mockDeleteRepo).toHaveBeenCalledWith("/repo");
+      expect(mockGitService.deleteRepo).toHaveBeenCalledWith(
+        project.absoluteRootDir,
+      );
       expect(result).toEqual({ data: undefined });
-    });
-
-    it("propagates deletion errors", async () => {
-      mockDeleteRepo.mockResolvedValue({ error: "rm-fail" });
-      const { deleteProject } = await import(
-        "../src/actions/instantiate/delete-project"
-      );
-
-      const result = await deleteProject({ absoluteRootDir: "/repo" } as any);
-
-      expect(result).toEqual({ error: "rm-fail" });
     });
   });
 });

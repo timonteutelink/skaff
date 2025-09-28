@@ -1,21 +1,21 @@
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { NewTemplateDiffResult, Result } from "../../lib";
 import { Project } from "../../models";
-import { generateNewTemplateDiff } from "../../core/diffing/project-diff-service";
+import { resolveProjectDiffPlanner } from "../../core/diffing/ProjectDiffPlanner";
 
 export async function prepareInstantiationDiff(
-  rootTemplateName: string,
+  _rootTemplateName: string,
   templateName: string,
   parentInstanceId: string,
   destinationProject: Project,
   userTemplateSettings: UserTemplateSettings,
 ): Promise<Result<NewTemplateDiffResult>> {
-  const result = await generateNewTemplateDiff(
-    rootTemplateName,
+  const planner = resolveProjectDiffPlanner();
+  const result = await planner.generateNewTemplateDiff(
     templateName,
     parentInstanceId,
-    destinationProject,
     userTemplateSettings,
+    destinationProject,
   );
 
   if ("error" in result) {

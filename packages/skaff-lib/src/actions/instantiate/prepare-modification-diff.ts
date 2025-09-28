@@ -1,6 +1,6 @@
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { NewTemplateDiffResult, Result } from "../../lib";
-import { generateModifyTemplateDiff } from "../../core/diffing/project-diff-service";
+import { resolveProjectDiffPlanner } from "../../core/diffing/ProjectDiffPlanner";
 import { Project } from "../../models";
 
 export async function prepareModificationDiff(
@@ -8,7 +8,8 @@ export async function prepareModificationDiff(
   destinationProject: Project,
   templateInstanceId: string,
 ): Promise<Result<NewTemplateDiffResult>> {
-  const result = await generateModifyTemplateDiff(
+  const planner = resolveProjectDiffPlanner();
+  const result = await planner.generateModifyTemplateDiff(
     userTemplateSettings,
     destinationProject,
     templateInstanceId,

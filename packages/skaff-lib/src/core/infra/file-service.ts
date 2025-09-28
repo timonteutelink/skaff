@@ -1,13 +1,24 @@
 import * as fs from "node:fs/promises";
-import { Result } from "../../lib/types";
-import { backendLogger } from "../../lib/logger";
+import { injectable } from "tsyringe";
 
-export async function makeDir(path: string): Promise<Result<void>> {
-  try {
-    await fs.mkdir(path, { recursive: true });
-  } catch (error) {
-    backendLogger.error(`Failed to create directory.`, error, path);
-    return { error: `Failed to create directory at ${path}: ${error}` };
+import { getSkaffContainer } from "../../di/container";
+import { FileSystemServiceToken } from "../../di/tokens";
+import { backendLogger } from "../../lib/logger";
+import { Result } from "../../lib/types";
+
+@injectable()
+export class FileSystemService {
+  public async makeDir(path: string): Promise<Result<void>> {
+    try {
+      await fs.mkdir(path, { recursive: true });
+    } catch (error) {
+      backendLogger.error(`Failed to create directory.`, error, path);
+      return { error: `Failed to create directory at ${path}: ${error}` };
+    }
+    return { data: undefined };
   }
-  return { data: undefined };
+}
+
+export function resolveFileSystemService(): FileSystemService {
+  return getSkaffContainer().resolve(FileSystemServiceToken);
 }

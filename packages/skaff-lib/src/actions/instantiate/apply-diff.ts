@@ -1,12 +1,13 @@
 import { ParsedFile, Result } from "../../lib";
+import { resolveProjectDiffPlanner } from "../../core/diffing/ProjectDiffPlanner";
 import { Project } from "../../models";
-import { applyDiffToProject } from "../../core/diffing/project-diff-service";
 
 export async function applyDiff(
   project: Project,
   diffHash: string,
 ): Promise<Result<ParsedFile[] | { resolveBeforeContinuing: boolean }>> {
-  const result = await applyDiffToProject(project, diffHash);
+  const planner = resolveProjectDiffPlanner();
+  const result = await planner.applyDiffToProject(project, diffHash);
 
   if ("error" in result) {
     return { error: result.error };

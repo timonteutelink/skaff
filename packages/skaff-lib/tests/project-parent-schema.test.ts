@@ -5,10 +5,55 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "@jest/globals";
 import z from "zod";
 
-import { Project } from "../src/models/project";
-import { ProjectSettings } from "@timonteutelink/template-types-lib";
-import { Template } from "../src/core/templates/Template";
-import { GenericTemplateConfigModule } from "../src/lib/types";
+import type { ProjectSettings } from "@timonteutelink/template-types-lib";
+import type { GenericTemplateConfigModule } from "../src/lib/types";
+
+jest.mock("../src/lib/logger", () => ({
+  backendLogger: {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+    trace: jest.fn(),
+  },
+}));
+
+jest.mock("../src/core/infra/git-service", () => ({
+  GitService: class {},
+  resolveGitService: () => ({
+    isGitRepo: async () => ({ data: true }),
+    isGitRepoClean: async () => ({ data: true }),
+    getCommitHash: async () => ({ data: "hash" }),
+    getCurrentBranch: async () => ({ data: "main" }),
+    getRemoteCommitHash: async () => ({ data: "hash" }),
+    addAllAndRetrieveDiff: async () => ({ data: "" }),
+    parseGitDiff: () => [],
+    resetAllChanges: async () => ({ data: undefined }),
+    deleteRepo: async () => ({ data: undefined }),
+  }),
+}));
+
+jest.mock("../src/core/diffing/DiffCache", () => ({
+  DiffCache: class {},
+  resolveDiffCache: () => ({
+    getNewTemplateDiff: async () => ({ data: null }),
+    getModifyTemplateDiff: async () => ({ data: null }),
+    getUpdateTemplateDiff: async () => ({ data: null }),
+    saveNewTemplateDiff: async () => ({ data: undefined }),
+    saveModifyTemplateDiff: async () => ({ data: undefined }),
+    saveUpdateTemplateDiff: async () => ({ data: undefined }),
+  }),
+}));
+
+jest.mock("../src/core/projects/ProjectCreationFacade", () => ({
+  parseProjectCreationResult: jest.fn(),
+  instantiateProject: jest.fn(),
+  generateProjectFromExistingProject: jest.fn(),
+  generateProjectFromTemplateSettings: jest.fn(),
+}));
+
+const { Project } = require("../src/models/project") as typeof import("../src/models/project");
+const { Template } = require("../src/core/templates/Template") as typeof import("../src/core/templates/Template");
 
 const cleanups: Array<() => Promise<void>> = [];
 

@@ -10,13 +10,17 @@ import {
 import { Result } from "../../lib/types";
 import { logError } from "../../lib/utils";
 import { Template } from "../../models/template";
-import { getRootTemplateRepository } from "../../repositories";
+import { resolveRootTemplateRepository } from "../../repositories";
 import { deepSortObject } from "../../utils/shared-utils";
-import { makeDir } from "../infra/file-service";
+import { resolveFileSystemService } from "../infra/file-service";
 
 interface LoadedProjectSettingsResult {
   settings: ProjectSettings;
   rootTemplate: Template;
+}
+
+function getFileSystemService() {
+  return resolveFileSystemService();
 }
 
 export class ProjectSettingsManager {
@@ -67,7 +71,7 @@ export class ProjectSettingsManager {
       }
     }
 
-    const dirResult = await makeDir(this.projectPath);
+    const dirResult = await getFileSystemService().makeDir(this.projectPath);
 
     if ("error" in dirResult) {
       return dirResult;
@@ -162,7 +166,7 @@ export class ProjectSettingsManager {
     }
 
     if (rootInstantiated?.templateRepoUrl) {
-      const repo = await getRootTemplateRepository();
+      const repo = resolveRootTemplateRepository();
       const addResult = await repo.addRemoteRepo(
         rootInstantiated.templateRepoUrl,
         rootInstantiated.templateBranch ?? "main",
@@ -172,7 +176,7 @@ export class ProjectSettingsManager {
       }
     }
 
-    const repo = await getRootTemplateRepository();
+    const repo = resolveRootTemplateRepository();
     const rootTemplate = await repo.loadRevision(
       validated.data.rootTemplateName,
       commitHash,

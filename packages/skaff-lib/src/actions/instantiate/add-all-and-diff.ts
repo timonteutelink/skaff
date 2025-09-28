@@ -1,14 +1,12 @@
 import { ParsedFile, Result } from "../../lib";
 import { Project } from "../../models";
-import {
-  addAllAndRetrieveDiff,
-  parseGitDiff,
-} from "../../core/infra/git-service";
+import { resolveGitService } from "../../core/infra/git-service";
 
 export async function addAllAndDiff(
   project: Project
 ): Promise<Result<ParsedFile[]>> {
-  const addAllResult = await addAllAndRetrieveDiff(
+  const gitService = resolveGitService();
+  const addAllResult = await gitService.addAllAndRetrieveDiff(
     project.absoluteRootDir,
   );
 
@@ -16,5 +14,5 @@ export async function addAllAndDiff(
     return addAllResult;
   }
 
-  return { data: parseGitDiff(addAllResult.data) };
+  return { data: gitService.parseGitDiff(addAllResult.data) };
 }

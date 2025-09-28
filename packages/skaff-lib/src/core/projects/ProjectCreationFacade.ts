@@ -9,50 +9,58 @@ import {
   Result,
 } from "../../lib/types";
 import { Project } from "../../models/project";
+import { resolveProjectCreationManager } from "./ProjectCreationManager";
 
-import { ProjectCreationManager } from "./ProjectCreationManager";
-
-export async function parseProjectCreationResult(
+export function parseProjectCreationResult(
   projectPath: string,
   projectCreationOptions?: ProjectCreationOptions,
 ): Promise<Result<ProjectCreationResult>> {
-  const manager = new ProjectCreationManager(projectCreationOptions);
-  return manager.parseCreationResult(projectPath);
+  const manager = resolveProjectCreationManager();
+  return manager.parseCreationResult(projectPath, projectCreationOptions);
 }
 
-export async function instantiateProject(
+export function instantiateProject(
   rootTemplateName: string,
   parentDirPath: string,
   newProjectName: string,
   userTemplateSettings: UserTemplateSettings,
   projectCreationOptions?: ProjectCreationOptions,
 ): Promise<Result<ProjectCreationResult>> {
-  const manager = new ProjectCreationManager(projectCreationOptions);
+  const manager = resolveProjectCreationManager();
   return manager.instantiateProject(
     rootTemplateName,
     parentDirPath,
     newProjectName,
     userTemplateSettings,
+    projectCreationOptions,
   );
 }
 
-export async function generateProjectFromExistingProject(
+export function generateProjectFromExistingProject(
   existingProject: Project,
   newProjectPath: string,
   projectCreationOptions?: ProjectCreationOptions,
 ): Promise<Result<ProjectCreationResult>> {
-  const manager = new ProjectCreationManager(projectCreationOptions);
-  return manager.generateFromExistingProject(existingProject, newProjectPath);
+  const manager = resolveProjectCreationManager();
+  return manager.generateFromExistingProject(
+    existingProject,
+    newProjectPath,
+    projectCreationOptions,
+  );
 }
 
 /**
  * When git false only returns path to repo
  */
-export async function generateProjectFromTemplateSettings(
+export function generateProjectFromTemplateSettings(
   projectSettings: ProjectSettings,
   newProjectPath: string,
   projectCreationOptions?: ProjectCreationOptions,
 ): Promise<Result<ProjectCreationResult>> {
-  const manager = new ProjectCreationManager(projectCreationOptions);
-  return manager.generateFromTemplateSettings(projectSettings, newProjectPath);
+  const manager = resolveProjectCreationManager();
+  return manager.generateFromTemplateSettings(
+    projectSettings,
+    newProjectPath,
+    projectCreationOptions,
+  );
 }

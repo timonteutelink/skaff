@@ -6,16 +6,27 @@ import { Result } from "../../lib/types";
 import { Project } from "../../models/project";
 import { ProjectCreationManager } from "../projects/ProjectCreationManager";
 import { DiffCache } from "./DiffCache";
+import { getSkaffContainer } from "../../di/container";
+import { inject, injectable } from "tsyringe";
+import {
+  DiffCacheToken,
+  ProjectCreationManagerToken,
+  TemporaryProjectFactoryToken,
+} from "../../di/tokens";
 
 interface TemporaryProject {
   path: string;
   cleanup: () => Promise<void>;
 }
 
+@injectable()
 export class TemporaryProjectFactory {
-  private readonly manager = new ProjectCreationManager({ git: false });
-
-  constructor(private readonly cache = new DiffCache()) {}
+  constructor(
+    @inject(DiffCacheToken)
+    private readonly cache: DiffCache,
+    @inject(ProjectCreationManagerToken)
+    private readonly manager: ProjectCreationManager,
+  ) {}
 
   public async createFromSettings(
     projectSettings: ProjectSettings,
@@ -33,6 +44,7 @@ export class TemporaryProjectFactory {
     const generationResult = await this.manager.generateFromTemplateSettings(
       projectSettings,
       tempPathResult.data,
+      { git: false },
     );
 
     if ("error" in generationResult) {
@@ -64,6 +76,7 @@ export class TemporaryProjectFactory {
     const generationResult = await this.manager.generateFromExistingProject(
       project,
       tempPathResult.data,
+      { git: false },
     );
 
     if ("error" in generationResult) {
@@ -78,4 +91,8 @@ export class TemporaryProjectFactory {
       },
     };
   }
+}
+
+export function resolveTemporaryProjectFactory(): TemporaryProjectFactory {
+  return getSkaffContainer().resolve(TemporaryProjectFactoryToken);
 }

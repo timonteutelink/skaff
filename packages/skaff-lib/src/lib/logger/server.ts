@@ -3,8 +3,26 @@ import path from "node:path";
 import { createLogger, format, transports } from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 import type { LevelName, LogJSON } from "./types";
-import { makeDir } from "../../core/infra/file-service";
-import { getCacheDirPath } from "../../core/infra/cache-service";
+import { CacheService, resolveCacheService } from "../../core/infra/cache-service";
+import { FileSystemService, resolveFileSystemService } from "../../core/infra/file-service";
+
+let resolvedCacheService: CacheService | null = null;
+let resolvedFileSystem: FileSystemService | null = null;
+
+function ensureInfrastructure(): boolean {
+  if (!resolvedCacheService || !resolvedFileSystem) {
+    try {
+      resolvedCacheService = resolveCacheService();
+      resolvedFileSystem = resolveFileSystemService();
+    } catch {
+      resolvedCacheService = null;
+      resolvedFileSystem = null;
+      return false;
+    }
+  }
+
+  return Boolean(resolvedCacheService && resolvedFileSystem);
+}
 
 const customLevels = {
   levels: {
@@ -17,8 +35,19 @@ const customLevels = {
   },
 };
 
-const LOG_DIR = path.join(getCacheDirPath(), "logs");
-if (!fs.existsSync(LOG_DIR)) makeDir(LOG_DIR);
+const LOG_DIR = (() => {
+  if (ensureInfrastructure() && resolvedCacheService && resolvedFileSystem) {
+    const cache = resolvedCacheService as CacheService;
+    const fileSystem = resolvedFileSystem as FileSystemService;
+    const dir = path.join(cache.getCacheDirPath(), "logs");
+    if (!fs.existsSync(dir)) {
+      void fileSystem.makeDir(dir);
+    }
+    return dir;
+  }
+
+  return path.join(process.cwd(), "logs");
+})();
 
 const jsonLine = format.printf((info) => {
   const base: LogJSON = {

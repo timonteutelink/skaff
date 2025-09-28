@@ -6,14 +6,19 @@ import {
 } from "@timonteutelink/template-types-lib";
 import crypto from "node:crypto";
 
+import { injectable } from "tsyringe";
+
+import { getSkaffContainer } from "../../di/container";
+import { AutoInstantiationSettingsAdjusterToken } from "../../di/tokens";
 import { backendLogger } from "../../lib/logger";
 import { Result } from "../../lib/types";
 import { anyOrCallbackToAny } from "../../lib/utils";
 import { Project } from "../../models/project";
 import { Template } from "../../models/template";
-import { getRootTemplateRepository } from "../../repositories";
+import { resolveRootTemplateRepository } from "../../repositories";
 import { getLatestTemplateMigrationUuid } from "../templates/TemplateMigration";
 
+@injectable()
 export class AutoInstantiationSettingsAdjuster {
   public async modifyAutoInstantiatedTemplates(
     projectSettings: ProjectSettings,
@@ -235,7 +240,7 @@ export class AutoInstantiationSettingsAdjuster {
     currentTemplateInstanceId: string,
     finalParentTemplateSettings: FinalTemplateSettings,
   ): Promise<Result<ProjectSettings>> {
-    const rootTemplateRepository = await getRootTemplateRepository();
+    const rootTemplateRepository = resolveRootTemplateRepository();
     for (const autoInstantiatedTemplate of templatesToAutoInstantiate || []) {
       const autoInstantiatedTemplateInstanceId = crypto.randomUUID();
       const newTemplateSettings = anyOrCallbackToAny(
@@ -363,4 +368,8 @@ export class AutoInstantiationSettingsAdjuster {
     }
     return { data: projectSettings };
   }
+}
+
+export function resolveAutoInstantiationSettingsAdjuster(): AutoInstantiationSettingsAdjuster {
+  return getSkaffContainer().resolve(AutoInstantiationSettingsAdjusterToken);
 }
