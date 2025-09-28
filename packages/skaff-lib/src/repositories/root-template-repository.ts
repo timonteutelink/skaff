@@ -1,20 +1,23 @@
 import * as fs from "node:fs/promises";
 import path from "node:path";
 
-import { delay, inject, injectable } from "tsyringe";
+import { inject, injectable } from "tsyringe";
 
 import { getConfig } from "../lib";
 import { backendLogger } from "../lib/logger";
 import { Result } from "../lib/types";
 import { logError } from "../lib/utils";
-import { GitService } from "../core/infra/git-service";
+import type { GitService } from "../core/infra/git-service";
 import { TemplateRegistry } from "../core/templates/TemplateRegistry";
 import { TemplateTreeBuilder } from "../core/templates/TemplateTreeBuilder";
 import type { Template } from "../core/templates/Template";
+import {
+  GitServiceToken,
+  TemplatePathsProviderToken,
+  TemplateTreeBuilderToken,
+} from "../di/tokens";
 
 export type TemplatePathsProvider = () => Promise<string[]>;
-
-export const TEMPLATE_PATHS_PROVIDER = Symbol("TemplatePathsProvider");
 
 export const defaultTemplatePathsProvider: TemplatePathsProvider = async () => {
   const config = await getConfig();
@@ -34,10 +37,10 @@ export class RootTemplateRepository {
   public templates: Template[] = [];
 
   constructor(
-    @inject(delay(() => TemplateTreeBuilder))
+    @inject(TemplateTreeBuilderToken)
     private readonly templateTreeBuilder: TemplateTreeBuilder,
-    @inject(delay(() => GitService)) private readonly gitService: GitService,
-    @inject(TEMPLATE_PATHS_PROVIDER)
+    @inject(GitServiceToken) private readonly gitService: GitService,
+    @inject(TemplatePathsProviderToken)
     templatePathsProvider: TemplatePathsProvider = defaultTemplatePathsProvider,
   ) {
     this.templatePathsProvider = templatePathsProvider;
@@ -95,7 +98,7 @@ export class RootTemplateRepository {
       } catch (error) {
         backendLogger.warn(
           `Failed to read root template directories at ${rootTemplateDirsPath}.`,
-          error
+          error,
         );
         continue;
       }
@@ -162,7 +165,7 @@ export class RootTemplateRepository {
       }
       if (!this.templates.length) {
         logError({ level: "trace", shortMessage: "No templates found." });
-        return { data: [] }
+        return { data: [] };
       }
     }
     return { data: this.templates };
@@ -239,24 +242,22 @@ export class RootTemplateRepository {
     const newTemplatePath = path.join(
       saveRevisionInCacheResult.data,
       "root-templates",
-      path.basename(sourceTemplate.absoluteDir),
+      templateName,
     );
 
-    const newTemplateResult = await this.templateTreeBuilder.build(
+    const templateResult = await this.templateTreeBuilder.build(
       newTemplatePath,
       {
         repoUrl: sourceTemplate.repoUrl,
         branchOverride: sourceTemplate.branch,
+        commitHash: revisionHash,
       },
     );
 
-    if ("error" in newTemplateResult) {
-      return newTemplateResult;
+    if ("error" in templateResult) {
+      return templateResult;
     }
 
-    this.registry.registerRoot(newTemplateResult.data);
-    this.templates = this.registry.getAllRootTemplates();
-
-    return { data: newTemplateResult.data };
+    return { data: templateResult.data };
   }
 }

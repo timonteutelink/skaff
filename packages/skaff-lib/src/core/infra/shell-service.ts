@@ -3,6 +3,7 @@ import { promisify } from "node:util";
 import { injectable } from "tsyringe";
 
 import { getSkaffContainer } from "../../di/container";
+import { ShellServiceToken } from "../../di/tokens";
 import { Result } from "../../lib/types";
 import { logError } from "../../lib/utils";
 
@@ -28,5 +29,5 @@ export class ShellService {
 }
 
 export function resolveShellService(): ShellService {
-  return getSkaffContainer().resolve(ShellService);
+  return getSkaffContainer().resolve(ShellServiceToken);
 }

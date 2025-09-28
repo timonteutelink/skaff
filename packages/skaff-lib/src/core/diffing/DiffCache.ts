@@ -1,14 +1,17 @@
 import { ProjectSettings } from "@timonteutelink/template-types-lib";
 
-import { injectable } from "tsyringe";
+import { inject, injectable } from "tsyringe";
 
 import { getSkaffContainer } from "../../di/container";
+import { CacheServiceToken, DiffCacheToken } from "../../di/tokens";
 import { Result } from "../../lib/types";
 import { CacheKey, CacheService } from "../infra/cache-service";
 
 @injectable()
 export class DiffCache {
-  constructor(private readonly cacheService: CacheService) {}
+  constructor(
+    @inject(CacheServiceToken) private readonly cacheService: CacheService,
+  ) {}
 
   public computeSettingsHash(settings: ProjectSettings): string {
     return this.cacheService.hash(JSON.stringify(settings));
@@ -37,5 +40,5 @@ export class DiffCache {
 }
 
 export function resolveDiffCache(): DiffCache {
-  return getSkaffContainer().resolve(DiffCache);
+  return getSkaffContainer().resolve(DiffCacheToken);
 }

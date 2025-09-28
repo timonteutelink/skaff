@@ -3,6 +3,7 @@ import { promisify } from "node:util";
 import { injectable } from "tsyringe";
 
 import { getSkaffContainer } from "../../di/container";
+import { NpmServiceToken } from "../../di/tokens";
 import { getConfig } from "../../lib";
 import { Result } from "../../lib/types";
 import { logError } from "../../lib/utils";
@@ -32,5 +33,5 @@ export class NpmService {
 }
 
 export function resolveNpmService(): NpmService {
-  return getSkaffContainer().resolve(NpmService);
+  return getSkaffContainer().resolve(NpmServiceToken);
 }

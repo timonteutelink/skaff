@@ -2,13 +2,14 @@ import { createHash } from "node:crypto";
 import * as fs from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { injectable } from "tsyringe";
+import { inject, injectable } from "tsyringe";
 
 import { getSkaffContainer } from "../../di/container";
+import { CacheServiceToken, FileSystemServiceToken } from "../../di/tokens";
 import { backendLogger } from "../../lib/logger";
 import { Result } from "../../lib/types";
 import { logError } from "../../lib/utils";
-import { FileSystemService } from "./file-service";
+import type { FileSystemService } from "./file-service";
 
 export type CacheKey =
   | "template-config"
@@ -18,7 +19,9 @@ export type CacheKey =
 
 @injectable()
 export class CacheService {
-  constructor(private readonly fileSystem: FileSystemService) {}
+  constructor(
+    @inject(FileSystemServiceToken) private readonly fileSystem: FileSystemService,
+  ) {}
 
   public hash(stringToHash: string): string {
     return createHash("sha256").update(stringToHash).digest("hex");
@@ -134,5 +137,5 @@ export class CacheService {
 }
 
 export function resolveCacheService(): CacheService {
-  return getSkaffContainer().resolve(CacheService);
+  return getSkaffContainer().resolve(CacheServiceToken);
 }

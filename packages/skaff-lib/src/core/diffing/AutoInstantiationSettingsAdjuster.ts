@@ -9,6 +9,7 @@ import crypto from "node:crypto";
 import { injectable } from "tsyringe";
 
 import { getSkaffContainer } from "../../di/container";
+import { AutoInstantiationSettingsAdjusterToken } from "../../di/tokens";
 import { backendLogger } from "../../lib/logger";
 import { Result } from "../../lib/types";
 import { anyOrCallbackToAny } from "../../lib/utils";
@@ -370,5 +371,5 @@ export class AutoInstantiationSettingsAdjuster {
 }
 
 export function resolveAutoInstantiationSettingsAdjuster(): AutoInstantiationSettingsAdjuster {
-  return getSkaffContainer().resolve(AutoInstantiationSettingsAdjuster);
+  return getSkaffContainer().resolve(AutoInstantiationSettingsAdjusterToken);
 }

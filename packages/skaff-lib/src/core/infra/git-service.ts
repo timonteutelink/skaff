@@ -4,14 +4,15 @@ import path from "node:path";
 
 import fsExtra from "fs-extra";
 import simpleGit from "simple-git";
-import { delay, inject, injectable } from "tsyringe";
+import { inject, injectable } from "tsyringe";
 
 import { getSkaffContainer } from "../../di/container";
+import { CacheServiceToken, GitServiceToken, NpmServiceToken } from "../../di/tokens";
 import { DiffHunk, GitStatus, ParsedFile, Result } from "../../lib/types";
 import { logError } from "../../lib/utils";
 import type { Template } from "../templates";
-import { CacheService } from "./cache-service";
-import { NpmService } from "./npm-service";
+import type { CacheService } from "./cache-service";
+import type { NpmService } from "./npm-service";
 
 type PossibleGitError = {
   exitCode?: number;
@@ -26,9 +27,9 @@ type PossibleGitError = {
 @injectable()
 export class GitService {
   constructor(
-    @inject(delay(() => CacheService))
+    @inject(CacheServiceToken)
     private readonly cacheService: CacheService,
-    @inject(delay(() => NpmService)) private readonly npmService: NpmService,
+    @inject(NpmServiceToken) private readonly npmService: NpmService,
   ) {}
 
   private gitClient(repoPath?: string) {
@@ -585,5 +586,5 @@ export class GitService {
 }
 
 export function resolveGitService(): GitService {
-  return getSkaffContainer().resolve(GitService);
+  return getSkaffContainer().resolve(GitServiceToken);
 }

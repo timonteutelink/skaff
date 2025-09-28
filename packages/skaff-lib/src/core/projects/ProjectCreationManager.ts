@@ -12,24 +12,30 @@ import type {
   Result,
 } from "../../lib/types";
 import { Project } from "../../models/project";
-import { ProjectRepository } from "../../repositories/project-repository";
+import type { ProjectRepository } from "../../repositories/project-repository";
 import type { RootTemplateRepository } from "../../repositories/root-template-repository";
-import { GitService } from "../infra/git-service";
-import { inject, injectable, delay } from "tsyringe";
-import { TemplateGeneratorService } from "../generation/template-generator-service";
+import type { GitService } from "../infra/git-service";
+import { inject, injectable } from "tsyringe";
+import type { TemplateGeneratorService } from "../generation/template-generator-service";
 import { getSkaffContainer } from "../../di/container";
-import { ROOT_TEMPLATE_REPOSITORY_TOKEN } from "../../repositories/tokens";
+import {
+  GitServiceToken,
+  ProjectCreationManagerToken,
+  ProjectRepositoryToken,
+  RootTemplateRepositoryToken,
+  TemplateGeneratorServiceToken,
+} from "../../di/tokens";
 
 @injectable()
 export class ProjectCreationManager {
   constructor(
-    @inject(delay(() => ProjectRepository))
+    @inject(ProjectRepositoryToken)
     private readonly projectRepository: ProjectRepository,
-    @inject(ROOT_TEMPLATE_REPOSITORY_TOKEN)
+    @inject(RootTemplateRepositoryToken)
     private readonly rootTemplateRepository: RootTemplateRepository,
-    @inject(GitService)
+    @inject(GitServiceToken)
     private readonly gitService: GitService,
-    @inject(TemplateGeneratorService)
+    @inject(TemplateGeneratorServiceToken)
     private readonly templateGenerator: TemplateGeneratorService,
   ) {}
 
@@ -205,6 +211,6 @@ export class ProjectCreationManager {
 }
 
 export function resolveProjectCreationManager(): ProjectCreationManager {
-  return getSkaffContainer().resolve(ProjectCreationManager);
+  return getSkaffContainer().resolve(ProjectCreationManagerToken);
 }
 

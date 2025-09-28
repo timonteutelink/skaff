@@ -7,22 +7,28 @@ import crypto from "node:crypto";
 import { inject, injectable } from "tsyringe";
 
 import { getSkaffContainer } from "../../di/container";
+import {
+  AutoInstantiationSettingsAdjusterToken,
+  DiffCacheToken,
+  GitServiceToken,
+  ProjectDiffPlannerToken,
+  RootTemplateRepositoryToken,
+  TemporaryProjectFactoryToken,
+} from "../../di/tokens";
 import { backendLogger } from "../../lib/logger";
 import { Result, NewTemplateDiffResult, ParsedFile } from "../../lib/types";
 import { logError } from "../../lib/utils";
 import { Project } from "../../models/project";
 import { Template } from "../../models/template";
 import type { RootTemplateRepository } from "../../repositories/root-template-repository";
-import { GitService } from "../infra/git-service";
-import { DiffCache } from "./DiffCache";
-import { AutoInstantiationSettingsAdjuster } from "./AutoInstantiationSettingsAdjuster";
-import { TemporaryProjectFactory } from "./TemporaryProjectFactory";
+import type { GitService } from "../infra/git-service";
+import type { DiffCache } from "./DiffCache";
+import type { AutoInstantiationSettingsAdjuster } from "./AutoInstantiationSettingsAdjuster";
+import type { TemporaryProjectFactory } from "./TemporaryProjectFactory";
 import {
   applyTemplateMigrationSequence,
   getLatestTemplateMigrationUuid,
 } from "../templates/TemplateMigration";
-import { ROOT_TEMPLATE_REPOSITORY_TOKEN } from "../../repositories/tokens";
-
 @injectable()
 export class ProjectDiffPlanner {
   private readonly cache: DiffCache;
@@ -32,15 +38,15 @@ export class ProjectDiffPlanner {
   private readonly rootTemplateRepository: RootTemplateRepository;
 
   constructor(
-    @inject(DiffCache)
+    @inject(DiffCacheToken)
     cache: DiffCache,
-    @inject(AutoInstantiationSettingsAdjuster)
+    @inject(AutoInstantiationSettingsAdjusterToken)
     autoInstantiationAdjuster: AutoInstantiationSettingsAdjuster,
-    @inject(TemporaryProjectFactory)
+    @inject(TemporaryProjectFactoryToken)
     tempProjectFactory: TemporaryProjectFactory,
-    @inject(ROOT_TEMPLATE_REPOSITORY_TOKEN)
+    @inject(RootTemplateRepositoryToken)
     rootTemplateRepository: RootTemplateRepository,
-    @inject(GitService)
+    @inject(GitServiceToken)
     gitService: GitService,
   ) {
     this.cache = cache;
@@ -510,5 +516,5 @@ export class ProjectDiffPlanner {
 }
 
 export function resolveProjectDiffPlanner(): ProjectDiffPlanner {
-  return getSkaffContainer().resolve(ProjectDiffPlanner);
+  return getSkaffContainer().resolve(ProjectDiffPlannerToken);
 }

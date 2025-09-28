@@ -17,11 +17,12 @@ import { SideEffectExecutor } from "./SideEffectExecutor";
 import { HandlebarsEnvironment } from "../shared/HandlebarsEnvironment";
 import { Template } from "../../models/template";
 import { isSubset } from "../../utils/shared-utils";
-import { FileSystemService } from "../infra/file-service";
+import type { FileSystemService } from "../infra/file-service";
 import { FileRollbackManager } from "../shared/FileRollbackManager";
 import { getSkaffContainer } from "../../di/container";
-import { GitService } from "../infra/git-service";
 import { inject, injectable } from "tsyringe";
+import { FileSystemServiceToken, GitServiceToken, TemplateGeneratorServiceToken } from "../../di/tokens";
+import type { GitService } from "../infra/git-service";
 
 export interface GeneratorOptions {
   /**
@@ -636,9 +637,9 @@ export class TemplateGenerationSession {
 @injectable()
 export class TemplateGeneratorService {
   constructor(
-    @inject(FileSystemService)
+    @inject(FileSystemServiceToken)
     private readonly fileSystemService: FileSystemService,
-    @inject(GitService)
+    @inject(GitServiceToken)
     private readonly gitService: GitService,
   ) {}
 
@@ -658,5 +659,5 @@ export class TemplateGeneratorService {
 }
 
 export function resolveTemplateGeneratorService(): TemplateGeneratorService {
-  return getSkaffContainer().resolve(TemplateGeneratorService);
+  return getSkaffContainer().resolve(TemplateGeneratorServiceToken);
 }

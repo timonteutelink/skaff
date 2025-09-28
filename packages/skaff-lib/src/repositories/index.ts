@@ -1,11 +1,15 @@
 import { getSkaffContainer } from "../di/container";
-import { ProjectRepository } from "./project-repository";
-import { RootTemplateRepository } from "./root-template-repository";
+import {
+  ProjectRepositoryToken,
+  RootTemplateRepositoryToken,
+} from "../di/tokens";
+import type { ProjectRepository } from "./project-repository";
+import type { RootTemplateRepository } from "./root-template-repository";
 
 export function resolveRootTemplateRepository(): RootTemplateRepository {
-  return getSkaffContainer().resolve(RootTemplateRepository);
+  return getSkaffContainer().resolve(RootTemplateRepositoryToken);
 }
 
 export function resolveProjectRepository(): ProjectRepository {
-  return getSkaffContainer().resolve(ProjectRepository);
+  return getSkaffContainer().resolve(ProjectRepositoryToken);
 }

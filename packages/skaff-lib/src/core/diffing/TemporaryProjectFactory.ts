@@ -8,6 +8,11 @@ import { ProjectCreationManager } from "../projects/ProjectCreationManager";
 import { DiffCache } from "./DiffCache";
 import { getSkaffContainer } from "../../di/container";
 import { inject, injectable } from "tsyringe";
+import {
+  DiffCacheToken,
+  ProjectCreationManagerToken,
+  TemporaryProjectFactoryToken,
+} from "../../di/tokens";
 
 interface TemporaryProject {
   path: string;
@@ -17,9 +22,9 @@ interface TemporaryProject {
 @injectable()
 export class TemporaryProjectFactory {
   constructor(
-    @inject(DiffCache)
+    @inject(DiffCacheToken)
     private readonly cache: DiffCache,
-    @inject(ProjectCreationManager)
+    @inject(ProjectCreationManagerToken)
     private readonly manager: ProjectCreationManager,
   ) {}
 
@@ -89,5 +94,5 @@ export class TemporaryProjectFactory {
 }
 
 export function resolveTemporaryProjectFactory(): TemporaryProjectFactory {
-  return getSkaffContainer().resolve(TemporaryProjectFactory);
+  return getSkaffContainer().resolve(TemporaryProjectFactoryToken);
 }

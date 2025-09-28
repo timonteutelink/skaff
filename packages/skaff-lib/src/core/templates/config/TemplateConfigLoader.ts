@@ -8,13 +8,18 @@ import * as handlebarsNS from "handlebars";
 import * as yamlNS from "yaml";
 import * as zodNS from "zod"; // full namespace object
 
-import { inject, injectable, delay } from "tsyringe";
+import { inject, injectable } from "tsyringe";
 
-import { CacheService } from "../../../core/infra/cache-service";
-import { initEsbuild } from "../../../utils/get-esbuild";
 import { existsSync } from "node:fs";
 import { GenericTemplateConfigModule } from "../../../lib";
 import { getSkaffContainer } from "../../../di/container";
+import {
+  CacheServiceToken,
+  EsbuildInitializerToken,
+  TemplateConfigLoaderToken,
+} from "../../../di/tokens";
+import type { CacheService } from "../../../core/infra/cache-service";
+import type { EsbuildInitializer } from "../../../utils/get-esbuild";
 
 const { templateConfigSchema } = templateTypesLibNS;
 
@@ -297,8 +302,9 @@ async function evaluateBundledCode(
 @injectable()
 export class TemplateConfigLoader {
   constructor(
-    @inject(delay(() => CacheService))
-    private readonly cacheService: CacheService,
+    @inject(CacheServiceToken) private readonly cacheService: CacheService,
+    @inject(EsbuildInitializerToken)
+    private readonly esbuildInitializer: EsbuildInitializer,
   ) {}
 
   public async loadAllTemplateConfigs(
@@ -360,7 +366,7 @@ export class TemplateConfigLoader {
       await fs.unlink(tmp);
     }
 
-    const esbuild = await initEsbuild();
+    const esbuild = await this.esbuildInitializer.init();
     if (!esbuild) {
       throw new Error("Failed to initialize esbuild");
     }
@@ -418,5 +424,5 @@ export class TemplateConfigLoader {
 }
 
 export function resolveTemplateConfigLoader(): TemplateConfigLoader {
-  return getSkaffContainer().resolve(TemplateConfigLoader);
+  return getSkaffContainer().resolve(TemplateConfigLoaderToken);
 }

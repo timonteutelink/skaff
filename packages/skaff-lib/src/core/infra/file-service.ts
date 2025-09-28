@@ -2,6 +2,7 @@ import * as fs from "node:fs/promises";
 import { injectable } from "tsyringe";
 
 import { getSkaffContainer } from "../../di/container";
+import { FileSystemServiceToken } from "../../di/tokens";
 import { backendLogger } from "../../lib/logger";
 import { Result } from "../../lib/types";
 
@@ -19,5 +20,5 @@ export class FileSystemService {
 }
 
 export function resolveFileSystemService(): FileSystemService {
-  return getSkaffContainer().resolve(FileSystemService);
+  return getSkaffContainer().resolve(FileSystemServiceToken);
 }

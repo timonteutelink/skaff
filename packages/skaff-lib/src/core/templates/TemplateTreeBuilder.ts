@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { inject, injectable, delay } from "tsyringe";
+import { inject, injectable } from "tsyringe";
 
 import {
   TemplateConfigLoader,
@@ -11,7 +11,8 @@ import {
 import { backendLogger } from "../../lib/logger";
 import { Result } from "../../lib/types";
 import { logError } from "../../lib/utils";
-import { GitService } from "../infra/git-service";
+import { GitServiceToken, TemplateConfigLoaderToken } from "../../di/tokens";
+import type { GitService } from "../infra/git-service";
 import { Template } from "./Template";
 import { validateTemplate } from "./TemplateValidation";
 
@@ -225,9 +226,9 @@ export interface TemplateTreeBuilderOptions {
 @injectable()
 export class TemplateTreeBuilder {
   constructor(
-    @inject(delay(() => GitService))
+    @inject(GitServiceToken)
     private readonly gitService: GitService,
-    @inject(delay(() => TemplateConfigLoader))
+    @inject(TemplateConfigLoaderToken)
     private readonly templateConfigLoader: TemplateConfigLoader,
   ) {}
 
