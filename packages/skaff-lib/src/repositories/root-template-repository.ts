@@ -157,6 +157,70 @@ export class RootTemplateRepository {
     return await this.loadTemplates();
   }
 
+  async listTemplatesInRepo(
+    repoUrl: string,
+    branch: string = "main",
+  ): Promise<Result<Template[]>> {
+    const cloneResult = await this.gitService.cloneRepoBranchToCache(
+      repoUrl,
+      branch,
+    );
+    if ("error" in cloneResult) {
+      return { error: cloneResult.error };
+    }
+
+    const repoPath = cloneResult.data;
+    const rootTemplatesDir = path.join(repoPath, "root-templates");
+
+    let rootTemplateDirs: string[];
+    try {
+      rootTemplateDirs = await fs.readdir(rootTemplatesDir);
+    } catch (error) {
+      const message = `Failed to read root template directories at ${rootTemplatesDir}`;
+      logError({ error, shortMessage: message });
+      return { error: message };
+    }
+
+    const templates: Template[] = [];
+
+    for (const dir of rootTemplateDirs) {
+      const templateDir = path.join(rootTemplatesDir, dir);
+      let stat;
+      try {
+        stat = await fs.stat(templateDir);
+      } catch (error) {
+        backendLogger.warn(
+          `Failed to read potential root template directory at ${templateDir}.`,
+          error,
+        );
+        continue;
+      }
+
+      if (!stat.isDirectory()) {
+        continue;
+      }
+
+      const templateResult = await this.templateTreeBuilder.build(templateDir, {
+        repoUrl,
+        branchOverride: branch,
+      });
+
+      if ("error" in templateResult) {
+        return { error: templateResult.error };
+      }
+
+      templates.push(templateResult.data);
+    }
+
+    if (!templates.length) {
+      const message = `No templates found in repository ${repoUrl} on branch ${branch}`;
+      logError({ shortMessage: message });
+      return { error: message };
+    }
+
+    return { data: templates };
+  }
+
   async getAllTemplates(): Promise<Result<Template[]>> {
     if (!this.templates.length) {
       const result = await this.loadTemplates();
