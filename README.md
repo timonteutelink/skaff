@@ -94,8 +94,8 @@ skaff --help
 ![Preview Patching](assets/previewPatching.png)
 - **Multi‑platform distribution.** Use it instantly via `npx` or `bunx`, install globally with npm or bun, download a prebuilt binary, or run it as a reproducible Nix flake.
 - **Visual Web UI.** A Next.js powered interface allows you to browse templates, fill in form fields, preview the resulting file tree or diff, and apply patches without touching the terminal
-- **Flexible configuration.** Configure where your templates live and where to create projects through a simple JSON config or environment variables like `TEMPLATE_DIR_PATHS`, `PROJECT_SEARCH_PATHS`
-- **Language agnostic.** Templates can target any stack like FastAPI, React, Go and Rust as long as they ship a schema. Additional template repositories can be referenced with `--repo`, and GitHub template retrieval is on the roadmap.
+- **Flexible configuration.** Configure where your templates live and where to create projects through a simple JSON config or environment variables like `TEMPLATE_DIR_PATHS`, `PROJECT_SEARCH_PATHS`. Point Skaff at local directories or GitHub repositories and it will clone the latest templates for you.
+- **Language agnostic.** Templates can target any stack like FastAPI, React, Go and Rust as long as they ship a schema. Additional template repositories can be referenced with `--repo` or configured once in `settings.json`.
 
 ## How it works
 
