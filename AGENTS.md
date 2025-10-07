@@ -15,5 +15,5 @@
 - If your work affects behavior that lacks coverage, add or extend tests accordingly.
 
 ## General expectations
-- Keep new instructions concise and ensure any documentation edits remain consistent across the repo.
+- Ensure any documentation edits remain consistent across the repo.
 - When touching documentation, always look for opportunities to improve clarity or completeness.
