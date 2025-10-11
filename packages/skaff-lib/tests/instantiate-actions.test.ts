@@ -97,6 +97,7 @@ describe("instantiate actions", () => {
       expect(mockPlanner.generateUpdateTemplateDiff).toHaveBeenCalledWith(
         project,
         "hash",
+        undefined,
       );
       expect(result).toEqual({ data: diffResult });
     });

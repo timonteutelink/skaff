@@ -4,6 +4,7 @@ import {
   TemplateConfig,
   TemplateConfigModule,
   TemplateDisablingThis,
+  TemplateParentReference,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import z from "zod";
@@ -44,6 +45,8 @@ export interface TemplateDTO {
   templatesThatDisableThis: TemplateDisablingThis[];
   templateCommands: { title: string; description: string }[];
   refDir?: string;
+  possibleParentTemplates?: TemplateParentReference[];
+  isDetachedSubtreeRoot?: boolean;
 }
 
 export interface GitStatus {

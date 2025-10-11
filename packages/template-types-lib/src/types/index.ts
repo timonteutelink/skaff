@@ -22,6 +22,7 @@ export type {
   AiUserConversationSettings,
   TemplateConfigModule,
   TemplateMigration,
+  TemplateParentReference,
 } from "./template-config-types";
 
 export type {

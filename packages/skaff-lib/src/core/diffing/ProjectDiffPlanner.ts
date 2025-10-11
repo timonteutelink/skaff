@@ -1,4 +1,5 @@
 import {
+  InstantiatedTemplate,
   ProjectSettings,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
@@ -311,10 +312,13 @@ export class ProjectDiffPlanner {
   public async generateUpdateTemplateDiff(
     project: Project,
     newTemplateRevisionHash: string,
+    options?: { treeRootTemplateName?: string },
   ): Promise<Result<NewTemplateDiffResult>> {
-    const rootTemplateName = project.rootTemplate.config.templateConfig.name;
+    const defaultRootName = project.rootTemplate.config.templateConfig.name;
+    const targetTemplateName = options?.treeRootTemplateName ?? defaultRootName;
+
     const template = await this.rootTemplateRepository.loadRevision(
-      rootTemplateName,
+      targetTemplateName,
       newTemplateRevisionHash,
     );
 
@@ -323,8 +327,19 @@ export class ProjectDiffPlanner {
     }
 
     if (!template.data) {
-      backendLogger.error(`Template ${rootTemplateName} not found`);
+      backendLogger.error(`Template ${targetTemplateName} not found`);
       return { error: "Template not found" };
+    }
+
+    const projectTemplate = project.rootTemplate.findSubTemplate(
+      targetTemplateName,
+    );
+
+    if (!projectTemplate) {
+      backendLogger.error(
+        `Template ${targetTemplateName} not found in current project tree`,
+      );
+      return { error: "Template not found in project" };
     }
 
     const newProjectSettings: ProjectSettings = {
@@ -334,23 +349,39 @@ export class ProjectDiffPlanner {
       ],
     };
 
-    if (!newProjectSettings.instantiatedTemplates[0]) {
+    const rootInstance = this.findSubtreeRootInstance(
+      newProjectSettings.instantiatedTemplates,
+      projectTemplate,
+      project.rootTemplate,
+    );
+
+    if (!rootInstance) {
       backendLogger.error(
-        `Instantiated template ${rootTemplateName} not found in project settings`,
+        `Instantiated template ${targetTemplateName} not found in project settings`,
       );
       return { error: "Instantiated template not found in project settings" };
     }
 
-    newProjectSettings.instantiatedTemplates[0] = {
-      ...newProjectSettings.instantiatedTemplates[0],
+    const { index: rootIndex } = rootInstance;
+    newProjectSettings.instantiatedTemplates[rootIndex] = {
+      ...newProjectSettings.instantiatedTemplates[rootIndex]!,
       templateCommitHash: newTemplateRevisionHash,
     };
 
+    const updatedRootInstance =
+      newProjectSettings.instantiatedTemplates[rootIndex]!;
+
+    const subtreeIds = this.collectSubtreeInstanceIds(
+      newProjectSettings.instantiatedTemplates,
+      updatedRootInstance.id,
+    );
+
     for (const instantiated of newProjectSettings.instantiatedTemplates) {
-      const tmpl =
-        instantiated.templateName === rootTemplateName
-          ? template.data
-          : template.data.findSubTemplate(instantiated.templateName);
+      if (!subtreeIds.has(instantiated.id)) {
+        continue;
+      }
+
+      const tmpl = template.data.findSubTemplate(instantiated.templateName);
 
       if (!tmpl) {
         backendLogger.error(
@@ -372,6 +403,62 @@ export class ProjectDiffPlanner {
       project.instantiatedProjectSettings,
       newProjectSettings,
     );
+  }
+
+  private collectSubtreeInstanceIds(
+    instantiatedTemplates: InstantiatedTemplate[],
+    rootInstanceId: string,
+  ): Set<string> {
+    const subtreeIds = new Set<string>();
+    const queue: string[] = [rootInstanceId];
+
+    while (queue.length) {
+      const current = queue.shift();
+      if (!current || subtreeIds.has(current)) {
+        continue;
+      }
+      subtreeIds.add(current);
+      for (const instantiated of instantiatedTemplates) {
+        if (instantiated.parentId === current) {
+          queue.push(instantiated.id);
+        }
+      }
+    }
+
+    return subtreeIds;
+  }
+
+  private findSubtreeRootInstance(
+    instantiatedTemplates: InstantiatedTemplate[],
+    targetTemplate: Template,
+    projectRootTemplate: Template,
+  ): { instance: InstantiatedTemplate; index: number } | null {
+    const targetName = targetTemplate.config.templateConfig.name;
+    const isProjectRoot = targetTemplate === projectRootTemplate;
+
+    for (let i = 0; i < instantiatedTemplates.length; i++) {
+      const instance = instantiatedTemplates[i]!;
+      if (instance.templateName !== targetName) {
+        continue;
+      }
+
+      if (isProjectRoot) {
+        if (!instance.parentId) {
+          return { instance, index: i };
+        }
+        continue;
+      }
+
+      if (targetTemplate.repoUrl && instance.templateRepoUrl) {
+        if (targetTemplate.repoUrl !== instance.templateRepoUrl) {
+          continue;
+        }
+      }
+
+      return { instance, index: i };
+    }
+
+    return null;
   }
 
   public async resolveConflictsAndRetrieveAppliedDiff(
