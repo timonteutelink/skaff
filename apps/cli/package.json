@@ -19,7 +19,7 @@
     "@oclif/plugin-help": "^6.2.32",
     "@oclif/plugin-plugins": "^5.4.46",
     "@timonteutelink/skaff-lib": "0.0.74",
-    "@timonteutelink/template-types-lib": "0.0.50",
+    "@timonteutelink/template-types-lib": "0.0.51",
     "esbuild": "^0.25.9",
     "loglevel": "^1.9.2",
     "winston": "^3.17.0",
