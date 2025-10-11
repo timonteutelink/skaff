@@ -10,7 +10,7 @@ COPY apps/cli/package.json ./apps/cli/package.json
 COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY packages/tailwind-config/package.json ./packages/tailwind-config/package.json
-RUN bun install --no-save --frozen-lockfile
+RUN bun install --no-save
 
 FROM base AS builder
 WORKDIR /app
