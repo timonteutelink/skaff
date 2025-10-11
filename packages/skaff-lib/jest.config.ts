@@ -25,7 +25,7 @@ const config: Config = {
       },
     ],
   },
-  setupFiles: ["reflect-metadata"],
+  setupFiles: ["<rootDir>/tests/setup-env.js"],
 
   collectCoverage: true,
   coverageDirectory: "coverage",
