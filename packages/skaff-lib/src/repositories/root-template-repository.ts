@@ -3,6 +3,8 @@ import path from "node:path";
 
 import { inject, injectable } from "tsyringe";
 
+import { TemplateParentReference } from "@timonteutelink/template-types-lib";
+
 import { getConfig } from "../lib";
 import { backendLogger } from "../lib/logger";
 import { Result } from "../lib/types";
@@ -237,7 +239,9 @@ export class RootTemplateRepository {
       }
     }
 
-    this.templates = this.registry.getAllRootTemplates();
+    const rootTemplates = this.registry.getAllRootTemplates();
+    this.attachDetachedTemplates(rootTemplates);
+    this.templates = rootTemplates;
     this.loading = false;
 
     return { data: undefined };
@@ -428,5 +432,96 @@ export class RootTemplateRepository {
     }
 
     return { data: templateResult.data };
+  }
+
+  private matchesParentReference(
+    candidate: Template,
+    child: Template,
+    reference: TemplateParentReference,
+  ): boolean {
+    if (candidate === child) {
+      return false;
+    }
+
+    if (reference.repoUrl) {
+      if (!candidate.repoUrl) {
+        return false;
+      }
+      if (candidate.repoUrl !== reference.repoUrl) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private linkDetachedTemplate(parent: Template, child: Template): void {
+    if (child.parentTemplate && child.parentTemplate !== parent) {
+      return;
+    }
+
+    const key = child.config.templateConfig.name;
+    const existing = parent.subTemplates[key] ?? [];
+    if (!existing.includes(child)) {
+      parent.subTemplates[key] = [...existing, child];
+    }
+
+    child.parentTemplate = parent;
+    child.isDetachedSubtreeRoot = child.possibleParentTemplates.length > 0;
+  }
+
+  public attachDetachedChild(parent: Template, child: Template): void {
+    if (!child.possibleParentTemplates.length) {
+      return;
+    }
+
+    for (const reference of child.possibleParentTemplates) {
+      if (reference.templateName !== parent.config.templateConfig.name) {
+        continue;
+      }
+
+      if (!this.matchesParentReference(parent, child, reference)) {
+        continue;
+      }
+
+      this.linkDetachedTemplate(parent, child);
+      break;
+    }
+  }
+
+  private attachDetachedTemplates(rootTemplates: Template[]): void {
+    if (!rootTemplates.length) {
+      return;
+    }
+
+    const templatesByName = new Map<string, Template[]>();
+    for (const template of rootTemplates) {
+      const name = template.config.templateConfig.name;
+      const list = templatesByName.get(name) ?? [];
+      list.push(template);
+      templatesByName.set(name, list);
+    }
+
+    for (const child of rootTemplates) {
+      if (!child.possibleParentTemplates.length || child.parentTemplate) {
+        continue;
+      }
+
+      for (const reference of child.possibleParentTemplates) {
+        const candidates = templatesByName.get(reference.templateName);
+        if (!candidates || !candidates.length) {
+          continue;
+        }
+
+        const parent = candidates.find((candidate) =>
+          this.matchesParentReference(candidate, child, reference),
+        );
+
+        if (parent) {
+          this.linkDetachedTemplate(parent, child);
+          break;
+        }
+      }
+    }
   }
 }

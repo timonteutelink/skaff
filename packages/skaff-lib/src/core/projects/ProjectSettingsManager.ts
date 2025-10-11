@@ -177,6 +177,26 @@ export class ProjectSettingsManager {
     }
 
     const repo = resolveRootTemplateRepository();
+    const remoteReposToLoad = new Map<string, { url: string; branch: string }>();
+
+    for (const instantiated of validated.data.instantiatedTemplates) {
+      if (!instantiated.templateRepoUrl) {
+        continue;
+      }
+      const branch = instantiated.templateBranch ?? "main";
+      const key = `${instantiated.templateRepoUrl}#${branch}`;
+      if (!remoteReposToLoad.has(key)) {
+        remoteReposToLoad.set(key, { url: instantiated.templateRepoUrl, branch });
+      }
+    }
+
+    for (const entry of remoteReposToLoad.values()) {
+      const addResult = await repo.addRemoteRepo(entry.url, entry.branch);
+      if ("error" in addResult) {
+        return addResult;
+      }
+    }
+
     const rootTemplate = await repo.loadRevision(
       validated.data.rootTemplateName,
       commitHash,
@@ -202,32 +222,132 @@ export class ProjectSettingsManager {
       if (rootTemplate.data.branch) {
         rootInstantiated.templateBranch = rootTemplate.data.branch;
       }
+      if (rootTemplate.data.commitHash) {
+        rootInstantiated.templateCommitHash = rootTemplate.data.commitHash;
+      }
     }
 
-    for (const subTemplateSettings of validated.data.instantiatedTemplates) {
-      const subTemplate = rootTemplate.data.findSubTemplate(
-        subTemplateSettings.templateName,
-      );
-      if (!subTemplate) {
-        logError({
-          shortMessage: `Sub template ${subTemplateSettings.templateName} not found in root template ${validated.data.rootTemplateName}`,
-        });
-        return {
-          error: `Template ${subTemplateSettings.templateName} not found in root template ${validated.data.rootTemplateName}`,
-        };
+    const instantiatedById = new Map(
+      validated.data.instantiatedTemplates.map((instantiated) => [
+        instantiated.id,
+        instantiated,
+      ]),
+    );
+
+    const childrenByParent = new Map<
+      string | undefined,
+      ProjectSettings["instantiatedTemplates"]
+    >();
+
+    for (const instantiated of validated.data.instantiatedTemplates) {
+      const parentId = instantiated.parentId;
+      const list = childrenByParent.get(parentId) ?? [];
+      list.push(instantiated);
+      childrenByParent.set(parentId, list);
+    }
+
+    const processingQueue: (string | undefined)[] = [undefined];
+    const seenParents = new Set<string | undefined>();
+
+    while (processingQueue.length > 0) {
+      const parentId = processingQueue.shift();
+      if (seenParents.has(parentId)) {
+        continue;
+      }
+      seenParents.add(parentId);
+
+      const siblings = childrenByParent.get(parentId);
+      if (!siblings) {
+        continue;
       }
 
-      const subTemplateSettingsSchema =
-        subTemplate.config.templateSettingsSchema.safeParse(
-          subTemplateSettings.templateSettings,
+      let parentTemplate: Template;
+      if (!parentId) {
+        parentTemplate = rootTemplate.data;
+      } else {
+        const parentSettings = instantiatedById.get(parentId);
+        if (!parentSettings) {
+          return {
+            error: `Parent template with id ${parentId} not found in templateSettings.json`,
+          };
+        }
+
+        const maybeParentTemplate = rootTemplate.data.findSubTemplate(
+          parentSettings.templateName,
         );
-      if (!subTemplateSettingsSchema.success) {
-        logError({
-          shortMessage: `Invalid templateSettings.json for template ${subTemplateSettings.templateName}: ${subTemplateSettingsSchema.error}`,
-        });
-        return {
-          error: `Invalid templateSettings.json for template ${subTemplateSettings.templateName}: ${subTemplateSettingsSchema.error}`,
-        };
+
+        if (!maybeParentTemplate) {
+          logError({
+            shortMessage: `Parent template ${parentSettings.templateName} not found while attaching detached templates`,
+          });
+          return {
+            error: `Template ${parentSettings.templateName} not found while loading detached templates`,
+          };
+        }
+
+        parentTemplate = maybeParentTemplate;
+      }
+
+      for (const childSettings of siblings) {
+        if (!seenParents.has(childSettings.id)) {
+          processingQueue.push(childSettings.id);
+        }
+
+        if (parentId === childSettings.id) {
+          continue;
+        }
+
+        let childTemplate = rootTemplate.data.findSubTemplate(
+          childSettings.templateName,
+        );
+
+        if (!childTemplate) {
+          const commit = childSettings.templateCommitHash;
+          const childResult = commit
+            ? await repo.loadRevision(childSettings.templateName, commit)
+            : await repo.findTemplate(childSettings.templateName);
+
+          if ("error" in childResult) {
+            return childResult;
+          }
+
+          childTemplate = childResult.data;
+
+          if (!childTemplate) {
+            logError({
+              shortMessage: `Template ${childSettings.templateName} could not be loaded`,
+            });
+            return {
+              error: `Template ${childSettings.templateName} could not be loaded`,
+            };
+          }
+
+          repo.attachDetachedChild(parentTemplate, childTemplate);
+        }
+
+        const schemaParse =
+          childTemplate.config.templateSettingsSchema.safeParse(
+            childSettings.templateSettings,
+          );
+
+        if (!schemaParse.success) {
+          logError({
+            shortMessage: `Invalid templateSettings.json for template ${childSettings.templateName}: ${schemaParse.error}`,
+          });
+          return {
+            error: `Invalid templateSettings.json for template ${childSettings.templateName}: ${schemaParse.error}`,
+          };
+        }
+
+        if (childTemplate.repoUrl) {
+          childSettings.templateRepoUrl = childTemplate.repoUrl;
+        }
+        if (childTemplate.branch) {
+          childSettings.templateBranch = childTemplate.branch;
+        }
+        if (childTemplate.commitHash) {
+          childSettings.templateCommitHash = childTemplate.commitHash;
+        }
       }
     }
 

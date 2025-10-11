@@ -1,5 +1,6 @@
 import {
   ProjectSettings,
+  TemplateParentReference,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import path from "node:path";
@@ -72,6 +73,8 @@ export class Template {
   public isLocal: boolean = false;
   public branch?: string;
   public repoUrl?: string;
+  public possibleParentTemplates: TemplateParentReference[] = [];
+  public isDetachedSubtreeRoot: boolean = false;
 
   constructor(init: TemplateInit) {
     this.config = init.config;
@@ -96,6 +99,9 @@ export class Template {
     this.commitHash = init.commitHash;
     this.branch = init.branch;
     this.repoUrl = init.repoUrl;
+    this.possibleParentTemplates =
+      init.config.possibleParentTemplates ?? [];
+    this.isDetachedSubtreeRoot = this.possibleParentTemplates.length > 0;
 
     if (!this.absoluteBaseDir.startsWith(getCacheService().getCacheDirPath())) {
       this.isLocal = true;
@@ -207,6 +213,8 @@ export class Template {
       isLocal: this.isLocal,
       branch: this.branch,
       repoUrl: this.repoUrl,
+      possibleParentTemplates: this.possibleParentTemplates,
+      isDetachedSubtreeRoot: this.isDetachedSubtreeRoot,
     };
   }
 
@@ -229,17 +237,17 @@ export class Template {
   }
 
   public findRootTemplate(): Template {
-    if (this.parentTemplate) {
-      return this.parentTemplate.findRootTemplate();
+    if (this.isDetachedSubtreeRoot || !this.parentTemplate) {
+      return this;
     }
-    return this;
+    return this.parentTemplate.findRootTemplate();
   }
 
   public findCommitHash(): string {
     if (this.commitHash) {
       return this.commitHash;
     }
-    if (this.parentTemplate) {
+    if (this.parentTemplate && !this.parentTemplate.isDetachedSubtreeRoot) {
       return this.parentTemplate.findCommitHash();
     }
     return "";

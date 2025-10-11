@@ -5,11 +5,13 @@ import { Project } from "../../models";
 export async function prepareUpdateDiff(
   project: Project,
   newTemplateRevisionCommitHash: string,
+  options?: { treeRootTemplateName?: string },
 ): Promise<Result<NewTemplateDiffResult>> {
   const planner = resolveProjectDiffPlanner();
   const result = await planner.generateUpdateTemplateDiff(
     project,
     newTemplateRevisionCommitHash,
+    options,
   );
 
   if ("error" in result) {
