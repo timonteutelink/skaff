@@ -42,7 +42,7 @@ export interface TemplateInit {
   config: GenericTemplateConfigModule;
   absoluteBaseDir: string;
   absoluteDir: string;
-  absoluteTemplatesDir: string;
+  absoluteFilesDir: string;
   commitHash?: string;
   branch?: string;
   repoUrl?: string;
@@ -61,8 +61,8 @@ export class Template {
   public absoluteDir: string;
   public relativeDir: string;
 
-  public absoluteTemplatesDir: string;
-  public relativeTemplatesDir: string;
+  public absoluteFilesDir: string;
+  public relativeFilesDir: string;
 
   public absolutePartialsDir?: string;
   public relativePartialsDir?: string;
@@ -83,10 +83,10 @@ export class Template {
     this.absoluteDir = init.absoluteDir;
     this.relativeDir = path.relative(init.absoluteBaseDir, init.absoluteDir);
 
-    this.absoluteTemplatesDir = init.absoluteTemplatesDir;
-    this.relativeTemplatesDir = path.relative(
+    this.absoluteFilesDir = init.absoluteFilesDir;
+    this.relativeFilesDir = path.relative(
       init.absoluteBaseDir,
-      init.absoluteTemplatesDir,
+      init.absoluteFilesDir,
     );
 
     this.absolutePartialsDir = init.partialsDir
@@ -200,7 +200,7 @@ export class Template {
           this.config.templateSettingsSchema,
         ),
       },
-      templatesDir: this.relativeTemplatesDir,
+      filesDir: this.relativeFilesDir,
       subTemplates,
       refDir: this.relativeRefDir,
       currentCommitHash: this.commitHash,

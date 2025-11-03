@@ -166,7 +166,7 @@ export class FileMaterializer {
       return stateResult;
     }
 
-    const src = stateResult.data.template.absoluteTemplatesDir;
+    const src = stateResult.data.template.absoluteFilesDir;
     const dest = this.pathResolver.getAbsoluteTargetPath();
 
     if ("error" in dest) {

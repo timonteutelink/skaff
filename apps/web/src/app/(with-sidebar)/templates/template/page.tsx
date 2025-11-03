@@ -108,20 +108,20 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ node }) => {
           </dd>
         </div>
 
-        {/* Templates Directory */}
+        {/* Files Directory */}
         <div>
-          <dt className="text-sm font-medium text-gray-700">Templates Dir</dt>
+          <dt className="text-sm font-medium text-gray-700">Files Dir</dt>
           <dd className="mt-1 flex items-center space-x-2 text-sm text-gray-600">
-            <span className="truncate">{node.data?.templatesDir}</span>
-            {node.data?.templatesDir && (
+            <span className="truncate">{node.data?.filesDir}</span>
+            {node.data?.filesDir && (
               <CopyIcon
                 className="w-4 h-4 cursor-pointer"
                 onClick={() =>
-                  handleCopy(node.data!.templatesDir, "templatesDir")
+                  handleCopy(node.data!.filesDir, "filesDir")
                 }
               />
             )}
-            {copiedField === "templatesDir" && (
+            {copiedField === "filesDir" && (
               <span className="text-xs text-green-500">Copied</span>
             )}
           </dd>

@@ -127,19 +127,20 @@ function buildTemplateModuleContent(options: TemplateModuleOptions): string {
 async function writeTemplateFiles(
   baseDir: string,
   options: TemplateDefinition,
+  isRootTemplate: boolean,
 ): Promise<void> {
   const templateDir = path.join(baseDir, options.name);
   await fs.mkdir(templateDir, { recursive: true });
 
-  const templatesDir = path.join(templateDir, "templates");
-  await fs.mkdir(templatesDir, { recursive: true });
+  const filesDir = path.join(templateDir, "files");
+  await fs.mkdir(filesDir, { recursive: true });
 
   const files = options.files && Object.keys(options.files).length > 0
     ? options.files
     : { "index.hbs": `Hello from ${options.name}!` };
 
   for (const [relativePath, contents] of Object.entries(files)) {
-    const destination = path.join(templatesDir, relativePath);
+    const destination = path.join(filesDir, relativePath);
     await fs.mkdir(path.dirname(destination), { recursive: true });
     await fs.writeFile(destination, contents, "utf8");
   }
@@ -147,7 +148,10 @@ async function writeTemplateFiles(
   const configPath = path.join(templateDir, "templateConfig.ts");
   const moduleContent = buildTemplateModuleContent({
     name: options.name,
-    templateConfig: options.templateConfig,
+    templateConfig: {
+      isRootTemplate,
+      ...options.templateConfig,
+    },
     settingsFields: options.settingsFields,
     mapFinalSettingsBody: options.mapFinalSettingsBody,
     templateModule: options.templateModule,
@@ -155,7 +159,7 @@ async function writeTemplateFiles(
   await fs.writeFile(configPath, moduleContent, "utf8");
 
   for (const subTemplate of options.subTemplates ?? []) {
-    await writeTemplateFiles(templateDir, subTemplate);
+    await writeTemplateFiles(templateDir, subTemplate, false);
   }
 }
 
@@ -246,7 +250,7 @@ export async function createTestTemplate(
   const restoreCachePath = applyCacheIsolation(tempRoot);
   const restoreGitMocks = await mockGitService();
 
-  await writeTemplateFiles(tempRoot, options);
+  await writeTemplateFiles(tempRoot, options, true);
 
   const templateDir = path.join(tempRoot, options.name);
   const templateTreeBuilder = getSkaffContainer().resolve(TemplateTreeBuilder);

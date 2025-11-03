@@ -241,6 +241,12 @@ export class RootTemplateRepository {
         if ("error" in templateResult) {
           continue;
         }
+        if (!templateResult.data.config.templateConfig.isRootTemplate) {
+          backendLogger.warn(
+            `Skipping template ${templateResult.data.config.templateConfig.name} because it is not marked as a root template.`,
+          );
+          continue;
+        }
         this.registry.registerRoot(templateResult.data);
       }
     }
@@ -310,6 +316,13 @@ export class RootTemplateRepository {
 
       if ("error" in templateResult) {
         return { error: templateResult.error };
+      }
+
+      if (!templateResult.data.config.templateConfig.isRootTemplate) {
+        backendLogger.warn(
+          `Skipping template ${templateResult.data.config.templateConfig.name} in ${repoUrl} because it is not marked as a root template.`,
+        );
+        continue;
       }
 
       templates.push(templateResult.data);
