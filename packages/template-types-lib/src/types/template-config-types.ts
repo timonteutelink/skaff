@@ -43,6 +43,11 @@ export const templateConfigSchema = z.object({
     .describe(
       "Whether the template can be used multiple times in the same project. Defaults to false.",
     ),
+  isRootTemplate: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe("Whether this template can be used to start a new project."),
 });
 
 // assuming output same type as input

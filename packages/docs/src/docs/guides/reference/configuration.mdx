@@ -8,7 +8,7 @@ Skaff stores user configuration in JSON at `~/.config/skaff/settings.json`. Envi
 
 | Key                    | Type       | Description                                                                                                              |
 | ---------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `TEMPLATE_DIR_PATHS`   | `string[]` | Directories or Git repositories that contain templates. Skaff scans directories for `root-templates/` and clones remote repositories such as `github:org/templates#branch`. |
+| `TEMPLATE_DIR_PATHS`   | `string[]` | Directories or Git repositories that contain templates. Skaff scans directories for `templates/` and clones remote repositories such as `github:org/templates#branch`. |
 | `PROJECT_SEARCH_PATHS` | `string[]` | Locations Skaff inspects when running `skaff project ls`. Helpful when projects live in multiple workspaces.             |
 | `NPM_PATH`             | `string`   | Command used to execute template-defined scripts. Defaults to `npm`; set to `bunx`, `pnpm`, or another runner as needed. |
 

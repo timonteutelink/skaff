@@ -78,8 +78,8 @@ async function createTemplate({
   absoluteBaseDir: string;
 }): Promise<Template> {
   const absoluteDir = path.join(absoluteBaseDir, name);
-  const templatesDir = path.join(absoluteDir, "templates");
-  await fs.mkdir(templatesDir, { recursive: true });
+  const filesDir = path.join(absoluteDir, "files");
+  await fs.mkdir(filesDir, { recursive: true });
 
   const config: GenericTemplateConfigModule = {
     templateConfig: {
@@ -96,7 +96,7 @@ async function createTemplate({
     config,
     absoluteBaseDir,
     absoluteDir,
-    absoluteTemplatesDir: templatesDir,
+    absoluteFilesDir: filesDir,
   });
 }
 

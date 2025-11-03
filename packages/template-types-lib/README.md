@@ -26,6 +26,7 @@ const templateConfig: TemplateConfig = {
   name: "hello-world",
   author: "Example Templates",
   specVersion: "1.0.0",
+  isRootTemplate: true,
 };
 
 const templateModule: TemplateConfigModule<

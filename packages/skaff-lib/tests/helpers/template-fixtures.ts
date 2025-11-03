@@ -131,15 +131,15 @@ async function writeTemplateFiles(
   const templateDir = path.join(baseDir, options.name);
   await fs.mkdir(templateDir, { recursive: true });
 
-  const templatesDir = path.join(templateDir, "templates");
-  await fs.mkdir(templatesDir, { recursive: true });
+  const filesDir = path.join(templateDir, "files");
+  await fs.mkdir(filesDir, { recursive: true });
 
   const files = options.files && Object.keys(options.files).length > 0
     ? options.files
     : { "index.hbs": `Hello from ${options.name}!` };
 
   for (const [relativePath, contents] of Object.entries(files)) {
-    const destination = path.join(templatesDir, relativePath);
+    const destination = path.join(filesDir, relativePath);
     await fs.mkdir(path.dirname(destination), { recursive: true });
     await fs.writeFile(destination, contents, "utf8");
   }
@@ -211,6 +211,7 @@ interface TemplateModuleOptions {
     description?: string;
     specVersion: string;
     multiInstance?: boolean;
+    isRootTemplate?: boolean;
   }>;
   settingsFields?: Record<string, TemplateSettingsFieldDefinition>;
   mapFinalSettingsBody?: string;

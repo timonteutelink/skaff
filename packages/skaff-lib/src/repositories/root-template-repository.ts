@@ -1,3 +1,4 @@
+import type { Dirent } from "node:fs";
 import * as fs from "node:fs/promises";
 import path from "node:path";
 
@@ -28,7 +29,7 @@ export const defaultTemplatePathsProvider: TemplatePathsProvider = async () => {
 
 // TODO: findTemplate and loadRevision should only load that specific template not load all templates
 
-// now only stores the root templates at: <templateDirPath>/root-templates/*
+// now only stores the root templates at: <templateDirPath>/templates/*
 // later also store reference to files and generic templates to allow direct instantiation without saving state of subtemplates
 type RemoteRepoSource = "config" | "manual";
 
@@ -194,21 +195,26 @@ export class RootTemplateRepository {
     ];
     for (const templatePath of paths) {
       const repoInfo = this.remoteRepos.find((r) => r.path === templatePath);
-      const rootTemplateDirsPath = path.join(templatePath, "root-templates");
-      let rootTemplateDirs: string[] = [];
+      const templatesRootDir = path.join(templatePath, "templates");
+      let templateEntries: Dirent[] = [];
       try {
-        rootTemplateDirs = await fs.readdir(rootTemplateDirsPath);
+        templateEntries = await fs.readdir(templatesRootDir, {
+          withFileTypes: true,
+        });
       } catch (error) {
         backendLogger.warn(
-          `Failed to read root template directories at ${rootTemplateDirsPath}.`,
+          `Failed to read template directories at ${templatesRootDir}.`,
           error,
         );
         continue;
       }
-      for (const rootTemplateDir of rootTemplateDirs) {
+      for (const entry of templateEntries) {
+        if (!entry.isDirectory()) {
+          continue;
+        }
         const rootTemplateDirPath = path.join(
-          rootTemplateDirsPath,
-          rootTemplateDir,
+          templatesRootDir,
+          entry.name,
         );
         try {
           const stat = await fs.stat(rootTemplateDirPath);
@@ -233,6 +239,12 @@ export class RootTemplateRepository {
           },
         );
         if ("error" in templateResult) {
+          continue;
+        }
+        if (!templateResult.data.config.templateConfig.isRootTemplate) {
+          backendLogger.debug(
+            `Skipping template ${templateResult.data.config.templateConfig.name} because it is not marked as a root template`,
+          );
           continue;
         }
         this.registry.registerRoot(templateResult.data);
@@ -275,35 +287,27 @@ export class RootTemplateRepository {
     }
 
     const repoPath = cloneResult.data;
-    const rootTemplatesDir = path.join(repoPath, "root-templates");
+    const rootTemplatesDir = path.join(repoPath, "templates");
 
-    let rootTemplateDirs: string[];
+    let templateEntries: Dirent[];
     try {
-      rootTemplateDirs = await fs.readdir(rootTemplatesDir);
+      templateEntries = await fs.readdir(rootTemplatesDir, {
+        withFileTypes: true,
+      });
     } catch (error) {
-      const message = `Failed to read root template directories at ${rootTemplatesDir}`;
+      const message = `Failed to read template directories at ${rootTemplatesDir}`;
       logError({ error, shortMessage: message });
       return { error: message };
     }
 
     const templates: Template[] = [];
 
-    for (const dir of rootTemplateDirs) {
-      const templateDir = path.join(rootTemplatesDir, dir);
-      let stat;
-      try {
-        stat = await fs.stat(templateDir);
-      } catch (error) {
-        backendLogger.warn(
-          `Failed to read potential root template directory at ${templateDir}.`,
-          error,
-        );
+    for (const entry of templateEntries) {
+      if (!entry.isDirectory()) {
         continue;
       }
 
-      if (!stat.isDirectory()) {
-        continue;
-      }
+      const templateDir = path.join(rootTemplatesDir, entry.name);
 
       const templateResult = await this.templateTreeBuilder.build(templateDir, {
         repoUrl,
@@ -312,6 +316,13 @@ export class RootTemplateRepository {
 
       if ("error" in templateResult) {
         return { error: templateResult.error };
+      }
+
+      if (!templateResult.data.config.templateConfig.isRootTemplate) {
+        backendLogger.debug(
+          `Skipping template ${templateResult.data.config.templateConfig.name} from ${repoUrl} because it is not marked as a root template`,
+        );
+        continue;
       }
 
       templates.push(templateResult.data);
