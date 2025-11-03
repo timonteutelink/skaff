@@ -3,8 +3,10 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     devenv.url = "github:cachix/devenv";
     flake-parts.url = "github:hercules-ci/flake-parts";
-    bun2nix.url = "github:baileyluTCD/bun2nix";
-    bun2nix.inputs.nixpkgs.follows = "nixpkgs";
+    bun2nix = {
+      url = "github:baileyluTCD/bun2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     nix-utils = {
       url = "git+ssh://git@github.com/timonteutelink/nix-utils";
@@ -36,6 +38,5 @@
         ];
       }
     );
-
 
 }

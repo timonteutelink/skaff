@@ -1,8 +1,7 @@
-FROM oven/bun:1 AS base
+FROM oven/bun:latest AS base
 
 WORKDIR /app
 
-# Install dependencies with bun
 FROM base AS deps
 COPY package.json bun.lock* ./
 RUN mkdir -p apps/web apps/cli packages/typescript-config packages/eslint-config packages/tailwind-config
@@ -11,9 +10,8 @@ COPY apps/cli/package.json ./apps/cli/package.json
 COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY packages/tailwind-config/package.json ./packages/tailwind-config/package.json
-RUN bun install --no-save --frozen-lockfile
+RUN bun install --no-save
 
-# Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
@@ -64,8 +62,8 @@ RUN mkdir -p /app/.cache/skaff
 RUN mkdir -p /app/.config/skaff
 
 RUN chown -R nextjs:nodejs /app
-RUN git config --system user.name "Skaff Webui" \
-    && git config --system user.email "timon+skaff@teutelink.nl"
+RUN git config --system user.name "Skaff Diff Bot" \
+    && git config --system user.email "skaff-diff@example.com"
 
 WORKDIR /app/apps/web
 
