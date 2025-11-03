@@ -47,7 +47,7 @@ export const templateConfigSchema = z.object({
     .boolean()
     .optional()
     .default(false)
-    .describe("Whether this template can be instantiated as the root template."),
+    .describe("Whether this template can be used to start a new project."),
 });
 
 // assuming output same type as input
