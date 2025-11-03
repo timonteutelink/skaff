@@ -24,7 +24,7 @@ interface TemplateBuildContext {
   repoUrl?: string;
 }
 
-async function ensureTemplatesDirectoryExists(dir: string): Promise<boolean> {
+async function ensureFilesDirectoryExists(dir: string): Promise<boolean> {
   try {
     const stat = await fs.stat(dir);
     return stat.isDirectory();
@@ -52,7 +52,7 @@ function createTemplateInstance(
   info: TemplateConfigWithFileInfo,
   context: TemplateBuildContext,
   templateDir: string,
-  templatesDir: string,
+  filesDir: string,
   partialsDir?: string,
 ): Template {
   const rootCommitHash =
@@ -62,7 +62,7 @@ function createTemplateInstance(
     config: info.templateConfig,
     absoluteBaseDir: context.absoluteBaseDir,
     absoluteDir: templateDir,
-    absoluteTemplatesDir: templatesDir,
+    absoluteFilesDir: filesDir,
     commitHash: rootCommitHash,
     branch: context.branch,
     repoUrl: context.repoUrl,
@@ -80,9 +80,9 @@ async function loadTemplateCandidates(
   for (const info of Object.values(configs)) {
     const configPath = path.resolve(context.absoluteRootDir, info.configPath);
     const templateDir = path.dirname(configPath);
-    const templatesDir = path.join(templateDir, "templates");
+    const filesDir = path.join(templateDir, "files");
 
-    if (!(await ensureTemplatesDirectoryExists(templatesDir))) {
+    if (!(await ensureFilesDirectoryExists(filesDir))) {
       continue;
     }
 
@@ -93,7 +93,7 @@ async function loadTemplateCandidates(
         info,
         context,
         templateDir,
-        templatesDir,
+        filesDir,
         partialsDir,
       );
 
@@ -165,7 +165,7 @@ function linkByDirectoryContainment(templatesMap: Record<string, Template>): voi
       }
 
       const segments = relative.split(path.sep).filter(Boolean);
-      if (segments[0] === "templates") {
+      if (segments[0] === "files") {
         continue;
       }
 

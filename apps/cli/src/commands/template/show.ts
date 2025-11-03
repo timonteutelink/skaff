@@ -26,7 +26,7 @@ static description = 'Display details for a loaded template revision';
       name: tpl.config.templateConfig.name,
       revision: tpl.commitHash,
       subTemplateCount: Object.keys(tpl.subTemplates).length,
-      templatesDir: tpl.absoluteBaseDir,
+      filesDir: tpl.absoluteFilesDir,
     });
   }
 }

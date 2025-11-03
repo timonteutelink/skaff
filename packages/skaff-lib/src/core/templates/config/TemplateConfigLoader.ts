@@ -194,7 +194,7 @@ async function typeCheckFile(filePath: string): Promise<void> {
   }
 }
 
-// TODO NEW add extra templateloader step that checks all "templates" and checks if all values used in templates are provided in FinalTemplateSettings
+// TODO NEW add extra templateloader step that checks all "files" and checks if all values used in templates are provided in FinalTemplateSettings
 async function findTemplateConfigFilesInSubdirs(
   dir: string,
   rootDir: string,

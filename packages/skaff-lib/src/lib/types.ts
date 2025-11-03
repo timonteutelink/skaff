@@ -36,7 +36,7 @@ export interface TemplateDTO {
     templateConfig: TemplateConfig;
     templateSettingsSchema: object;
   };
-  templatesDir: string;
+  filesDir: string;
   subTemplates: Record<string, TemplateDTO[]>;
   currentCommitHash?: string; //always defined on root templates.
   isLocal: boolean;
