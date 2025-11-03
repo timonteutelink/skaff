@@ -18,8 +18,11 @@
   },
   "packageManager": "bun@1.2.12",
   "workspaces": [
-    "packages/skaff-lib",
-    "packages/template-types-lib"
+    "apps/web",
+    "apps/cli",
+    "packages/typescript-config",
+    "packages/eslint-config",
+    "packages/tailwind-config"
   ],
   "resolutions": {
     "react": "19.1.0",
