@@ -211,6 +211,7 @@ interface TemplateModuleOptions {
     description?: string;
     specVersion: string;
     multiInstance?: boolean;
+    isRootTemplate?: boolean;
   }>;
   settingsFields?: Record<string, TemplateSettingsFieldDefinition>;
   mapFinalSettingsBody?: string;

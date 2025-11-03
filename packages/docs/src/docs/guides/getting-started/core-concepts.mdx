@@ -8,10 +8,10 @@ A few building blocks explain how Skaff keeps generated projects reproducible an
 
 ## Templates and repositories
 
-Templates live in Git repositories under `root-templates/<name>/`. Each template exports a `templateConfig.ts` module alongside a `templates/` directory (and optional `subtemplates/`). Skaff reads this metadata to know how to prompt for input, where to write files, and which hooks to run.
+Templates live in Git repositories under `templates/<name>/`. Each template exports a `templateConfig.ts` module alongside a `templates/` directory (and optional `subtemplates/`). Skaff reads this metadata to know how to prompt for input, where to write files, and which hooks to run.
 
 ```text
-root-templates/
+templates/
   nextjs-app/
     templateConfig.ts
     templates/

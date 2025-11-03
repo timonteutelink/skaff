@@ -211,7 +211,7 @@ export class GitService {
     template: Template,
     revisionHash: string,
   ): Promise<Result<string>> {
-    const repoDir = path.dirname(template.absoluteBaseDir); //TODO absoluteBaseDir should point to root of git dir now is root-templates.
+    const repoDir = path.dirname(template.absoluteBaseDir); //TODO absoluteBaseDir should point to root of git dir; currently it resolves to the templates directory.
     const repoName = path.basename(repoDir);
 
     const destDirName = `${repoName}-${revisionHash}`;

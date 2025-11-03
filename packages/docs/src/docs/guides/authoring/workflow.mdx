@@ -9,7 +9,7 @@ A Skaff template is a directory with a TypeScript config file and a set of files
 ## Directory layout
 
 ```
-root-templates/
+templates/
   service-template/
     templateConfig.ts
     templates/
@@ -21,7 +21,7 @@ root-templates/
         templates/
 ```
 
-- **`templateConfig.ts`** exports a `TemplateConfigModule`. Define metadata (`name`, `description`, `specVersion`), the Zod schemas for user input (`templateSettingsSchema` and `templateFinalSettingsSchema`), and the `mapFinalSettings` function that produces the values used during rendering. Set `targetPath` so Skaff knows where files land.
+- **`templateConfig.ts`** exports a `TemplateConfigModule`. Define metadata (`name`, `description`, `specVersion`), the Zod schemas for user input (`templateSettingsSchema` and `templateFinalSettingsSchema`), and the `mapFinalSettings` function that produces the values used during rendering. Set `isRootTemplate` to `true` for templates that can start a project and configure `targetPath` so Skaff knows where files land.
 - **`templates/`** holds files to render. Append `.hbs` to process a file with Handlebars; omit it for plain copies. Skaff copies the directory structure relative to `targetPath`.
 - **`subtemplates/`** hosts optional modules. Structure them the same way as root templates so they can run independently.
 
@@ -56,6 +56,7 @@ const templateConfig: TemplateConfigModule<
     author: "Example team",
     description: "Production-ready service starter",
     specVersion: "1.0.0",
+    isRootTemplate: true,
   },
   templateSettingsSchema,
   templateFinalSettingsSchema: templateSettingsSchema,
