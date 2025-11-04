@@ -46,7 +46,6 @@ export const templateConfigSchema = z.object({
   isRootTemplate: z
     .boolean()
     .optional()
-    .default(false)
     .describe("Whether this template can be used to start a new project."),
 });
 

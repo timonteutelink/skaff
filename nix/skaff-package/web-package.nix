@@ -40,6 +40,11 @@ mkBunDerivation {
     cp -r .next/standalone/apps/web/.next $out/share/app/.next
 
     cp -r .next/standalone/node_modules $out/share/app/node_modules
+
+    rm -rf $out/share/app/node_modules/typescript
+    ln -s ${pkgs.nodePackages.typescript}/lib/node_modules/typescript \
+      $out/share/app/node_modules/typescript
+
     if [ -f .next/standalone/package.json ]; then
       cp .next/standalone/package.json $out/share/app/package.json
     fi

@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { withTestContainer } from "../src/di/testing";
+import { CacheService } from "../src/core/infra/cache-service";
 
 jest.mock("../src/lib/logger", () => ({
   backendLogger: {
@@ -41,8 +42,7 @@ describe("cache-service", () => {
 
   it("uses environment variable for cache path", async () =>
     withTestContainer(async () => {
-      const cacheService = resolveCacheService();
-      expect(cacheService.getCacheDirPath()).toBe(cacheDir);
+      expect(CacheService.getCacheDirPath()).toBe(cacheDir);
     }),
   );
 
