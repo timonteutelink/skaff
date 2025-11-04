@@ -12,19 +12,15 @@ import { logError } from "../../lib/utils";
 import { Template } from "../../models/template";
 import { resolveRootTemplateRepository } from "../../repositories";
 import { deepSortObject } from "../../utils/shared-utils";
-import { resolveFileSystemService } from "../infra/file-service";
+import { makeDir } from "../infra/file-service";
 
 interface LoadedProjectSettingsResult {
   settings: ProjectSettings;
   rootTemplate: Template;
 }
 
-function getFileSystemService() {
-  return resolveFileSystemService();
-}
-
 export class ProjectSettingsManager {
-  constructor(private readonly projectPath: string) {}
+  constructor(private readonly projectPath: string) { }
 
   private get settingsFilePath(): string {
     return path.join(this.projectPath, "templateSettings.json");
@@ -71,7 +67,7 @@ export class ProjectSettingsManager {
       }
     }
 
-    const dirResult = await getFileSystemService().makeDir(this.projectPath);
+    const dirResult = await makeDir(this.projectPath);
 
     if ("error" in dirResult) {
       return dirResult;

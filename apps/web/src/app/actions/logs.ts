@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
 import {
+  CacheService,
   LevelName,
   LogFilter,
   LogJSON,
@@ -52,7 +53,7 @@ export async function fetchLogs(filter: LogFilter): Promise<Result<LogJSON[] | s
   const toMs = to ? Date.parse(to) : null;
 
   const logPath = path.join(
-    cacheService.getCacheDirPath(),
+    CacheService.getCacheDirPath(),
     "logs",
     `skaff.${file}.log`,
   );

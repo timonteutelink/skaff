@@ -16,12 +16,12 @@ import { SideEffectExecutor } from "./SideEffectExecutor";
 import { HandlebarsEnvironment } from "../shared/HandlebarsEnvironment";
 import { Template } from "../../models/template";
 import { isSubset } from "../../utils/shared-utils";
-import type { FileSystemService } from "../infra/file-service";
 import { FileRollbackManager } from "../shared/FileRollbackManager";
 import { getSkaffContainer } from "../../di/container";
 import { inject, injectable } from "tsyringe";
-import { FileSystemServiceToken, GitServiceToken, TemplateGeneratorServiceToken } from "../../di/tokens";
+import { GitServiceToken, TemplateGeneratorServiceToken } from "../../di/tokens";
 import type { GitService } from "../infra/git-service";
+import { makeDir } from "../infra/file-service";
 
 export interface GeneratorOptions {
   /**
@@ -63,7 +63,6 @@ export class TemplateGenerationSession {
     private readonly options: GeneratorOptions,
     rootTemplate: Template,
     private readonly destinationProjectSettings: ProjectSettings,
-    private readonly fileSystemService: FileSystemService,
     gitService: GitService,
   ) {
     this.generationContext = new GenerationContext(rootTemplate);
@@ -477,7 +476,7 @@ export class TemplateGenerationSession {
     }
 
     try {
-      const ensureProjectDirResult = await this.fileSystemService.makeDir(
+      const ensureProjectDirResult = await makeDir(
         this.options.absoluteDestinationPath,
       );
 
@@ -636,11 +635,9 @@ export class TemplateGenerationSession {
 @injectable()
 export class TemplateGeneratorService {
   constructor(
-    @inject(FileSystemServiceToken)
-    private readonly fileSystemService: FileSystemService,
     @inject(GitServiceToken)
     private readonly gitService: GitService,
-  ) {}
+  ) { }
 
   public createSession(
     options: GeneratorOptions,
@@ -651,7 +648,6 @@ export class TemplateGeneratorService {
       options,
       rootTemplate,
       destinationProjectSettings,
-      this.fileSystemService,
       this.gitService,
     );
   }

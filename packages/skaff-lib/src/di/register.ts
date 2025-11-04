@@ -6,7 +6,6 @@ import { DiffCache } from "../core/diffing/DiffCache";
 import { ProjectDiffPlanner } from "../core/diffing/ProjectDiffPlanner";
 import { TemporaryProjectFactory } from "../core/diffing/TemporaryProjectFactory";
 import { CacheService } from "../core/infra/cache-service";
-import { FileSystemService } from "../core/infra/file-service";
 import { GitService } from "../core/infra/git-service";
 import { NpmService } from "../core/infra/npm-service";
 import { ShellService } from "../core/infra/shell-service";
@@ -26,7 +25,6 @@ import {
   CacheServiceToken,
   DiffCacheToken,
   EsbuildInitializerToken,
-  FileSystemServiceToken,
   GitServiceToken,
   NpmServiceToken,
   ProjectCreationManagerToken,
@@ -54,7 +52,6 @@ function registerClassSingleton<T>(
 export function registerInfrastructure(
   container: DependencyContainer,
 ): void {
-  registerClassSingleton(container, FileSystemServiceToken, FileSystemService);
   registerClassSingleton(container, CacheServiceToken, CacheService);
   registerClassSingleton(container, GitServiceToken, GitService);
   registerClassSingleton(container, NpmServiceToken, NpmService);

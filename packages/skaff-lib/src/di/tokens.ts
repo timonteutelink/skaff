@@ -5,7 +5,6 @@ import type { DiffCache } from "../core/diffing/DiffCache";
 import type { ProjectDiffPlanner } from "../core/diffing/ProjectDiffPlanner";
 import type { TemporaryProjectFactory } from "../core/diffing/TemporaryProjectFactory";
 import type { CacheService } from "../core/infra/cache-service";
-import type { FileSystemService } from "../core/infra/file-service";
 import type { GitService } from "../core/infra/git-service";
 import type { NpmService } from "../core/infra/npm-service";
 import type { ShellService } from "../core/infra/shell-service";
@@ -22,8 +21,6 @@ function createToken<T>(description: string): InjectionToken<T> {
   return Symbol.for(`skaff:${description}`);
 }
 
-export const FileSystemServiceToken =
-  createToken<FileSystemService>("FileSystemService");
 export const CacheServiceToken = createToken<CacheService>("CacheService");
 export const GitServiceToken = createToken<GitService>("GitService");
 export const NpmServiceToken = createToken<NpmService>("NpmService");
@@ -55,7 +52,6 @@ export const EsbuildInitializerToken =
   createToken<EsbuildInitializer>("EsbuildInitializer");
 
 export const TOKENS = {
-  FileSystemService: FileSystemServiceToken,
   CacheService: CacheServiceToken,
   GitService: GitServiceToken,
   NpmService: NpmServiceToken,

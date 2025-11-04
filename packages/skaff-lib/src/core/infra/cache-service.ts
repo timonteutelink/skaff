@@ -2,14 +2,14 @@ import { createHash } from "node:crypto";
 import * as fs from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { inject, injectable } from "tsyringe";
+import { injectable } from "tsyringe";
 
 import { getSkaffContainer } from "../../di/container";
-import { CacheServiceToken, FileSystemServiceToken } from "../../di/tokens";
+import { CacheServiceToken } from "../../di/tokens";
 import { backendLogger } from "../../lib/logger";
 import { Result } from "../../lib/types";
 import { logError } from "../../lib/utils";
-import type { FileSystemService } from "./file-service";
+import { makeDir } from "./file-service";
 
 export type CacheKey =
   | "template-config"
@@ -20,22 +20,21 @@ export type CacheKey =
 @injectable()
 export class CacheService {
   constructor(
-    @inject(FileSystemServiceToken) private readonly fileSystem: FileSystemService,
-  ) {}
+  ) { }
 
   public hash(stringToHash: string): string {
     return createHash("sha256").update(stringToHash).digest("hex");
   }
 
-  public getCacheDirPath(): string {
+  public static getCacheDirPath(): string {
     return (
       process.env.SKAFF_CACHE_PATH || path.join(tmpdir(), "skaff-cache")
     );
   }
 
   public async getCacheDir(): Promise<Result<string>> {
-    const cacheDir = this.getCacheDirPath();
-    const ensureDirResult = await this.fileSystem.makeDir(cacheDir);
+    const cacheDir = CacheService.getCacheDirPath();
+    const ensureDirResult = await makeDir(cacheDir);
 
     if ("error" in ensureDirResult) {
       return ensureDirResult;

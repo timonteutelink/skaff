@@ -23,7 +23,7 @@ import {
 } from "../generation/template-generator-service";
 import { Project } from "../../models/project";
 import { resolveProjectCreationManager } from "../projects/ProjectCreationManager";
-import { resolveCacheService } from "../infra/cache-service";
+import { CacheService, resolveCacheService } from "../infra/cache-service";
 import { resolveGitService } from "../infra/git-service";
 
 function getCacheService() {
@@ -103,7 +103,7 @@ export class Template {
       init.config.possibleParentTemplates ?? [];
     this.isDetachedSubtreeRoot = this.possibleParentTemplates.length > 0;
 
-    if (!this.absoluteBaseDir.startsWith(getCacheService().getCacheDirPath())) {
+    if (!this.absoluteBaseDir.startsWith(CacheService.getCacheDirPath())) {
       this.isLocal = true;
     }
   }
