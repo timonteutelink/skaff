@@ -15,6 +15,10 @@ import { TemplateRegistry } from "../core/templates/TemplateRegistry";
 import { TemplateTreeBuilder } from "../core/templates/TemplateTreeBuilder";
 import type { Template } from "../core/templates/Template";
 import {
+  normalizeGitRepositorySpecifier,
+  parseTemplatePathEntry,
+} from "../lib/git-repo-spec";
+import {
   GitServiceToken,
   TemplatePathsProviderToken,
   TemplateTreeBuilderToken,
@@ -40,47 +44,6 @@ interface RemoteRepoEntry {
   source: RemoteRepoSource;
 }
 
-type TemplatePathEntry =
-  | { kind: "local"; path: string }
-  | { kind: "remote"; repoUrl: string; branch?: string };
-
-function normalizeGithubRepoUrl(spec: string): string {
-  const repoPath = spec.replace(/\.git$/, "");
-  return `https://github.com/${repoPath}.git`;
-}
-
-function parseTemplatePathEntry(raw: string): TemplatePathEntry | null {
-  const trimmed = raw.trim();
-  if (!trimmed) {
-    return null;
-  }
-
-  if (trimmed.startsWith("github:")) {
-    const remainder = trimmed.slice("github:".length);
-    const branchSeparator = remainder.search(/[@#]/);
-    const repoSpec =
-      branchSeparator === -1
-        ? remainder
-        : remainder.slice(0, branchSeparator);
-    const branch =
-      branchSeparator === -1
-        ? undefined
-        : remainder.slice(branchSeparator + 1).trim() || undefined;
-    const normalizedRepo = repoSpec.trim();
-    if (!normalizedRepo) {
-      return null;
-    }
-    const repoUrl = normalizeGithubRepoUrl(normalizedRepo);
-    return { kind: "remote", repoUrl, branch };
-  }
-
-  if (/^(https?:\/\/|git@|ssh:\/\/)/i.test(trimmed)) {
-    return { kind: "remote", repoUrl: trimmed };
-  }
-
-  return { kind: "local", path: trimmed };
-}
-
 @injectable()
 export class RootTemplateRepository {
   private loading: boolean = false;
@@ -100,20 +63,27 @@ export class RootTemplateRepository {
   }
 
   async addRemoteRepo(url: string, branch: string = "main"): Promise<Result<void>> {
-    const cloneResult = await this.gitService.cloneRepoBranchToCache(url, branch);
+    const normalized = normalizeGitRepositorySpecifier(url);
+    const repoUrl = normalized?.repoUrl ?? url;
+    const targetBranch = normalized?.branch ?? branch;
+
+    const cloneResult = await this.gitService.cloneRepoBranchToCache(
+      repoUrl,
+      targetBranch,
+    );
     if ("error" in cloneResult) {
       return { error: cloneResult.error };
     }
     const existing = this.remoteRepos.find(
-      (r) => r.url === url && r.branch === branch,
+      (r) => r.url === repoUrl && r.branch === targetBranch,
     );
     if (existing) {
       existing.path = cloneResult.data;
       existing.source = existing.source ?? "manual";
     } else {
       this.remoteRepos.push({
-        url,
-        branch,
+        url: repoUrl,
+        branch: targetBranch,
         path: cloneResult.data,
         source: "manual",
       });
@@ -278,9 +248,13 @@ export class RootTemplateRepository {
     repoUrl: string,
     branch: string = "main",
   ): Promise<Result<Template[]>> {
+    const normalized = normalizeGitRepositorySpecifier(repoUrl);
+    const resolvedRepoUrl = normalized?.repoUrl ?? repoUrl;
+    const resolvedBranch = normalized?.branch ?? branch;
+
     const cloneResult = await this.gitService.cloneRepoBranchToCache(
-      repoUrl,
-      branch,
+      resolvedRepoUrl,
+      resolvedBranch,
     );
     if ("error" in cloneResult) {
       return { error: cloneResult.error };
@@ -310,8 +284,8 @@ export class RootTemplateRepository {
       const templateDir = path.join(rootTemplatesDir, entry.name);
 
       const templateResult = await this.templateTreeBuilder.build(templateDir, {
-        repoUrl,
-        branchOverride: branch,
+        repoUrl: resolvedRepoUrl,
+        branchOverride: resolvedBranch,
       });
 
       if ("error" in templateResult) {
@@ -329,7 +303,7 @@ export class RootTemplateRepository {
     }
 
     if (!templates.length) {
-      const message = `No templates found in repository ${repoUrl} on branch ${branch}`;
+      const message = `No templates found in repository ${resolvedRepoUrl} on branch ${resolvedBranch}`;
       logError({ shortMessage: message });
       return { error: message };
     }

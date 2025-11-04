@@ -12,6 +12,7 @@ import { inject, injectable } from "tsyringe";
 
 import { existsSync } from "node:fs";
 import { GenericTemplateConfigModule } from "../../../lib";
+import { normalizeGitRepositorySpecifier } from "../../../lib/git-repo-spec";
 import { getSkaffContainer } from "../../../di/container";
 import {
   CacheServiceToken,
@@ -87,11 +88,12 @@ function extractTemplateRefEntries(raw: unknown): TemplateRefEntry[] {
     if (typeof repoUrl === "string" && typeof pathValue === "string") {
       const branch =
         typeof record.branch === "string" ? record.branch : undefined;
+      const normalized = normalizeGitRepositorySpecifier(repoUrl);
       return [
         {
           type: "remote",
-          repoUrl,
-          branch,
+          repoUrl: normalized?.repoUrl ?? repoUrl,
+          branch: normalized?.branch ?? branch,
           path: pathValue,
         },
       ];
