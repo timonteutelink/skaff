@@ -1,6 +1,6 @@
 {
   "name": "@timonteutelink/skaff-lib",
-  "version": "0.0.79",
+  "version": "0.0.80",
   "exports": {
     ".": "./dist/index.js",
     "./browser": "./dist/browser.js"
@@ -37,7 +37,7 @@
     "@types/node": "^22.18.0",
     "@langchain/langgraph": "^0.3.12",
     "@langchain/openai": "^0.5.18",
-    "@timonteutelink/template-types-lib": "0.0.52",
+    "@timonteutelink/template-types-lib": "0.0.53",
     "esbuild": "^0.25.9",
     "fs-extra": "^11.3.1",
     "glob": "^11.0.3",
