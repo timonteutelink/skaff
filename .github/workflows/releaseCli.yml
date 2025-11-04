@@ -28,14 +28,23 @@ jobs:
         run: bun install --frozen-lockfile
         working-directory: apps/cli
 
+      - name: Build dist
+        run: bun run build:dist
+        working-directory: apps/cli
+
+      - name: Clean node_modules (remove Bun layout)
+        run: rm -rf apps/cli/node_modules
+
       - name: Create npm lockfile for oclif
         run: npm install --package-lock-only --omit=dev --no-audit --fund=false --workspaces=false --prefix ./apps/cli ./apps/cli
 
-      - name: Install production deps for packaging (npm)
-        run: npm ci --omit=dev --workspaces=false --prefix ./apps/cli
+      - name: Install production deps for packaging (npm, no scripts)
+        env:
+          npm_config_ignore_scripts: "true"
+        run: npm ci --omit=dev --ignore-scripts --no-audit --fund=false --workspaces=false --prefix ./apps/cli
 
       - name: Pack tarballs
-        run: bun run pack:all
+        run: oclif pack tarballs --targets linux-x64,linux-arm64,darwin-x64,darwin-arm64 && oclif pack deb
         working-directory: apps/cli
 
       - name: Publish to npm
