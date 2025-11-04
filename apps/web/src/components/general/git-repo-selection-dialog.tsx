@@ -29,12 +29,12 @@ export const GitRepoSelectionDialog: React.FC<GitRepoSelectionDialogProps> = ({
   onCancel,
 }) => {
   const [open, setOpen] = useState(false);
-  const [githubUrl, setGithubUrl] = useState("");
+  const [repoUrl, setRepoUrl] = useState("");
   const [branch, setBranch] = useState("main");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const resetForm = useCallback(() => {
-    setGithubUrl("");
+    setRepoUrl("");
     setBranch("main");
   }, []);
 
@@ -44,7 +44,7 @@ export const GitRepoSelectionDialog: React.FC<GitRepoSelectionDialogProps> = ({
       if (isSubmitting) {
         return;
       }
-      const trimmedUrl = githubUrl.trim();
+      const trimmedUrl = repoUrl.trim();
       const trimmedBranch = branch.trim();
       if (!trimmedUrl || !trimmedBranch) {
         return;
@@ -58,7 +58,7 @@ export const GitRepoSelectionDialog: React.FC<GitRepoSelectionDialogProps> = ({
         setIsSubmitting(false);
       }
     },
-    [branch, githubUrl, isSubmitting, onConfirm, resetForm],
+    [branch, isSubmitting, onConfirm, repoUrl, resetForm],
   );
 
   const handleCancel = useCallback(async () => {
@@ -88,27 +88,27 @@ export const GitRepoSelectionDialog: React.FC<GitRepoSelectionDialogProps> = ({
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Select Github Repo</DialogTitle>
+          <DialogTitle>Select Git Repository</DialogTitle>
           {/* <DialogDescription></DialogDescription> */}
         </DialogHeader>
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="github-url">GitHub URL</Label>
+            <Label htmlFor="repository-url">Repository URL</Label>
             <Input
-              id="github-url"
-              name="githubUrl"
-              value={githubUrl}
-              onChange={(e) => setGithubUrl(e.target.value)}
-              type="url"
-              placeholder="https://github.com/timonteutelink/example-templates"
+              id="repository-url"
+              name="repoUrl"
+              value={repoUrl}
+              onChange={(e) => setRepoUrl(e.target.value)}
+              type="text"
+              placeholder="git@github.com:org/example-templates.git"
               autoFocus
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="github-branch">Branch</Label>
+            <Label htmlFor="repository-branch">Branch</Label>
             <Input
-              id="github-branch"
+              id="repository-branch"
               name="branch"
               value={branch}
               onChange={(e) => setBranch(e.target.value)}
@@ -130,9 +130,7 @@ export const GitRepoSelectionDialog: React.FC<GitRepoSelectionDialogProps> = ({
               variant="default"
               type="submit"
               className="ml-2"
-              disabled={
-                isSubmitting || !githubUrl.trim() || !branch.trim()
-              }
+              disabled={isSubmitting || !repoUrl.trim() || !branch.trim()}
             >
               {actionText}
             </Button>

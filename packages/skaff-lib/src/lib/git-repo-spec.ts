@@ -33,9 +33,25 @@ function extractBranchSuffix(
   return { repoUrl, branch };
 }
 
-function normalizeGithubRepoPath(raw: string): string | null {
-  const cleaned = raw
-    .trim()
+interface NormalizedGithubPath {
+  scheme: string;
+  host: string;
+  path: string;
+}
+
+function normalizeGithubRepoPath(raw: string): NormalizedGithubPath | null {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const schemeMatch = trimmed.match(/^([a-z][a-z0-9+.-]*):\/\//i);
+  const scheme = schemeMatch ? schemeMatch[1].toLowerCase() : "https";
+  const withoutScheme = schemeMatch
+    ? trimmed.slice(schemeMatch[0].length)
+    : trimmed;
+
+  const cleaned = withoutScheme
     .replace(/^\/+/, "")
     .replace(/\.git$/i, "")
     .replace(/\/+$/g, "");
@@ -49,7 +65,24 @@ function normalizeGithubRepoPath(raw: string): string | null {
     return null;
   }
 
-  return segments.join("/");
+  let host: string;
+  let pathSegments: string[];
+  if (segments[0].includes(".") || segments[0].includes(":")) {
+    host = segments[0];
+    pathSegments = segments.slice(1);
+    if (pathSegments.length === 0) {
+      return null;
+    }
+  } else {
+    host = "github.com";
+    pathSegments = segments;
+  }
+
+  return {
+    scheme,
+    host,
+    path: pathSegments.join("/"),
+  };
 }
 
 function parseGithubSpecifier(
@@ -68,7 +101,7 @@ function parseGithubSpecifier(
 
   const branch = match.groups.branch?.trim();
   return {
-    repoUrl: `https://github.com/${repoPath}.git`,
+    repoUrl: `${repoPath.scheme}://${repoPath.host}/${repoPath.path}.git`,
     branch: branch ? branch : undefined,
   };
 }
