@@ -46,9 +46,9 @@ jobs:
       - name: Pack tarballs
         working-directory: apps/cli
         run: |
-          npx --yes oclif@4.22.18 pack tarballs \
+          npx --yes oclif@4.22.41 pack tarballs \
             --targets linux-x64,linux-arm64,darwin-x64,darwin-arm64
-          npx --yes oclif@4.22.18 pack deb
+          npx --yes oclif@4.22.41 pack deb
 
       - name: Publish to npm
         env:
