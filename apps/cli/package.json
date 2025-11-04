@@ -85,7 +85,7 @@
   "repository": "timonteutelink/skaff",
   "scripts": {
     "rundev": "",
-    "build": "shx rm -rf dist && tsc -b",
+    "build": "rm -rf dist && tsc -b",
     "lint": "eslint",
     "postpack": "shx rm -f oclif.manifest.json",
     "posttest": "bun run lint",
