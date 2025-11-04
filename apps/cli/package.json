@@ -87,7 +87,7 @@
     "rundev": "",
     "build": "rm -rf dist && tsc -b",
     "lint": "eslint",
-    "postpack": "shx rm -f oclif.manifest.json",
+    "postpack": "rm -f oclif.manifest.json",
     "posttest": "bun run lint",
     "prepack": "bun run build:dist && oclif readme",
     "test": "mocha --forbid-only \"test/**/*.test.ts\"",
