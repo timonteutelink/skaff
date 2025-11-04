@@ -44,8 +44,11 @@ jobs:
         run: npm ci --omit=dev --ignore-scripts --no-audit --fund=false --workspaces=false --prefix ./apps/cli
 
       - name: Pack tarballs
-        run: oclif pack tarballs --targets linux-x64,linux-arm64,darwin-x64,darwin-arm64 && oclif pack deb
         working-directory: apps/cli
+        run: |
+          npx --yes oclif@4.22.18 pack tarballs \
+            --targets linux-x64,linux-arm64,darwin-x64,darwin-arm64
+          npx --yes oclif@4.22.18 pack deb
 
       - name: Publish to npm
         env:
