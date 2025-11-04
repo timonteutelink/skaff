@@ -46,7 +46,7 @@ function normalizeGithubRepoPath(raw: string): NormalizedGithubPath | null {
   }
 
   const schemeMatch = trimmed.match(/^([a-z][a-z0-9+.-]*):\/\//i);
-  const scheme = schemeMatch ? schemeMatch[1].toLowerCase() : "https";
+  const scheme = schemeMatch ? schemeMatch[1]!.toLowerCase() : "https";
   const withoutScheme = schemeMatch
     ? trimmed.slice(schemeMatch[0].length)
     : trimmed;
@@ -67,8 +67,8 @@ function normalizeGithubRepoPath(raw: string): NormalizedGithubPath | null {
 
   let host: string;
   let pathSegments: string[];
-  if (segments[0].includes(".") || segments[0].includes(":")) {
-    host = segments[0];
+  if (segments[0]!.includes(".") || segments[0]!.includes(":")) {
+    host = segments[0]!;
     pathSegments = segments.slice(1);
     if (pathSegments.length === 0) {
       return null;
