@@ -108,7 +108,7 @@ build-all: it il ir bt bl bc
 
 ba: build-all
 
-build-all-all: build-all bw bwd
+build-all-all: build-all bwd
 
 baa: build-all-all
 
