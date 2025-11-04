@@ -20,6 +20,26 @@ describe("normalizeGitRepositorySpecifier", () => {
     });
   });
 
+  it("supports overriding the GitHub host", () => {
+    const result = normalizeGitRepositorySpecifier(
+      "github:github.example.com/org/project",
+    );
+    expect(result).toEqual({
+      repoUrl: "https://github.example.com/org/project.git",
+      branch: undefined,
+    });
+  });
+
+  it("preserves explicit schemes in github shorthand", () => {
+    const result = normalizeGitRepositorySpecifier(
+      "github:http://github.example.com/org/project@release",
+    );
+    expect(result).toEqual({
+      repoUrl: "http://github.example.com/org/project.git",
+      branch: "release",
+    });
+  });
+
   it("parses branch fragments on remote URLs", () => {
     const result = normalizeGitRepositorySpecifier(
       "https://github.com/org/project.git#feature",
@@ -58,6 +78,17 @@ describe("parseTemplatePathEntry", () => {
       kind: "remote",
       repoUrl: "https://github.com/owner/repo.git",
       branch: "dev",
+    });
+  });
+
+  it("treats github host overrides as remote", () => {
+    const result = parseTemplatePathEntry(
+      "github:github.example.com/org/project",
+    );
+    expect(result).toEqual({
+      kind: "remote",
+      repoUrl: "https://github.example.com/org/project.git",
+      branch: undefined,
     });
   });
 

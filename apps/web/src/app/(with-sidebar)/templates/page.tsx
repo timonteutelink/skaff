@@ -111,7 +111,7 @@ export default function TemplatesListPage() {
     () => (
       <>
         <GitRepoSelectionDialog
-          buttonText="Load from Github"
+          buttonText="Load from Repository"
           actionText="Load Template Repo"
           onConfirm={handleLoadTemplateRepo}
         />
