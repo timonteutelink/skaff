@@ -265,7 +265,6 @@ async function findTemplateConfigFiles(
       } catch (e) {
         console.warn(`Error parsing ${refJson}: ${(e as Error).message}`);
       }
-      continue;
     }
 
     const nested = await findTemplateConfigFiles(full, rootDir);
