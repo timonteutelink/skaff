@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7
+
 FROM oven/bun:latest AS base
 
 WORKDIR /app
@@ -10,25 +12,41 @@ COPY apps/cli/package.json ./apps/cli/package.json
 COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY packages/tailwind-config/package.json ./packages/tailwind-config/package.json
-RUN bun install --no-save
+
+RUN --mount=type=cache,target=/root/.cache/bun \
+    --mount=type=cache,target=/app/node_modules \
+    bun install --no-save
+
+WORKDIR /app/apps/web
+
+RUN --mount=type=cache,target=/root/.cache/bun \
+    --mount=type=cache,target=/app/apps/web/node_modules \
+    bun install --no-save
 
 FROM base AS builder
+
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+
 COPY package.json bun.lock* ./
 COPY apps/web ./apps/web
 COPY packages/typescript-config ./packages/typescript-config
 COPY packages/eslint-config ./packages/eslint-config
 COPY packages/tailwind-config ./packages/tailwind-config
 
-RUN ln -s /app/node_modules apps/web/node_modules
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV SKAFF_CACHE_PATH=/app/.cache/skaff
 ENV SKAFF_CONFIG_PATH=/app/.config/skaff
 ENV NPM_PATH="/usr/local/bin/bun"
 
-RUN cd apps/web && bun run build
+WORKDIR /app/apps/web
+
+ENV NEXT_CACHE_DIR=/app/apps/web/.next/cache
+
+RUN --mount=type=cache,target=/app/apps/web/.next/cache \
+    bun run build
 
 # Production image, copy all the files and run next
 FROM base AS runner

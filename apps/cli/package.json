@@ -1,7 +1,7 @@
 {
   "name": "@timonteutelink/skaff",
   "description": "A CLI tool for managing code templates",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "author": "timonteutelink",
   "bin": {
     "skaff": "./bin/run.js"
