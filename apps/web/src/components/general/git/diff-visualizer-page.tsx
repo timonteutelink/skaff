@@ -5,12 +5,12 @@ import { FileTree } from "./file-tree";
 import { DiffVisualizer } from "./diff-visualizer";
 
 interface DiffVisualizerPageProps {
-  projectName: string;
+  projectRepositoryName: string;
   parsedDiff: ParsedFile[];
 }
 
 export const DiffVisualizerPage: React.FC<DiffVisualizerPageProps> = ({
-  projectName,
+  projectRepositoryName,
   parsedDiff,
 }) => {
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -34,7 +34,7 @@ export const DiffVisualizerPage: React.FC<DiffVisualizerPageProps> = ({
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
       <div className="md:col-span-1">
         <FileTree
-          projectName={projectName}
+          projectRepositoryName={projectRepositoryName}
           files={parsedDiff}
           selectedFile={selectedFile}
           onSelectFile={setSelectedFile}

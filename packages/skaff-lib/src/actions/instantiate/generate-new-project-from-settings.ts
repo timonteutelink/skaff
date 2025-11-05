@@ -11,7 +11,7 @@ import { ProjectSettings, projectSettingsSchema } from "@timonteutelink/template
 export async function generateNewProjectFromSettings(
   projectSettingsJson: string,
   newProjectDirPath: string,
-  newProjectDirName: string,
+  newProjectRepositoryDirName: string,
   projectCreationOptions?: ProjectCreationOptions,
 ): Promise<Result<ProjectCreationResult>> {
   let parsedProjectSettings: ProjectSettings | undefined;
@@ -28,13 +28,13 @@ export async function generateNewProjectFromSettings(
     return { error: `Failed to parse project settings.` };
   }
 
-  parsedProjectSettings.projectName = newProjectDirName;
+  parsedProjectSettings.projectRepositoryName = newProjectRepositoryDirName;
 
   const projectCreationManager = resolveProjectCreationManager();
 
   return await projectCreationManager.generateFromTemplateSettings(
     parsedProjectSettings,
-    path.join(newProjectDirPath, newProjectDirName),
+    path.join(newProjectDirPath, newProjectRepositoryDirName),
     projectCreationOptions
   );
 }

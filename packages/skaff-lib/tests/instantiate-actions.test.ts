@@ -264,10 +264,10 @@ describe("instantiate actions", () => {
         "../src/actions/instantiate/generate-new-project-from-existing"
       );
 
-      const originalProjectName = "old-project";
+      const originalProjectRepositoryName = "old-project";
       const project = {
         instantiatedProjectSettings: {
-          projectName: originalProjectName,
+          projectRepositoryName: originalProjectRepositoryName,
           rootTemplateName: "root",
           instantiatedTemplates: [],
         },
@@ -286,14 +286,14 @@ describe("instantiate actions", () => {
         mockGenerateProjectFromTemplateSettings.mock.calls[0];
 
       expect(newSettings).toEqual({
-        projectName: "new-project",
+        projectRepositoryName: "new-project",
         rootTemplateName: "root",
         instantiatedTemplates: [],
       });
       expect(destinationPath).toContain("/dest");
       expect(options).toEqual({ dryRun: true });
-      expect(project.instantiatedProjectSettings.projectName).toBe(
-        originalProjectName,
+      expect(project.instantiatedProjectSettings.projectRepositoryName).toBe(
+        originalProjectRepositoryName,
       );
       expect(result).toEqual({ data: creationResult });
     });
@@ -308,7 +308,7 @@ describe("instantiate actions", () => {
 
       const project = {
         instantiatedProjectSettings: {
-          projectName: "old",
+          projectRepositoryName: "old",
           rootTemplateName: "root",
           instantiatedTemplates: [],
         },
@@ -326,7 +326,7 @@ describe("instantiate actions", () => {
     it("parses settings and delegates to facade", async () => {
       const creationResult = { projectPath: "generated" };
       mockProjectSettingsSchemaParse.mockReturnValue({
-        projectName: "old",
+        projectRepositoryName: "old",
         rootTemplateName: "root",
         instantiatedTemplates: [],
       });
@@ -349,7 +349,7 @@ describe("instantiate actions", () => {
 
       expect(mockProjectSettingsSchemaParse).toHaveBeenCalled();
       expect(mockGenerateProjectFromTemplateSettings).toHaveBeenCalledWith({
-        projectName: "project",
+        projectRepositoryName: "project",
         rootTemplateName: "root",
         instantiatedTemplates: [],
       }, expect.any(String), { verbose: true });

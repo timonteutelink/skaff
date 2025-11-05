@@ -6,16 +6,19 @@ import { resolveProjectCreationManager } from "../../core/projects/ProjectCreati
 export async function generateNewProjectFromExisting(
   oldProject: Project,
   newProjectDestinationDirPath: string,
-  newProjectName: string,
+  newProjectRepositoryName: string,
   projectCreationOptions?: ProjectCreationOptions
 ): Promise<Result<ProjectCreationResult>> {
-  const newSettings = { ...oldProject.instantiatedProjectSettings, projectName: newProjectName };
+  const newSettings = {
+    ...oldProject.instantiatedProjectSettings,
+    projectRepositoryName: newProjectRepositoryName,
+  };
 
   const projectCreationManager = resolveProjectCreationManager();
 
   const result = await projectCreationManager.generateFromTemplateSettings(
     newSettings,
-    path.join(newProjectDestinationDirPath, newProjectName),
+    path.join(newProjectDestinationDirPath, newProjectRepositoryName),
     projectCreationOptions
   );
 

@@ -17,21 +17,21 @@ import { Badge } from "@/components/ui/badge";
 import { ParsedFile } from "@timonteutelink/skaff-lib/browser";
 
 interface FileTreeProps {
-  projectName: string;
+  projectRepositoryName: string;
   files: ParsedFile[];
   selectedFile: string | null;
   onSelectFile: (path: string) => void;
 }
 
 export function FileTree({
-  projectName,
+  projectRepositoryName,
   files,
   selectedFile,
   onSelectFile,
 }: FileTreeProps) {
   const fileTree = useMemo(
-    () => buildFileTree(projectName, files),
-    [files, projectName],
+    () => buildFileTree(projectRepositoryName, files),
+    [files, projectRepositoryName],
   );
 
   return (
@@ -173,9 +173,9 @@ function StatusBadge({ status }: { status: "added" | "modified" | "deleted" }) {
 }
 
 // Helper function to build a file tree from a flat list of files
-function buildFileTree(projectName: string, files: ParsedFile[]): TreeNode {
+function buildFileTree(projectRepositoryName: string, files: ParsedFile[]): TreeNode {
   const root: TreeNode = {
-    name: projectName,
+    name: projectRepositoryName,
     path: "",
     type: "directory",
     children: [],

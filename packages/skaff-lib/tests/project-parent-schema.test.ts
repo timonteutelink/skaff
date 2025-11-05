@@ -103,7 +103,7 @@ async function createTemplate({
 describe("Project parent final settings validation", () => {
   function buildProjectSettings(parentName: string, parentValue: string): ProjectSettings {
     return {
-      projectName: "test-project",
+      projectRepositoryName: "test-project",
       projectAuthor: "tester",
       rootTemplateName: parentName,
       instantiatedTemplates: [

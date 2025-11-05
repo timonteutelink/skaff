@@ -7,10 +7,10 @@ import { viewParsedDiffWithGit } from '../../utils/diff-utils.js';
 
 export default class InstantiationProjectFromSettings extends Base {
   static args = {
-    newProjectName: Args.string({ required: true }),
+    newProjectRepositoryName: Args.string({ required: true }),
     settingsFileOrJson: Args.string({ required: true }),
   };
-static description = 'Generate a project entirely from a ProjectSettings JSON';
+  static description = 'Generate a project repository entirely from a ProjectSettings JSON';
 
   async run() {
     const { args } = await this.parse(InstantiationProjectFromSettings);
@@ -22,7 +22,7 @@ static description = 'Generate a project entirely from a ProjectSettings JSON';
     const res = await generateNewProjectFromSettings(
       settingsStr,
       process.cwd(),
-      args.newProjectName,
+      args.newProjectRepositoryName,
       { git: true },
     );
     if ('error' in res) this.error(res.error, { exit: 1 });

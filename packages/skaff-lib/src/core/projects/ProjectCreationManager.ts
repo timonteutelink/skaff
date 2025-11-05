@@ -44,12 +44,12 @@ export class ProjectCreationManager {
     options?: ProjectCreationOptions,
   ): Promise<Result<ProjectCreationResult>> {
     const projectRepository = this.projectRepository;
-    const newProjectName = path.basename(projectPath);
+    const newProjectRepositoryName = path.basename(projectPath);
     const newProjectParentDir = path.dirname(projectPath);
 
-    const project = await projectRepository.findProjectByName(
+    const project = await projectRepository.findProjectByRepositoryName(
       newProjectParentDir,
-      newProjectName,
+      newProjectRepositoryName,
     );
 
     if ("error" in project) {
@@ -57,7 +57,7 @@ export class ProjectCreationManager {
     }
 
     if (!project.data) {
-      backendLogger.error(`Project ${newProjectName} not found after creation`);
+      backendLogger.error(`Project ${newProjectRepositoryName} not found after creation`);
       return {
         error: "Failed to create project, project not found after creation",
       };
@@ -95,7 +95,7 @@ export class ProjectCreationManager {
   public async instantiateProject(
     rootTemplateName: string,
     parentDirPath: string,
-    newProjectName: string,
+    newProjectRepositoryName: string,
     userTemplateSettings: UserTemplateSettings,
     projectCreationOptions?: ProjectCreationOptions,
   ): Promise<Result<ProjectCreationResult>> {
@@ -115,7 +115,7 @@ export class ProjectCreationManager {
     return template.data.instantiateNewProject(
       userTemplateSettings,
       parentDirPath,
-      newProjectName,
+      newProjectRepositoryName,
       projectCreationOptions,
       this.templateGenerator,
     );

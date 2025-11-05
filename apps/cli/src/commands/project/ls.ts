@@ -5,12 +5,12 @@ import Base from '../../base-command.js';
 
 export default class ProjectLs extends Base {
   static description =
-    'List projects in the current directory (use --project PATH to scope the search, --name to filter by project name)';
+    'List projects in the current directory (use --project PATH to scope the search, --name to filter by project repository name)';
   static flags = {
     ...Base.flags,
     name: Flags.string({
       char: 'n',
-      description: 'Filter by project name',
+      description: 'Filter by project repository name',
     }),
   };
 
@@ -23,7 +23,7 @@ export default class ProjectLs extends Base {
     let projects = res.data;
     if (flags.name) {
       projects = projects.filter(
-        p => p.instantiatedProjectSettings.projectName === flags.name,
+        p => p.instantiatedProjectSettings.projectRepositoryName === flags.name,
       );
       if (projects.length === 0)
         this.error('No projects found with the given name', { exit: 1 });

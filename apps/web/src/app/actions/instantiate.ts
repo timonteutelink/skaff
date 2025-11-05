@@ -5,7 +5,7 @@ import { getConfig, NewTemplateDiffResult, ParsedFile, ProjectCreationResult, pr
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 
 export async function createNewProject(
-  projectName: string,
+  projectRepositoryName: string,
   templateName: string,
   projectDirPathId: string,
   userTemplateSettings: UserTemplateSettings,
@@ -22,22 +22,22 @@ export async function createNewProject(
     };
   }
 
-  return await tempLib.generateNewProject(projectName, templateName, projectDirPath, userTemplateSettings, { git: true });
+  return await tempLib.generateNewProject(projectRepositoryName, templateName, projectDirPath, userTemplateSettings, { git: true });
 }
 
 export async function prepareTemplateModificationDiff(
   userTemplateSettings: UserTemplateSettings,
-  destinationProjectName: string,
+  destinationProjectRepositoryName: string,
   templateInstanceId: string,
 ): Promise<Result<NewTemplateDiffResult>> {
-  const destinationProject = await findProject(destinationProjectName);
+  const destinationProject = await findProject(destinationProjectRepositoryName);
 
   if ('error' in destinationProject) {
     return { error: destinationProject.error };
   }
 
   if (!destinationProject.data) {
-    return { error: `Project ${destinationProjectName} not found.` };
+    return { error: `Project ${destinationProjectRepositoryName} not found.` };
   }
 
   return await tempLib.prepareModificationDiff(userTemplateSettings, destinationProject.data, templateInstanceId);
@@ -47,17 +47,17 @@ export async function prepareTemplateInstantiationDiff(
   rootTemplateName: string,
   templateName: string,
   parentInstanceId: string,
-  destinationProjectName: string,
+  destinationProjectRepositoryName: string,
   userTemplateSettings: UserTemplateSettings,
 ): Promise<Result<NewTemplateDiffResult>> {
-  const destinationProject = await findProject(destinationProjectName);
+  const destinationProject = await findProject(destinationProjectRepositoryName);
 
   if ('error' in destinationProject) {
     return { error: destinationProject.error };
   }
 
   if (!destinationProject.data) {
-    return { error: `Project ${destinationProjectName} not found.` };
+    return { error: `Project ${destinationProjectRepositoryName} not found.` };
   }
 
   return await tempLib.prepareInstantiationDiff(
@@ -70,84 +70,84 @@ export async function prepareTemplateInstantiationDiff(
 }
 
 export async function resolveConflictsAndDiff(
-  projectName: string,
+  projectRepositoryName: string,
 ): Promise<Result<ParsedFile[]>> {
-  const project = await findProject(projectName);
+  const project = await findProject(projectRepositoryName);
 
   if ('error' in project) {
     return { error: project.error };
   }
 
   if (!project.data) {
-    return { error: `Project ${projectName} not found.` };
+    return { error: `Project ${projectRepositoryName} not found.` };
   }
 
   return await tempLib.addAllAndDiff(project.data);
 }
 
 export async function restoreAllChangesToCleanProject(
-  projectName: string,
+  projectRepositoryName: string,
 ): Promise<Result<void>> {
-  const project = await findProject(projectName);
+  const project = await findProject(projectRepositoryName);
 
   if ('error' in project) {
     return { error: project.error };
   }
 
   if (!project.data) {
-    return { error: `Project ${projectName} not found.` };
+    return { error: `Project ${projectRepositoryName} not found.` };
   }
 
   return await tempLib.restoreAllChanges(project.data);
 }
 
 export async function applyTemplateDiffToProject(
-  projectName: string,
+  projectRepositoryName: string,
   diffHash: string,
 ): Promise<Result<ParsedFile[] | { resolveBeforeContinuing: boolean }>> {
-  const project = await findProject(projectName);
+  const project = await findProject(projectRepositoryName);
 
   if ('error' in project) {
     return { error: project.error };
   }
 
   if (!project.data) {
-    return { error: `Project ${projectName} not found.` };
+    return { error: `Project ${projectRepositoryName} not found.` };
   }
 
   return await tempLib.applyDiff(project.data, diffHash);
 }
 
 export async function cancelProjectCreation(
-  projectName: string,
+  projectRepositoryName: string,
 ): Promise<Result<void>> {
-  const project = await findProject(projectName);
+  const project = await findProject(projectRepositoryName);
 
   if ('error' in project) {
     return { error: project.error };
   }
 
   if (!project.data) {
-    return { error: `Project ${projectName} not found.` };
+    return { error: `Project ${projectRepositoryName} not found.` };
   }
 
   return await tempLib.deleteProject(project.data);
 }
 
 export async function generateNewProjectFromExisting(
-  currentProjectName: string,
+  currentProjectRepositoryName: string,
   newProjectDestinationDirPathId: string,
-  newProjectName: string,
+  newProjectRepositoryName: string,
 ): Promise<Result<ProjectCreationResult>> {
   const config = await getConfig();
-  const currentProject = await findProject(currentProjectName);
+  const currentProject = await findProject(currentProjectRepositoryName);
 
   if ('error' in currentProject) {
     return { error: currentProject.error };
   }
 
   if (!currentProject.data) {
-    return { error: `Project ${currentProjectName} not found.` };
+    return { error: `Project ${currentProjectRepositoryName} not found.` };
   }
 
   const newProjectDestinationDirPath = config.PROJECT_SEARCH_PATHS.find(
@@ -162,23 +162,23 @@ export async function generateNewProjectFromExisting(
   return await tempLib.generateNewProjectFromExisting(
     currentProject.data,
     newProjectDestinationDirPath,
-    newProjectName,
+    newProjectRepositoryName,
     { git: true }
   );
 }
 
 export async function retrieveDiffUpdateProjectNewTemplateRevision(
-  projectName: string,
+  projectRepositoryName: string,
   newTemplateRevisionCommitHash: string,
 ): Promise<Result<NewTemplateDiffResult>> {
-  const project = await findProject(projectName);
+  const project = await findProject(projectRepositoryName);
 
   if ('error' in project) {
     return { error: project.error };
   }
 
   if (!project.data) {
-    return { error: `Project ${projectName} not found.` };
+    return { error: `Project ${projectRepositoryName} not found.` };
   }
 
   return await tempLib.prepareUpdateDiff(
@@ -190,7 +190,7 @@ export async function retrieveDiffUpdateProjectNewTemplateRevision(
 export async function generateProjectFromProjectSettings(
   projectSettingsJson: string,
   projectDirPathId: string,
-  newProjectDirName: string,
+  newProjectRepositoryDirName: string,
 ): Promise<Result<ProjectCreationResult>> {
   const config = await getConfig();
   const projectDirPath = config.PROJECT_SEARCH_PATHS.find(
@@ -206,7 +206,7 @@ export async function generateProjectFromProjectSettings(
   return await tempLib.generateNewProjectFromSettings(
     projectSettingsJson,
     projectDirPath,
-    newProjectDirName,
+    newProjectRepositoryDirName,
     { git: true }
   );
 }

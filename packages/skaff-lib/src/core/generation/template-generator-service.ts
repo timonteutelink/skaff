@@ -506,7 +506,7 @@ export class TemplateGenerationSession {
       if (!this.options.dontDoGit) {
         const commitResult = await this.gitService.commitAll(
           this.options.absoluteDestinationPath,
-          `Initial commit for ${projectSettings.projectName}`,
+          `Initial commit for ${projectSettings.projectRepositoryName}`,
         );
         if ("error" in commitResult) {
           return fail(commitResult);

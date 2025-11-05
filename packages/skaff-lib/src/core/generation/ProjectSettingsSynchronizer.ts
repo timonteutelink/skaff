@@ -91,10 +91,10 @@ export class ProjectSettingsSynchronizer {
   ): Result<string> {
     if (this.destinationProjectSettings.instantiatedTemplates.length > 0) {
       backendLogger.error(
-        `Project ${this.destinationProjectSettings.projectName} already has instantiated templates.`,
+        `Project ${this.destinationProjectSettings.projectRepositoryName} already has instantiated templates.`,
       );
       return {
-        error: `Project ${this.destinationProjectSettings.projectName} already has instantiated templates.`,
+        error: `Project ${this.destinationProjectSettings.projectRepositoryName} already has instantiated templates.`,
       };
     }
 

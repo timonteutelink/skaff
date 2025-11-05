@@ -52,12 +52,12 @@ export class ProjectRepository {
     return result;
   }
 
-  async findProjectByName(
+  async findProjectByRepositoryName(
     searchPath: string,
-    projectName: string,
+    projectRepositoryName: string,
     cached: boolean = false,
   ): Promise<Result<Project | null>> {
-    const projectPath = path.join(searchPath, projectName);
+    const projectPath = path.join(searchPath, projectRepositoryName);
 
     try {
       const stat = await fs.stat(projectPath);

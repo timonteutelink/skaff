@@ -4,7 +4,7 @@ import type { UseFormReturn } from "react-hook-form";
 import { ReactNode } from "react";
 
 export interface TemplateSettingsFormProps {
-  projectName: string;
+  projectRepositoryName: string;
   selectedTemplate: string;
   selectedTemplateSettingsSchema: any;
   formDefaultValues: Record<string, any>;

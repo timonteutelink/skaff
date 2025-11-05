@@ -16,28 +16,28 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 export default function ProjectStagedChangesPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const projectNameParam = useMemo(
-    () => searchParams.get("projectName"),
+  const projectRepositoryNameParam = useMemo(
+    () => searchParams.get("projectRepositoryName"),
     [searchParams],
   );
   const [projectDiff, setProjectDiff] = useState<ParsedFile[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!projectNameParam) {
+    if (!projectRepositoryNameParam) {
       toastNullError({
-        shortMessage: "No project name provided in search params.",
+        shortMessage: "No project repository name provided in search params.",
       });
       router.push("/projects");
       return;
     }
 
-    resolveConflictsAndDiff(projectNameParam).then(
+    resolveConflictsAndDiff(projectRepositoryNameParam).then(
       (data: Result<ParsedFile[] | null>) => {
         const toastResult = toastNullError({
           result: data,
           shortMessage: "Error retrieving project diff",
-          nullErrorMessage: `Project diff not found for ${projectNameParam}`,
+          nullErrorMessage: `Project diff not found for ${projectRepositoryNameParam}`,
           nullRedirectPath: "/projects",
         });
         if (!toastResult) {
@@ -46,15 +46,15 @@ export default function ProjectStagedChangesPage() {
         setProjectDiff(toastResult);
       },
     );
-  }, [projectNameParam, router]);
+  }, [projectRepositoryNameParam, router]);
 
   const handleCommit = useCallback(
     async (message: string) => {
-      if (!projectNameParam) return;
+      if (!projectRepositoryNameParam) return;
 
       setIsLoading(true);
       try {
-        const result = await commitChanges(projectNameParam, message);
+        const result = await commitChanges(projectRepositoryNameParam, message);
 
         const toastResult = toastNullError({
           result,
@@ -64,7 +64,7 @@ export default function ProjectStagedChangesPage() {
           return;
         }
 
-        router.push(`/projects/project/?projectName=${projectNameParam}`);
+        router.push(`/projects/project/?projectRepositoryName=${projectRepositoryNameParam}`);
       } catch (error) {
         toastNullError({
           error,
@@ -74,21 +74,21 @@ export default function ProjectStagedChangesPage() {
         setIsLoading(false);
       }
     },
-    [projectNameParam, router],
+    [projectRepositoryNameParam, router],
   );
 
   const handleCancel = useCallback(() => { }, []);
 
   const handleBack = useCallback(() => {
-    if (projectNameParam) {
-      router.push(`/projects/project/?projectName=${projectNameParam}`);
+    if (projectRepositoryNameParam) {
+      router.push(`/projects/project/?projectRepositoryName=${projectRepositoryNameParam}`);
     } else {
       router.push("/projects");
     }
-  }, [projectNameParam, router]);
+  }, [projectRepositoryNameParam, router]);
 
-  if (!projectNameParam) {
-    return <div>Error: No project name provided.</div>;
+  if (!projectRepositoryNameParam) {
+    return <div>Error: No project repository name provided.</div>;
   }
 
   if (!projectDiff || isLoading) {
@@ -107,7 +107,7 @@ export default function ProjectStagedChangesPage() {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-xl font-semibold truncate">{projectNameParam}</h1>
+          <h1 className="text-xl font-semibold truncate">{projectRepositoryNameParam}</h1>
         </div>
         <div className="flex items-center gap-2">
           <CommitButton onCommit={handleCommit} onCancel={handleCancel} />
@@ -116,7 +116,7 @@ export default function ProjectStagedChangesPage() {
 
       <div className="flex-1 p-4">
         <DiffVisualizerPage
-          projectName={projectNameParam}
+          projectRepositoryName={projectRepositoryNameParam}
           parsedDiff={projectDiff}
         />
       </div>

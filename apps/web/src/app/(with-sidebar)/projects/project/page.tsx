@@ -205,8 +205,8 @@ const buildProjectTree = (
 export default function ProjectTemplateTreePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const projectNameParam = useMemo(
-    () => searchParams.get("projectName"),
+  const projectRepositoryNameParam = useMemo(
+    () => searchParams.get("projectRepositoryName"),
     [searchParams],
   );
   const [project, setProject] = useState<ProjectDTO>();
@@ -219,9 +219,9 @@ export default function ProjectTemplateTreePage() {
 
   // Fetch project data.
   useEffect(() => {
-    if (!projectNameParam) {
+    if (!projectRepositoryNameParam) {
       toastNullError({
-        shortMessage: "No project name provided in search params.",
+        shortMessage: "No project repository name provided in search params.",
       });
       router.push("/projects");
       return;
@@ -229,8 +229,8 @@ export default function ProjectTemplateTreePage() {
 
     const retrieveStuff = async () => {
       const [projectResult, revisionResult] = await Promise.all([
-        retrieveProject(projectNameParam),
-        retrieveTemplateRevisionForProject(projectNameParam),
+        retrieveProject(projectRepositoryNameParam),
+        retrieveTemplateRevisionForProject(projectRepositoryNameParam),
       ]);
 
       const project = toastNullError({
@@ -256,7 +256,7 @@ export default function ProjectTemplateTreePage() {
       const revision = toastNullError({
         result: revisionResult,
         shortMessage: "Error retrieving template revision.",
-        nullErrorMessage: `Template not found for project ${projectNameParam}.`,
+        nullErrorMessage: `Template not found for project ${projectRepositoryNameParam}.`,
         nullRedirectPath: "/projects",
         router,
       });
@@ -268,7 +268,7 @@ export default function ProjectTemplateTreePage() {
       setRootTemplate(revision);
     };
     retrieveStuff();
-  }, [projectNameParam, router]);
+  }, [projectRepositoryNameParam, router]);
 
   useEffect(() => {
     if (rootTemplate) {
@@ -306,9 +306,9 @@ export default function ProjectTemplateTreePage() {
 
   const handleBranchChange = useCallback(
     async (branch: string) => {
-      if (!projectNameParam) return;
+      if (!projectRepositoryNameParam) return;
 
-      const switchResult = await switchProjectBranch(projectNameParam, branch);
+      const switchResult = await switchProjectBranch(projectRepositoryNameParam, branch);
       const result = toastNullError({
         result: switchResult,
         shortMessage: "Error switching branch.",
@@ -316,18 +316,18 @@ export default function ProjectTemplateTreePage() {
       if (!result) {
         return;
       }
-      const updatedProjectResult = await retrieveProject(projectNameParam);
+      const updatedProjectResult = await retrieveProject(projectRepositoryNameParam);
       const updatedProject = toastNullError({
         result: updatedProjectResult,
         shortMessage: "Error retrieving updated project.",
-        nullErrorMessage: `Updated project not found for ${projectNameParam}.`,
+        nullErrorMessage: `Updated project not found for ${projectRepositoryNameParam}.`,
       });
       if (!updatedProject) {
         return;
       }
       setProject(updatedProject);
     },
-    [projectNameParam],
+    [projectRepositoryNameParam],
   );
 
   if (!project || !rootTemplate || !latestTemplate) {
@@ -340,7 +340,7 @@ export default function ProjectTemplateTreePage() {
 
   return (
     <div className="flex flex-col h-screen">
-      {projectNameParam && (
+      {projectRepositoryNameParam && (
         <ProjectHeader
           project={project}
           onBranchChange={handleBranchChange}

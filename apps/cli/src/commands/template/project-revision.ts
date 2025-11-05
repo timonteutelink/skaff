@@ -32,7 +32,7 @@ export default class TemplateProjectRevision extends Base {
 
     this.output({
       description: tpl.config.templateConfig.description,
-      project: project.data.instantiatedProjectSettings.projectName,
+      project: project.data.instantiatedProjectSettings.projectRepositoryName,
       revision: tpl.commitHash,
       template: tpl.config.templateConfig.name,
     });

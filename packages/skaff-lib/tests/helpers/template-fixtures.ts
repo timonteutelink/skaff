@@ -24,7 +24,7 @@ import { getSkaffContainer } from "../../src/di/container";
  *   it("works", async () => {
  *     const { template } = await createTestTemplate({
  *       name: "root-template",
- *       files: { "README.hbs": "Hello {{projectName}}" },
+ *       files: { "README.hbs": "Hello {{projectRepositoryName}}" },
  *       subTemplates: [{ name: "child-template" }],
  *     });
  *
@@ -273,7 +273,7 @@ export async function createTestTemplate(
 
 export interface CreateTestProjectOptions {
   template: Template;
-  projectName?: string;
+  projectRepositoryName?: string;
   projectAuthor?: string;
   instantiatedTemplates?: ProjectSettings["instantiatedTemplates"];
   settingsOverrides?: Partial<ProjectSettings>;
@@ -294,11 +294,14 @@ export async function createTestProject(
   options: CreateTestProjectOptions,
 ): Promise<CreateTestProjectResult> {
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), "skaff-project-"));
-  const projectDir = path.join(tempRoot, options.projectName ?? "test-project");
+  const projectDir = path.join(
+    tempRoot,
+    options.projectRepositoryName ?? "test-project",
+  );
   await fs.mkdir(projectDir, { recursive: true });
 
   const baseSettings: ProjectSettings = {
-    projectName: options.projectName ?? "test-project",
+    projectRepositoryName: options.projectRepositoryName ?? "test-project",
     projectAuthor: options.projectAuthor ?? "Test Author",
     rootTemplateName: options.template.config.templateConfig.name,
     instantiatedTemplates: options.instantiatedTemplates ?? [],
