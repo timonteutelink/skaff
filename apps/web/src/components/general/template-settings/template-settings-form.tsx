@@ -27,7 +27,7 @@ import { RecordFieldRenderer } from "./field-renderers/record-field-renderer";
 import { toastNullError } from "@/lib/utils";
 
 export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
-  projectName,
+  projectRepositoryName,
   selectedTemplate,
   selectedTemplateSettingsSchema,
   formDefaultValues,
@@ -284,7 +284,7 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
           <p className="text-muted-foreground">
             Configure settings for template{" "}
             <span className="font-medium">{selectedTemplate}</span> in project{" "}
-            <span className="font-medium">{projectName}</span>
+            <span className="font-medium">{projectRepositoryName}</span>
           </p>
         </div>
 

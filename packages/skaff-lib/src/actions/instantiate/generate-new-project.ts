@@ -3,7 +3,7 @@ import { ProjectCreationOptions, ProjectCreationResult, Result } from "../../lib
 import { resolveProjectCreationManager } from "../../core/projects/ProjectCreationManager";
 
 export async function generateNewProject(
-  projectName: string,
+  projectRepositoryName: string,
   templateName: string,
   newProjectParentDirPath: string,
   userTemplateSettings: UserTemplateSettings,
@@ -13,7 +13,7 @@ export async function generateNewProject(
   return await projectCreationManager.instantiateProject(
     templateName,
     newProjectParentDirPath,
-    projectName,
+    projectRepositoryName,
     userTemplateSettings,
     projectCreationOptions,
   );

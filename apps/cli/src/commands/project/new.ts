@@ -7,10 +7,10 @@ import { readUserTemplateSettings } from '../../utils/template-utils.js';
 
 export default class InstantiationProjectNew extends Base {
   static args = {
-    projectName: Args.string({ required: true }),
+    projectRepositoryName: Args.string({ required: true }),
     templateName: Args.string({ required: true }),
   };
-  static description = 'Create a new project from a template';
+  static description = 'Create a new project repository from a template';
   static flags = {
     ...Base.flags,
     settings: Flags.string({
@@ -37,7 +37,7 @@ export default class InstantiationProjectNew extends Base {
     );
 
     const res = await generateNewProject(
-      args.projectName,
+      args.projectRepositoryName,
       args.templateName,
       process.cwd(),
       settings,

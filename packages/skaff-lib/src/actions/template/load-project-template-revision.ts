@@ -14,10 +14,10 @@ export async function loadProjectTemplateRevision(
 
   if (!commitHash) {
     logError({
-      shortMessage: `No commit hash found for project ${project.instantiatedProjectSettings.projectName}`,
+      shortMessage: `No commit hash found for project ${project.instantiatedProjectSettings.projectRepositoryName}`,
     });
     return {
-      error: `No commit hash found for project ${project.instantiatedProjectSettings.projectName}`,
+      error: `No commit hash found for project ${project.instantiatedProjectSettings.projectRepositoryName}`,
     };
   }
 

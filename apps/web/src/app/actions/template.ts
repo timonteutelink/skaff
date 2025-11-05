@@ -94,16 +94,16 @@ export async function retrieveAllTemplateRevisions(
 }
 
 export async function retrieveTemplateRevisionForProject(
-  projectName: string,
+  projectRepositoryName: string,
 ): Promise<Result<TemplateDTO | null>> {
-  const project = await findProject(projectName);
+  const project = await findProject(projectRepositoryName);
 
   if ('error' in project) {
     return { error: project.error };
   }
 
   if (!project.data) {
-    return { error: `Project ${projectName} not found.` };
+    return { error: `Project ${projectRepositoryName} not found.` };
   }
 
   const result = await tempLib.loadProjectTemplateRevision(project.data);

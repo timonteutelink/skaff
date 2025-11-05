@@ -127,7 +127,7 @@ describe("ProjectSettingsManager.load", () => {
     });
 
     const templateSettings = {
-      projectName: "demo",
+      projectRepositoryName: "demo",
       projectAuthor: "me",
       rootTemplateName: "root",
       instantiatedTemplates: [

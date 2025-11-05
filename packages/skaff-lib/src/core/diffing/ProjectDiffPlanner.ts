@@ -84,12 +84,12 @@ export class ProjectDiffPlanner {
       };
     }
 
-    const tempOldProjectName = `${oldProjectSettings.projectName}-${crypto.randomUUID()}`;
-    const tempNewProjectName = `${oldProjectSettings.projectName}-${crypto.randomUUID()}`;
+    const tempOldProjectRepositoryName = `${oldProjectSettings.projectRepositoryName}-${crypto.randomUUID()}`;
+    const tempNewProjectRepositoryName = `${oldProjectSettings.projectRepositoryName}-${crypto.randomUUID()}`;
 
     const tempOldResult = await this.tempProjectFactory.createFromSettings(
       oldProjectSettings,
-      tempOldProjectName,
+      tempOldProjectRepositoryName,
     );
 
     if ("error" in tempOldResult) {
@@ -98,7 +98,7 @@ export class ProjectDiffPlanner {
 
     const tempNewResult = await this.tempProjectFactory.createFromSettings(
       newProjectSettings,
-      tempNewProjectName,
+      tempNewProjectRepositoryName,
     );
 
     if ("error" in tempNewResult) {
@@ -559,10 +559,10 @@ export class ProjectDiffPlanner {
       };
     }
 
-    const tempProjectName = `${project.instantiatedProjectSettings.projectName}-${crypto.randomUUID()}`;
+    const tempProjectRepositoryName = `${project.instantiatedProjectSettings.projectRepositoryName}-${crypto.randomUUID()}`;
     const tempProjectResult = await this.tempProjectFactory.createFromExistingProject(
       project,
-      tempProjectName,
+      tempProjectRepositoryName,
     );
 
     if ("error" in tempProjectResult) {

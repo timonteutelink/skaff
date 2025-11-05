@@ -9,10 +9,10 @@ import { viewParsedDiffWithGit } from '../../utils/diff-utils.js';
 
 export default class InstantiationProjectClone extends Base {
   static args = {
-    newProjectName: Args.string({ required: true }),
+    newProjectRepositoryName: Args.string({ required: true }),
     oldProjectPath: Args.string({ required: true }),
   };
-static description = 'Generate a new project from an existing one';
+  static description = 'Generate a new project repository from an existing one';
 
   async run() {
     const { args } = await this.parse(InstantiationProjectClone);
@@ -29,7 +29,7 @@ static description = 'Generate a new project from an existing one';
     const res = await generateNewProjectFromExisting(
       oldProject.data,
       process.cwd(),
-      args.newProjectName,
+      args.newProjectRepositoryName,
       { git: true },
     );
     if ('error' in res) this.error(res.error, { exit: 1 });

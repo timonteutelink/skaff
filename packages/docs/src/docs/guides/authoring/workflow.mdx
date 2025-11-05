@@ -37,7 +37,10 @@ import type {
 } from "@timonteutelink/template-types-lib";
 
 const templateSettingsSchema = z.object({
-  projectName: z.string().min(1).describe("NPM package name"),
+  projectRepositoryName: z
+    .string()
+    .min(1)
+    .describe("NPM package name"),
   includeAuth: z
     .boolean()
     .default(false)

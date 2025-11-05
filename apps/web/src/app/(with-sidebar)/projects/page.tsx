@@ -39,7 +39,7 @@ import {
   type ProjectDTO,
   type TemplateDTO,
 } from "@timonteutelink/skaff-lib/browser";
-import { projectNameRegex } from "@timonteutelink/template-types-lib";
+import { projectRepositoryNameRegex } from "@timonteutelink/template-types-lib";
 import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -58,12 +58,12 @@ const columnMapping: FieldInfo<ProjectDTO>[] = [
 ];
 
 const formSchema = z.object({
-  projectName: z
+  projectRepositoryName: z
     .string()
-    .min(1, "Project name is required")
+    .min(1, "Project repository name is required")
     .regex(
-      projectNameRegex,
-      "Project name can only contain letters, numbers, dashes and underscores.",
+      projectRepositoryNameRegex,
+      "Project repository name can only contain letters, numbers, dashes and underscores.",
     ),
   template: z.string().min(1, "Template is required"),
   directory: z.string().min(1, "Project directory is required"),
@@ -83,7 +83,7 @@ export default function TemplatesListPage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema as any),
     defaultValues: {
-      projectName: "",
+      projectRepositoryName: "",
       template: "",
       directory: "",
     },
@@ -118,7 +118,7 @@ export default function TemplatesListPage() {
   const onSubmit = useCallback(
     (values: FormValues) => {
       router.push(
-        `/projects/instantiate-template/?projectName=${values.projectName}&template=${values.template}&selectedProjectDirectoryId=${values.directory}`,
+        `/projects/instantiate-template/?projectRepositoryName=${values.projectRepositoryName}&template=${values.template}&selectedProjectDirectoryId=${values.directory}`,
       );
       setOpen(false);
       form.reset();
@@ -150,12 +150,12 @@ export default function TemplatesListPage() {
             >
               <FormField
                 control={form.control}
-                name="projectName"
+                name="projectRepositoryName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Project Name</FormLabel>
+                    <FormLabel>Project Repository Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="My Awesome Project" {...field} />
+                      <Input placeholder="my-awesome-project" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -246,7 +246,7 @@ export default function TemplatesListPage() {
       caption="A list of your projects."
       buttons={createProjectDialog}
       onClick={(item) => {
-        router.push(`/projects/project?projectName=${item.name}`);
+        router.push(`/projects/project?projectRepositoryName=${item.name}`);
       }}
     />
   );

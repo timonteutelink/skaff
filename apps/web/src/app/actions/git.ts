@@ -5,50 +5,50 @@ import * as tempLib from "@timonteutelink/skaff-lib";
 import { ParsedFile, Result } from "@timonteutelink/skaff-lib";
 
 export async function commitChanges(
-  projectName: string,
+  projectRepositoryName: string,
   commitMessage: string,
 ): Promise<Result<void>> {
-  const project = await findProject(projectName);
+  const project = await findProject(projectRepositoryName);
 
   if ('error' in project) {
     return { error: project.error };
   }
 
   if (!project.data) {
-    return { error: `Project ${projectName} not found.` };
+    return { error: `Project ${projectRepositoryName} not found.` };
   }
 
   return await tempLib.addAllAndCommit(project.data, commitMessage);
 }
 
 export async function switchProjectBranch(
-  projectName: string,
+  projectRepositoryName: string,
   branch: string,
 ): Promise<Result<void>> {
-  const project = await findProject(projectName);
+  const project = await findProject(projectRepositoryName);
 
   if ('error' in project) {
     return { error: project.error };
   }
 
   if (!project.data) {
-    return { error: `Project ${projectName} not found.` };
+    return { error: `Project ${projectRepositoryName} not found.` };
   }
 
   return await tempLib.switchProjectBranch(project.data, branch);
 }
 
 export async function diffProjectFromItsTemplate(
-  projectName: string,
+  projectRepositoryName: string,
 ): Promise<Result<ParsedFile[]>> {
-  const project = await findProject(projectName);
+  const project = await findProject(projectRepositoryName);
 
   if ('error' in project) {
     return { error: project.error };
   }
 
   if (!project.data) {
-    return { error: `Project ${projectName} not found.` };
+    return { error: `Project ${projectRepositoryName} not found.` };
   }
 
   const result = await tempLib.diffProjectFromTemplate(project.data);

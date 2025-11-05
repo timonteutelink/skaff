@@ -115,7 +115,7 @@ export function ProjectDetailsPanel({
                 disabled={!project?.name}
                 onClick={() => {
                   router.push(
-                    `/projects/instantiate-template/?projectName=${project.name}` +
+                    `/projects/instantiate-template/?projectRepositoryName=${project.name}` +
                     `&existingTemplateInstanceId=${id}` +
                     `&template=${selectedInstantiatedTemplate.templateName}`,
                   );
@@ -275,7 +275,7 @@ export function ProjectDetailsPanel({
           disabled={!project || !project.name}
           onClick={() => {
             router.push(
-              `/projects/instantiate-template/?projectName=${project.name}` +
+              `/projects/instantiate-template/?projectRepositoryName=${project.name}` +
               `&template=${candidate.config.templateConfig.name}` +
               `&parentTemplateInstanceId=${selectedNode.parentId}`,
             );

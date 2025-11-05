@@ -17,15 +17,15 @@ export const instantiatedTemplateSchema = z.object({
 
 export type InstantiatedTemplate = z.infer<typeof instantiatedTemplateSchema>;
 
-export const projectNameRegex = /^[a-zA-Z0-9-_]+$/;
+export const projectRepositoryNameRegex = /^[a-zA-Z0-9-_]+$/;
 
 export const projectSettingsSchema = z.object({
-  projectName: z
+  projectRepositoryName: z
     .string()
     .min(1)
     .regex(
-      projectNameRegex,
-      "Project name can only contain letters, numbers, dashes and underscores.",
+      projectRepositoryNameRegex,
+      "Project repository name can only contain letters, numbers, dashes and underscores.",
     ),
   projectAuthor: z.string().min(1),
 

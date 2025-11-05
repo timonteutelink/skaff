@@ -14,27 +14,27 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 export default function ProjectStagedChangesPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const projectNameParam = useMemo(
-    () => searchParams.get("projectName"),
+  const projectRepositoryNameParam = useMemo(
+    () => searchParams.get("projectRepositoryName"),
     [searchParams],
   );
   const [projectDiff, setProjectDiff] = useState<ParsedFile[]>([]);
 
   useEffect(() => {
-    if (!projectNameParam) {
+    if (!projectRepositoryNameParam) {
       toastNullError({
-        shortMessage: "No project name provided in search params.",
+        shortMessage: "No project repository name provided in search params.",
       });
       router.push("/projects");
       return;
     }
 
-    diffProjectFromItsTemplate(projectNameParam).then(
+    diffProjectFromItsTemplate(projectRepositoryNameParam).then(
       (diffResult: Result<ParsedFile[]>) => {
         const diff = toastNullError({
           result: diffResult,
           shortMessage: "Error retrieving project diff",
-          nullErrorMessage: `Project diff not found for ${projectNameParam}`,
+          nullErrorMessage: `Project diff not found for ${projectRepositoryNameParam}`,
           nullRedirectPath: "/projects",
         });
 
@@ -52,18 +52,18 @@ export default function ProjectStagedChangesPage() {
         setProjectDiff(diff);
       },
     );
-  }, [projectNameParam, router]);
+  }, [projectRepositoryNameParam, router]);
 
   const handleBack = useCallback(() => {
-    if (projectNameParam) {
-      router.push(`/projects/project/?projectName=${projectNameParam}`);
+    if (projectRepositoryNameParam) {
+      router.push(`/projects/project/?projectRepositoryName=${projectRepositoryNameParam}`);
     } else {
       router.push("/projects");
     }
-  }, [projectNameParam, router]);
+  }, [projectRepositoryNameParam, router]);
 
-  if (!projectNameParam) {
-    return <div>Error: No project name provided.</div>;
+  if (!projectRepositoryNameParam) {
+    return <div>Error: No project repository name provided.</div>;
   }
 
   if (!projectDiff) {
@@ -82,13 +82,13 @@ export default function ProjectStagedChangesPage() {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-xl font-semibold truncate">{projectNameParam}</h1>
+          <h1 className="text-xl font-semibold truncate">{projectRepositoryNameParam}</h1>
         </div>
       </div>
 
       <div className="flex-1 p-4">
         <DiffVisualizerPage
-          projectName={projectNameParam}
+          projectRepositoryName={projectRepositoryNameParam}
           parsedDiff={projectDiff}
         />
       </div>

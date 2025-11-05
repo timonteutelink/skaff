@@ -46,8 +46,8 @@ import { ConfirmationDialog } from "@/components/general/confirmation-dialog";
 const TemplateInstantiationPage: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const projectNameParam = useMemo(
-    () => searchParams.get("projectName"),
+  const projectRepositoryNameParam = useMemo(
+    () => searchParams.get("projectRepositoryName"),
     [searchParams],
   );
   const templateNameParam = useMemo(
@@ -80,9 +80,9 @@ const TemplateInstantiationPage: React.FC = () => {
     useState<UserTemplateSettings | null>(null);
 
   useEffect(() => {
-    if (!projectNameParam) {
+    if (!projectRepositoryNameParam) {
       toastNullError({
-        shortMessage: "Project name not provided in search params.",
+        shortMessage: "Project repository name not provided in search params.",
       });
       router.push("/projects");
       return;
@@ -115,10 +115,10 @@ const TemplateInstantiationPage: React.FC = () => {
     }
     const retrieveStuff = async () => {
       const [projectResult, revisionResult] = await Promise.all([
-        retrieveProject(projectNameParam),
+        retrieveProject(projectRepositoryNameParam),
         selectedDirectoryIdParam
           ? retrieveTemplate(templateNameParam!)
-          : retrieveTemplateRevisionForProject(projectNameParam),
+          : retrieveTemplateRevisionForProject(projectRepositoryNameParam),
       ]);
 
       const revision = toastNullError({
@@ -126,7 +126,7 @@ const TemplateInstantiationPage: React.FC = () => {
           TemplateSummary | TemplateDTO | null
         >,
         shortMessage: "Error retrieving template.",
-        nullErrorMessage: `Template not found for project: ${projectNameParam}`,
+        nullErrorMessage: `Template not found for project: ${projectRepositoryNameParam}`,
         nullRedirectPath: "/projects",
         router,
       });
@@ -156,7 +156,7 @@ const TemplateInstantiationPage: React.FC = () => {
       if (!project) {
         if (!selectedDirectoryIdParam) {
           toastNullError({
-            shortMessage: `Project not found: ${projectNameParam}`,
+            shortMessage: `Project not found: ${projectRepositoryNameParam}`,
           });
           router.push("/projects");
         }
@@ -177,7 +177,7 @@ const TemplateInstantiationPage: React.FC = () => {
       }
       const newRevisionResult =
         await retrieveDiffUpdateProjectNewTemplateRevision(
-          projectNameParam,
+          projectRepositoryNameParam,
           newRevisionHashParam,
         );
       const newRevision = toastNullError({
@@ -191,7 +191,7 @@ const TemplateInstantiationPage: React.FC = () => {
     };
     retrieveStuff();
   }, [
-    projectNameParam,
+    projectRepositoryNameParam,
     router,
     templateNameParam,
     parentTemplateInstanceIdParam,
@@ -210,13 +210,13 @@ const TemplateInstantiationPage: React.FC = () => {
   const handleSubmitSettings = useCallback(
     async (data: UserTemplateSettings) => {
       if (
-        !projectNameParam ||
+        !projectRepositoryNameParam ||
         !templateNameParam ||
         !rootTemplate ||
         !subTemplate
       ) {
         toastNullError({
-          shortMessage: "Project name or template name not found.",
+          shortMessage: "Project repository name or template name not found.",
         });
         return;
       }
@@ -224,7 +224,7 @@ const TemplateInstantiationPage: React.FC = () => {
       setStoredFormData(data);
       if (selectedDirectoryIdParam) {
         const newProjectResult = await createNewProject(
-          projectNameParam,
+          projectRepositoryNameParam,
           templateNameParam,
           selectedDirectoryIdParam,
           data,
@@ -248,9 +248,9 @@ const TemplateInstantiationPage: React.FC = () => {
           return;
         }
 
-        if (project.settings.projectName !== projectNameParam) {
+        if (project.settings.projectRepositoryName !== projectRepositoryNameParam) {
           toastNullError({
-            shortMessage: "Project name does not match.",
+            shortMessage: "Project repository name does not match.",
           });
           return;
         }
@@ -281,7 +281,7 @@ const TemplateInstantiationPage: React.FC = () => {
             rootTemplate.config.templateConfig.name,
             subTemplateValue.config.templateConfig.name,
             parentTemplateInstanceIdParam!,
-            projectNameParam,
+            projectRepositoryNameParam,
             data,
           );
 
@@ -298,14 +298,14 @@ const TemplateInstantiationPage: React.FC = () => {
       } else if (existingTemplateInstanceIdParam) {
         if (!project) {
           toastNullError({
-            shortMessage: `Project not found: ${projectNameParam}`,
+            shortMessage: `Project not found: ${projectRepositoryNameParam}`,
           });
           return;
         }
 
-        if (project.settings.projectName !== projectNameParam) {
+        if (project.settings.projectRepositoryName !== projectRepositoryNameParam) {
           toastNullError({
-            shortMessage: "Project name does not match.",
+            shortMessage: "Project repository name does not match.",
           });
           return;
         }
@@ -322,7 +322,7 @@ const TemplateInstantiationPage: React.FC = () => {
         const templateModificationResult =
           await prepareTemplateModificationDiff(
             data,
-            projectNameParam,
+            projectRepositoryNameParam,
             existingTemplateInstanceIdParam,
           );
 
@@ -344,7 +344,7 @@ const TemplateInstantiationPage: React.FC = () => {
       }
     },
     [
-      projectNameParam,
+      projectRepositoryNameParam,
       rootTemplate,
       subTemplate,
       parentTemplateInstanceIdParam,
@@ -357,9 +357,9 @@ const TemplateInstantiationPage: React.FC = () => {
 
   const handleConfirmAppliedDiff = useCallback(
     async (commitMessage: string) => {
-      if (!projectNameParam || !commitMessage) {
+      if (!projectRepositoryNameParam || !commitMessage) {
         toastNullError({
-          shortMessage: "Project name or commit message not found.",
+          shortMessage: "Project repository name or commit message not found.",
         });
         return;
       }
@@ -370,7 +370,7 @@ const TemplateInstantiationPage: React.FC = () => {
         return;
       }
 
-      const commitResult = await commitChanges(projectNameParam, commitMessage);
+      const commitResult = await commitChanges(projectRepositoryNameParam, commitMessage);
 
       const commit = toastNullError({
         result: commitResult,
@@ -380,9 +380,9 @@ const TemplateInstantiationPage: React.FC = () => {
       if (commit === false) {
         return;
       }
-      router.push(`/projects/project/?projectName=${projectNameParam}`);
+      router.push(`/projects/project/?projectRepositoryName=${projectRepositoryNameParam}`);
     },
-    [router, projectNameParam],
+    [router, projectRepositoryNameParam],
   );
 
   const handleUploadProjectSettings = useCallback(
@@ -390,11 +390,11 @@ const TemplateInstantiationPage: React.FC = () => {
       if (
         !templateNameParam ||
         !selectedDirectoryIdParam ||
-        !projectNameParam
+        !projectRepositoryNameParam
       ) {
         toastNullError({
           shortMessage:
-            "Not creating a project. 'template' or 'selectedDirectoryId' or 'projectName' is missing.",
+            "Not creating a project. 'template' or 'selectedDirectoryId' or 'projectRepositoryName' is missing.",
         });
         return { data: undefined };
       }
@@ -427,7 +427,7 @@ const TemplateInstantiationPage: React.FC = () => {
       const newProjectResult = await generateProjectFromProjectSettings(
         projectSettingsJson.text,
         selectedDirectoryIdParam,
-        projectNameParam,
+        projectRepositoryNameParam,
       );
 
       const newProject = toastNullError({
@@ -442,13 +442,13 @@ const TemplateInstantiationPage: React.FC = () => {
       setAppliedDiff(newProject.diff || null);
       return { data: undefined };
     },
-    [projectNameParam, selectedDirectoryIdParam, templateNameParam],
+    [projectRepositoryNameParam, selectedDirectoryIdParam, templateNameParam],
   );
 
   const handleSubmitDiffToApply = useCallback(async () => {
-    if (!projectNameParam) {
+    if (!projectRepositoryNameParam) {
       toastNullError({
-        shortMessage: "Project name not found.",
+        shortMessage: "Project repository name not found.",
       });
       return;
     }
@@ -466,7 +466,7 @@ const TemplateInstantiationPage: React.FC = () => {
     }
 
     const applyDiffResult = await applyTemplateDiffToProject(
-      projectNameParam,
+      projectRepositoryNameParam,
       diffToApply.diffHash,
     );
 
@@ -488,7 +488,7 @@ const TemplateInstantiationPage: React.FC = () => {
         return;
       }
 
-      const resolveResult = await resolveConflictsAndDiff(projectNameParam);
+      const resolveResult = await resolveConflictsAndDiff(projectRepositoryNameParam);
 
       const resolved = toastNullError({
         result: resolveResult,
@@ -505,19 +505,19 @@ const TemplateInstantiationPage: React.FC = () => {
     }
 
     setAppliedDiff(diff);
-  }, [projectNameParam, diffToApply, selectedDirectoryIdParam]);
+  }, [projectRepositoryNameParam, diffToApply, selectedDirectoryIdParam]);
 
   const handleBackFromAppliedDiff = useCallback(async () => {
-    if (!projectNameParam) {
+    if (!projectRepositoryNameParam) {
       toastNullError({
-        shortMessage: "Project name not found.",
+        shortMessage: "Project repository name not found.",
       });
       return;
     }
 
     if (selectedDirectoryIdParam) {
       // when going back just delete project that was created. Then recreate again when going to diff. For projects this is an easy workflow for templates will be another step after viewing the diff. and no changes will be applied to project when showing first diff so when going back from first diff no deletion is necessary.
-      const result = await cancelProjectCreation(projectNameParam);
+      const result = await cancelProjectCreation(projectRepositoryNameParam);
 
       const cancel = toastNullError({
         result: result,
@@ -528,7 +528,7 @@ const TemplateInstantiationPage: React.FC = () => {
       }
     } else {
       const restoreResult =
-        await restoreAllChangesToCleanProject(projectNameParam);
+        await restoreAllChangesToCleanProject(projectRepositoryNameParam);
       const restored = toastNullError({
         result: restoreResult,
         shortMessage: "Error restoring changes.",
@@ -539,7 +539,7 @@ const TemplateInstantiationPage: React.FC = () => {
     }
 
     setAppliedDiff(null);
-  }, [projectNameParam, selectedDirectoryIdParam]);
+  }, [projectRepositoryNameParam, selectedDirectoryIdParam]);
 
   const handleBackFromDiffToApply = useCallback(() => {
     setDiffToApply(null);
@@ -570,11 +570,11 @@ const TemplateInstantiationPage: React.FC = () => {
     return instantiatedSettings;
   }, [subTemplate, project, existingTemplateInstanceIdParam, storedFormData]);
 
-  if (!projectNameParam) {
+  if (!projectRepositoryNameParam) {
     return (
       <div className="container mx-auto py-10">
         <h1 className="text-2xl font-bold">
-          Project name not provided in search params.
+          Project repository name not provided in search params.
         </h1>
       </div>
     );
@@ -599,7 +599,7 @@ const TemplateInstantiationPage: React.FC = () => {
       <div className="container py-4 mx-auto">
         <h1 className="text-2xl font-bold mb-4">Diff to apply</h1>
         <DiffVisualizerPage
-          projectName={projectNameParam}
+          projectRepositoryName={projectRepositoryNameParam}
           parsedDiff={appliedDiff}
         />
         <div className="flex justify-between mt-4">
@@ -633,7 +633,7 @@ const TemplateInstantiationPage: React.FC = () => {
       <div className="container py-4 mx-auto">
         <h1 className="text-2xl font-bold mb-4">Diff to apply</h1>
         <DiffVisualizerPage
-          projectName={projectNameParam}
+          projectRepositoryName={projectRepositoryNameParam}
           parsedDiff={diffToApply.parsedDiff}
         />
         <div className="flex flex-row-reverse justify-between mt-4">
@@ -700,7 +700,7 @@ const TemplateInstantiationPage: React.FC = () => {
         </div>
       ) : null}
       <TemplateSettingsForm
-        projectName={projectNameParam}
+        projectRepositoryName={projectRepositoryNameParam}
         selectedTemplate={templateNameParam}
         selectedTemplateSettingsSchema={
           subTemplate.data.config.templateSettingsSchema
@@ -709,7 +709,7 @@ const TemplateInstantiationPage: React.FC = () => {
         action={handleSubmitSettings}
         cancel={() => {
           router.push(
-            `/projects/${projectNameParam && !selectedDirectoryIdParam ? `project/?projectName=${projectNameParam}` : ""}`,
+            `/projects/${projectRepositoryNameParam && !selectedDirectoryIdParam ? `project/?projectRepositoryName=${projectRepositoryNameParam}` : ""}`,
           );
         }}
       />

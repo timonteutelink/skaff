@@ -12,8 +12,8 @@ import { resolveShellService } from "../core/infra/shell-service";
 import { Template } from "./template";
 import { backendLogger } from "../lib";
 
-// every project name inside a root project should be unique.
-// The root project can be uniquely identified by its name and author.(and version)
+// Every project repository name inside a root project should be unique.
+// The root project can be uniquely identified by its repository name and author (and version).
 
 function isCrossRepoChild(template: Template): boolean {
   if (!template.parentTemplate) {
@@ -412,7 +412,7 @@ export class Project {
   public mapToDTO(): Result<ProjectDTO> {
     return {
       data: {
-        name: this.instantiatedProjectSettings.projectName,
+        name: this.instantiatedProjectSettings.projectRepositoryName,
         absPath: this.absoluteRootDir,
         rootTemplateName: this.instantiatedProjectSettings.rootTemplateName,
         settings: this.instantiatedProjectSettings,

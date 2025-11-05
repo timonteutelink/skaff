@@ -7,14 +7,17 @@ import {
 } from "@timonteutelink/skaff-lib";
 
 export async function findProject(
-  projectName: string,
+  projectRepositoryName: string,
 ): Promise<Result<Project>> {
   const projectRepository = resolveProjectRepository();
   const config = await getConfig();
 
   let project: Project | null = null;
   for (const searchPath of config.PROJECT_SEARCH_PATHS) {
-    const result = await projectRepository.findProjectByName(searchPath, projectName);
+    const result = await projectRepository.findProjectByRepositoryName(
+      searchPath,
+      projectRepositoryName,
+    );
     if ("error" in result) {
       return { error: result.error };
     }
@@ -26,8 +29,8 @@ export async function findProject(
   }
 
   if (!project) {
-    backendLogger.error(`Project ${projectName} not found`);
-    return { error: `Project ${projectName} not found` };
+    backendLogger.error(`Project ${projectRepositoryName} not found`);
+    return { error: `Project ${projectRepositoryName} not found` };
   }
 
   return { data: project };

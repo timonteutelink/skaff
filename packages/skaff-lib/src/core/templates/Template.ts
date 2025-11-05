@@ -146,12 +146,12 @@ export class Template {
   public async instantiateNewProject(
     rootTemplateSettings: UserTemplateSettings,
     destinationDir: string,
-    projectName: string,
+    projectRepositoryName: string,
     projectCreationOptions?: ProjectCreationOptions,
     templateGeneratorService?: TemplateGeneratorService,
   ): Promise<Result<ProjectCreationResult>> {
     const newProjectSettings: ProjectSettings = {
-      projectName,
+      projectRepositoryName,
       projectAuthor: "abc",
       rootTemplateName: this.config.templateConfig.name,
       instantiatedTemplates: [],
@@ -161,7 +161,7 @@ export class Template {
       templateGeneratorService ?? resolveTemplateGeneratorService();
     const generatorSession = generatorService.createSession(
       {
-        absoluteDestinationPath: path.join(destinationDir, projectName),
+        absoluteDestinationPath: path.join(destinationDir, projectRepositoryName),
         dontDoGit: !projectCreationOptions?.git,
       },
       this,

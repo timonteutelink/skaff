@@ -127,7 +127,7 @@ export function ProjectHeader({
           disabled={project.gitStatus!.isClean}
           onClick={() =>
             router.push(
-              `/projects/project-staged-changes?projectName=${project.name}`,
+              `/projects/project-staged-changes?projectRepositoryName=${project.name}`,
             )
           }
         >
@@ -141,7 +141,7 @@ export function ProjectHeader({
           disabled={isDiffClean}
           onClick={() =>
             router.push(
-              `/projects/project-template-diff?projectName=${project.name}`,
+              `/projects/project-template-diff?projectRepositoryName=${project.name}`,
             )
           }
         >
@@ -155,7 +155,7 @@ export function ProjectHeader({
           disabled={!project.outdatedTemplate}
           onClick={() =>
             router.push(
-              `/projects/instantiate-template/?projectName=${project.settings.projectName}&newRevisionHash=${latestTemplate.currentCommitHash}`,
+              `/projects/instantiate-template/?projectRepositoryName=${project.settings.projectRepositoryName}&newRevisionHash=${latestTemplate.currentCommitHash}`,
             )
           }
         >

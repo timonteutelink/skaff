@@ -39,9 +39,9 @@ export async function retrieveProjects(): Promise<Result<ProjectDTO[]>> {
 }
 
 export async function retrieveProject(
-  projectName: string,
+  projectRepositoryName: string,
 ): Promise<Result<ProjectDTO | null>> {
-  const project = await findProject(projectName);
+  const project = await findProject(projectRepositoryName);
   if ("error" in project) {
     return { error: project.error };
   }
@@ -56,18 +56,18 @@ export async function retrieveProject(
 }
 
 export async function runProjectCommand(
-  projectName: string,
+  projectRepositoryName: string,
   templateInstanceId: string,
   commandTitle: string,
 ): Promise<Result<string>> {
-  const project = await findProject(projectName);
+  const project = await findProject(projectRepositoryName);
 
   if ('error' in project) {
     return { error: project.error };
   }
 
   if (!project.data) {
-    return { error: `Project ${projectName} not found.` };
+    return { error: `Project ${projectRepositoryName} not found.` };
   }
 
   return await project.data.executeTemplateCommand(
