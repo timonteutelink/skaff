@@ -1,4 +1,5 @@
 import {
+  FinalTemplateSettings,
   ProjectSettings,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
@@ -177,7 +178,10 @@ export class TemplateGenerationSession {
   public async instantiateTemplateInProject(
     newTemplateInstanceId: string,
     options?: { removeOnFailure?: boolean },
-  ): Promise<Result<string>> {
+  ): Promise<Result<{
+    targetPath: string;
+    finalSettings: FinalTemplateSettings;
+  }>> {
     const removeOnFailure = options?.removeOnFailure ?? false;
     const projectSettings = this.projectSettingsSynchronizer.getProjectSettings();
 
@@ -217,10 +221,33 @@ export class TemplateGenerationSession {
       );
     };
 
-    const fail = async <T>(result: Result<T>): Promise<Result<T>> =>
-      this.failGeneration(rollbackManager, cleanupOnFailure, result);
+    const fail = async <T>(
+      result: Result<T>,
+    ): Promise<Result<{
+      targetPath: string;
+      finalSettings: FinalTemplateSettings;
+    }>> => {
+      const failure = await this.failGeneration(
+        rollbackManager,
+        cleanupOnFailure,
+        result,
+      );
 
-    const failWithMessage = (message: string): Promise<Result<string>> =>
+      if ("error" in failure) {
+        return { error: failure.error };
+      }
+
+      return {
+        error: "Template generation failed unexpectedly.",
+      };
+    };
+
+    const failWithMessage = (
+      message: string,
+    ): Promise<Result<{
+      targetPath: string;
+      finalSettings: FinalTemplateSettings;
+    }>> =>
       fail({ error: message });
 
     if (!parentInstanceId) {
@@ -367,13 +394,28 @@ export class TemplateGenerationSession {
     if ("error" in targetPathResult) {
       rollbackManager.clear();
       this.generationContext.clearCurrentState();
-      return targetPathResult;
+      return { error: targetPathResult.error };
+    }
+
+    const finalSettingsAtEnd = this.generationContext.getFinalSettings();
+
+    if ("error" in finalSettingsAtEnd) {
+      rollbackManager.clear();
+      this.generationContext.clearCurrentState();
+      return {
+        error: finalSettingsAtEnd.error,
+      };
     }
 
     rollbackManager.clear();
     this.generationContext.clearCurrentState();
 
-    return targetPathResult;
+    return {
+      data: {
+        targetPath: targetPathResult.data,
+        finalSettings: finalSettingsAtEnd.data,
+      },
+    };
   }
 
   public async instantiateNewProject(): Promise<Result<string>> {

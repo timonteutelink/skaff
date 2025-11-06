@@ -18,7 +18,10 @@ export class AutoInstantiationPlanner {
     private readonly instantiateTemplate: (
       templateInstanceId: string,
       options?: { removeOnFailure?: boolean },
-    ) => Promise<Result<string>>,
+    ) => Promise<Result<{
+      targetPath: string;
+      finalSettings: FinalTemplateSettings;
+    }>>,
   ) {}
 
   public getTemplatesToAutoInstantiateForCurrentTemplate(): Result<
@@ -109,7 +112,7 @@ export class AutoInstantiationPlanner {
         return childFinalTemplateSettingsResult;
       }
 
-      const childFinalTemplateSettings =
+      let childFinalTemplateSettings =
         childFinalTemplateSettingsResult.data;
 
       const addTemplateResult = this.projectSettingsSynchronizer.addNewTemplate(
@@ -134,6 +137,9 @@ export class AutoInstantiationPlanner {
         this.context.setCurrentState(parentState);
         return instantiateTemplateResult;
       }
+
+      childFinalTemplateSettings =
+        instantiateTemplateResult.data.finalSettings;
 
       const childrenTemplatesToAutoInstantiate =
         templateToAutoInstantiate.children;

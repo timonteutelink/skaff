@@ -139,8 +139,10 @@ export class Template {
       return resultPath;
     }
 
-    backendLogger.info(`Template instantiated at: ${resultPath.data}`);
-    return resultPath;
+    backendLogger.info(
+      `Template instantiated at: ${resultPath.data.targetPath}`,
+    );
+    return { data: resultPath.data.targetPath };
   }
 
   public async instantiateNewProject(
