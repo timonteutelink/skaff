@@ -9,7 +9,7 @@
     };
 
     nix-utils = {
-      url = "git+ssh://git@github.com/timonteutelink/nix-utils";
+      url = "github:timonteutelink/nix-utils";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
