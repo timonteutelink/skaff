@@ -23,6 +23,10 @@ jobs:
     permissions:
       contents: write
       actions: read
+    env:
+      # Help devenv & Nix resolve the repo root and enable flakes
+      DEVENV_ROOT: ${{ github.workspace }}
+      NIX_CONFIG: experimental-features = nix-command flakes
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -44,7 +48,7 @@ jobs:
       - id: current_version
         name: Read current library version
         run: |
-          version=$(nix develop --command bash -lc 'jq -r ".version" packages/skaff-lib/package.json')
+          version=$(nix develop . --command bash -lc 'jq -r ".version" packages/skaff-lib/package.json')
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - id: bump_version
@@ -56,14 +60,13 @@ jobs:
 
       - name: Update library version
         run: |
-          nix develop --command bash -lc '
+          nix develop . --command bash -lc '
             set -euo pipefail
             new_version="${{ steps.bump_version.outputs.new_version }}"
             tmp=$(mktemp)
             jq ".version = \"${new_version}\"" packages/skaff-lib/package.json > "$tmp"
             mv "$tmp" packages/skaff-lib/package.json
           '
-
       - name: Commit library version bump
         run: |
           git add packages/skaff-lib/package.json
@@ -146,7 +149,7 @@ jobs:
 
       - name: Update Skaff consumers and dependencies
         run: |
-          nix develop --command bash -lc '
+          nix develop . --command bash -lc '
             set -euo pipefail
             new_version="${{ steps.bump_version.outputs.new_version }}"
             for pkg in apps/web/package.json apps/cli/package.json; do
