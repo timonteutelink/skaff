@@ -25,7 +25,7 @@ jobs:
       actions: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -100,7 +100,7 @@ jobs:
           make_latest: true
 
       - name: Wait for Skaff lib publish workflow
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const workflowId = "releaseLib.yml";
@@ -159,7 +159,7 @@ jobs:
 
       - name: Commit dependency updates
         run: |
-          git add apps/web/package.json apps/cli/package.json bun.lock
+          git add apps/web/package.json apps/cli/package.json bun.lock nix/skaff-package/bun-packages.nix
           if git diff --staged --quiet; then
             echo "No consumer dependency changes detected; skipping commit."
           else
@@ -168,7 +168,7 @@ jobs:
           fi
 
       - name: Publish GitHub Release
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const releaseIdRaw = "${{ steps.create_release.outputs.id }}";
