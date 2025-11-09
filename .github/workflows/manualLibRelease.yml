@@ -48,7 +48,7 @@ jobs:
       - id: current_version
         name: Read current library version
         run: |
-          version=$(nix develop . --command bash -lc 'jq -r ".version" packages/skaff-lib/package.json')
+          version=$(nix develop --impure . --command bash -lc 'jq -r ".version" packages/skaff-lib/package.json')
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - id: bump_version
@@ -60,7 +60,7 @@ jobs:
 
       - name: Update library version
         run: |
-          nix develop . --command bash -lc '
+          nix develop --impure . --command bash -lc '
             set -euo pipefail
             new_version="${{ steps.bump_version.outputs.new_version }}"
             tmp=$(mktemp)
@@ -149,7 +149,7 @@ jobs:
 
       - name: Update Skaff consumers and dependencies
         run: |
-          nix develop . --command bash -lc '
+          nix develop --impure . --command bash -lc '
             set -euo pipefail
             new_version="${{ steps.bump_version.outputs.new_version }}"
             for pkg in apps/web/package.json apps/cli/package.json; do
