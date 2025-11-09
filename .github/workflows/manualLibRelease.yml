@@ -48,7 +48,7 @@ jobs:
       - id: current_version
         name: Read current library version
         run: |
-          version=$(nix develop --impure . --command bash -lc 'jq -r ".version" packages/skaff-lib/package.json')
+          version=$(jq -r '.version' packages/skaff-lib/package.json)
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - id: bump_version
