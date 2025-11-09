@@ -1,0 +1,185 @@
+name: Manual Skaff Lib Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: "Which part of the version should be bumped"
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      release_notes:
+        description: "Release notes for this version"
+        required: true
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v20
+
+      - name: Enable Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@v13
+
+      - id: current_version
+        name: Read current library version
+        run: |
+          version=$(nix develop --command bash -lc 'jq -r ".version" packages/skaff-lib/package.json')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - id: bump_version
+        name: Calculate next version
+        uses: actions-ecosystem/action-bump-semver@v1
+        with:
+          version: ${{ steps.current_version.outputs.version }}
+          type: ${{ github.event.inputs.release_type }}
+
+      - name: Update library version
+        run: |
+          nix develop --command bash -lc '
+            set -euo pipefail
+            new_version="${{ steps.bump_version.outputs.new_version }}"
+            tmp=$(mktemp)
+            jq ".version = \"${new_version}\"" packages/skaff-lib/package.json > "$tmp"
+            mv "$tmp" packages/skaff-lib/package.json
+          '
+
+      - name: Commit library version bump
+        run: |
+          git add packages/skaff-lib/package.json
+          if git diff --staged --quiet; then
+            echo "No library version changes detected; skipping commit."
+          else
+            git commit -m "chore: release skaff-lib v${{ steps.bump_version.outputs.new_version }}"
+          fi
+
+      - id: head_sha
+        name: Capture release commit
+        run: |
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Push version bump commit
+        run: git push
+
+      - id: tag
+        name: Create release tag
+        run: |
+          tag="lib-v${{ steps.bump_version.outputs.new_version }}"
+          git tag "$tag"
+          git push origin "$tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - id: create_release
+        name: Create DRAFT GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Skaff Lib ${{ steps.bump_version.outputs.new_version }}
+          body: ${{ github.event.inputs.release_notes }}
+          draft: true
+          make_latest: true
+
+      - name: Wait for Skaff lib publish workflow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflowId = "releaseLib.yml";
+            const headSha = "${{ steps.head_sha.outputs.sha }}";
+            const timeoutMs = 30 * 60 * 1000;
+            const pollInterval = 15000;
+            const start = Date.now();
+
+            async function delay(ms) {
+              return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            while (true) {
+              const runs = await github.rest.actions.listWorkflowRuns({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: workflowId,
+                event: "push",
+                per_page: 50
+              });
+
+              const run = runs.data.workflow_runs.find(r => r.head_sha === headSha);
+
+              if (run) {
+                core.info(`Found workflow run ${run.id} with status ${run.status}`);
+                if (run.status === "completed") {
+                  if (run.conclusion !== "success") {
+                    throw new Error(`releaseLib workflow finished with conclusion ${run.conclusion}`);
+                  }
+                  core.info("releaseLib workflow completed successfully.");
+                  break;
+                }
+              } else {
+                core.info("releaseLib workflow run not found yet, waiting...");
+              }
+
+              if (Date.now() - start > timeoutMs) {
+                throw new Error("Timed out waiting for releaseLib workflow to complete");
+              }
+
+              await delay(pollInterval);
+            }
+
+      - name: Update Skaff consumers and dependencies
+        run: |
+          nix develop --command bash -lc '
+            set -euo pipefail
+            new_version="${{ steps.bump_version.outputs.new_version }}"
+            for pkg in apps/web/package.json apps/cli/package.json; do
+              tmp=$(mktemp)
+              jq ".dependencies[\"@timonteutelink/skaff\"] = \"${new_version}\"" "$pkg" > "$tmp"
+              mv "$tmp" "$pkg"
+            done
+            bun install
+          '
+
+      - name: Commit dependency updates
+        run: |
+          git add apps/web/package.json apps/cli/package.json bun.lock
+          if git diff --staged --quiet; then
+            echo "No consumer dependency changes detected; skipping commit."
+          else
+            git commit -m "chore: use skaff-lib v${{ steps.bump_version.outputs.new_version }}"
+            git push
+          fi
+
+      - name: Publish GitHub Release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const releaseIdRaw = "${{ steps.create_release.outputs.id }}";
+            if (!releaseIdRaw) {
+              throw new Error("Release ID from draft creation step is missing");
+            }
+            const releaseId = Number(releaseIdRaw);
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: releaseId,
+              draft: false
+            });
+            core.info(`Published release ${releaseId}`);
