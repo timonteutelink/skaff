@@ -55,8 +55,8 @@ jobs:
         name: Calculate next version
         uses: actions-ecosystem/action-bump-semver@v1
         with:
-          version: ${{ steps.current_version.outputs.version }}
-          type: ${{ github.event.inputs.release_type }}
+          current_version: ${{ steps.current_version.outputs.version }}
+          level: ${{ github.event.inputs.release_type }}
 
       - name: Update library version
         run: |
