@@ -1,6 +1,6 @@
 {
   "name": "@timonteutelink/skaff-lib",
-  "version": "0.0.84",
+  "version": "0.0.85",
   "exports": {
     ".": "./dist/index.js",
     "./browser": "./dist/browser.js"
