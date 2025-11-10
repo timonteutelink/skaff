@@ -141,17 +141,64 @@ jobs:
               await delay(pollInterval);
             }
 
+      - name: Wait for package to appear on npm (with cache clear)
+        run: |
+          set -euo pipefail
+          pkg="@timonteutelink/skaff"
+          ver="${{ steps.bump_version.outputs.new_version }}"
+          # total timeout (seconds) and poll interval (seconds)
+          timeout=$((20*60))
+          interval=15
+          start=$(date +%s)
+
+          echo "Waiting for ${pkg}@${ver} to be visible on the npm registry..."
+          while true; do
+            if npm view "${pkg}@${ver}" version >/dev/null 2>&1; then
+              echo "Found ${pkg}@${ver} on npm."
+              break
+            fi
+
+            now=$(date +%s)
+            if [ $((now - start)) -ge $timeout ]; then
+              echo "Timed out waiting for ${pkg}@${ver} to appear on npm after $timeout seconds."
+              exit 1
+            fi
+
+            echo "Not visible yet. Clearing caches and retrying in ${interval}s..."
+            npm cache clean --force || true
+            rm -rf ~/.cache/bun || true
+            sleep "$interval"
+          done
+
       - name: Update Skaff consumers and dependencies
         run: |
           nix develop --impure . --command bash -lc '
             set -euo pipefail
             new_version="${{ steps.bump_version.outputs.new_version }}"
+
+            # Pin the new version in dependents
             for pkg in apps/web/package.json apps/cli/package.json; do
               tmp=$(mktemp)
               jq ".dependencies[\"@timonteutelink/skaff\"] = \"${new_version}\"" "$pkg" > "$tmp"
               mv "$tmp" "$pkg"
             done
-            bun install
+
+            # Retry bun install with cache clears (handles npm propagation slowness)
+            attempts=0
+            max_attempts=8
+            sleep_between=10
+
+            until bun install; do
+              attempts=$((attempts+1))
+              if [ "$attempts" -ge "$max_attempts" ]; then
+                echo "bun install failed after ${attempts} attempts."
+                exit 1
+              fi
+              echo "bun install failed. Clearing caches and retrying ($attempts/${max_attempts}) in ${sleep_between}s..."
+              npm cache clean --force || true
+              rm -rf ~/.cache/bun || true
+              sleep "$sleep_between"
+            done
           '
 
       - name: Commit dependency updates
