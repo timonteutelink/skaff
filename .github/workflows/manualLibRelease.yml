@@ -201,6 +201,17 @@ jobs:
             done
           '
 
+      - name: Format & verify with pre-commit
+        run: |
+          nix develop --impure . --command bash -lc '
+            set -euo pipefail
+            # Run once to apply any auto-fixes, then restage
+            pre-commit run --all-files || true
+            git add -A
+            # Run again to ensure nothing else would change
+            pre-commit run --all-files
+          '
+
       - name: Commit dependency updates
         run: |
           git add apps/web/package.json apps/cli/package.json bun.lock nix/skaff-package/bun-packages.nix
@@ -208,13 +219,7 @@ jobs:
             echo "No consumer dependency changes detected; skipping commit."
           else
             git commit -m "chore: use skaff-lib v${{ steps.bump_version.outputs.new_version }}"
-            git add nix/skaff-package/bun-packages.nix
-            if git diff --staged --quiet; then
-              git push origin HEAD:${{ github.ref_name }}
-            else
-              git commit -m "chore: use skaff-lib v${{ steps.bump_version.outputs.new_version }}"
-              git push origin HEAD:${{ github.ref_name }}
-            fi
+            git push origin HEAD:${{ github.ref_name }}
           fi
 
       - name: Publish GitHub Release
