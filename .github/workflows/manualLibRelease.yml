@@ -208,7 +208,13 @@ jobs:
             echo "No consumer dependency changes detected; skipping commit."
           else
             git commit -m "chore: use skaff-lib v${{ steps.bump_version.outputs.new_version }}"
-            git push origin HEAD:${{ github.ref_name }}
+            git add nix/skaff-package/bun-packages.nix
+            if git diff --staged --quiet; then
+              git push origin HEAD:${{ github.ref_name }}
+            else
+              git commit -m "chore: use skaff-lib v${{ steps.bump_version.outputs.new_version }}"
+              git push origin HEAD:${{ github.ref_name }}
+            fi
           fi
 
       - name: Publish GitHub Release
