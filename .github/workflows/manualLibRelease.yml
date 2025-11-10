@@ -179,7 +179,7 @@ jobs:
             # Pin the new version in dependents
             for pkg in apps/web/package.json apps/cli/package.json; do
               tmp=$(mktemp)
-              jq ".dependencies[\"@timonteutelink/skaff\"] = \"${new_version}\"" "$pkg" > "$tmp"
+              jq ".dependencies[\"@timonteutelink/skaff-lib\"] = \"${new_version}\"" "$pkg" > "$tmp"
               mv "$tmp" "$pkg"
             done
 
