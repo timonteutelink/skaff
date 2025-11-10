@@ -144,7 +144,7 @@ jobs:
       - name: Wait for package to appear on npm (with cache clear)
         run: |
           set -euo pipefail
-          pkg="@timonteutelink/skaff"
+          pkg="@timonteutelink/skaff-lib"
           ver="${{ steps.bump_version.outputs.new_version }}"
           # total timeout (seconds) and poll interval (seconds)
           timeout=$((20*60))
