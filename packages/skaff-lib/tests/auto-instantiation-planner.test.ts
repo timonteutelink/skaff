@@ -133,4 +133,110 @@ describe("AutoInstantiationPlanner", () => {
 
     jest.resetModules();
   });
+
+  it("does not leak parent settings mutations between sibling mapSettings calls", async () => {
+    jest.resetModules();
+    jest.doMock("../src/models/template", () => ({
+      Template: class {},
+    }));
+
+    const { AutoInstantiationPlanner } = require("../src/core/generation/AutoInstantiationPlanner") as typeof import("../src/core/generation/AutoInstantiationPlanner");
+
+    const parentTemplate: any = {
+      config: { templateConfig: { name: "parent" }, autoInstantiatedSubtemplates: undefined },
+      findSubTemplate: jest.fn(),
+    };
+
+    const childTemplateA: any = {
+      config: { templateConfig: { name: "child-a" }, autoInstantiatedSubtemplates: undefined },
+      parentTemplate,
+      findSubTemplate: jest.fn(),
+    };
+
+    const childTemplateB: any = {
+      config: { templateConfig: { name: "child-b" }, autoInstantiatedSubtemplates: undefined },
+      parentTemplate,
+      findSubTemplate: jest.fn(),
+    };
+
+    parentTemplate.findSubTemplate.mockImplementation((name: string) => {
+      if (name === "child-a") {
+        return childTemplateA;
+      }
+      if (name === "child-b") {
+        return childTemplateB;
+      }
+      return undefined;
+    });
+
+    const parentFinalSettings = { parent: true };
+
+    const context = new StubGenerationContext({
+      template: parentTemplate,
+      finalSettings: parentFinalSettings,
+      parentInstanceId: "root-id",
+    });
+
+    const getFinalTemplateSettings = jest
+      .fn()
+      .mockReturnValueOnce({ data: { initial: "child-a" } })
+      .mockReturnValueOnce({ data: { initial: "child-b" } });
+
+    const addNewTemplate = jest
+      .fn()
+      .mockReturnValueOnce({ data: "child-a-id" })
+      .mockReturnValueOnce({ data: "child-b-id" });
+
+    const instantiateTemplate = jest
+      .fn()
+      .mockResolvedValueOnce({
+        data: { targetPath: "/child-a", finalSettings: { final: "child-a" } },
+      })
+      .mockResolvedValueOnce({
+        data: { targetPath: "/child-b", finalSettings: { final: "child-b" } },
+      });
+
+    const projectSettingsSynchronizer = {
+      getFinalTemplateSettings,
+      addNewTemplate,
+    };
+
+    const planner = new AutoInstantiationPlanner(
+      { dontAutoInstantiate: false } as any,
+      context as any,
+      projectSettingsSynchronizer as any,
+      instantiateTemplate,
+    );
+
+    const firstChildMapSettings = jest.fn((settings: Record<string, unknown>) => {
+      (settings as Record<string, unknown>).mutated = "yes";
+      return {};
+    });
+
+    const secondChildMapSettings = jest.fn(() => ({}));
+
+    const subtemplates = [
+      {
+        subTemplateName: "child-a",
+        mapSettings: firstChildMapSettings,
+      },
+      {
+        subTemplateName: "child-b",
+        mapSettings: secondChildMapSettings,
+      },
+    ];
+
+    await planner.autoInstantiateSubTemplates(
+      parentFinalSettings,
+      "parent-id",
+      subtemplates as any,
+    );
+
+    expect(firstChildMapSettings).toHaveBeenCalledTimes(1);
+    expect(secondChildMapSettings).toHaveBeenCalledTimes(1);
+    expect(secondChildMapSettings.mock.calls[0]![0]).toEqual({ parent: true });
+    expect(parentFinalSettings).toEqual({ parent: true });
+
+    jest.resetModules();
+  });
 });
