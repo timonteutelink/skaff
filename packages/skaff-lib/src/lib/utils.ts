@@ -6,6 +6,24 @@ import {
 import { Result } from "./types";
 import { backendLogger, LevelName } from "./logger";
 
+type GlobalWithStructuredClone = typeof globalThis & {
+  structuredClone?: (value: unknown) => unknown;
+};
+
+export function cloneValue<T>(value: T): T {
+  if (value === undefined || value === null) {
+    return value;
+  }
+
+  const globalWithClone = globalThis as GlobalWithStructuredClone;
+
+  if (typeof globalWithClone.structuredClone === "function") {
+    return globalWithClone.structuredClone(value) as T;
+  }
+
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
 export function anyOrCallbackToAny<
   TSettings extends FinalTemplateSettings,
   T,
