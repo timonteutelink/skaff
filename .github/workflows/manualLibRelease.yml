@@ -8,10 +8,7 @@ on:
         required: true
         default: patch
         type: choice
-        options:
-          - patch
-          - minor
-          - major
+        options: [patch, minor, major]
       release_notes:
         description: "Release notes for this version"
         required: true
@@ -24,19 +21,18 @@ jobs:
       contents: write
       actions: read
     env:
-      # Help devenv & Nix resolve the repo root and enable flakes
-      DEVENV_ROOT: ${{ github.workspace }}
       NIX_CONFIG: experimental-features = nix-command flakes
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          token: ${{ secrets.USER_TOKEN }}
 
       - name: Configure git user
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "Timon Teutelink"
+          git config user.email "timon@teutelink.nl"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Install Nix
@@ -67,6 +63,7 @@ jobs:
             jq ".version = \"${new_version}\"" packages/skaff-lib/package.json > "$tmp"
             mv "$tmp" packages/skaff-lib/package.json
           '
+
       - name: Commit library version bump
         run: |
           git add packages/skaff-lib/package.json
@@ -78,11 +75,10 @@ jobs:
 
       - id: head_sha
         name: Capture release commit
-        run: |
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Push version bump commit
-        run: git push
+        run: git push origin HEAD:${{ github.ref_name }}
 
       - id: tag
         name: Create release tag
@@ -112,9 +108,7 @@ jobs:
             const pollInterval = 15000;
             const start = Date.now();
 
-            async function delay(ms) {
-              return new Promise(resolve => setTimeout(resolve, ms));
-            }
+            async function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
             while (true) {
               const runs = await github.rest.actions.listWorkflowRuns({
@@ -167,7 +161,7 @@ jobs:
             echo "No consumer dependency changes detected; skipping commit."
           else
             git commit -m "chore: use skaff-lib v${{ steps.bump_version.outputs.new_version }}"
-            git push
+            git push origin HEAD:${{ github.ref_name }}
           fi
 
       - name: Publish GitHub Release
@@ -175,9 +169,7 @@ jobs:
         with:
           script: |
             const releaseIdRaw = "${{ steps.create_release.outputs.id }}";
-            if (!releaseIdRaw) {
-              throw new Error("Release ID from draft creation step is missing");
-            }
+            if (!releaseIdRaw) throw new Error("Release ID from draft creation step is missing");
             const releaseId = Number(releaseIdRaw);
             await github.rest.repos.updateRelease({
               owner: context.repo.owner,
