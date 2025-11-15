@@ -17,7 +17,7 @@ export class NpmService {
     try {
       await asyncExecFile(
         npmPath,
-        ["i", "--prefer-frozen-lockfile"],
+        ["i", "--frozen-lockfile"],
         { cwd: dirPath },
       );
 

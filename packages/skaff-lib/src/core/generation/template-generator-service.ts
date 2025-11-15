@@ -201,6 +201,7 @@ export class TemplateGenerationSession {
     const templateName = instantiatedTemplate.templateName;
     const userSettings = instantiatedTemplate.templateSettings;
     const parentInstanceId = instantiatedTemplate.parentId;
+    backendLogger.error("nice: " + JSON.stringify(userSettings));
 
     let templateSettingsPersisted = false;
     const rollbackManager = new FileRollbackManager();

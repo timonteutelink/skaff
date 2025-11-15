@@ -9,9 +9,9 @@
   },
   "devDependencies": {
     "prettier": "^3.6.2",
-    "prettier-plugin-tailwindcss": "^0.6.14",
-    "turbo": "^2.5.6",
-    "typescript": "5.8.3"
+    "prettier-plugin-tailwindcss": "^0.7.1",
+    "turbo": "^2.6.1",
+    "typescript": "5.9.3"
   },
   "engines": {
     "node": ">=20"
@@ -25,11 +25,11 @@
     "packages/typescript-config"
   ],
   "resolutions": {
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
   },
   "dependencies": {
-    "@inquirer/core": "^10.2.0",
-    "@inquirer/prompts": "^7.8.4"
+    "@inquirer/core": "^10.3.2",
+    "@inquirer/prompts": "^7.10.1"
   }
 }

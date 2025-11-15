@@ -74,7 +74,7 @@ async function createTemplate({
   absoluteBaseDir,
 }: {
   name: string;
-  schema: z.AnyZodObject;
+  schema: z.ZodAny;
   absoluteBaseDir: string;
 }): Promise<Template> {
   const absoluteDir = path.join(absoluteBaseDir, name);

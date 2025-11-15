@@ -155,6 +155,10 @@ export class Project {
         parentSettings: parentFinalSettings,
         aiResults: {},
       });
+      backendLogger.error("NICENICE" + JSON.stringify({
+        mappedSettings,
+        parsedUserSettings,
+      }))
     } catch (error) {
       logError({
         shortMessage: `Failed to map final settings for template ${templateName}`,
@@ -175,6 +179,9 @@ export class Project {
         error: `Invalid final template settings for template ${templateName}: ${parsedFinalSettings.error}`,
       };
     }
+    backendLogger.error("NICENICE" + JSON.stringify({
+      parsedFinalSettings
+    }))
 
     return { data: parsedFinalSettings.data };
   }

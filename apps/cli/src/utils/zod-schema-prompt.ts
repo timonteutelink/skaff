@@ -12,14 +12,14 @@ interface PromptContext {
   path: Path;
 }
 
-  export async function promptForSchema<T extends ZodTypeAny>(
-    schema: T,
-    options?: {
-      defaults?: unknown;
-      rootName?: string;
-      skipValidation?: boolean;
-    }
-  ): Promise<z.infer<T>> {
+export async function promptForSchema<T extends ZodTypeAny>(
+  schema: T,
+  options?: {
+    defaults?: unknown;
+    rootName?: string;
+    skipValidation?: boolean;
+  }
+): Promise<z.infer<T>> {
   const rootPath = options?.rootName ? [options.rootName] : ['root'];
 
   try {
@@ -297,7 +297,7 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
           try {
             const bigIntValue = BigInt(value);
             const result = schema.safeParse(bigIntValue);
-            return result.success || result.error.errors[0]?.message || 'Invalid BigInt';
+            return result.success || result.error.issues[0]?.message || 'Invalid BigInt';
           } catch {
             return 'Invalid BigInt format';
           }
@@ -340,7 +340,7 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
           const date = new Date(value);
           if (Number.isNaN(date.getTime())) return 'Invalid date format';
           const result = schema.safeParse(date);
-          return result.success || result.error.errors[0]?.message || 'Invalid date';
+          return result.success || result.error.issues[0]?.message || 'Invalid date';
         },
       });
       return new Date(value);
@@ -498,7 +498,7 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
         validate(value) {
           if (value === undefined || value === null) return 'Number is required';
           const result = schema.safeParse(value);
-          return result.success || result.error.errors[0]?.message || 'Invalid number';
+          return result.success || result.error.issues[0]?.message || 'Invalid number';
         },
       });
     }
@@ -575,7 +575,7 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
           validate(value) {
             if (!value.trim()) return 'Key cannot be empty';
             const result = keyType.safeParse(value);
-            return result.success || result.error.errors[0]?.message || 'Invalid key';
+            return result.success || result.error.issues[0]?.message || 'Invalid key';
           },
         });
 
@@ -738,7 +738,7 @@ async function promptByType(schema: ZodTypeAny, context: PromptContext): Promise
           }
 
           const result = schema.safeParse(value);
-          return result.success || result.error.errors[0]?.message || 'Invalid input';
+          return result.success || result.error.issues[0]?.message || 'Invalid input';
         },
       });
     }

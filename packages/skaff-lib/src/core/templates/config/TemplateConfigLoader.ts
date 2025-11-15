@@ -306,7 +306,7 @@ export class TemplateConfigLoader {
     @inject(CacheServiceToken) private readonly cacheService: CacheService,
     @inject(EsbuildInitializerToken)
     private readonly esbuildInitializer: EsbuildInitializer,
-  ) {}
+  ) { }
 
   public async loadAllTemplateConfigs(
     rootDir: string,

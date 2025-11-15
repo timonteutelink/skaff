@@ -13,15 +13,15 @@
 		"serve": "docusaurus serve"
 	},
 	"devDependencies": {
-		"@docusaurus/core": "^3.8.1",
-		"@docusaurus/preset-classic": "^3.8.1",
-		"@microsoft/api-extractor": "^7.52.11",
+		"@docusaurus/core": "^3.9.2",
+		"@docusaurus/preset-classic": "^3.9.2",
+		"@microsoft/api-extractor": "^7.55.0",
 		"clsx": "^2.1.1",
-		"commander": "^14.0.0",
-		"react": "^19.1.0",
-		"react-dom": "^19.1.0",
-		"typedoc": "^0.28.11",
+		"commander": "^14.0.2",
+		"react": "^19.2.0",
+		"react-dom": "^19.2.0",
+		"typedoc": "^0.28.14",
 		"docusaurus-plugin-typedoc": "^1.4.2",
-		"typedoc-plugin-markdown": "^4.8.1"
+		"typedoc-plugin-markdown": "^4.9.0"
 	}
 }

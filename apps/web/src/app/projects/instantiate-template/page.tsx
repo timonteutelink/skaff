@@ -113,13 +113,18 @@ const TemplateInstantiationPage: React.FC = () => {
       router.push("/projects");
       return;
     }
+
     const retrieveStuff = async () => {
-      const [projectResult, revisionResult] = await Promise.all([
-        retrieveProject(projectRepositoryNameParam),
-        selectedDirectoryIdParam
-          ? retrieveTemplate(templateNameParam!)
-          : retrieveTemplateRevisionForProject(projectRepositoryNameParam),
-      ]);
+      let projectResult;
+      let revisionResult;
+      if (selectedDirectoryIdParam) {
+        revisionResult = await retrieveTemplate(templateNameParam!)
+      } else {
+        [projectResult, revisionResult] = await Promise.all([
+          retrieveProject(projectRepositoryNameParam),
+          retrieveTemplateRevisionForProject(projectRepositoryNameParam),
+        ]);
+      }
 
       const revision = toastNullError({
         result: revisionResult as Result<
@@ -148,6 +153,10 @@ const TemplateInstantiationPage: React.FC = () => {
       }
 
       setRootTemplate(revision);
+
+      if (selectedDirectoryIdParam) {
+        return;
+      }
 
       const project = toastNullError({
         result: projectResult,
