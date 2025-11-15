@@ -40,7 +40,6 @@ export class EsbuildInitializer {
 
     let mod: unknown;
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       mod = require("esbuild");
     } catch {
       mod = await import("esbuild");
@@ -91,7 +90,7 @@ export class EsbuildInitializer {
           });
           return await bunToEsbuild(bunOut);
         } finally {
-          await fs.unlink(tmpFile).catch(() => {});
+          await fs.unlink(tmpFile).catch(() => { });
         }
       }
 

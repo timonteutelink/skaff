@@ -18,11 +18,11 @@
   },
   "packageManager": "bun@1.2.12",
   "workspaces": [
-    "apps/web",
     "apps/cli",
-    "packages/typescript-config",
+    "apps/web",
     "packages/eslint-config",
-    "packages/tailwind-config"
+    "packages/tailwind-config",
+    "packages/typescript-config"
   ],
   "resolutions": {
     "react": "19.1.0",
