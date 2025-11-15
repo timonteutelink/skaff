@@ -134,6 +134,92 @@ describe("AutoInstantiationPlanner", () => {
     jest.resetModules();
   });
 
+  it("stores auto-generated user settings in project settings", async () => {
+    jest.resetModules();
+    jest.doMock("../src/models/template", () => ({
+      Template: class {},
+    }));
+
+    const { AutoInstantiationPlanner } = require("../src/core/generation/AutoInstantiationPlanner") as typeof import("../src/core/generation/AutoInstantiationPlanner");
+
+    const parentTemplate: any = {
+      config: {
+        templateConfig: { name: "parent" },
+        autoInstantiatedSubtemplates: undefined,
+      },
+      findSubTemplate: jest.fn(),
+    };
+
+    const childTemplate: any = {
+      config: {
+        templateConfig: { name: "child" },
+        autoInstantiatedSubtemplates: undefined,
+      },
+      parentTemplate,
+      findSubTemplate: jest.fn(),
+    };
+
+    parentTemplate.findSubTemplate.mockReturnValue(childTemplate);
+
+    const context = new StubGenerationContext({
+      template: parentTemplate,
+      finalSettings: { parent: true },
+      parentInstanceId: "root-id",
+    });
+
+    const childUserSettings = { inputOnly: "value" };
+    const childFinalSettings = { inputOnly: "value", derived: "extra" };
+
+    const getFinalTemplateSettings = jest
+      .fn()
+      .mockReturnValue({ data: childFinalSettings });
+
+    const addNewTemplate = jest
+      .fn()
+      .mockReturnValue({ data: "child-id" });
+
+    const instantiateTemplate = jest.fn().mockResolvedValue({
+      data: { targetPath: "/child", finalSettings: childFinalSettings },
+    });
+
+    const projectSettingsSynchronizer = {
+      getFinalTemplateSettings,
+      addNewTemplate,
+    };
+
+    const planner = new AutoInstantiationPlanner(
+      { dontAutoInstantiate: false } as any,
+      context as any,
+      projectSettingsSynchronizer as any,
+      instantiateTemplate,
+    );
+
+    const subtemplates = [
+      {
+        subTemplateName: "child",
+        mapSettings: jest.fn(() => childUserSettings),
+      },
+    ];
+
+    await planner.autoInstantiateSubTemplates(
+      { parent: true },
+      "parent-id",
+      subtemplates as any,
+    );
+
+    expect(addNewTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({ inputOnly: "value" }),
+      "child",
+      "parent-id",
+      true,
+    );
+
+    const persistedSettings = addNewTemplate.mock.calls[0]![0];
+    expect(persistedSettings).not.toHaveProperty("derived");
+
+    jest.resetModules();
+  });
+
   it("does not leak parent settings mutations between sibling mapSettings calls", async () => {
     jest.resetModules();
     jest.doMock("../src/models/template", () => ({
