@@ -166,33 +166,8 @@ export class AutoInstantiationPlanner {
         }
       }
 
-      this.context.setCurrentState({
-        template: templateToInstantiate,
-        finalSettings: childFinalTemplateSettings,
-        parentInstanceId: instantiatedTemplateId,
-      });
-
-      const templatesToAutoInstantiateResult =
-        this.getTemplatesToAutoInstantiateForCurrentTemplate();
-
-      if ("error" in templatesToAutoInstantiateResult) {
-        this.context.setCurrentState(parentState);
-        return templatesToAutoInstantiateResult;
-      }
-
-      if (templatesToAutoInstantiateResult.data.length) {
-        const autoInstantiationResult = await this.autoInstantiateSubTemplates(
-          cloneValue(childFinalTemplateSettings),
-          instantiatedTemplateId,
-          templatesToAutoInstantiateResult.data,
-        );
-
-        if ("error" in autoInstantiationResult) {
-          this.context.setCurrentState(parentState);
-          return autoInstantiationResult;
-        }
-      }
-
+      // The child template's own auto-instantiation routine runs inside
+      // instantiateTemplate, so we only need to restore the parent state here.
       this.context.setCurrentState(parentState);
     }
 

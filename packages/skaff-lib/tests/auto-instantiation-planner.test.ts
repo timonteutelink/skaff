@@ -325,4 +325,177 @@ describe("AutoInstantiationPlanner", () => {
 
     jest.resetModules();
   });
+
+  it("delegates child auto-instantiation to instantiateTemplate", async () => {
+    jest.resetModules();
+    jest.doMock("../src/models/template", () => ({
+      Template: class {},
+    }));
+
+    const { AutoInstantiationPlanner } = require("../src/core/generation/AutoInstantiationPlanner") as typeof import("../src/core/generation/AutoInstantiationPlanner");
+
+    const parentTemplate: any = {
+      config: {
+        templateConfig: { name: "parent" },
+        autoInstantiatedSubtemplates: undefined,
+      },
+      findSubTemplate: jest.fn(),
+    };
+
+    const childTemplate: any = {
+      config: {
+        templateConfig: { name: "child" },
+        autoInstantiatedSubtemplates: [
+          {
+            subTemplateName: "grandchild",
+            mapSettings: jest.fn(() => ({ grandchild: true })),
+          },
+        ],
+      },
+      parentTemplate,
+      findSubTemplate: jest.fn(),
+    };
+
+    const grandchildTemplate: any = {
+      config: {
+        templateConfig: { name: "grandchild" },
+        autoInstantiatedSubtemplates: undefined,
+      },
+      parentTemplate: childTemplate,
+      findSubTemplate: jest.fn(),
+    };
+
+    parentTemplate.findSubTemplate.mockImplementation((name: string) => {
+      if (name === "child") {
+        return childTemplate;
+      }
+      return undefined;
+    });
+
+    childTemplate.findSubTemplate.mockImplementation((name: string) => {
+      if (name === "grandchild") {
+        return grandchildTemplate;
+      }
+      return undefined;
+    });
+
+    const context = new StubGenerationContext({
+      template: parentTemplate,
+      finalSettings: { parent: true },
+      parentInstanceId: "root-id",
+    });
+
+    const childFinalSettings = { child: true };
+    const grandchildFinalSettings = { grandchild: true };
+
+    const getFinalTemplateSettings = jest
+      .fn()
+      .mockReturnValueOnce({ data: childFinalSettings })
+      .mockReturnValueOnce({ data: grandchildFinalSettings });
+
+    const addNewTemplate = jest
+      .fn()
+      .mockReturnValueOnce({ data: "child-id" })
+      .mockReturnValueOnce({ data: "grandchild-id" });
+
+    let plannerRef: import("../src/core/generation/AutoInstantiationPlanner").AutoInstantiationPlanner;
+
+    const instantiateTemplate = jest.fn(async (templateInstanceId: string) => {
+      const currentStateResult = context.getState();
+      const previousState = "error" in currentStateResult ? undefined : currentStateResult.data;
+
+      if (templateInstanceId === "child-id") {
+        const childState = {
+          template: childTemplate,
+          finalSettings: childFinalSettings,
+          parentInstanceId: "parent-id",
+        };
+
+        context.setCurrentState(childState);
+
+        const templatesToAutoInstantiateResult =
+          plannerRef.getTemplatesToAutoInstantiateForCurrentTemplate();
+
+        if ("error" in templatesToAutoInstantiateResult) {
+          return templatesToAutoInstantiateResult;
+        }
+
+        if (templatesToAutoInstantiateResult.data.length) {
+          const autoInstantiationResult = await plannerRef.autoInstantiateSubTemplates(
+            childFinalSettings,
+            "child-id",
+            templatesToAutoInstantiateResult.data,
+          );
+
+          if ("error" in autoInstantiationResult) {
+            return autoInstantiationResult;
+          }
+        }
+
+        if (previousState) {
+          context.setCurrentState(previousState);
+        }
+
+        return {
+          data: { targetPath: "/child", finalSettings: childFinalSettings },
+        };
+      }
+
+      if (templateInstanceId === "grandchild-id") {
+        const grandchildState = {
+          template: grandchildTemplate,
+          finalSettings: grandchildFinalSettings,
+          parentInstanceId: "child-id",
+        };
+
+        context.setCurrentState(grandchildState);
+
+        if (previousState) {
+          context.setCurrentState(previousState);
+        }
+
+        return {
+          data: {
+            targetPath: "/grandchild",
+            finalSettings: grandchildFinalSettings,
+          },
+        };
+      }
+
+      throw new Error(`Unexpected template instance id ${templateInstanceId}`);
+    });
+
+    const projectSettingsSynchronizer = {
+      getFinalTemplateSettings,
+      addNewTemplate,
+    };
+
+    const planner = new AutoInstantiationPlanner(
+      { dontAutoInstantiate: false } as any,
+      context as any,
+      projectSettingsSynchronizer as any,
+      instantiateTemplate,
+    );
+
+    plannerRef = planner;
+
+    const subtemplates = [
+      {
+        subTemplateName: "child",
+        mapSettings: jest.fn(() => ({ child: true })),
+      },
+    ];
+
+    await planner.autoInstantiateSubTemplates(
+      { parent: true },
+      "parent-id",
+      subtemplates as any,
+    );
+
+    expect(addNewTemplate).toHaveBeenCalledTimes(2);
+    expect(addNewTemplate.mock.calls[1]![1]).toBe("grandchild");
+    expect(instantiateTemplate).toHaveBeenCalledTimes(2);
+
+    jest.resetModules();
+  });
 });
