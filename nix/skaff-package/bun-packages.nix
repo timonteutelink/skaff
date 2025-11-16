@@ -2663,9 +2663,9 @@
   };
   "@timonteutelink/skaff-lib" = {
     out_path = "@timonteutelink/skaff-lib";
-    name = "@timonteutelink/skaff-lib@0.0.95";
-    url = "https://registry.npmjs.org/@timonteutelink/skaff-lib/-/skaff-lib-0.0.95.tgz";
-    hash = "sha512-j9l4BRwSyyDcu7il9ID9zG1D6/NrKBgGdj2OoGGW3Re3pPssWnBgNiqUNRpc7j4ydby8TmzbZl5g/jOImKj9/Q==";
+    name = "@timonteutelink/skaff-lib@0.0.96";
+    url = "https://registry.npmjs.org/@timonteutelink/skaff-lib/-/skaff-lib-0.0.96.tgz";
+    hash = "sha512-hTexNzxjT+jFtfWoDY0KaadiMcF/y2oKG9Ho13jMSOl8fXrUDP8nUQmFNN9N/SfWG7R0LibQPhG+mN2KcW1Zzw==";
   };
   "@timonteutelink/skaff-lib/fs-extra" = {
     out_path = "@timonteutelink/skaff-lib/node_modules/fs-extra";
@@ -9058,12 +9058,6 @@
     name = "zod@4.1.12";
     url = "https://registry.npmjs.org/zod/-/zod-4.1.12.tgz";
     hash = "sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==";
-  };
-  "zod-to-json-schema" = {
-    out_path = "zod-to-json-schema";
-    name = "zod-to-json-schema@3.24.6";
-    url = "https://registry.npmjs.org/zod-to-json-schema/-/zod-to-json-schema-3.24.6.tgz";
-    hash = "sha512-h/z3PKvcTcTetyjl1fkj79MHNEjm+HpD6NXheWjzOekY7kV+lwDYnHw+ivHkijnCSMz1yJaWBD9vu/Fcmk+vEg==";
   };
   "zod-validation-error" = {
     out_path = "zod-validation-error";
