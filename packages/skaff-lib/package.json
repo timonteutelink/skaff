@@ -51,7 +51,6 @@
     "winston": "^3.18.3",
     "winston-daily-rotate-file": "^5.0.0",
     "yaml": "^2.8.1",
-    "zod": "^4.1.12",
-    "zod-to-json-schema": "^3.24.6"
+    "zod": "^4.1.12"
   }
 }

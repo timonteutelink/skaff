@@ -6,7 +6,7 @@ import {
 import path from "node:path";
 
 import { glob } from "glob";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import z from "zod";
 
 import {
   GenericTemplateConfigModule,
@@ -198,7 +198,7 @@ export class Template {
       dir: this.relativeDir,
       config: {
         templateConfig: this.config.templateConfig,
-        templateSettingsSchema: zodToJsonSchema(
+        templateSettingsSchema: z.toJSONSchema(
           this.config.templateSettingsSchema,
         ),
       },

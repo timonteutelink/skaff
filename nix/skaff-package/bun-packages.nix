@@ -9059,12 +9059,6 @@
     url = "https://registry.npmjs.org/zod/-/zod-4.1.12.tgz";
     hash = "sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==";
   };
-  "zod-to-json-schema" = {
-    out_path = "zod-to-json-schema";
-    name = "zod-to-json-schema@3.24.6";
-    url = "https://registry.npmjs.org/zod-to-json-schema/-/zod-to-json-schema-3.24.6.tgz";
-    hash = "sha512-h/z3PKvcTcTetyjl1fkj79MHNEjm+HpD6NXheWjzOekY7kV+lwDYnHw+ivHkijnCSMz1yJaWBD9vu/Fcmk+vEg==";
-  };
   "zod-validation-error" = {
     out_path = "zod-validation-error";
     name = "zod-validation-error@4.0.2";
