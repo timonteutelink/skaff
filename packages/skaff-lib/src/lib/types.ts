@@ -30,13 +30,11 @@ export interface NewTemplateDiffResult {
 
 export type Result<T> = { data: T } | { error: string };
 
-export type TemplateSettingsJsonSchema = ReturnType<typeof z.toJSONSchema>;
-
 export interface TemplateDTO {
   dir: string;
   config: {
     templateConfig: TemplateConfig;
-    templateSettingsSchema: TemplateSettingsJsonSchema;
+    templateSettingsSchema: z.core.JSONSchema.BaseSchema;
   };
   filesDir: string;
   subTemplates: Record<string, TemplateDTO[]>;
