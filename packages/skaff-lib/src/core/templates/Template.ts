@@ -23,12 +23,8 @@ import {
 } from "../generation/template-generator-service";
 import { Project } from "../../models/project";
 import { resolveProjectCreationManager } from "../projects/ProjectCreationManager";
-import { CacheService, resolveCacheService } from "../infra/cache-service";
+import { CacheService } from "../infra/cache-service";
 import { resolveGitService } from "../infra/git-service";
-
-function getCacheService() {
-  return resolveCacheService();
-}
 
 function getGitService() {
   return resolveGitService();
