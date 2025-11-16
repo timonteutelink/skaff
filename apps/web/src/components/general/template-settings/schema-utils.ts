@@ -921,7 +921,7 @@ export function buildArraySchema(itemSchema: any, path = ""): SchemaResult {
     }
 
     if (schemaNode.default !== undefined) {
-      arraySchema = arraySchema.default(schemaNode.default);
+      arraySchema = arraySchema.default(schemaNode.default) as any;
     }
 
     return {
@@ -1179,7 +1179,7 @@ export function buildRecordSchema(jsonSchema: any, path = ""): SchemaResult {
     }
 
     if (valueNode.default !== undefined) {
-      nestedArraySchema = nestedArraySchema.default(valueNode.default);
+      nestedArraySchema = nestedArraySchema.default(valueNode.default) as any;
     }
 
     valueSchemaResult = {
