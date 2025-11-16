@@ -1205,21 +1205,21 @@
   };
   "@langchain/langgraph" = {
     out_path = "@langchain/langgraph";
-    name = "@langchain/langgraph@0.3.12";
-    url = "https://registry.npmjs.org/@langchain/langgraph/-/langgraph-0.3.12.tgz";
-    hash = "sha512-4jKvfmxxgQyKnCvXdFbcKt6MdfaJoQ2WWqBR16o2E6D2RxqHvnLMMClZh4FSd6WYw39z5LGWvzRapFbRMqxu1A==";
+    name = "@langchain/langgraph@1.0.2";
+    url = "https://registry.npmjs.org/@langchain/langgraph/-/langgraph-1.0.2.tgz";
+    hash = "sha512-syxzzWTnmpCL+RhUEvalUeOXFoZy/KkzHa2Da2gKf18zsf9Dkbh3rfnRDrTyUGS1XSTejq07s4rg1qntdEDs2A==";
   };
   "@langchain/langgraph-checkpoint" = {
     out_path = "@langchain/langgraph-checkpoint";
-    name = "@langchain/langgraph-checkpoint@0.0.18";
-    url = "https://registry.npmjs.org/@langchain/langgraph-checkpoint/-/langgraph-checkpoint-0.0.18.tgz";
-    hash = "sha512-IS7zJj36VgY+4pf8ZjsVuUWef7oTwt1y9ylvwu0aLuOn1d0fg05Om9DLm3v2GZ2Df6bhLV1kfWAM0IAl9O5rQQ==";
+    name = "@langchain/langgraph-checkpoint@1.0.0";
+    url = "https://registry.npmjs.org/@langchain/langgraph-checkpoint/-/langgraph-checkpoint-1.0.0.tgz";
+    hash = "sha512-xrclBGvNCXDmi0Nz28t3vjpxSH6UYx6w5XAXSiiB1WEdc2xD2iY/a913I3x3a31XpInUW/GGfXXfePfaghV54A==";
   };
   "@langchain/langgraph-sdk" = {
     out_path = "@langchain/langgraph-sdk";
-    name = "@langchain/langgraph-sdk@0.0.112";
-    url = "https://registry.npmjs.org/@langchain/langgraph-sdk/-/langgraph-sdk-0.0.112.tgz";
-    hash = "sha512-/9W5HSWCqYgwma6EoOspL4BGYxGxeJP6lIquPSF4FA0JlKopaUv58ucZC3vAgdJyCgg6sorCIV/qg7SGpEcCLw==";
+    name = "@langchain/langgraph-sdk@1.0.0";
+    url = "https://registry.npmjs.org/@langchain/langgraph-sdk/-/langgraph-sdk-1.0.0.tgz";
+    hash = "sha512-g25ti2W7Dl5wUPlNK+0uIGbeNFqf98imhHlbdVVKTTkDYLhi/pI1KTgsSSkzkeLuBIfvt2b0q6anQwCs7XBlbw==";
   };
   "@langchain/langgraph-sdk/uuid" = {
     out_path = "@langchain/langgraph-sdk/node_modules/uuid";
@@ -1230,29 +1230,11 @@
     url = "https://registry.npmjs.org/uuid/-/uuid-9.0.1.tgz";
     hash = "sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==";
   };
-  "@langchain/langgraph/zod" = {
-    out_path = "@langchain/langgraph/node_modules/zod";
-    name = "zod@3.25.76";
-    url = "https://registry.npmjs.org/zod/-/zod-3.25.76.tgz";
-    hash = "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==";
-  };
   "@langchain/openai" = {
     out_path = "@langchain/openai";
-    name = "@langchain/openai@0.5.18";
-    url = "https://registry.npmjs.org/@langchain/openai/-/openai-0.5.18.tgz";
-    hash = "sha512-CX1kOTbT5xVFNdtLjnM0GIYNf+P7oMSu+dGCFxxWRa3dZwWiuyuBXCm+dToUGxDLnsHuV1bKBtIzrY1mLq/A1Q==";
-  };
-  "@langchain/openai/zod" = {
-    out_path = "@langchain/openai/node_modules/zod";
-    name = "zod@3.25.76";
-    url = "https://registry.npmjs.org/zod/-/zod-3.25.76.tgz";
-    hash = "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==";
-  };
-  "@langchain/textsplitters" = {
-    out_path = "@langchain/textsplitters";
-    name = "@langchain/textsplitters@0.1.0";
-    url = "https://registry.npmjs.org/@langchain/textsplitters/-/textsplitters-0.1.0.tgz";
-    hash = "sha512-djI4uw9rlkAb5iMhtLED+xJebDdAG935AdP4eRTB02R7OB/act55Bj9wsskhZsvuyQRpO4O1wQOp85s6T6GWmw==";
+    name = "@langchain/openai@1.1.1";
+    url = "https://registry.npmjs.org/@langchain/openai/-/openai-1.1.1.tgz";
+    hash = "sha512-0kUaXejo/sn6QAohWHDaAUapC4CJRkJIajGaWfJC+llSqpDBnmBE1oHg1M2fi1OCeP+ns9SxB6BTsq4Qbiqmig==";
   };
   "@napi-rs/wasm-runtime" = {
     out_path = "@napi-rs/wasm-runtime";
@@ -2573,192 +2555,9 @@
   };
   "@timonteutelink/skaff-lib" = {
     out_path = "@timonteutelink/skaff-lib";
-    name = "@timonteutelink/skaff-lib@0.0.93";
-    url = "https://registry.npmjs.org/@timonteutelink/skaff-lib/-/skaff-lib-0.0.93.tgz";
-    hash = "sha512-ezFw9rnI8JpKm9LLzzULbB6CYc0H6M6+LBuUQug2rD4IBczE4uJ9ptrAmBESmNk1yAejhMVj8msSiWCXMqXCRA==";
-  };
-  "@timonteutelink/skaff-lib/@timonteutelink/template-types-lib" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/@timonteutelink/node_modules/template-types-lib";
-    name = "@timonteutelink/template-types-lib@0.0.54";
-    url = "https://registry.npmjs.org/@timonteutelink/template-types-lib/-/template-types-lib-0.0.54.tgz";
-    hash = "sha512-7tw+80HdbILbY+meEKMHbVF857nradEDBjYetEZpG/PydsCaX9QiEmB15rE9AXsr9vNOgw404+5d2V6sbVgAmQ==";
-  };
-  "@timonteutelink/skaff-lib/@types/node" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/@types/node_modules/node";
-    name = "@types/node@22.19.1";
-    url = "https://registry.npmjs.org/@types/node/-/node-22.19.1.tgz";
-    hash = "sha512-LCCV0HdSZZZb34qifBsyWlUmok6W7ouER+oQIGBScS8EsZsQbrtFTUrDX4hOl+CS6p7cnNC4td+qrSVGSCTUfQ==";
-  };
-  "@timonteutelink/skaff-lib/@types/node/undici-types" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/@types/node_modules/node/node_modules/undici-types";
-    name = "undici-types@6.21.0";
-    url = "https://registry.npmjs.org/undici-types/-/undici-types-6.21.0.tgz";
-    hash = "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==";
-  };
-  "@timonteutelink/skaff-lib/esbuild" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild";
-    binaries = {
-      "esbuild" = "../@timonteutelink/skaff-lib/node_modules/esbuild/bin/esbuild";
-    };
-    name = "esbuild@0.25.12";
-    url = "https://registry.npmjs.org/esbuild/-/esbuild-0.25.12.tgz";
-    hash = "sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/aix-ppc64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/aix-ppc64";
-    name = "@esbuild/aix-ppc64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/aix-ppc64/-/aix-ppc64-0.25.12.tgz";
-    hash = "sha512-Hhmwd6CInZ3dwpuGTF8fJG6yoWmsToE+vYgD4nytZVxcu1ulHpUQRAB1UJ8+N1Am3Mz4+xOByoQoSZf4D+CpkA==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/android-arm" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/android-arm";
-    name = "@esbuild/android-arm@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.25.12.tgz";
-    hash = "sha512-VJ+sKvNA/GE7Ccacc9Cha7bpS8nyzVv0jdVgwNDaR4gDMC/2TTRc33Ip8qrNYUcpkOHUT5OZ0bUcNNVZQ9RLlg==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/android-arm64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/android-arm64";
-    name = "@esbuild/android-arm64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/android-arm64/-/android-arm64-0.25.12.tgz";
-    hash = "sha512-6AAmLG7zwD1Z159jCKPvAxZd4y/VTO0VkprYy+3N2FtJ8+BQWFXU+OxARIwA46c5tdD9SsKGZ/1ocqBS/gAKHg==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/android-x64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/android-x64";
-    name = "@esbuild/android-x64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/android-x64/-/android-x64-0.25.12.tgz";
-    hash = "sha512-5jbb+2hhDHx5phYR2By8GTWEzn6I9UqR11Kwf22iKbNpYrsmRB18aX/9ivc5cabcUiAT/wM+YIZ6SG9QO6a8kg==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/darwin-arm64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/darwin-arm64";
-    name = "@esbuild/darwin-arm64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.25.12.tgz";
-    hash = "sha512-N3zl+lxHCifgIlcMUP5016ESkeQjLj/959RxxNYIthIg+CQHInujFuXeWbWMgnTo4cp5XVHqFPmpyu9J65C1Yg==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/darwin-x64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/darwin-x64";
-    name = "@esbuild/darwin-x64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/darwin-x64/-/darwin-x64-0.25.12.tgz";
-    hash = "sha512-HQ9ka4Kx21qHXwtlTUVbKJOAnmG1ipXhdWTmNXiPzPfWKpXqASVcWdnf2bnL73wgjNrFXAa3yYvBSd9pzfEIpA==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/freebsd-arm64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/freebsd-arm64";
-    name = "@esbuild/freebsd-arm64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/freebsd-arm64/-/freebsd-arm64-0.25.12.tgz";
-    hash = "sha512-gA0Bx759+7Jve03K1S0vkOu5Lg/85dou3EseOGUes8flVOGxbhDDh/iZaoek11Y8mtyKPGF3vP8XhnkDEAmzeg==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/freebsd-x64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/freebsd-x64";
-    name = "@esbuild/freebsd-x64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/freebsd-x64/-/freebsd-x64-0.25.12.tgz";
-    hash = "sha512-TGbO26Yw2xsHzxtbVFGEXBFH0FRAP7gtcPE7P5yP7wGy7cXK2oO7RyOhL5NLiqTlBh47XhmIUXuGciXEqYFfBQ==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/linux-arm" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/linux-arm";
-    name = "@esbuild/linux-arm@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/linux-arm/-/linux-arm-0.25.12.tgz";
-    hash = "sha512-lPDGyC1JPDou8kGcywY0YILzWlhhnRjdof3UlcoqYmS9El818LLfJJc3PXXgZHrHCAKs/Z2SeZtDJr5MrkxtOw==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/linux-arm64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/linux-arm64";
-    name = "@esbuild/linux-arm64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/linux-arm64/-/linux-arm64-0.25.12.tgz";
-    hash = "sha512-8bwX7a8FghIgrupcxb4aUmYDLp8pX06rGh5HqDT7bB+8Rdells6mHvrFHHW2JAOPZUbnjUpKTLg6ECyzvas2AQ==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/linux-ia32" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/linux-ia32";
-    name = "@esbuild/linux-ia32@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/linux-ia32/-/linux-ia32-0.25.12.tgz";
-    hash = "sha512-0y9KrdVnbMM2/vG8KfU0byhUN+EFCny9+8g202gYqSSVMonbsCfLjUO+rCci7pM0WBEtz+oK/PIwHkzxkyharA==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/linux-loong64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/linux-loong64";
-    name = "@esbuild/linux-loong64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/linux-loong64/-/linux-loong64-0.25.12.tgz";
-    hash = "sha512-h///Lr5a9rib/v1GGqXVGzjL4TMvVTv+s1DPoxQdz7l/AYv6LDSxdIwzxkrPW438oUXiDtwM10o9PmwS/6Z0Ng==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/linux-mips64el" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/linux-mips64el";
-    name = "@esbuild/linux-mips64el@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/linux-mips64el/-/linux-mips64el-0.25.12.tgz";
-    hash = "sha512-iyRrM1Pzy9GFMDLsXn1iHUm18nhKnNMWscjmp4+hpafcZjrr2WbT//d20xaGljXDBYHqRcl8HnxbX6uaA/eGVw==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/linux-ppc64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/linux-ppc64";
-    name = "@esbuild/linux-ppc64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/linux-ppc64/-/linux-ppc64-0.25.12.tgz";
-    hash = "sha512-9meM/lRXxMi5PSUqEXRCtVjEZBGwB7P/D4yT8UG/mwIdze2aV4Vo6U5gD3+RsoHXKkHCfSxZKzmDssVlRj1QQA==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/linux-riscv64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/linux-riscv64";
-    name = "@esbuild/linux-riscv64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/linux-riscv64/-/linux-riscv64-0.25.12.tgz";
-    hash = "sha512-Zr7KR4hgKUpWAwb1f3o5ygT04MzqVrGEGXGLnj15YQDJErYu/BGg+wmFlIDOdJp0PmB0lLvxFIOXZgFRrdjR0w==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/linux-s390x" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/linux-s390x";
-    name = "@esbuild/linux-s390x@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/linux-s390x/-/linux-s390x-0.25.12.tgz";
-    hash = "sha512-MsKncOcgTNvdtiISc/jZs/Zf8d0cl/t3gYWX8J9ubBnVOwlk65UIEEvgBORTiljloIWnBzLs4qhzPkJcitIzIg==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/linux-x64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/linux-x64";
-    name = "@esbuild/linux-x64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.25.12.tgz";
-    hash = "sha512-uqZMTLr/zR/ed4jIGnwSLkaHmPjOjJvnm6TVVitAa08SLS9Z0VM8wIRx7gWbJB5/J54YuIMInDquWyYvQLZkgw==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/netbsd-arm64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/netbsd-arm64";
-    name = "@esbuild/netbsd-arm64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/netbsd-arm64/-/netbsd-arm64-0.25.12.tgz";
-    hash = "sha512-xXwcTq4GhRM7J9A8Gv5boanHhRa/Q9KLVmcyXHCTaM4wKfIpWkdXiMog/KsnxzJ0A1+nD+zoecuzqPmCRyBGjg==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/netbsd-x64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/netbsd-x64";
-    name = "@esbuild/netbsd-x64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/netbsd-x64/-/netbsd-x64-0.25.12.tgz";
-    hash = "sha512-Ld5pTlzPy3YwGec4OuHh1aCVCRvOXdH8DgRjfDy/oumVovmuSzWfnSJg+VtakB9Cm0gxNO9BzWkj6mtO1FMXkQ==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/openbsd-arm64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/openbsd-arm64";
-    name = "@esbuild/openbsd-arm64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/openbsd-arm64/-/openbsd-arm64-0.25.12.tgz";
-    hash = "sha512-fF96T6KsBo/pkQI950FARU9apGNTSlZGsv1jZBAlcLL1MLjLNIWPBkj5NlSz8aAzYKg+eNqknrUJ24QBybeR5A==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/openbsd-x64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/openbsd-x64";
-    name = "@esbuild/openbsd-x64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/openbsd-x64/-/openbsd-x64-0.25.12.tgz";
-    hash = "sha512-MZyXUkZHjQxUvzK7rN8DJ3SRmrVrke8ZyRusHlP+kuwqTcfWLyqMOE3sScPPyeIXN/mDJIfGXvcMqCgYKekoQw==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/openharmony-arm64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/openharmony-arm64";
-    name = "@esbuild/openharmony-arm64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/openharmony-arm64/-/openharmony-arm64-0.25.12.tgz";
-    hash = "sha512-rm0YWsqUSRrjncSXGA7Zv78Nbnw4XL6/dzr20cyrQf7ZmRcsovpcRBdhD43Nuk3y7XIoW2OxMVvwuRvk9XdASg==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/sunos-x64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/sunos-x64";
-    name = "@esbuild/sunos-x64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/sunos-x64/-/sunos-x64-0.25.12.tgz";
-    hash = "sha512-3wGSCDyuTHQUzt0nV7bocDy72r2lI33QL3gkDNGkod22EsYl04sMf0qLb8luNKTOmgF/eDEDP5BFNwoBKH441w==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/win32-arm64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/win32-arm64";
-    name = "@esbuild/win32-arm64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/win32-arm64/-/win32-arm64-0.25.12.tgz";
-    hash = "sha512-rMmLrur64A7+DKlnSuwqUdRKyd3UE7oPJZmnljqEptesKM8wx9J8gx5u0+9Pq0fQQW8vqeKebwNXdfOyP+8Bsg==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/win32-ia32" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/win32-ia32";
-    name = "@esbuild/win32-ia32@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/win32-ia32/-/win32-ia32-0.25.12.tgz";
-    hash = "sha512-HkqnmmBoCbCwxUKKNPBixiWDGCpQGVsrQfJoVGYLPT41XWF8lHuE5N6WhVia2n4o5QK5M4tYr21827fNhi4byQ==";
-  };
-  "@timonteutelink/skaff-lib/esbuild/@esbuild/win32-x64" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/esbuild/node_modules/@esbuild/node_modules/win32-x64";
-    name = "@esbuild/win32-x64@0.25.12";
-    url = "https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.25.12.tgz";
-    hash = "sha512-alJC0uCZpTFrSL0CCDjcgleBXPnCrEAhTBILpeAp7M/OFgoqtAetfBzX0xM00MUsVVPpVjlPuMbREqnZCXaTnA==";
+    name = "@timonteutelink/skaff-lib@0.0.94";
+    url = "https://registry.npmjs.org/@timonteutelink/skaff-lib/-/skaff-lib-0.0.94.tgz";
+    hash = "sha512-MNvMSC4AqNwZHIV7VL56NJi/PsmkE8jdgAH3ThRcNidcE2PagVZTygr8uboJIBPZIaS5DdXNK3CH4+iC3JZ43w==";
   };
   "@timonteutelink/skaff-lib/fs-extra" = {
     out_path = "@timonteutelink/skaff-lib/node_modules/fs-extra";
@@ -2819,22 +2618,6 @@
     name = "semver@7.7.3";
     url = "https://registry.npmjs.org/semver/-/semver-7.7.3.tgz";
     hash = "sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==";
-  };
-  "@timonteutelink/skaff-lib/typescript" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/typescript";
-    binaries = {
-      "tsc" = "../@timonteutelink/skaff-lib/node_modules/typescript/bin/tsc";
-      "tsserver" = "../@timonteutelink/skaff-lib/node_modules/typescript/bin/tsserver";
-    };
-    name = "typescript@5.8.3";
-    url = "https://registry.npmjs.org/typescript/-/typescript-5.8.3.tgz";
-    hash = "sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==";
-  };
-  "@timonteutelink/skaff-lib/zod" = {
-    out_path = "@timonteutelink/skaff-lib/node_modules/zod";
-    name = "zod@3.25.76";
-    url = "https://registry.npmjs.org/zod/-/zod-3.25.76.tgz";
-    hash = "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==";
   };
   "@timonteutelink/template-types-lib" = {
     out_path = "@timonteutelink/template-types-lib";
@@ -5718,12 +5501,6 @@
     url = "https://registry.npmjs.org/jsonfile/-/jsonfile-4.0.0.tgz";
     hash = "sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==";
   };
-  "jsonpointer" = {
-    out_path = "jsonpointer";
-    name = "jsonpointer@5.0.1";
-    url = "https://registry.npmjs.org/jsonpointer/-/jsonpointer-5.0.1.tgz";
-    hash = "sha512-p/nXbhSEcu3pZRdkW1OfJhpsVtW1gd4Wa1fnQc9YLiTfAjn0312eMKimbdIQzuZl9aa9xUGaRlP9T/CJE/ditQ==";
-  };
   "jsx-ast-utils" = {
     out_path = "jsx-ast-utils";
     name = "jsx-ast-utils@3.3.5";
@@ -5744,15 +5521,9 @@
   };
   "langchain" = {
     out_path = "langchain";
-    name = "langchain@0.3.36";
-    url = "https://registry.npmjs.org/langchain/-/langchain-0.3.36.tgz";
-    hash = "sha512-PqC19KChFF0QlTtYDFgfEbIg+SCnCXox29G8tY62QWfj9bOW7ew2kgWmPw5qoHLOTKOdQPvXET20/1Pdq8vAtQ==";
-  };
-  "langchain/zod" = {
-    out_path = "langchain/node_modules/zod";
-    name = "zod@3.25.76";
-    url = "https://registry.npmjs.org/zod/-/zod-3.25.76.tgz";
-    hash = "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==";
+    name = "langchain@1.0.4";
+    url = "https://registry.npmjs.org/langchain/-/langchain-1.0.4.tgz";
+    hash = "sha512-g7z2kKvnXOecybbVGHfI2ZmdmP309mxC1FYlq6WC/7RsKgX5MwY9gBjwK16mpKOaozOD9QCo1Ia7o2UcUBRb9Q==";
   };
   "langsmith" = {
     out_path = "langsmith";
@@ -7714,15 +7485,9 @@
     binaries = {
       "openai" = "../openai/bin/cli";
     };
-    name = "openai@5.23.2";
-    url = "https://registry.npmjs.org/openai/-/openai-5.23.2.tgz";
-    hash = "sha512-MQBzmTulj+MM5O8SKEk/gL8a7s5mktS9zUtAkU257WjvobGc9nKcBuVwjyEEcb9SI8a8Y2G/mzn3vm9n1Jlleg==";
-  };
-  "openapi-types" = {
-    out_path = "openapi-types";
-    name = "openapi-types@12.1.3";
-    url = "https://registry.npmjs.org/openapi-types/-/openapi-types-12.1.3.tgz";
-    hash = "sha512-N4YtSYJqghVu4iek2ZUvcN/0aqH1kRDuNqzcycDxhOUpg7GdvLa2F3DgS6yBNhInhv2r/6I0Flkn7CqL8+nIcw==";
+    name = "openai@6.9.0";
+    url = "https://registry.npmjs.org/openai/-/openai-6.9.0.tgz";
+    hash = "sha512-n2sJRYmM+xfJ0l3OfH8eNnIyv3nQY7L08gZQu3dw6wSdfPtKAk92L83M2NIP5SS8Cl/bsBBG3yKzEOjkx0O+7A==";
   };
   "optionator" = {
     out_path = "optionator";
