@@ -50,17 +50,17 @@ export function buildSchemaAndDefaults(
     // If pick is specified, filter properties to only include those
     const propertiesToProcess = jsonSchema.pick
       ? Object.fromEntries(
-          Object.entries(jsonSchema.properties).filter(([key]) =>
-            jsonSchema.pick.includes(key),
+        Object.entries(jsonSchema.properties).filter(([key]) =>
+          jsonSchema.pick.includes(key),
+        ),
+      )
+      : // If omit is specified, filter properties to exclude those
+      jsonSchema.omit
+        ? Object.fromEntries(
+          Object.entries(jsonSchema.properties).filter(
+            ([key]) => !jsonSchema.omit.includes(key),
           ),
         )
-      : // If omit is specified, filter properties to exclude those
-        jsonSchema.omit
-        ? Object.fromEntries(
-            Object.entries(jsonSchema.properties).filter(
-              ([key]) => !jsonSchema.omit.includes(key),
-            ),
-          )
         : jsonSchema.properties;
 
     Object.entries(propertiesToProcess).forEach(
@@ -362,10 +362,7 @@ export function buildDiscriminatedUnionSchema(
   // Create the discriminated union
   const unionSchema = z.discriminatedUnion(
     discriminator,
-    variants as [
-      z.ZodDiscriminatedUnionOption<string>,
-      ...z.ZodDiscriminatedUnionOption<string>[],
-    ],
+    variants as any
   );
 
   // Use the first variant's defaults as the initial defaults
@@ -571,7 +568,7 @@ export function buildFieldSchema(
 
       if (property.multipleOf !== undefined) {
         numberSchema = numberSchema.refine(
-          (val) => val % property.multipleOf === 0,
+          (val) => val as number % property.multipleOf === 0,
           {
             message: `Must be a multiple of ${property.multipleOf}`,
           },

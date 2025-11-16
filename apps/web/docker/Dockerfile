@@ -14,13 +14,11 @@ COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY packages/tailwind-config/package.json ./packages/tailwind-config/package.json
 
 RUN --mount=type=cache,target=/root/.cache/bun \
-    --mount=type=cache,target=/app/node_modules \
     bun install --no-save
 
 WORKDIR /app/apps/web
 
 RUN --mount=type=cache,target=/root/.cache/bun \
-    --mount=type=cache,target=/app/apps/web/node_modules \
     bun install --no-save
 
 FROM base AS builder
@@ -34,7 +32,7 @@ COPY packages/eslint-config ./packages/eslint-config
 COPY packages/tailwind-config ./packages/tailwind-config
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
+# COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV SKAFF_CACHE_PATH=/app/.cache/skaff

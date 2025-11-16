@@ -25,7 +25,7 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "allowJs": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "noEmit": true,
     "paths": {
       "@/*": [
@@ -38,7 +38,8 @@
     "**/*.tsx",
     "next-env.d.ts",
     "next.config.ts",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
