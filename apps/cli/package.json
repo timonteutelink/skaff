@@ -18,7 +18,7 @@
     "@oclif/core": "^4.8.0",
     "@oclif/plugin-help": "^6.2.36",
     "@oclif/plugin-plugins": "^5.4.54",
-    "@timonteutelink/skaff-lib": "0.0.96",
+    "@timonteutelink/skaff-lib": "0.0.97",
     "@timonteutelink/template-types-lib": "0.0.56",
     "esbuild": "^0.27.0",
     "loglevel": "^1.9.2",
