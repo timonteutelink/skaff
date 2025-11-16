@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/tooltip";
 import { renderInputByType } from "../input-renderers";
 import type { FieldRendererProps } from "../types";
+import { getDefaultValueForType } from "../schema-utils";
 import { Badge } from "@/components/ui/badge";
 
 export function RecordFieldRenderer({
@@ -52,23 +53,7 @@ export function RecordFieldRenderer({
     setKeyError(null);
 
     // Create default value based on the valueSchema
-    let defaultValue;
-    if (property.additionalProperties.type === "string") {
-      defaultValue = "";
-    } else if (
-      property.additionalProperties.type === "number" ||
-      property.additionalProperties.type === "integer"
-    ) {
-      defaultValue = 0;
-    } else if (property.additionalProperties.type === "boolean") {
-      defaultValue = false;
-    } else if (property.additionalProperties.type === "object") {
-      defaultValue = {};
-    } else if (property.additionalProperties.type === "array") {
-      defaultValue = [];
-    } else {
-      defaultValue = null;
-    }
+    const defaultValue = getDefaultValueForType(property.additionalProperties);
 
     // Add the new entry
     const updatedRecord = { ...recordValue, [newKey]: defaultValue };

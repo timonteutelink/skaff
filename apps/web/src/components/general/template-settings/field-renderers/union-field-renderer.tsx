@@ -230,6 +230,7 @@ export function UnionFieldRenderer({
                             value,
                             fieldPath,
                             variantRequiredFields,
+                            isReadOnly,
                           );
                         })}
                   </CardContent>
@@ -314,6 +315,7 @@ export function UnionFieldRenderer({
                             value,
                             fieldPath,
                             property.anyOf[selectedVariant].required || [],
+                            isReadOnly,
                           );
                         })
                       ) : (

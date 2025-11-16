@@ -29,7 +29,7 @@ export function TupleFieldRenderer({
   renderFormField,
 }: FieldRendererProps) {
   // For tuples, we need to render each item with its specific type
-  const tupleItems = property.items || [];
+  const tupleItems = property.prefixItems || property.items || [];
 
   return (
     <FormField
@@ -90,6 +90,7 @@ export function TupleFieldRenderer({
                                 value,
                                 itemPath,
                                 itemSchema.required || [],
+                                isReadOnly,
                               );
                             },
                           )}
