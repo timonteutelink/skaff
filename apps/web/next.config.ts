@@ -3,12 +3,13 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   webpack(config, { isServer }) {
     if (isServer) {
+      const externalsToAdd = ["esbuild", "typescript"];
       if (Array.isArray(config.externals)) {
-        config.externals.push("esbuild");
+        config.externals.push(...externalsToAdd);
       } else if (config.externals) {
-        config.externals = [config.externals, "esbuild"];
+        config.externals = [config.externals, ...externalsToAdd];
       } else {
-        config.externals = ["esbuild"];
+        config.externals = externalsToAdd;
       }
 
       config.resolve.alias = {
@@ -20,7 +21,7 @@ const nextConfig: NextConfig = {
     return config;
   },
 
-  serverExternalPackages: ["esbuild", "node:vm"],
+  serverExternalPackages: ["esbuild", "typescript", "node:vm"],
 
   output: "standalone",
 };
