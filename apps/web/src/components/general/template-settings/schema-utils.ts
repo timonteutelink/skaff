@@ -406,10 +406,11 @@ function buildUnionSchema(jsonSchema: any, path = ""): SchemaResult {
     };
   }
 
-  let unionSchema = variantSchemas[0];
-  for (let i = 1; i < variantSchemas.length; i++) {
-    unionSchema = z.union([unionSchema, variantSchemas[i]]);
-  }
+  const [firstSchema, ...remainingSchemas] = variantSchemas;
+  let unionSchema: z.ZodTypeAny = firstSchema!;
+  remainingSchemas.forEach((schema) => {
+    unionSchema = z.union([unionSchema, schema]);
+  });
 
   if (normalizedSchema.default !== undefined) {
     unionSchema = unionSchema.default(normalizedSchema.default);
