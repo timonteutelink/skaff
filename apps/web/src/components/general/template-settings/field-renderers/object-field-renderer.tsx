@@ -102,6 +102,7 @@ export function ObjectFieldRenderer({
                         propValue,
                         fieldPath,
                         objectRequiredFields,
+                        isReadOnly,
                       );
                     },
                   )}

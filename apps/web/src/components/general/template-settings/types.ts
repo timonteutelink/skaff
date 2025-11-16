@@ -32,6 +32,7 @@ export interface FieldRendererProps {
     property: any,
     parentPath: string,
     requiredFieldsList: string[],
+    parentReadOnly?: boolean,
   ) => React.ReactNode;
 }
 
@@ -48,6 +49,7 @@ export interface ArrayFieldRendererProps {
     property: any,
     parentPath: string,
     requiredFieldsList: string[],
+    parentReadOnly?: boolean,
   ) => React.ReactNode;
 }
 

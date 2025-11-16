@@ -39,7 +39,11 @@ import { renderInputByType } from "../input-renderers";
 import type { ArrayFieldRendererProps } from "../types";
 import { ObjectFieldRenderer } from "./object-field-renderer";
 import { ArrayUnionItem, UnionFieldRenderer } from "./union-field-renderer";
-import { buildDiscriminatedUnionSchema } from "../schema-utils";
+import {
+  buildDiscriminatedUnionSchema,
+  getDefaultValueForType,
+  isDiscriminatedUnionSchema,
+} from "../schema-utils";
 
 export function ArrayFieldRenderer({
   form,
@@ -80,16 +84,26 @@ export function ArrayFieldRenderer({
 
   const onAddItem = useCallback(() => {
     let newItem;
-    if (property.items.anyOf) {
-      const firstVariant = property.items.anyOf[0];
+    if (property.items?.anyOf) {
+      if (isDiscriminatedUnionSchema(property.items)) {
+        const firstVariant = property.items.anyOf[0];
 
-      const discrKey = Object.entries(firstVariant.properties).find(
-        ([, v]: any) => v.const !== undefined,
-      )?.[0] as string;
-      const discrVal = firstVariant.properties[discrKey].const;
+        const discrKey = Object.entries(firstVariant.properties).find(
+          ([, v]: any) => v.const !== undefined,
+        )?.[0] as string;
+        const discrVal = firstVariant.properties[discrKey].const;
 
-      const { defaults } = buildDiscriminatedUnionSchema(property.items);
-      newItem = { ...defaults, [discrKey]: discrVal };
+        const { defaults } = buildDiscriminatedUnionSchema(property.items);
+        newItem = { ...defaults, [discrKey]: discrVal };
+      } else {
+        const baseVariant =
+          property.items.anyOf.find((variant: any) => variant.type !== "null") ||
+          property.items.anyOf[0];
+        newItem =
+          property.items.default ??
+          baseVariant?.default ??
+          getDefaultValueForType(baseVariant);
+      }
     } else {
       newItem = createDefaultItem ? createDefaultItem(property.items) : {};
     }
@@ -168,7 +182,7 @@ export function ArrayFieldRenderer({
               <div className="space-y-3">
                 {fieldArray.fields.map((item, index) => {
                   const itemPath = `${fieldPath}.${index}`;
-                  if (property.items.anyOf) {
+                  if (property.items?.anyOf) {
                     const isExpanded = expandedItems[index] !== false;
                     return (
                       <ArrayUnionItem
@@ -357,6 +371,7 @@ function ArrayObjectItem({
                     propValue,
                     `${fieldPath}.${index}`,
                     itemRequiredFields,
+                    isReadOnly,
                   );
                 }
 
@@ -365,6 +380,7 @@ function ArrayObjectItem({
                   propValue,
                   `${fieldPath}.${index}`,
                   itemRequiredFields,
+                  isReadOnly,
                 );
               },
             )}

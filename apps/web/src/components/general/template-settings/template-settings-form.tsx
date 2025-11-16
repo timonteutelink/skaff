@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -17,7 +17,13 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 
 import type { TemplateSettingsFormProps } from "./types";
-import { buildSchemaAndDefaults, createDefaultItem } from "./schema-utils";
+import {
+  buildSchemaAndDefaults,
+  createDefaultItem,
+  getSchemaCategory,
+  getSchemaMeta,
+  normalizeNativeSchemaNode,
+} from "./schema-utils";
 import { ArrayFieldRenderer } from "./field-renderers/array-field-renderer";
 import { ObjectFieldRenderer } from "./field-renderers/object-field-renderer";
 import { PrimitiveFieldRenderer } from "./field-renderers/primitive-field-renderer";
@@ -43,12 +49,17 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
     Record<string, string[]>
   >({});
 
+  const normalizedSchema = useMemo(
+    () => normalizeNativeSchemaNode(selectedTemplateSettingsSchema),
+    [selectedTemplateSettingsSchema],
+  );
+
   // Create a dynamic zod schema based on the JSON schema
   useEffect(() => {
-    if (!selectedTemplateSettingsSchema?.properties) return;
+    if (!normalizedSchema?.properties) return;
 
     const { schema, defaults, required } = buildSchemaAndDefaults(
-      selectedTemplateSettingsSchema,
+      normalizedSchema,
     );
     setZodSchema(schema);
     setFormDefaults((prev) => {
@@ -56,7 +67,7 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
       return { ...defaults, ...formDefaultValues };
     });
     setRequiredFields(required);
-  }, [selectedTemplateSettingsSchema, formDefaultValues]);
+  }, [normalizedSchema, formDefaultValues]);
 
   const form = useForm<Record<string, any>>({
     resolver: zodResolver(zodSchema as any),
@@ -90,7 +101,7 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
 
   // Render form fields based on schema
   const renderFormFields = () => {
-    if (!selectedTemplateSettingsSchema?.properties) {
+    if (!normalizedSchema?.properties) {
       return (
         <p className="text-sm text-muted-foreground">
           No settings required for this template.
@@ -99,11 +110,11 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
     }
 
     // Group fields by categories if they exist
-    const categories: Record<string, any[]> = { "": [] };
+    const categories: Record<string, { key: string; value: any }[]> = { "": [] };
 
-    Object.entries(selectedTemplateSettingsSchema.properties).forEach(
+    Object.entries(normalizedSchema.properties).forEach(
       ([key, value]: [string, any]) => {
-        const category = value.category || "";
+        const category = getSchemaCategory(value);
         if (!categories[category]) {
           categories[category] = [];
         }
@@ -152,7 +163,7 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
     // Otherwise render fields directly
     return (
       <div className="grid gap-6">
-        {Object.entries(selectedTemplateSettingsSchema.properties).map(
+        {Object.entries(normalizedSchema.properties).map(
           ([key, value]: [string, any]) =>
             renderFormField(key, value, "", requiredFields["root"] || []),
         )}
@@ -167,23 +178,26 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
     property: any,
     parentPath = "",
     requiredFieldsList: string[] = [],
+    parentReadOnly = false,
   ) => {
-    // Skip rendering if the field should be hidden
-    if (property.hidden) return null;
+    const propertyMeta = getSchemaMeta(property);
+
+    if (propertyMeta.hidden) return null;
 
     const fieldPath = parentPath ? `${parentPath}.${key}` : key;
     const isRequired = requiredFieldsList.includes(key);
-    const isReadOnly = property.readOnly === true;
+    const resolvedReadOnly = parentReadOnly || propertyMeta.readOnly === true;
+    const propertyNode = property;
 
     // Handle discriminated unions (anyOf)
-    if (property.anyOf) {
+    if (propertyNode.anyOf) {
       return (
         <UnionFieldRenderer
           key={fieldPath}
           fieldPath={fieldPath}
-          property={property}
+          property={propertyNode}
           isRequired={isRequired}
-          isReadOnly={isReadOnly}
+          isReadOnly={resolvedReadOnly}
           form={form}
           requiredFields={requiredFields}
           renderFormField={renderFormField}
@@ -191,15 +205,19 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
       );
     }
 
+    const tupleItems = Array.isArray(propertyNode.prefixItems)
+      ? propertyNode.prefixItems
+      : propertyNode.items;
+
     // Handle tuples (array with prefixItems)
-    if (property.type === "array" && Array.isArray(property.items)) {
+    if (propertyNode.type === "array" && Array.isArray(tupleItems)) {
       return (
         <TupleFieldRenderer
           key={fieldPath}
           fieldPath={fieldPath}
-          property={property}
+          property={propertyNode}
           isRequired={isRequired}
-          isReadOnly={isReadOnly}
+          isReadOnly={resolvedReadOnly}
           form={form}
           requiredFields={requiredFields}
           renderFormField={renderFormField}
@@ -209,17 +227,17 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
 
     // Handle records (object with additionalProperties)
     if (
-      property.type === "object" &&
-      !property.properties &&
-      property.additionalProperties
+      propertyNode.type === "object" &&
+      !propertyNode.properties &&
+      propertyNode.additionalProperties
     ) {
       return (
         <RecordFieldRenderer
           key={fieldPath}
           fieldPath={fieldPath}
-          property={property}
+          property={propertyNode}
           isRequired={isRequired}
-          isReadOnly={isReadOnly}
+          isReadOnly={resolvedReadOnly}
           form={form}
           requiredFields={requiredFields}
           renderFormField={renderFormField}
@@ -228,15 +246,15 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
     }
 
     // Special handling for arrays
-    if (property.type === "array") {
+    if (propertyNode.type === "array") {
       return (
         <ArrayFieldRenderer
           key={fieldPath}
           form={form}
           fieldPath={fieldPath}
-          property={property}
+          property={propertyNode}
           isRequired={isRequired}
-          isReadOnly={isReadOnly}
+          isReadOnly={resolvedReadOnly}
           createDefaultItem={memoizedCreateDefaultItem}
           requiredFields={requiredFields}
           renderFormField={renderFormField}
@@ -245,14 +263,14 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
     }
 
     // Special handling for objects
-    if (property.type === "object" && property.properties) {
+    if (propertyNode.type === "object" && propertyNode.properties) {
       return (
         <ObjectFieldRenderer
           key={fieldPath}
           fieldPath={fieldPath}
-          property={property}
+          property={propertyNode}
           isRequired={isRequired}
-          isReadOnly={isReadOnly}
+          isReadOnly={resolvedReadOnly}
           form={form}
           requiredFields={requiredFields}
           renderFormField={renderFormField}
@@ -265,9 +283,9 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
       <PrimitiveFieldRenderer
         key={fieldPath}
         fieldPath={fieldPath}
-        property={property}
+        property={propertyNode}
         isRequired={isRequired}
-        isReadOnly={isReadOnly}
+        isReadOnly={resolvedReadOnly}
         form={form}
         label={key}
       />
@@ -312,3 +330,4 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
     </div>
   );
 };
+

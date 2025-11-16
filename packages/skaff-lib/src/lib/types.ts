@@ -34,7 +34,7 @@ export interface TemplateDTO {
   dir: string;
   config: {
     templateConfig: TemplateConfig;
-    templateSettingsSchema: object;
+    templateSettingsSchema: z.core.JSONSchema.BaseSchema;
   };
   filesDir: string;
   subTemplates: Record<string, TemplateDTO[]>;
