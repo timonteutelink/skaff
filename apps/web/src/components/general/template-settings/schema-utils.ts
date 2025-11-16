@@ -465,7 +465,7 @@ function buildAllOfSchema(jsonSchema: any, path = ""): SchemaResult {
   }
 
   if (schemaNode.default !== undefined) {
-    mergedSchema = mergedSchema.default(schemaNode.default);
+    mergedSchema = (mergedSchema as z.ZodTypeAny).default(schemaNode.default);
     mergedDefaults = schemaNode.default;
   }
 
