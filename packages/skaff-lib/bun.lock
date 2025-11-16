@@ -6,7 +6,7 @@
       "dependencies": {
         "@langchain/langgraph": "^1.0.2",
         "@langchain/openai": "^1.1.1",
-        "@timonteutelink/template-types-lib": "0.0.55",
+        "@timonteutelink/template-types-lib": "0.0.56",
         "@types/node": "^24.10.1",
         "esbuild": "^0.27.0",
         "fs-extra": "^11.3.2",
@@ -322,7 +322,7 @@
 
     "@swc/types": ["@swc/types@0.1.25", "", { "dependencies": { "@swc/counter": "^0.1.3" } }, "sha512-iAoY/qRhNH8a/hBvm3zKj9qQ4oc2+3w1unPJa2XvTK3XjeLXtzcCingVPw/9e5mn1+0yPqxcBGp9Jf0pkfMb1g=="],
 
-    "@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.55", "", { "peerDependencies": { "handlebars": "^4.7.8", "zod": "^4.1.12" } }, "sha512-0920OzKjJS9c/krGlLY6C7Cz9Ibso6W+xFNYJILVJNGivTDtHYmH0x31DNvS0MiUr3HX1rh5FxnZNRh0Vdz8VQ=="],
+    "@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.56", "", { "peerDependencies": { "handlebars": "^4.7.8", "zod": "^4.1.12" } }, "sha512-9gWJR2v64GoKfvL+eVsQKYGKCkihTiNvfYq573r+LytBqeXvlWMHHUy33s/sD1SsIHjYGpUeqHkvXBSlXXq4Hg=="],
 
     "@tsconfig/node10": ["@tsconfig/node10@1.0.12", "", {}, "sha512-UCYBaeFvM11aU2y3YPZ//O5Rhj+xKyzy7mvcIoAjASbigy8mHMryP5cK7dgjlz2hWxh1g5pLw084E0a/wlUSFQ=="],
 
