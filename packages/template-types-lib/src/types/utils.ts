@@ -1,5 +1,5 @@
-export type UserTemplateSettings = Record<string, unknown>;
-export type FinalTemplateSettings = Record<string, unknown>;
+export type UserTemplateSettings = Record<string, any>;
+export type FinalTemplateSettings = Record<string, any>;
 
 export type AiResultsObject = Record<string, string>;
 

@@ -5,7 +5,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "@jest/globals";
 import z from "zod";
 
-import type { ProjectSettings } from "@timonteutelink/template-types-lib";
+import type { ProjectSettings, UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import type { GenericTemplateConfigModule } from "../src/lib/types";
 
 jest.mock("../src/lib/logger", () => ({
@@ -74,7 +74,7 @@ async function createTemplate({
   absoluteBaseDir,
 }: {
   name: string;
-  schema: z.ZodAny;
+  schema: z.ZodObject<UserTemplateSettings>;
   absoluteBaseDir: string;
 }): Promise<Template> {
   const absoluteDir = path.join(absoluteBaseDir, name);

@@ -204,8 +204,8 @@ export interface TemplateMigration {
  */
 export interface TemplateConfigModule<
   TParentFinalSettings extends FinalTemplateSettings,
-  TInputSettingsSchema extends z.ZodAny,
-  TFinalSettingsSchema extends z.ZodAny = TInputSettingsSchema,
+  TInputSettingsSchema extends z.ZodObject<UserTemplateSettings>,
+  TFinalSettingsSchema extends z.ZodObject<UserTemplateSettings> = TInputSettingsSchema,
   TAiResultsObject extends AiResultsObject = {},
   TInputSettings extends UserTemplateSettings = z.output<TInputSettingsSchema>,
   TFinalSettings extends FinalTemplateSettings = z.output<TFinalSettingsSchema>

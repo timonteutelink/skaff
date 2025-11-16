@@ -82,4 +82,4 @@ export interface DiffHunk {
   lines: string[];
 }
 
-export type GenericTemplateConfigModule = TemplateConfigModule<FinalTemplateSettings, z.ZodAny, z.ZodAny, Record<string, string>, UserTemplateSettings, FinalTemplateSettings>;
+export type GenericTemplateConfigModule = TemplateConfigModule<FinalTemplateSettings, z.ZodObject<UserTemplateSettings>, z.ZodObject<UserTemplateSettings>, Record<string, string>, UserTemplateSettings, FinalTemplateSettings>;

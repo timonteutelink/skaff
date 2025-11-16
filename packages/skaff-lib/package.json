@@ -37,7 +37,7 @@
     "@types/node": "^24.10.1",
     "@langchain/langgraph": "^1.0.2",
     "@langchain/openai": "^1.1.1",
-    "@timonteutelink/template-types-lib": "0.0.55",
+    "@timonteutelink/template-types-lib": "0.0.56",
     "esbuild": "^0.27.0",
     "fs-extra": "^11.3.2",
     "glob": "^11.0.3",
