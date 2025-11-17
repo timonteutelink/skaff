@@ -15,6 +15,8 @@ import type { Template } from "../templates";
 import type { CacheService } from "./cache-service";
 import type { NpmService } from "./npm-service";
 
+export const WORKTREE_METADATA_FILE = ".skaff-worktree.json";
+
 type PossibleGitError = {
   exitCode?: number;
   message?: string;
@@ -24,6 +26,11 @@ type PossibleGitError = {
     stdErr?: string;
   };
 };
+
+interface WorktreeSpec {
+  branch?: string;
+  revision?: string;
+}
 
 @injectable()
 export class GitService {
@@ -50,11 +57,21 @@ export class GitService {
     return value.replace(/[^a-zA-Z0-9.-]/g, "-");
   }
 
-  private buildCacheDirName(repoUrl: string, branch?: string): string {
+  private buildCacheDirName(repoUrl: string, spec?: WorktreeSpec): string {
     const repoName = path.basename(repoUrl).replace(/\.git$/, "");
-    const branchPart = this.sanitizeCacheSegment(branch ?? "default");
-    const hash = this.cacheService.hash(`${repoUrl}:${branchPart}`).slice(0, 8);
-    return `${repoName}-${branchPart}-${hash}`;
+    const descriptorParts: string[] = [];
+    if (spec?.branch) {
+      descriptorParts.push(`branch-${this.sanitizeCacheSegment(spec.branch)}`);
+    }
+    if (spec?.revision) {
+      const trimmed = spec.revision.slice(0, 12);
+      descriptorParts.push(`rev-${this.sanitizeCacheSegment(trimmed)}`);
+    }
+    const descriptor = descriptorParts.length ? descriptorParts.join("-") : "default";
+    const hash = this.cacheService
+      .hash(`${repoUrl}:${descriptor}`)
+      .slice(0, 8);
+    return `${repoName}-${descriptor}-${hash}`;
   }
 
   private buildRepoStorageDirName(repoUrl: string): string {
@@ -67,9 +84,9 @@ export class GitService {
 
   private async cachePathForRepo(
     repoUrl: string,
-    branch?: string,
+    spec?: WorktreeSpec,
   ): Promise<Result<string>> {
-    const dirName = this.buildCacheDirName(repoUrl, branch);
+    const dirName = this.buildCacheDirName(repoUrl, spec);
     return this.cacheService.pathInCache(dirName);
   }
 
@@ -163,6 +180,30 @@ export class GitService {
     }
   }
 
+  private async writeWorktreeMetadata(
+    worktreePath: string,
+    repoUrl: string,
+    spec: WorktreeSpec,
+  ): Promise<void> {
+    const metadata = {
+      repoUrl,
+      branch: spec.branch,
+      revision: spec.revision,
+    };
+    try {
+      const metadataPath = `${worktreePath}${WORKTREE_METADATA_FILE}`;
+      await fs.writeFile(
+        metadataPath,
+        JSON.stringify(metadata, null, 2),
+        "utf8",
+      );
+      const legacyPath = path.join(worktreePath, WORKTREE_METADATA_FILE);
+      await fsExtra.remove(legacyPath).catch(() => undefined);
+    } catch (error) {
+      logError({ shortMessage: "Failed to persist worktree metadata", error });
+    }
+  }
+
   private async worktreeExists(worktreePath: string): Promise<boolean> {
     const stat = await fs.stat(worktreePath).catch(() => null);
     return Boolean(stat && stat.isDirectory());
@@ -188,22 +229,65 @@ export class GitService {
     }
 
     await fsExtra.remove(worktreePath).catch(() => undefined);
+    await fsExtra
+      .remove(`${worktreePath}${WORKTREE_METADATA_FILE}`)
+      .catch(() => undefined);
+  }
+
+  private async resolveWorktreeRef(
+    repoPath: string,
+    spec: WorktreeSpec,
+  ): Promise<Result<string>> {
+    if (spec.revision) {
+      return { data: spec.revision };
+    }
+
+    const git = this.gitClient(repoPath);
+
+    if (spec.branch) {
+      const branchRef = this.sanitizeBranchName(spec.branch);
+      try {
+        const result = await git.revparse([branchRef]);
+        return { data: result.trim() };
+      } catch (error) {
+        logError({
+          shortMessage: `Failed to resolve branch ${branchRef}`,
+          error,
+        });
+        return {
+          error: `Failed to resolve branch ${branchRef}: ${error}`,
+        };
+      }
+    }
+
+    try {
+      const result = await git.revparse(["HEAD"]);
+      return { data: result.trim() };
+    } catch (error) {
+      logError({ shortMessage: "Failed to resolve HEAD", error });
+      return { error: `Failed to resolve HEAD: ${error}` };
+    }
   }
 
   private async createWorktree(
     repoPath: string,
     worktreePath: string,
-    branch?: string,
+    spec: WorktreeSpec,
   ): Promise<Result<void>> {
     const git = this.gitClient(repoPath);
-    const branchRef = branch ? this.sanitizeBranchName(branch) : undefined;
-    const args = ["worktree", "add", "--force"];
-
-    if (branchRef) {
-      args.push("-B", branchRef, worktreePath, `origin/${branchRef}`);
-    } else {
-      args.push(worktreePath, "HEAD");
+    const targetResult = await this.resolveWorktreeRef(repoPath, spec);
+    if ("error" in targetResult) {
+      return targetResult;
     }
+
+    const args = [
+      "worktree",
+      "add",
+      "--force",
+      "--detach",
+      worktreePath,
+      targetResult.data,
+    ];
 
     try {
       await git.raw(args);
@@ -271,15 +355,20 @@ export class GitService {
   public async cloneRepoBranchToCache(
     repoUrl: string,
     branch?: string,
-    options?: { forceRefresh?: boolean },
+    options?: { forceRefresh?: boolean; revision?: string },
   ): Promise<Result<string>> {
     const normalizedRepoUrl = this.normalizeRepoUrl(repoUrl);
     const normalizedBranch = branch
       ? this.sanitizeBranchName(branch)
       : undefined;
+    const normalizedRevision = options?.revision?.trim() || undefined;
+    const worktreeSpec: WorktreeSpec = {
+      branch: normalizedBranch,
+      revision: normalizedRevision,
+    };
     const worktreePathResult = await this.cachePathForRepo(
       normalizedRepoUrl,
-      normalizedBranch,
+      worktreeSpec,
     );
     if ("error" in worktreePathResult) {
       return worktreePathResult;
@@ -310,12 +399,18 @@ export class GitService {
         const createResult = await this.createWorktree(
           repoPath,
           worktreePath,
-          normalizedBranch,
+          worktreeSpec,
         );
         if ("error" in createResult) {
           return createResult;
         }
       }
+
+      await this.writeWorktreeMetadata(
+        worktreePath,
+        normalizedRepoUrl,
+        worktreeSpec,
+      );
 
       const installResult = await this.npmService.install(worktreePath);
       if ("error" in installResult) {
@@ -353,7 +448,14 @@ export class GitService {
       }
 
       const git = this.gitClient(repoDir);
-      await git.raw(["worktree", "add", "--force", destPath.data, revisionHash]);
+      await git.raw([
+        "worktree",
+        "add",
+        "--force",
+        "--detach",
+        destPath.data,
+        revisionHash,
+      ]);
       const installResult = await this.npmService.install(destPath.data);
       if ("error" in installResult) {
         return { error: installResult.error };

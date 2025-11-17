@@ -27,9 +27,13 @@ export async function runEraseCache(): Promise<
 export async function loadTemplateRepo(
   repoUrl: string,
   branch?: string,
+  revision?: string,
   options?: { refresh?: boolean },
 ): Promise<Result<TemplateRepoLoadResult>> {
-  const result = await tempLib.loadTemplateFromRepo(repoUrl, branch, options);
+  const result = await tempLib.loadTemplateFromRepo(repoUrl, branch, {
+    refresh: options?.refresh,
+    revision,
+  });
   if ("error" in result) {
     return { error: result.error };
   }
@@ -39,9 +43,11 @@ export async function loadTemplateRepo(
 export async function refreshTemplateRepo(
   repoUrl: string,
   branch?: string,
+  revision?: string,
 ): Promise<Result<void>> {
   const result = await tempLib.loadTemplateFromRepo(repoUrl, branch, {
     refresh: true,
+    revision,
   });
   if ("error" in result) {
     return { error: result.error };

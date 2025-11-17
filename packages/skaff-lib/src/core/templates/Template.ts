@@ -42,6 +42,7 @@ export interface TemplateInit {
   commitHash?: string;
   branch?: string;
   repoUrl?: string;
+  trackedRevision?: string;
   refDir?: string;
   partialsDir?: string;
 }
@@ -69,6 +70,7 @@ export class Template {
   public isLocal: boolean = false;
   public branch?: string;
   public repoUrl?: string;
+  public trackedRevision?: string;
   public possibleParentTemplates: TemplateParentReference[] = [];
   public isDetachedSubtreeRoot: boolean = false;
 
@@ -95,6 +97,7 @@ export class Template {
     this.commitHash = init.commitHash;
     this.branch = init.branch;
     this.repoUrl = init.repoUrl;
+    this.trackedRevision = init.trackedRevision;
     this.possibleParentTemplates =
       init.config.possibleParentTemplates ?? [];
     this.isDetachedSubtreeRoot = this.possibleParentTemplates.length > 0;
@@ -211,6 +214,7 @@ export class Template {
       isLocal: this.isLocal,
       branch: this.branch,
       repoUrl: this.repoUrl,
+      trackedRevision: this.trackedRevision,
       possibleParentTemplates: this.possibleParentTemplates,
       isDetachedSubtreeRoot: this.isDetachedSubtreeRoot,
     };

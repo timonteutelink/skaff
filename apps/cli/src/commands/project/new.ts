@@ -20,6 +20,7 @@ export default class InstantiationProjectNew extends Base {
     }),
     repo: Flags.string({ description: 'Git repository URL or path to load before instantiation' }),
     branch: Flags.string({ description: 'Branch to checkout when loading repo (optional)' }),
+    revision: Flags.string({ description: 'Specific commit hash to pin when loading repo (optional)' }),
   };
 
   async run() {
@@ -27,11 +28,12 @@ export default class InstantiationProjectNew extends Base {
 
     if (flags.repo) {
       const branch = (flags.branch as string | undefined)?.trim() || undefined;
-      const res = await loadTemplateFromRepo(flags.repo, branch);
+      const revision = (flags.revision as string | undefined)?.trim() || undefined;
+      const res = await loadTemplateFromRepo(flags.repo, branch, { revision });
       if ('error' in res) this.error(res.error, { exit: 1 });
       if (res.data.alreadyExisted) {
         this.log(
-          `Template repository ${flags.repo}${branch ? ` (${branch})` : ''} is already cached. Using the existing clone.`,
+          `Template repository ${flags.repo}${branch ? ` (${branch})` : ''}${revision ? ` [rev ${revision.slice(0, 12)}]` : ''} is already cached. Using the existing clone.`,
         );
       }
     }

@@ -9,6 +9,7 @@ describe("normalizeGitRepositorySpecifier", () => {
     expect(result).toEqual({
       repoUrl: "https://github.com/owner/repo.git",
       branch: undefined,
+      revision: undefined,
     });
   });
 
@@ -17,6 +18,7 @@ describe("normalizeGitRepositorySpecifier", () => {
     expect(result).toEqual({
       repoUrl: "https://github.com/org/project.git",
       branch: "dev",
+      revision: undefined,
     });
   });
 
@@ -27,6 +29,7 @@ describe("normalizeGitRepositorySpecifier", () => {
     expect(result).toEqual({
       repoUrl: "https://github.example.com/org/project.git",
       branch: undefined,
+      revision: undefined,
     });
   });
 
@@ -37,6 +40,7 @@ describe("normalizeGitRepositorySpecifier", () => {
     expect(result).toEqual({
       repoUrl: "http://github.example.com/org/project.git",
       branch: "release",
+      revision: undefined,
     });
   });
 
@@ -47,6 +51,7 @@ describe("normalizeGitRepositorySpecifier", () => {
     expect(result).toEqual({
       repoUrl: "https://github.com/org/project.git",
       branch: "feature",
+      revision: undefined,
     });
   });
 
@@ -57,12 +62,27 @@ describe("normalizeGitRepositorySpecifier", () => {
     expect(result).toEqual({
       repoUrl: "git@github.com:org/project.git",
       branch: undefined,
+      revision: undefined,
     });
   });
 
   it("supports file scheme repositories", () => {
     const result = normalizeGitRepositorySpecifier("file:///tmp/repo#main");
-    expect(result).toEqual({ repoUrl: "file:///tmp/repo", branch: "main" });
+    expect(result).toEqual({
+      repoUrl: "file:///tmp/repo",
+      branch: "main",
+      revision: undefined,
+    });
+  });
+
+  it("detects commit hashes as revisions", () => {
+    const sha = "abcdef1234567890abcdef1234567890abcdef12";
+    const result = normalizeGitRepositorySpecifier(`github:owner/repo@${sha}`);
+    expect(result).toEqual({
+      repoUrl: "https://github.com/owner/repo.git",
+      branch: undefined,
+      revision: sha,
+    });
   });
 
   it("returns null for plain paths", () => {
@@ -78,6 +98,7 @@ describe("parseTemplatePathEntry", () => {
       kind: "remote",
       repoUrl: "https://github.com/owner/repo.git",
       branch: "dev",
+      revision: undefined,
     });
   });
 
@@ -89,6 +110,7 @@ describe("parseTemplatePathEntry", () => {
       kind: "remote",
       repoUrl: "https://github.example.com/org/project.git",
       branch: undefined,
+      revision: undefined,
     });
   });
 
@@ -103,6 +125,18 @@ describe("parseTemplatePathEntry", () => {
       kind: "remote",
       repoUrl: "file:///srv/templates",
       branch: undefined,
+      revision: undefined,
+    });
+  });
+
+  it("captures revision fragments", () => {
+    const sha = "abcdef1234567890abcdef1234567890abcdef12";
+    const result = parseTemplatePathEntry(`https://example.com/repo.git#${sha}`);
+    expect(result).toEqual({
+      kind: "remote",
+      repoUrl: "https://example.com/repo.git",
+      branch: undefined,
+      revision: sha,
     });
   });
 });

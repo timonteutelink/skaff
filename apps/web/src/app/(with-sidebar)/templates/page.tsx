@@ -33,8 +33,8 @@ export default function TemplatesListPage() {
   const router = useRouter();
   const [templates, setTemplates] = useState<TemplateSummary[]>([]);
   const handleLoadTemplateRepo = useCallback(
-    async (repoUrl: string, branch?: string) => {
-      const loadResult = await loadTemplateRepo(repoUrl, branch);
+    async (repoUrl: string, branch?: string, revision?: string) => {
+      const loadResult = await loadTemplateRepo(repoUrl, branch, revision);
       const repoLoaded = toastNullError({
         result: loadResult,
         shortMessage: "Error loading repo",

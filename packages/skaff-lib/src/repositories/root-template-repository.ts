@@ -11,6 +11,7 @@ import { backendLogger } from "../lib/logger";
 import { Result, TemplateRepoLoadResult } from "../lib/types";
 import { logError } from "../lib/utils";
 import type { GitService } from "../core/infra/git-service";
+import { WORKTREE_METADATA_FILE } from "../core/infra/git-service";
 import { CacheService } from "../core/infra/cache-service";
 import { TemplateRegistry } from "../core/templates/TemplateRegistry";
 import { TemplateTreeBuilder } from "../core/templates/TemplateTreeBuilder";
@@ -41,6 +42,7 @@ type RemoteRepoSource = "config" | "manual" | "cache";
 interface RemoteRepoEntry {
   url: string;
   branch?: string;
+  revision?: string;
   path: string;
   source: RemoteRepoSource;
   commitHash?: string;
@@ -108,21 +110,34 @@ export class RootTemplateRepository {
         continue;
       }
 
-      const branch = branchResult.data?.trim() || undefined;
+      const metaPath = `${repoPath}${WORKTREE_METADATA_FILE}`;
+      const meta = await fs
+        .readFile(metaPath, "utf8")
+        .then((content) => JSON.parse(content) as { branch?: string; revision?: string })
+        .catch(() => null);
+
+      const branchFromGit = branchResult.data?.trim() || undefined;
+      const branch =
+        meta?.branch ?? (branchFromGit === "HEAD" ? undefined : branchFromGit);
+      const revision = meta?.revision;
       const existing = this.remoteRepos.find(
         (repo) =>
           repo.url === repoUrlResult.data &&
-          (repo.branch ?? "") === (branch ?? ""),
+          (repo.branch ?? "") === (branch ?? "") &&
+          (repo.revision ?? "") === (revision ?? ""),
       );
 
       if (existing) {
         existing.path = repoPath;
         existing.commitHash = commitHashResult.data;
         existing.source = existing.source ?? "cache";
+        existing.revision = revision;
+        existing.branch = branch;
       } else {
         this.remoteRepos.push({
           url: repoUrlResult.data,
           branch,
+          revision,
           path: repoPath,
           source: "cache",
           commitHash: commitHashResult.data,
@@ -134,15 +149,17 @@ export class RootTemplateRepository {
   async addRemoteRepo(
     url: string,
     branch?: string,
-    options?: { refresh?: boolean },
+    options?: { refresh?: boolean; revision?: string },
   ): Promise<Result<TemplateRepoLoadResult>> {
     const normalized = normalizeGitRepositorySpecifier(url);
     const repoUrl = normalized?.repoUrl ?? url;
     const targetBranch = normalized?.branch ?? branch;
+    const targetRevision = normalized?.revision ?? options?.revision;
     const existing = this.remoteRepos.find(
       (r) =>
         r.url === repoUrl &&
-        (r.branch ?? "") === (targetBranch ?? ""),
+        (r.branch ?? "") === (targetBranch ?? "") &&
+        (r.revision ?? "") === (targetRevision ?? ""),
     );
 
     if (existing && !options?.refresh) {
@@ -152,7 +169,7 @@ export class RootTemplateRepository {
     const cloneResult = await this.gitService.cloneRepoBranchToCache(
       repoUrl,
       targetBranch,
-      { forceRefresh: Boolean(options?.refresh) },
+      { forceRefresh: Boolean(options?.refresh), revision: targetRevision },
     );
     if ("error" in cloneResult) {
       return { error: cloneResult.error };
@@ -161,10 +178,12 @@ export class RootTemplateRepository {
     if (existing) {
       existing.path = cloneResult.data;
       existing.source = existing.source ?? "manual";
+      existing.revision = targetRevision;
     } else {
       this.remoteRepos.push({
         url: repoUrl,
         branch: targetBranch,
+        revision: targetRevision,
         path: cloneResult.data,
         source: "manual",
       });
@@ -219,9 +238,11 @@ export class RootTemplateRepository {
 
       if (parsed.kind === "remote") {
         const branch = parsed.branch;
+        const revision = parsed.revision;
         const cloneResult = await this.gitService.cloneRepoBranchToCache(
           parsed.repoUrl,
           branch,
+          { revision },
         );
         if ("error" in cloneResult) {
           backendLogger.warn(
@@ -233,14 +254,17 @@ export class RootTemplateRepository {
         const existing = this.remoteRepos.find(
           (repo) =>
             repo.url === parsed.repoUrl &&
-            (repo.branch ?? "") === (branch ?? ""),
+            (repo.branch ?? "") === (branch ?? "") &&
+            (repo.revision ?? "") === (revision ?? ""),
         );
         if (existing) {
           existing.path = cloneResult.data;
+          existing.revision = revision;
         } else {
           this.remoteRepos.push({
             url: parsed.repoUrl,
             branch,
+            revision,
             path: cloneResult.data,
             source: "config",
           });
@@ -296,6 +320,8 @@ export class RootTemplateRepository {
           {
             repoUrl: repoInfo?.url,
             branchOverride: repoInfo?.branch,
+            trackedRevision: repoInfo?.revision,
+            skipBranchResolution: Boolean(repoInfo),
           },
         );
         if ("error" in templateResult) {
@@ -326,14 +352,17 @@ export class RootTemplateRepository {
   async listTemplatesInRepo(
     repoUrl: string,
     branch?: string,
+    options?: { revision?: string },
   ): Promise<Result<Template[]>> {
     const normalized = normalizeGitRepositorySpecifier(repoUrl);
     const resolvedRepoUrl = normalized?.repoUrl ?? repoUrl;
     const resolvedBranch = normalized?.branch ?? branch;
+    const resolvedRevision = normalized?.revision ?? options?.revision;
 
     const cloneResult = await this.gitService.cloneRepoBranchToCache(
       resolvedRepoUrl,
       resolvedBranch,
+      { revision: resolvedRevision },
     );
     if ("error" in cloneResult) {
       return { error: cloneResult.error };
@@ -365,6 +394,8 @@ export class RootTemplateRepository {
       const templateResult = await this.templateTreeBuilder.build(templateDir, {
         repoUrl: resolvedRepoUrl,
         branchOverride: resolvedBranch,
+        trackedRevision: resolvedRevision,
+        skipBranchResolution: true,
       });
 
       if ("error" in templateResult) {
@@ -488,6 +519,8 @@ export class RootTemplateRepository {
         repoUrl: sourceTemplate.repoUrl,
         branchOverride: sourceTemplate.branch,
         commitHash: revisionHash,
+        trackedRevision: sourceTemplate.trackedRevision,
+        skipBranchResolution: true,
       },
     );
 

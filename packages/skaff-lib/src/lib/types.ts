@@ -46,6 +46,7 @@ export interface TemplateDTO {
   isLocal: boolean;
   branch?: string;
   repoUrl?: string;
+  trackedRevision?: string;
   templatesThatDisableThis: TemplateDisablingThis[];
   templateCommands: { title: string; description: string }[];
   refDir?: string;

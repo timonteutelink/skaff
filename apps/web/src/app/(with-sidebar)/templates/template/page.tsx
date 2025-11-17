@@ -149,6 +149,50 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ node }) => {
           </div>
         )}
 
+        {/* Repository URL */}
+        {node.data?.repoUrl && (
+          <div className="sm:col-span-2">
+            <dt className="text-sm font-medium text-gray-700">Repository</dt>
+            <dd className="mt-1 flex items-center space-x-2 text-sm text-gray-600">
+              <span className="truncate">{node.data.repoUrl}</span>
+              <CopyIcon
+                className="w-4 h-4 cursor-pointer"
+                onClick={() => handleCopy(node.data!.repoUrl!, "repoUrl")}
+              />
+              {copiedField === "repoUrl" && (
+                <span className="text-xs text-green-500">Copied</span>
+              )}
+            </dd>
+          </div>
+        )}
+
+        {/* Branch */}
+        {node.data?.branch && (
+          <div>
+            <dt className="text-sm font-medium text-gray-700">Branch</dt>
+            <dd className="mt-1 text-sm text-gray-600">{node.data.branch}</dd>
+          </div>
+        )}
+
+        {/* Tracked Revision */}
+        {node.data?.trackedRevision && (
+          <div>
+            <dt className="text-sm font-medium text-gray-700">Pinned Revision</dt>
+            <dd className="mt-1 flex items-center space-x-2 text-sm text-gray-600">
+              <span className="truncate">{node.data.trackedRevision}</span>
+              <CopyIcon
+                className="w-4 h-4 cursor-pointer"
+                onClick={() =>
+                  handleCopy(node.data!.trackedRevision!, "trackedRevision")
+                }
+              />
+              {copiedField === "trackedRevision" && (
+                <span className="text-xs text-green-500">Copied</span>
+              )}
+            </dd>
+          </div>
+        )}
+
         {/* Author */}
         <div>
           <dt className="text-sm font-medium text-gray-700">Author</dt>
@@ -292,6 +336,7 @@ export default function TemplatePage() {
       const refreshResult = await refreshTemplateRepo(
         selectedTemplate.repoUrl,
         selectedTemplate.branch,
+        selectedTemplate.trackedRevision,
       );
 
       if ("error" in refreshResult) {
