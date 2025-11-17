@@ -8,9 +8,10 @@ import { TemplateParentReference } from "@timonteutelink/template-types-lib";
 
 import { getConfig } from "../lib";
 import { backendLogger } from "../lib/logger";
-import { Result } from "../lib/types";
+import { Result, TemplateRepoLoadResult } from "../lib/types";
 import { logError } from "../lib/utils";
 import type { GitService } from "../core/infra/git-service";
+import { CacheService } from "../core/infra/cache-service";
 import { TemplateRegistry } from "../core/templates/TemplateRegistry";
 import { TemplateTreeBuilder } from "../core/templates/TemplateTreeBuilder";
 import type { Template } from "../core/templates/Template";
@@ -35,13 +36,14 @@ export const defaultTemplatePathsProvider: TemplatePathsProvider = async () => {
 
 // now only stores the root templates at: <templateDirPath>/templates/*
 // later also store reference to files and generic templates to allow direct instantiation without saving state of subtemplates
-type RemoteRepoSource = "config" | "manual";
+type RemoteRepoSource = "config" | "manual" | "cache";
 
 interface RemoteRepoEntry {
   url: string;
-  branch: string;
+  branch?: string;
   path: string;
   source: RemoteRepoSource;
+  commitHash?: string;
 }
 
 @injectable()
@@ -62,21 +64,100 @@ export class RootTemplateRepository {
     this.templatePathsProvider = templatePathsProvider;
   }
 
-  async addRemoteRepo(url: string, branch: string = "main"): Promise<Result<void>> {
+  private async hydrateCachedRepos(): Promise<void> {
+    const cacheDir = CacheService.getCacheDirPath();
+    let entries: Dirent[];
+    try {
+      entries = await fs.readdir(cacheDir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) {
+        continue;
+      }
+
+      const repoPath = path.join(cacheDir, entry.name);
+      const gitDir = await fs
+        .stat(path.join(repoPath, ".git"))
+        .catch(() => null);
+      if (!gitDir || (!gitDir.isDirectory() && !gitDir.isFile())) {
+        continue;
+      }
+
+      const templatesDir = path.join(repoPath, "templates");
+      const hasTemplates = await fs
+        .stat(templatesDir)
+        .then((stat) => stat.isDirectory())
+        .catch(() => false);
+      if (!hasTemplates) {
+        continue;
+      }
+
+      const repoUrlResult = await this.gitService.getRemoteUrl(repoPath);
+      if ("error" in repoUrlResult) {
+        continue;
+      }
+      const branchResult = await this.gitService.getCurrentBranch(repoPath);
+      if ("error" in branchResult) {
+        continue;
+      }
+      const commitHashResult = await this.gitService.getCommitHash(repoPath);
+      if ("error" in commitHashResult) {
+        continue;
+      }
+
+      const branch = branchResult.data?.trim() || undefined;
+      const existing = this.remoteRepos.find(
+        (repo) =>
+          repo.url === repoUrlResult.data &&
+          (repo.branch ?? "") === (branch ?? ""),
+      );
+
+      if (existing) {
+        existing.path = repoPath;
+        existing.commitHash = commitHashResult.data;
+        existing.source = existing.source ?? "cache";
+      } else {
+        this.remoteRepos.push({
+          url: repoUrlResult.data,
+          branch,
+          path: repoPath,
+          source: "cache",
+          commitHash: commitHashResult.data,
+        });
+      }
+    }
+  }
+
+  async addRemoteRepo(
+    url: string,
+    branch?: string,
+    options?: { refresh?: boolean },
+  ): Promise<Result<TemplateRepoLoadResult>> {
     const normalized = normalizeGitRepositorySpecifier(url);
     const repoUrl = normalized?.repoUrl ?? url;
     const targetBranch = normalized?.branch ?? branch;
+    const existing = this.remoteRepos.find(
+      (r) =>
+        r.url === repoUrl &&
+        (r.branch ?? "") === (targetBranch ?? ""),
+    );
+
+    if (existing && !options?.refresh) {
+      return { data: { alreadyExisted: true } };
+    }
 
     const cloneResult = await this.gitService.cloneRepoBranchToCache(
       repoUrl,
       targetBranch,
+      { forceRefresh: Boolean(options?.refresh) },
     );
     if ("error" in cloneResult) {
       return { error: cloneResult.error };
     }
-    const existing = this.remoteRepos.find(
-      (r) => r.url === repoUrl && r.branch === targetBranch,
-    );
+
     if (existing) {
       existing.path = cloneResult.data;
       existing.source = existing.source ?? "manual";
@@ -88,7 +169,13 @@ export class RootTemplateRepository {
         source: "manual",
       });
     }
-    return await this.loadTemplates();
+
+    const loadResult = await this.loadTemplates();
+    if ("error" in loadResult) {
+      return loadResult;
+    }
+
+    return { data: { alreadyExisted: Boolean(existing) } };
   }
 
   // load templates from configured paths and cached remote repos
@@ -105,6 +192,8 @@ export class RootTemplateRepository {
     this.remoteRepos = this.remoteRepos.filter(
       (repo) => repo.source === "manual",
     );
+
+    await this.hydrateCachedRepos();
 
     let baseTemplatePaths: string[];
     try {
@@ -129,20 +218,22 @@ export class RootTemplateRepository {
       }
 
       if (parsed.kind === "remote") {
-        const branch = parsed.branch ?? "main";
+        const branch = parsed.branch;
         const cloneResult = await this.gitService.cloneRepoBranchToCache(
           parsed.repoUrl,
           branch,
         );
         if ("error" in cloneResult) {
           backendLogger.warn(
-            `Failed to load remote template repository ${parsed.repoUrl} (${branch}): ${cloneResult.error}`,
+            `Failed to load remote template repository ${parsed.repoUrl} (${branch ?? "default"}): ${cloneResult.error}`,
           );
           continue;
         }
 
         const existing = this.remoteRepos.find(
-          (repo) => repo.url === parsed.repoUrl && repo.branch === branch,
+          (repo) =>
+            repo.url === parsed.repoUrl &&
+            (repo.branch ?? "") === (branch ?? ""),
         );
         if (existing) {
           existing.path = cloneResult.data;
@@ -159,10 +250,9 @@ export class RootTemplateRepository {
       }
     }
 
-    const paths = [
-      ...localTemplatePaths,
-      ...this.remoteRepos.map((r) => r.path),
-    ];
+    const paths = Array.from(
+      new Set([...localTemplatePaths, ...this.remoteRepos.map((r) => r.path)]),
+    );
     for (const templatePath of paths) {
       const repoInfo = this.remoteRepos.find((r) => r.path === templatePath);
       const templatesRootDir = path.join(templatePath, "templates");
@@ -230,23 +320,12 @@ export class RootTemplateRepository {
   }
 
   async reloadTemplates(): Promise<Result<void>> {
-    // refresh remote repos to latest commit on their branches
-    for (const repo of this.remoteRepos) {
-      const cloneResult = await this.gitService.cloneRepoBranchToCache(
-        repo.url,
-        repo.branch,
-      );
-      if ("error" in cloneResult) {
-        return { error: cloneResult.error };
-      }
-      repo.path = cloneResult.data;
-    }
     return await this.loadTemplates();
   }
 
   async listTemplatesInRepo(
     repoUrl: string,
-    branch: string = "main",
+    branch?: string,
   ): Promise<Result<Template[]>> {
     const normalized = normalizeGitRepositorySpecifier(repoUrl);
     const resolvedRepoUrl = normalized?.repoUrl ?? repoUrl;
@@ -303,7 +382,7 @@ export class RootTemplateRepository {
     }
 
     if (!templates.length) {
-      const message = `No templates found in repository ${resolvedRepoUrl} on branch ${resolvedBranch}`;
+      const message = `No templates found in repository ${resolvedRepoUrl} on branch ${resolvedBranch ?? "default"}`;
       logError({ shortMessage: message });
       return { error: message };
     }

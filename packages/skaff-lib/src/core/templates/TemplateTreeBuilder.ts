@@ -303,7 +303,7 @@ export class TemplateTreeBuilder {
         continue;
       }
 
-      const branch = remoteRef.branch ?? "";
+      const branch = remoteRef.branch;
       const cloneResult = await this.gitService.cloneRepoBranchToCache(
         remoteRef.repoUrl,
         branch,

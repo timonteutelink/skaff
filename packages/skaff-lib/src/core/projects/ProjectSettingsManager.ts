@@ -165,31 +165,34 @@ export class ProjectSettingsManager {
       const repo = resolveRootTemplateRepository();
       const addResult = await repo.addRemoteRepo(
         rootInstantiated.templateRepoUrl,
-        rootInstantiated.templateBranch ?? "main",
+        rootInstantiated.templateBranch,
       );
       if ("error" in addResult) {
-        return addResult;
+        return { error: addResult.error };
       }
     }
 
     const repo = resolveRootTemplateRepository();
-    const remoteReposToLoad = new Map<string, { url: string; branch: string }>();
+    const remoteReposToLoad = new Map<string, { url: string; branch?: string }>();
 
     for (const instantiated of validated.data.instantiatedTemplates) {
       if (!instantiated.templateRepoUrl) {
         continue;
       }
-      const branch = instantiated.templateBranch ?? "main";
-      const key = `${instantiated.templateRepoUrl}#${branch}`;
+      const branch = instantiated.templateBranch;
+      const key = `${instantiated.templateRepoUrl}#${branch ?? ""}`;
       if (!remoteReposToLoad.has(key)) {
-        remoteReposToLoad.set(key, { url: instantiated.templateRepoUrl, branch });
+        remoteReposToLoad.set(key, {
+          url: instantiated.templateRepoUrl,
+          branch,
+        });
       }
     }
 
     for (const entry of remoteReposToLoad.values()) {
       const addResult = await repo.addRemoteRepo(entry.url, entry.branch);
       if ("error" in addResult) {
-        return addResult;
+        return { error: addResult.error };
       }
     }
 

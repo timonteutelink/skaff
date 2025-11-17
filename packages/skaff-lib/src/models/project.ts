@@ -302,21 +302,7 @@ export class Project {
       gitStatus = gitStatusResult.data;
     }
 
-    let outdated = false;
-    const rootInstantiated = projectSettings.data.settings.instantiatedTemplates[0];
-    if (
-      rootInstantiated?.templateRepoUrl &&
-      rootInstantiated.templateBranch &&
-      rootInstantiated.templateCommitHash
-    ) {
-      const remote = await gitService.getRemoteCommitHash(
-        rootInstantiated.templateRepoUrl,
-        rootInstantiated.templateBranch,
-      );
-      if ("data" in remote && remote.data !== rootInstantiated.templateCommitHash) {
-        outdated = true;
-      }
-    }
+    const outdated = false;
 
     return {
       data: new Project(

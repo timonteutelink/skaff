@@ -19,15 +19,21 @@ export default class InstantiationProjectNew extends Base {
         'Inline JSON or path to JSON file with template settings. If omitted, settings are prompted.',
     }),
     repo: Flags.string({ description: 'Git repository URL or path to load before instantiation' }),
-    branch: Flags.string({ description: 'Branch to checkout when loading repo', default: 'main' }),
+    branch: Flags.string({ description: 'Branch to checkout when loading repo (optional)' }),
   };
 
   async run() {
     const { args, flags } = await this.parse(InstantiationProjectNew);
 
     if (flags.repo) {
-      const res = await loadTemplateFromRepo(flags.repo, flags.branch as string);
+      const branch = (flags.branch as string | undefined)?.trim() || undefined;
+      const res = await loadTemplateFromRepo(flags.repo, branch);
       if ('error' in res) this.error(res.error, { exit: 1 });
+      if (res.data.alreadyExisted) {
+        this.log(
+          `Template repository ${flags.repo}${branch ? ` (${branch})` : ''} is already cached. Using the existing clone.`,
+        );
+      }
     }
 
     const settings = await readUserTemplateSettings(

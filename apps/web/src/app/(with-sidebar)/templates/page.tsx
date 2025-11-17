@@ -33,13 +33,18 @@ export default function TemplatesListPage() {
   const router = useRouter();
   const [templates, setTemplates] = useState<TemplateSummary[]>([]);
   const handleLoadTemplateRepo = useCallback(
-    async (repoUrl: string, branch: string) => {
+    async (repoUrl: string, branch?: string) => {
       const loadResult = await loadTemplateRepo(repoUrl, branch);
       const repoLoaded = toastNullError({
         result: loadResult,
         shortMessage: "Error loading repo",
       });
-      if (repoLoaded === false) {
+      if (!repoLoaded) {
+        return;
+      }
+
+      if (repoLoaded.alreadyExisted) {
+        toast.info("Repository is already loaded. Use the refresh action to fetch the latest revision.");
         return;
       }
 
@@ -53,7 +58,7 @@ export default function TemplatesListPage() {
       }
 
       setTemplates(newTemplates);
-      toast.success("Repo loaded");
+      toast.success("Repository loaded");
     },
     [],
   );

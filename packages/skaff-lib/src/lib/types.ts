@@ -23,6 +23,10 @@ export interface TemplateSummary {
   template: TemplateDTO;
   revisions: string[];
 }
+
+export interface TemplateRepoLoadResult {
+  alreadyExisted: boolean;
+}
 export interface NewTemplateDiffResult {
   diffHash: string;
   parsedDiff: ParsedFile[];
