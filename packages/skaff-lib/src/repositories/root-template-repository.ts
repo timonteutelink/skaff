@@ -153,14 +153,36 @@ export class RootTemplateRepository {
   ): Promise<Result<TemplateRepoLoadResult>> {
     const normalized = normalizeGitRepositorySpecifier(url);
     const repoUrl = normalized?.repoUrl ?? url;
-    const targetBranch = normalized?.branch ?? branch;
+    const requestedBranch = normalized?.branch ?? branch;
     const targetRevision = normalized?.revision ?? options?.revision;
-    const existing = this.remoteRepos.find(
+    const shouldInferDefaultBranch = !requestedBranch && !targetRevision;
+
+    let targetBranch = requestedBranch;
+    if (shouldInferDefaultBranch) {
+      const defaultBranchResult = await this.gitService.getRemoteDefaultBranch(
+        repoUrl,
+      );
+      if ("error" in defaultBranchResult) {
+        return { error: defaultBranchResult.error };
+      }
+      targetBranch = defaultBranchResult.data;
+    }
+
+    let existing = this.remoteRepos.find(
       (r) =>
         r.url === repoUrl &&
         (r.branch ?? "") === (targetBranch ?? "") &&
         (r.revision ?? "") === (targetRevision ?? ""),
     );
+
+    if (!existing && shouldInferDefaultBranch) {
+      existing = this.remoteRepos.find(
+        (r) =>
+          r.url === repoUrl &&
+          (r.branch ?? "") === "" &&
+          (r.revision ?? "") === "",
+      );
+    }
 
     if (existing && !options?.refresh) {
       return { data: { alreadyExisted: true } };
@@ -179,6 +201,7 @@ export class RootTemplateRepository {
       existing.path = cloneResult.data;
       existing.source = existing.source ?? "manual";
       existing.revision = targetRevision;
+      existing.branch = targetBranch;
     } else {
       this.remoteRepos.push({
         url: repoUrl,
@@ -356,8 +379,17 @@ export class RootTemplateRepository {
   ): Promise<Result<Template[]>> {
     const normalized = normalizeGitRepositorySpecifier(repoUrl);
     const resolvedRepoUrl = normalized?.repoUrl ?? repoUrl;
-    const resolvedBranch = normalized?.branch ?? branch;
+    let resolvedBranch = normalized?.branch ?? branch;
     const resolvedRevision = normalized?.revision ?? options?.revision;
+
+    if (!resolvedBranch && !resolvedRevision) {
+      const defaultBranchResult =
+        await this.gitService.getRemoteDefaultBranch(resolvedRepoUrl);
+      if ("error" in defaultBranchResult) {
+        return { error: defaultBranchResult.error };
+      }
+      resolvedBranch = defaultBranchResult.data;
+    }
 
     const cloneResult = await this.gitService.cloneRepoBranchToCache(
       resolvedRepoUrl,

@@ -95,6 +95,14 @@ export class GitService {
     return this.cacheService.pathInCache(dirName);
   }
 
+  private parseDefaultBranch(raw: string): string | undefined {
+    const match = raw.match(/ref:\s+refs\/heads\/([^\s]+)\s+HEAD/);
+    if (!match || !match[1]) {
+      return undefined;
+    }
+    return this.sanitizeBranchName(match[1]);
+  }
+
   private isNotRepoError(error: unknown): boolean {
     if (typeof error !== "object" || error === null) {
       return false;
@@ -424,6 +432,35 @@ export class GitService {
         error,
       });
       return { error: `Error cloning repo to cache: ${error}` };
+    }
+  }
+
+  public async getRemoteDefaultBranch(
+    repoUrl: string,
+  ): Promise<Result<string>> {
+    const normalizedRepoUrl = this.normalizeRepoUrl(repoUrl);
+
+    try {
+      const git = this.gitClient();
+      const output = await git.raw([
+        "ls-remote",
+        "--symref",
+        normalizedRepoUrl,
+        "HEAD",
+      ]);
+      const branch = this.parseDefaultBranch(output);
+      if (branch) {
+        return { data: branch };
+      }
+      return {
+        error: `Unable to determine default branch for ${normalizedRepoUrl}`,
+      };
+    } catch (error) {
+      logError({
+        shortMessage: "Error determining default branch",
+        error,
+      });
+      return { error: `Error determining default branch: ${error}` };
     }
   }
 
