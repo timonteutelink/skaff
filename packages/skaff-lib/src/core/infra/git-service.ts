@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 
 import fsExtra from "fs-extra";
-import simpleGit from "simple-git";
+import simpleGit, { type SimpleGit } from "simple-git";
 import { inject, injectable } from "tsyringe";
 
 import { getSkaffContainer } from "../../di/container";
@@ -46,6 +46,19 @@ export class GitService {
 
   private sanitizeBranchName(branchName: string): string {
     return branchName.replace("*", "").trim();
+  }
+
+  private async refreshBranchRef(
+    git: SimpleGit,
+    branchName: string,
+  ): Promise<void> {
+    const sanitized = this.sanitizeBranchName(branchName);
+    await git.raw([
+      "fetch",
+      "--force",
+      "origin",
+      `${sanitized}:${sanitized}`,
+    ]);
   }
 
   private normalizeRepoUrl(repoUrl: string): string {
@@ -395,7 +408,7 @@ export class GitService {
     try {
       if (shouldRefresh) {
         if (normalizedBranch) {
-          await git.fetch("origin", normalizedBranch);
+          await this.refreshBranchRef(git, normalizedBranch);
         } else {
           await git.fetch();
         }
