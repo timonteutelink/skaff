@@ -22,7 +22,7 @@
         "@oclif/core": "^4.8.0",
         "@oclif/plugin-help": "^6.2.36",
         "@oclif/plugin-plugins": "^5.4.54",
-        "@timonteutelink/skaff-lib": "0.0.97",
+        "@timonteutelink/skaff-lib": "0.0.98",
         "@timonteutelink/template-types-lib": "0.0.56",
         "@types/node": "^24.10.1",
         "esbuild": "^0.27.0",
@@ -82,7 +82,7 @@
         "@radix-ui/react-toggle-group": "^1.1.11",
         "@radix-ui/react-tooltip": "^1.2.8",
         "@tailwindcss/postcss": "^4.1.17",
-        "@timonteutelink/skaff-lib": "0.0.97",
+        "@timonteutelink/skaff-lib": "0.0.98",
         "@timonteutelink/template-types-lib": "0.0.56",
         "@types/node": "^24.10.1",
         "class-variance-authority": "^0.7.1",
@@ -862,7 +862,7 @@
 
     "@timonteutelink/skaff": ["@timonteutelink/skaff@workspace:apps/cli"],
 
-    "@timonteutelink/skaff-lib": ["@timonteutelink/skaff-lib@0.0.97", "", { "dependencies": { "@langchain/langgraph": "^1.0.2", "@langchain/openai": "^1.1.1", "@timonteutelink/template-types-lib": "0.0.56", "@types/node": "^24.10.1", "esbuild": "^0.27.0", "fs-extra": "^11.3.2", "glob": "^11.0.3", "handlebars": "^4.7.8", "langchain": "^1.0.4", "loglevel": "^1.9.2", "reflect-metadata": "^0.2.2", "semver": "^7.7.3", "simple-git": "^3.30.0", "tsyringe": "^4.10.0", "typescript": "5.9.3", "winston": "^3.18.3", "winston-daily-rotate-file": "^5.0.0", "yaml": "^2.8.1", "zod": "^4.1.12" } }, "sha512-bHte7W19Up3VBPXQ0uJQyrb+oILtf/MZnr66671qU97Bxb8GJkjVgtRg2an6vKBDCF2GMm8W4wRM7xmkoPD3Xg=="],
+    "@timonteutelink/skaff-lib": ["@timonteutelink/skaff-lib@0.0.98", "", { "dependencies": { "@langchain/langgraph": "^1.0.2", "@langchain/openai": "^1.1.1", "@timonteutelink/template-types-lib": "0.0.56", "@types/node": "^24.10.1", "esbuild": "^0.27.0", "fs-extra": "^11.3.2", "glob": "^11.0.3", "handlebars": "^4.7.8", "langchain": "^1.0.4", "loglevel": "^1.9.2", "reflect-metadata": "^0.2.2", "semver": "^7.7.3", "simple-git": "^3.30.0", "tsyringe": "^4.10.0", "typescript": "5.9.3", "winston": "^3.18.3", "winston-daily-rotate-file": "^5.0.0", "yaml": "^2.8.1", "zod": "^4.1.12" } }, "sha512-+NYMd+4AhB42D/LwQcQ+wm3vImZk5cx/0xclxOhkii75INNYkBKCRcEnjsyYa79/AIBhENzKBedvNsEY7aqzhg=="],
 
     "@timonteutelink/template-types-lib": ["@timonteutelink/template-types-lib@0.0.56", "", { "peerDependencies": { "handlebars": "^4.7.8", "zod": "^4.1.12" } }, "sha512-9gWJR2v64GoKfvL+eVsQKYGKCkihTiNvfYq573r+LytBqeXvlWMHHUy33s/sD1SsIHjYGpUeqHkvXBSlXXq4Hg=="],
 
