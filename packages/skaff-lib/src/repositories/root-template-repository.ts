@@ -11,7 +11,6 @@ import { backendLogger } from "../lib/logger";
 import { Result, TemplateRepoLoadResult } from "../lib/types";
 import { logError } from "../lib/utils";
 import type { GitService } from "../core/infra/git-service";
-import { WORKTREE_METADATA_FILE } from "../core/infra/git-service";
 import { CacheService } from "../core/infra/cache-service";
 import { TemplateRegistry } from "../core/templates/TemplateRegistry";
 import { TemplateTreeBuilder } from "../core/templates/TemplateTreeBuilder";
@@ -46,6 +45,93 @@ interface RemoteRepoEntry {
   path: string;
   source: RemoteRepoSource;
   commitHash?: string;
+}
+
+interface CacheDirDescriptorInfo {
+  branch?: string;
+  hasExplicitRevision: boolean;
+  revisionFromSuffix?: string;
+}
+
+const LONG_REVISION_SUFFIX = /-([0-9a-f]{40})$/i;
+const SHORT_HASH_SUFFIX = /-([0-9a-f]{8})$/i;
+
+function extractDescriptorSegment(dirName: string): string | null {
+  const branchTokenIndex = dirName.lastIndexOf("-branch-");
+  if (branchTokenIndex >= 0) {
+    return dirName.slice(branchTokenIndex + 1);
+  }
+
+  const revisionTokenIndex = dirName.lastIndexOf("-rev-");
+  if (revisionTokenIndex >= 0) {
+    return dirName.slice(revisionTokenIndex + 1);
+  }
+
+  const defaultTokenIndex = dirName.lastIndexOf("-default");
+  if (defaultTokenIndex >= 0) {
+    return dirName.slice(defaultTokenIndex + 1);
+  }
+
+  return null;
+}
+
+function inferCacheDirDescriptor(dirName: string): CacheDirDescriptorInfo {
+  let workingName = dirName;
+  let revisionFromSuffix: string | undefined;
+
+  const revisionMatch = workingName.match(LONG_REVISION_SUFFIX);
+  if (revisionMatch?.[1]) {
+    revisionFromSuffix = revisionMatch[1];
+    const matchedSuffix = revisionMatch[0] ?? "";
+    workingName = workingName.slice(0, -matchedSuffix.length);
+  }
+
+  const shortHashMatch = workingName.match(SHORT_HASH_SUFFIX);
+  if (shortHashMatch?.[0]) {
+    const matchedShortSuffix = shortHashMatch[0];
+    workingName = workingName.slice(0, -matchedShortSuffix.length);
+  }
+
+  const descriptorSegment = extractDescriptorSegment(workingName);
+
+  if (!descriptorSegment || descriptorSegment === "default") {
+    return { branch: undefined, hasExplicitRevision: Boolean(revisionFromSuffix), revisionFromSuffix };
+  }
+
+  if (descriptorSegment.startsWith("branch-")) {
+    const remainder = descriptorSegment.slice("branch-".length);
+    const revisionDelimiter = remainder.lastIndexOf("-rev-");
+
+    if (revisionDelimiter >= 0) {
+      const branchValue = remainder.slice(0, revisionDelimiter).trim();
+      return {
+        branch: branchValue.length ? branchValue : undefined,
+        hasExplicitRevision: true,
+        revisionFromSuffix,
+      };
+    }
+
+    const trimmedBranch = remainder.trim();
+    return {
+      branch: trimmedBranch.length ? trimmedBranch : undefined,
+      hasExplicitRevision: Boolean(revisionFromSuffix),
+      revisionFromSuffix,
+    };
+  }
+
+  if (descriptorSegment.startsWith("rev-")) {
+    return {
+      branch: undefined,
+      hasExplicitRevision: true,
+      revisionFromSuffix,
+    };
+  }
+
+  return {
+    branch: undefined,
+    hasExplicitRevision: Boolean(revisionFromSuffix),
+    revisionFromSuffix,
+  };
 }
 
 @injectable()
@@ -110,16 +196,15 @@ export class RootTemplateRepository {
         continue;
       }
 
-      const metaPath = `${repoPath}${WORKTREE_METADATA_FILE}`;
-      const meta = await fs
-        .readFile(metaPath, "utf8")
-        .then((content) => JSON.parse(content) as { branch?: string; revision?: string })
-        .catch(() => null);
-
+      const descriptorInfo = inferCacheDirDescriptor(entry.name);
       const branchFromGit = branchResult.data?.trim() || undefined;
       const branch =
-        meta?.branch ?? (branchFromGit === "HEAD" ? undefined : branchFromGit);
-      const revision = meta?.revision;
+        branchFromGit && branchFromGit !== "HEAD"
+          ? branchFromGit
+          : descriptorInfo.branch;
+      const revision =
+        descriptorInfo.revisionFromSuffix ??
+        (descriptorInfo.hasExplicitRevision ? commitHashResult.data : undefined);
       const existing = this.remoteRepos.find(
         (repo) =>
           repo.url === repoUrlResult.data &&

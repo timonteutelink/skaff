@@ -15,8 +15,6 @@ import type { Template } from "../templates";
 import type { CacheService } from "./cache-service";
 import type { NpmService } from "./npm-service";
 
-export const WORKTREE_METADATA_FILE = ".skaff-worktree.json";
-
 type PossibleGitError = {
   exitCode?: number;
   message?: string;
@@ -201,30 +199,6 @@ export class GitService {
     }
   }
 
-  private async writeWorktreeMetadata(
-    worktreePath: string,
-    repoUrl: string,
-    spec: WorktreeSpec,
-  ): Promise<void> {
-    const metadata = {
-      repoUrl,
-      branch: spec.branch,
-      revision: spec.revision,
-    };
-    try {
-      const metadataPath = `${worktreePath}${WORKTREE_METADATA_FILE}`;
-      await fs.writeFile(
-        metadataPath,
-        JSON.stringify(metadata, null, 2),
-        "utf8",
-      );
-      const legacyPath = path.join(worktreePath, WORKTREE_METADATA_FILE);
-      await fsExtra.remove(legacyPath).catch(() => undefined);
-    } catch (error) {
-      logError({ shortMessage: "Failed to persist worktree metadata", error });
-    }
-  }
-
   private async worktreeExists(worktreePath: string): Promise<boolean> {
     const stat = await fs.stat(worktreePath).catch(() => null);
     return Boolean(stat && stat.isDirectory());
@@ -250,9 +224,6 @@ export class GitService {
     }
 
     await fsExtra.remove(worktreePath).catch(() => undefined);
-    await fsExtra
-      .remove(`${worktreePath}${WORKTREE_METADATA_FILE}`)
-      .catch(() => undefined);
   }
 
   private async resolveWorktreeRef(
@@ -426,12 +397,6 @@ export class GitService {
           return createResult;
         }
       }
-
-      await this.writeWorktreeMetadata(
-        worktreePath,
-        normalizedRepoUrl,
-        worktreeSpec,
-      );
 
       const installResult = await this.npmService.install(worktreePath);
       if ("error" in installResult) {
