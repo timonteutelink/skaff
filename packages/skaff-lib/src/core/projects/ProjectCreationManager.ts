@@ -143,10 +143,10 @@ export class ProjectCreationManager {
     if (rootInstantiated?.templateRepoUrl) {
       const addResult = await this.rootTemplateRepository.addRemoteRepo(
         rootInstantiated.templateRepoUrl,
-        rootInstantiated.templateBranch ?? "main",
+        rootInstantiated.templateBranch,
       );
       if ("error" in addResult) {
-        return addResult;
+        return { error: addResult.error };
       }
     }
 

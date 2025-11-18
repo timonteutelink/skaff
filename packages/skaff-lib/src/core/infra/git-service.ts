@@ -3,11 +3,12 @@ import os from "node:os";
 import path from "node:path";
 
 import fsExtra from "fs-extra";
-import simpleGit from "simple-git";
+import simpleGit, { type SimpleGit } from "simple-git";
 import { inject, injectable } from "tsyringe";
 
 import { getSkaffContainer } from "../../di/container";
 import { CacheServiceToken, GitServiceToken, NpmServiceToken } from "../../di/tokens";
+import { normalizeGitRepositorySpecifier } from "../../lib/git-repo-spec";
 import { DiffHunk, GitStatus, ParsedFile, Result } from "../../lib/types";
 import { logError } from "../../lib/utils";
 import type { Template } from "../templates";
@@ -24,6 +25,11 @@ type PossibleGitError = {
   };
 };
 
+interface WorktreeSpec {
+  branch?: string;
+  revision?: string;
+}
+
 @injectable()
 export class GitService {
   constructor(
@@ -38,6 +44,74 @@ export class GitService {
 
   private sanitizeBranchName(branchName: string): string {
     return branchName.replace("*", "").trim();
+  }
+
+  private async refreshBranchRef(
+    git: SimpleGit,
+    branchName: string,
+  ): Promise<void> {
+    const sanitized = this.sanitizeBranchName(branchName);
+    await git.raw([
+      "fetch",
+      "--force",
+      "origin",
+      `${sanitized}:${sanitized}`,
+    ]);
+  }
+
+  private normalizeRepoUrl(repoUrl: string): string {
+    const normalized = normalizeGitRepositorySpecifier(repoUrl);
+    return normalized?.repoUrl ?? repoUrl;
+  }
+
+  private sanitizeCacheSegment(value: string): string {
+    return value.replace(/[^a-zA-Z0-9.-]/g, "-");
+  }
+
+  private buildCacheDirName(repoUrl: string, spec?: WorktreeSpec): string {
+    const repoName = path.basename(repoUrl).replace(/\.git$/, "");
+    const descriptorParts: string[] = [];
+    if (spec?.branch) {
+      descriptorParts.push(`branch-${this.sanitizeCacheSegment(spec.branch)}`);
+    }
+    if (spec?.revision) {
+      const trimmed = spec.revision.slice(0, 12);
+      descriptorParts.push(`rev-${this.sanitizeCacheSegment(trimmed)}`);
+    }
+    const descriptor = descriptorParts.length ? descriptorParts.join("-") : "default";
+    const hash = this.cacheService
+      .hash(`${repoUrl}:${descriptor}`)
+      .slice(0, 8);
+    return `${repoName}-${descriptor}-${hash}`;
+  }
+
+  private buildRepoStorageDirName(repoUrl: string): string {
+    const repoName = this.sanitizeCacheSegment(
+      path.basename(repoUrl).replace(/\.git$/, ""),
+    );
+    const hash = this.cacheService.hash(repoUrl).slice(0, 8);
+    return `${repoName}-repo-${hash}`;
+  }
+
+  private async cachePathForRepo(
+    repoUrl: string,
+    spec?: WorktreeSpec,
+  ): Promise<Result<string>> {
+    const dirName = this.buildCacheDirName(repoUrl, spec);
+    return this.cacheService.pathInCache(dirName);
+  }
+
+  private async repoStoragePath(repoUrl: string): Promise<Result<string>> {
+    const dirName = this.buildRepoStorageDirName(repoUrl);
+    return this.cacheService.pathInCache(dirName);
+  }
+
+  private parseDefaultBranch(raw: string): string | undefined {
+    const match = raw.match(/ref:\s+refs\/heads\/([^\s]+)\s+HEAD/);
+    if (!match || !match[1]) {
+      return undefined;
+    }
+    return this.sanitizeBranchName(match[1]);
   }
 
   private isNotRepoError(error: unknown): boolean {
@@ -101,6 +175,121 @@ export class GitService {
     );
   }
 
+  private async ensureBareRepo(repoUrl: string): Promise<Result<string>> {
+    const storagePathResult = await this.repoStoragePath(repoUrl);
+    if ("error" in storagePathResult) {
+      return storagePathResult;
+    }
+
+    const repoPath = storagePathResult.data;
+    const stat = await fs.stat(repoPath).catch(() => null);
+    if (stat && stat.isDirectory()) {
+      return { data: repoPath };
+    }
+
+    try {
+      await this.gitClient().clone(repoUrl, repoPath, ["--bare"]);
+      return { data: repoPath };
+    } catch (error) {
+      logError({
+        shortMessage: "Error cloning bare repository",
+        error,
+      });
+      return { error: `Error cloning bare repository: ${error}` };
+    }
+  }
+
+  private async worktreeExists(worktreePath: string): Promise<boolean> {
+    const stat = await fs.stat(worktreePath).catch(() => null);
+    return Boolean(stat && stat.isDirectory());
+  }
+
+  private async removeWorktree(
+    repoPath: string,
+    worktreePath: string,
+  ): Promise<void> {
+    const exists = await this.worktreeExists(worktreePath);
+    if (!exists) {
+      return;
+    }
+
+    const git = this.gitClient(repoPath);
+    try {
+      await git.raw(["worktree", "remove", "--force", worktreePath]);
+    } catch (error) {
+      logError({
+        shortMessage: `Failed to detach worktree at ${worktreePath}`,
+        error,
+      });
+    }
+
+    await fsExtra.remove(worktreePath).catch(() => undefined);
+  }
+
+  private async resolveWorktreeRef(
+    repoPath: string,
+    spec: WorktreeSpec,
+  ): Promise<Result<string>> {
+    if (spec.revision) {
+      return { data: spec.revision };
+    }
+
+    const git = this.gitClient(repoPath);
+
+    if (spec.branch) {
+      const branchRef = this.sanitizeBranchName(spec.branch);
+      try {
+        const result = await git.revparse([branchRef]);
+        return { data: result.trim() };
+      } catch (error) {
+        logError({
+          shortMessage: `Failed to resolve branch ${branchRef}`,
+          error,
+        });
+        return {
+          error: `Failed to resolve branch ${branchRef}: ${error}`,
+        };
+      }
+    }
+
+    try {
+      const result = await git.revparse(["HEAD"]);
+      return { data: result.trim() };
+    } catch (error) {
+      logError({ shortMessage: "Failed to resolve HEAD", error });
+      return { error: `Failed to resolve HEAD: ${error}` };
+    }
+  }
+
+  private async createWorktree(
+    repoPath: string,
+    worktreePath: string,
+    spec: WorktreeSpec,
+  ): Promise<Result<void>> {
+    const git = this.gitClient(repoPath);
+    const targetResult = await this.resolveWorktreeRef(repoPath, spec);
+    if ("error" in targetResult) {
+      return targetResult;
+    }
+
+    const args = [
+      "worktree",
+      "add",
+      "--force",
+      "--detach",
+      worktreePath,
+      targetResult.data,
+    ];
+
+    try {
+      await git.raw(args);
+      return { data: undefined };
+    } catch (error) {
+      logError({ shortMessage: "Error creating git worktree", error });
+      return { error: `Error creating git worktree: ${error}` };
+    }
+  }
+
   public async isGitRepo(dir: string): Promise<Result<boolean>> {
     try {
       const git = this.gitClient(dir);
@@ -157,53 +346,99 @@ export class GitService {
 
   public async cloneRepoBranchToCache(
     repoUrl: string,
-    branch: string,
+    branch?: string,
+    options?: { forceRefresh?: boolean; revision?: string },
   ): Promise<Result<string>> {
-    const repoName = path.basename(repoUrl).replace(/\.git$/, "");
-    const normalizedBranch = this.sanitizeBranchName(branch);
-    const revisionHash = await this.getRemoteCommitHash(
-      repoUrl,
-      normalizedBranch,
+    const normalizedRepoUrl = this.normalizeRepoUrl(repoUrl);
+    const normalizedBranch = branch
+      ? this.sanitizeBranchName(branch)
+      : undefined;
+    const normalizedRevision = options?.revision?.trim() || undefined;
+    const worktreeSpec: WorktreeSpec = {
+      branch: normalizedBranch,
+      revision: normalizedRevision,
+    };
+    const worktreePathResult = await this.cachePathForRepo(
+      normalizedRepoUrl,
+      worktreeSpec,
     );
-    if ("error" in revisionHash) {
-      return revisionHash;
+    if ("error" in worktreePathResult) {
+      return worktreePathResult;
     }
-    const destDirName = `${repoName}-${normalizedBranch}-${revisionHash.data}`;
-    const destPath = await this.cacheService.pathInCache(destDirName);
-    if ("error" in destPath) {
-      return destPath;
-    }
-    try {
-      const stat = await fs.stat(destPath.data).catch(() => null);
 
-      if (stat && stat.isDirectory()) {
-        const git = this.gitClient(destPath.data);
-        await git.fetch();
-        await git.checkout(normalizedBranch);
-        await git.pull();
-        const installResult = await this.npmService.install(destPath.data);
-        if ("error" in installResult) {
-          return { error: installResult.error };
+    const repoPathResult = await this.ensureBareRepo(normalizedRepoUrl);
+    if ("error" in repoPathResult) {
+      return repoPathResult;
+    }
+
+    const repoPath = repoPathResult.data;
+    const worktreePath = worktreePathResult.data;
+    const git = this.gitClient(repoPath);
+    const shouldRefresh = Boolean(options?.forceRefresh);
+
+    try {
+      if (shouldRefresh) {
+        if (normalizedBranch) {
+          await this.refreshBranchRef(git, normalizedBranch);
+        } else {
+          await git.fetch();
         }
-        return { data: destPath.data };
+        await this.removeWorktree(repoPath, worktreePath);
       }
-      await this.gitClient().clone(repoUrl, destPath.data, [
-        "--branch",
-        normalizedBranch,
-      ]);
-      const git = this.gitClient(destPath.data);
-      await git.checkout(normalizedBranch);
-      const installResult = await this.npmService.install(destPath.data);
+
+      const exists = await this.worktreeExists(worktreePath);
+      if (!exists) {
+        const createResult = await this.createWorktree(
+          repoPath,
+          worktreePath,
+          worktreeSpec,
+        );
+        if ("error" in createResult) {
+          return createResult;
+        }
+      }
+
+      const installResult = await this.npmService.install(worktreePath);
       if ("error" in installResult) {
         return { error: installResult.error };
       }
-      return { data: destPath.data };
+
+      return { data: worktreePath };
     } catch (error) {
       logError({
         shortMessage: "Error cloning repo to cache",
         error,
       });
       return { error: `Error cloning repo to cache: ${error}` };
+    }
+  }
+
+  public async getRemoteDefaultBranch(
+    repoUrl: string,
+  ): Promise<Result<string>> {
+    const normalizedRepoUrl = this.normalizeRepoUrl(repoUrl);
+
+    try {
+      const git = this.gitClient();
+      const output = await git.raw([
+        "ls-remote",
+        "--symref",
+        normalizedRepoUrl,
+        "HEAD",
+      ]);
+      const branch = this.parseDefaultBranch(output);
+      if (branch) {
+        return { data: branch };
+      }
+      return {
+        error: `Unable to determine default branch for ${normalizedRepoUrl}`,
+      };
+    } catch (error) {
+      logError({
+        shortMessage: "Error determining default branch",
+        error,
+      });
+      return { error: `Error determining default branch: ${error}` };
     }
   }
 
@@ -227,9 +462,15 @@ export class GitService {
         return { data: destPath.data };
       }
 
-      await this.gitClient().clone(repoDir, destPath.data);
-      const git = this.gitClient(destPath.data);
-      await git.checkout(revisionHash);
+      const git = this.gitClient(repoDir);
+      await git.raw([
+        "worktree",
+        "add",
+        "--force",
+        "--detach",
+        destPath.data,
+        revisionHash,
+      ]);
       const installResult = await this.npmService.install(destPath.data);
       if ("error" in installResult) {
         return { error: installResult.error };
@@ -310,6 +551,17 @@ export class GitService {
     } catch (error) {
       logError({ shortMessage: "Error getting remote commit hash", error });
       return { error: `Error getting remote commit hash: ${error}` };
+    }
+  }
+
+  public async getRemoteUrl(repoPath: string): Promise<Result<string>> {
+    try {
+      const git = this.gitClient(repoPath);
+      const remoteUrl = await git.raw(["remote", "get-url", "origin"]);
+      return { data: remoteUrl.trim() };
+    } catch (error) {
+      logError({ shortMessage: "Error reading remote URL", error });
+      return { error: `Error reading remote URL: ${error}` };
     }
   }
 

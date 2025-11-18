@@ -9,7 +9,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { retrieveAllTemplateRevisions } from "@/app/actions/template";
+import {
+  refreshTemplateRepo,
+  retrieveAllTemplateRevisions,
+} from "@/app/actions/template";
 import { Badge } from "@/components/ui/badge";
 import {
   Collapsible,
@@ -23,8 +26,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { toastNullError } from "@/lib/utils";
 import { CopyIcon } from "lucide-react";
+import { toast } from "sonner";
 
 /* =============================================================================
    Template Tree and Helper Functions
@@ -144,6 +149,50 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ node }) => {
           </div>
         )}
 
+        {/* Repository URL */}
+        {node.data?.repoUrl && (
+          <div className="sm:col-span-2">
+            <dt className="text-sm font-medium text-gray-700">Repository</dt>
+            <dd className="mt-1 flex items-center space-x-2 text-sm text-gray-600">
+              <span className="truncate">{node.data.repoUrl}</span>
+              <CopyIcon
+                className="w-4 h-4 cursor-pointer"
+                onClick={() => handleCopy(node.data!.repoUrl!, "repoUrl")}
+              />
+              {copiedField === "repoUrl" && (
+                <span className="text-xs text-green-500">Copied</span>
+              )}
+            </dd>
+          </div>
+        )}
+
+        {/* Branch */}
+        {node.data?.branch && (
+          <div>
+            <dt className="text-sm font-medium text-gray-700">Branch</dt>
+            <dd className="mt-1 text-sm text-gray-600">{node.data.branch}</dd>
+          </div>
+        )}
+
+        {/* Tracked Revision */}
+        {node.data?.trackedRevision && (
+          <div>
+            <dt className="text-sm font-medium text-gray-700">Pinned Revision</dt>
+            <dd className="mt-1 flex items-center space-x-2 text-sm text-gray-600">
+              <span className="truncate">{node.data.trackedRevision}</span>
+              <CopyIcon
+                className="w-4 h-4 cursor-pointer"
+                onClick={() =>
+                  handleCopy(node.data!.trackedRevision!, "trackedRevision")
+                }
+              />
+              {copiedField === "trackedRevision" && (
+                <span className="text-xs text-green-500">Copied</span>
+              )}
+            </dd>
+          </div>
+        )}
+
         {/* Author */}
         <div>
           <dt className="text-sm font-medium text-gray-700">Author</dt>
@@ -224,6 +273,7 @@ export default function TemplatePage() {
   const [selectedNode, setSelectedNode] = useState<TemplateTreeNode | null>(
     null,
   );
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     if (!templateName) {
@@ -275,6 +325,48 @@ export default function TemplatePage() {
     [allTemplates],
   );
 
+  const handleRefreshTemplate = useCallback(async () => {
+    if (!templateName || !selectedTemplate?.repoUrl) {
+      toast.info("Only remote templates can be refreshed.");
+      return;
+    }
+
+    setIsRefreshing(true);
+    try {
+      const refreshResult = await refreshTemplateRepo(
+        selectedTemplate.repoUrl,
+        selectedTemplate.branch,
+        selectedTemplate.trackedRevision,
+      );
+
+      if ("error" in refreshResult) {
+        toast.error(refreshResult.error);
+        return;
+      }
+
+      toast.success("Template repository refreshed");
+
+      const revisionsResult = await retrieveAllTemplateRevisions(templateName);
+      const updatedTemplates = toastNullError({
+        result: revisionsResult,
+        shortMessage: "Error retrieving template revisions",
+      });
+
+      if (!updatedTemplates) {
+        return;
+      }
+
+      setAllTemplates(updatedTemplates);
+      const nextSelection = updatedTemplates.find(
+        (tpl) => tpl.currentCommitHash === selectedTemplate.currentCommitHash,
+      );
+      setSelectedTemplate(nextSelection ?? updatedTemplates[0]);
+      setSelectedNode(null);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [selectedTemplate, templateName]);
+
   if (!selectedTemplate) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -288,30 +380,39 @@ export default function TemplatePage() {
       {/* Left side: Tree view */}
       <div className="w-1/3 border-r border-gray-300 overflow-auto">
         <header className="p-4 border-b border-gray-300 space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <h1 className="text-3xl font-bold">Templates Tree</h1>
-            {allTemplates.length > 1 && (
-              <div className="w-64">
-                <Select
-                  value={selectedTemplate?.currentCommitHash}
-                  onValueChange={handleRevisionChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select revision" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allTemplates.map((template) => (
-                      <SelectItem
-                        key={template.currentCommitHash}
-                        value={template.currentCommitHash!}
-                      >
-                        {template.currentCommitHash!.substring(0, 8)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {allTemplates.length > 1 && (
+                <div className="w-64">
+                  <Select
+                    value={selectedTemplate?.currentCommitHash}
+                    onValueChange={handleRevisionChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select revision" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allTemplates.map((template) => (
+                        <SelectItem
+                          key={template.currentCommitHash}
+                          value={template.currentCommitHash!}
+                        >
+                          {template.currentCommitHash!.substring(0, 8)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <Button
+                variant="outline"
+                onClick={handleRefreshTemplate}
+                disabled={!selectedTemplate?.repoUrl || isRefreshing}
+              >
+                {isRefreshing ? "Refreshing..." : "Refresh Repository"}
+              </Button>
+            </div>
           </div>
         </header>
         <div className="p-4">

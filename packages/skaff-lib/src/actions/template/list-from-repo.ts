@@ -4,8 +4,13 @@ import { resolveRootTemplateRepository } from "../../repositories";
 
 export async function listTemplatesInRepo(
   repoUrl: string,
-  branch: string = "main",
+  branch?: string,
+  options?: { revision?: string },
 ): Promise<Result<Template[]>> {
   const rootTemplateRepository = resolveRootTemplateRepository();
-  return await rootTemplateRepository.listTemplatesInRepo(repoUrl, branch);
+  return await rootTemplateRepository.listTemplatesInRepo(
+    repoUrl,
+    branch,
+    options,
+  );
 }

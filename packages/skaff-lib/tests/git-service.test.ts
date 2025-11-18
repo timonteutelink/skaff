@@ -12,6 +12,7 @@ jest.mock("../src/lib/logger", () => ({
 }));
 
 const mockCheckIsRepo = jest.fn();
+const mockRaw = jest.fn();
 const mockSimpleGit = jest.fn();
 
 jest.mock("simple-git", () => ({
@@ -28,8 +29,10 @@ describe("git-service", () => {
     jest.resetModules();
     mockSimpleGit.mockReset();
     mockCheckIsRepo.mockReset();
+    mockRaw.mockReset();
     mockSimpleGit.mockImplementation(() => ({
       checkIsRepo: mockCheckIsRepo,
+      raw: mockRaw,
     }));
   });
 
@@ -60,6 +63,36 @@ describe("git-service", () => {
     await withTestContainer(async () => {
       const gitService = resolveGitService();
       const result = await gitService.isGitRepo(".");
+      expect(result).toHaveProperty("error");
+    });
+  });
+
+  it("discovers default branch using ls-remote output", async () => {
+    await withTestContainer(async () => {
+      const gitService = resolveGitService();
+      mockRaw.mockResolvedValue(
+        "ref: refs/heads/main HEAD\n111111\tHEAD\n111111\trefs/heads/main",
+      );
+      const result = await gitService.getRemoteDefaultBranch(
+        "https://example.com/owner/repo",
+      );
+      expect(mockRaw).toHaveBeenCalledWith([
+        "ls-remote",
+        "--symref",
+        "https://example.com/owner/repo",
+        "HEAD",
+      ]);
+      expect(result).toEqual({ data: "main" });
+    });
+  });
+
+  it("returns error when default branch cannot be determined", async () => {
+    await withTestContainer(async () => {
+      const gitService = resolveGitService();
+      mockRaw.mockResolvedValue("unexpected output");
+      const result = await gitService.getRemoteDefaultBranch(
+        "https://example.com/owner/repo",
+      );
       expect(result).toHaveProperty("error");
     });
   });

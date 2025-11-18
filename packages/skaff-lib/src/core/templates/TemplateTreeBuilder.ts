@@ -20,8 +20,9 @@ interface TemplateBuildContext {
   absoluteRootDir: string;
   absoluteBaseDir: string;
   commitHash: string;
-  branch: string;
+  branch?: string;
   repoUrl?: string;
+  trackedRevision?: string;
 }
 
 async function ensureFilesDirectoryExists(dir: string): Promise<boolean> {
@@ -66,6 +67,7 @@ function createTemplateInstance(
     commitHash: rootCommitHash,
     branch: context.branch,
     repoUrl: context.repoUrl,
+    trackedRevision: context.trackedRevision,
     refDir: info.refDir,
     partialsDir,
   });
@@ -222,6 +224,8 @@ export interface TemplateTreeBuilderOptions {
   repoUrl?: string;
   branchOverride?: string;
   commitHash?: string;
+  trackedRevision?: string;
+  skipBranchResolution?: boolean;
 }
 
 @injectable()
@@ -242,7 +246,9 @@ export class TemplateTreeBuilder {
       absoluteRootDir,
       options.repoUrl,
       options.branchOverride,
+      options.skipBranchResolution,
       options.commitHash,
+      options.trackedRevision,
     );
     if ("error" in contextResult) {
       return contextResult;
@@ -303,10 +309,12 @@ export class TemplateTreeBuilder {
         continue;
       }
 
-      const branch = remoteRef.branch ?? "";
+      const branch = remoteRef.branch;
+      const revision = remoteRef.revision;
       const cloneResult = await this.gitService.cloneRepoBranchToCache(
         remoteRef.repoUrl,
         branch,
+        { revision },
       );
 
       if ("error" in cloneResult) {
@@ -321,6 +329,8 @@ export class TemplateTreeBuilder {
       const remoteTemplateResult = await this.build(remoteTemplateDir, {
         repoUrl: remoteRef.repoUrl,
         branchOverride: branch,
+        trackedRevision: revision,
+        skipBranchResolution: true,
       });
 
       if ("error" in remoteTemplateResult) {
@@ -358,9 +368,14 @@ export class TemplateTreeBuilder {
   private async resolveBranch(
     absoluteRootDir: string,
     branchOverride?: string,
-  ): Promise<Result<string>> {
+    skipInference?: boolean,
+  ): Promise<Result<string | undefined>> {
     if (branchOverride) {
       return { data: branchOverride };
+    }
+
+    if (skipInference) {
+      return { data: undefined };
     }
 
     const branchResult = await this.gitService.getCurrentBranch(absoluteRootDir);
@@ -375,7 +390,9 @@ export class TemplateTreeBuilder {
     absoluteRootDir: string,
     repoUrl?: string,
     branchOverride?: string,
+    skipBranchResolution?: boolean,
     commitHashOverride?: string,
+    trackedRevision?: string,
   ): Promise<Result<TemplateBuildContext>> {
     const absoluteBaseDir = path.dirname(absoluteRootDir);
     const isRepoCleanResult = await this.gitService.isGitRepoClean(
@@ -399,6 +416,7 @@ export class TemplateTreeBuilder {
     const branchResult = await this.resolveBranch(
       absoluteRootDir,
       branchOverride,
+      skipBranchResolution,
     );
     if ("error" in branchResult) {
       return { error: branchResult.error };
@@ -411,6 +429,7 @@ export class TemplateTreeBuilder {
         commitHash: commitHashResult.data,
         branch: branchResult.data,
         repoUrl,
+        trackedRevision,
       },
     };
   }

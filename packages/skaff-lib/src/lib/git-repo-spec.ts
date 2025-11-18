@@ -2,9 +2,19 @@ const GITHUB_PREFIX_PATTERN = /^(github|gh):/i;
 const REMOTE_SCHEME_PATTERN = /^[a-z][a-z0-9+.-]*:\/\//i;
 const SCP_LIKE_PATTERN = /^[^@\s]+@[^:\s]+:/;
 
+const COMMIT_HASH_PATTERN = /^[0-9a-f]{7,40}$/i;
+
+function looksLikeCommitHash(value: string | undefined): value is string {
+  if (!value) {
+    return false;
+  }
+  return COMMIT_HASH_PATTERN.test(value.trim());
+}
+
 export interface NormalizedGitRepositorySpecifier {
   repoUrl: string;
   branch?: string;
+  revision?: string;
 }
 
 function extractBranchSuffix(
@@ -28,6 +38,10 @@ function extractBranchSuffix(
 
   if (!repoUrl) {
     return null;
+  }
+
+  if (looksLikeCommitHash(branch)) {
+    return { repoUrl, revision: branch };
   }
 
   return { repoUrl, branch };
@@ -102,7 +116,9 @@ function parseGithubSpecifier(
   const branch = match.groups.branch?.trim();
   return {
     repoUrl: `${repoPath.scheme}://${repoPath.host}/${repoPath.path}.git`,
-    branch: branch ? branch : undefined,
+    branch:
+      branch && !looksLikeCommitHash(branch) ? branch : undefined,
+    revision: looksLikeCommitHash(branch) ? branch : undefined,
   };
 }
 
@@ -138,7 +154,7 @@ export function normalizeGitRepositorySpecifier(
 
 export type TemplatePathEntry =
   | { kind: "local"; path: string }
-  | { kind: "remote"; repoUrl: string; branch?: string };
+  | { kind: "remote"; repoUrl: string; branch?: string; revision?: string };
 
 export function parseTemplatePathEntry(raw: string): TemplatePathEntry | null {
   const trimmed = raw.trim();
@@ -152,8 +168,20 @@ export function parseTemplatePathEntry(raw: string): TemplatePathEntry | null {
       kind: "remote",
       repoUrl: normalized.repoUrl,
       branch: normalized.branch,
+      revision: normalized.revision,
     };
   }
 
   return { kind: "local", path: trimmed };
+}
+
+export function normalizeCommitish(
+  value?: string,
+): { branch?: string; revision?: string } {
+  if (!value) {
+    return {};
+  }
+  return looksLikeCommitHash(value)
+    ? { revision: value }
+    : { branch: value };
 }

@@ -44,12 +44,19 @@ export type TemplateConfigWithFileInfo = {
 
 type TemplateRefEntry =
   | { type: "local"; path: string }
-  | { type: "remote"; path: string; repoUrl: string; branch?: string };
+  | {
+      type: "remote";
+      path: string;
+      repoUrl: string;
+      branch?: string;
+      revision?: string;
+    };
 
 export interface RemoteTemplateReference {
   refDir: string;
   repoUrl: string;
   branch?: string;
+  revision?: string;
   templatePath: string;
 }
 
@@ -94,6 +101,7 @@ function extractTemplateRefEntries(raw: unknown): TemplateRefEntry[] {
           type: "remote",
           repoUrl: normalized?.repoUrl ?? repoUrl,
           branch: normalized?.branch ?? branch,
+          revision: normalized?.revision,
           path: pathValue,
         },
       ];
@@ -238,13 +246,14 @@ async function findTemplateConfigFiles(
         }
 
         for (const reference of references) {
-          if (reference.type === "remote") {
-            results.remoteRefs.push({
-              refDir: path.relative(rootDir, full),
-              repoUrl: reference.repoUrl,
-              branch: reference.branch,
-              templatePath: reference.path,
-            });
+        if (reference.type === "remote") {
+          results.remoteRefs.push({
+            refDir: path.relative(rootDir, full),
+            repoUrl: reference.repoUrl,
+            branch: reference.branch,
+            revision: reference.revision,
+            templatePath: reference.path,
+          });
             continue;
           }
 

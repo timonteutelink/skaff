@@ -22,8 +22,7 @@ export async function loadProjectTemplateRevision(
   }
 
   const repoUrl = rootInst?.templateRepoUrl ?? project.rootTemplate.repoUrl;
-  const branch =
-    rootInst?.templateBranch ?? project.rootTemplate.branch ?? "main";
+  const branch = rootInst?.templateBranch ?? project.rootTemplate.branch;
 
   if (repoUrl) {
     const addResult = await rootTemplateRepository.addRemoteRepo(
@@ -31,7 +30,7 @@ export async function loadProjectTemplateRevision(
       branch,
     );
     if ("error" in addResult) {
-      return addResult;
+      return { error: addResult.error };
     }
   }
 

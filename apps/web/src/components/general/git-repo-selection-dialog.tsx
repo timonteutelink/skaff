@@ -18,7 +18,7 @@ interface GitRepoSelectionDialogProps {
   buttonText: string;
   actionText: string;
 
-  onConfirm: (repoUrl: string, branch: string) => Promise<void>;
+  onConfirm: (repoUrl: string, branch?: string, revision?: string) => Promise<void>;
   onCancel?: () => Promise<void>;
 }
 
@@ -30,12 +30,14 @@ export const GitRepoSelectionDialog: React.FC<GitRepoSelectionDialogProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [repoUrl, setRepoUrl] = useState("");
-  const [branch, setBranch] = useState("main");
+  const [branch, setBranch] = useState("");
+  const [revision, setRevision] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const resetForm = useCallback(() => {
     setRepoUrl("");
-    setBranch("main");
+    setBranch("");
+    setRevision("");
   }, []);
 
   const handleSubmit = useCallback(
@@ -46,19 +48,24 @@ export const GitRepoSelectionDialog: React.FC<GitRepoSelectionDialogProps> = ({
       }
       const trimmedUrl = repoUrl.trim();
       const trimmedBranch = branch.trim();
-      if (!trimmedUrl || !trimmedBranch) {
+      const trimmedRevision = revision.trim();
+      if (!trimmedUrl) {
         return;
       }
       setIsSubmitting(true);
       try {
-        await onConfirm(trimmedUrl, trimmedBranch);
+        await onConfirm(
+          trimmedUrl,
+          trimmedBranch || undefined,
+          trimmedRevision || undefined,
+        );
         resetForm();
         setOpen(false);
       } finally {
         setIsSubmitting(false);
       }
     },
-    [branch, isSubmitting, onConfirm, repoUrl, resetForm],
+    [branch, isSubmitting, onConfirm, repoUrl, resetForm, revision],
   );
 
   const handleCancel = useCallback(async () => {
@@ -106,7 +113,7 @@ export const GitRepoSelectionDialog: React.FC<GitRepoSelectionDialogProps> = ({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="repository-branch">Branch</Label>
+            <Label htmlFor="repository-branch">Branch (optional)</Label>
             <Input
               id="repository-branch"
               name="branch"
@@ -114,7 +121,17 @@ export const GitRepoSelectionDialog: React.FC<GitRepoSelectionDialogProps> = ({
               onChange={(e) => setBranch(e.target.value)}
               type="text"
               placeholder="main"
-              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="repository-revision">Revision (commit hash, optional)</Label>
+            <Input
+              id="repository-revision"
+              name="revision"
+              value={revision}
+              onChange={(e) => setRevision(e.target.value)}
+              type="text"
+              placeholder="abcdef123456"
             />
           </div>
           <DialogFooter className="mt-4">
@@ -130,7 +147,7 @@ export const GitRepoSelectionDialog: React.FC<GitRepoSelectionDialogProps> = ({
               variant="default"
               type="submit"
               className="ml-2"
-              disabled={isSubmitting || !repoUrl.trim() || !branch.trim()}
+              disabled={isSubmitting || !repoUrl.trim()}
             >
               {actionText}
             </Button>

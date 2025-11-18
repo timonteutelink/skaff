@@ -8,9 +8,10 @@ import { TemplateParentReference } from "@timonteutelink/template-types-lib";
 
 import { getConfig } from "../lib";
 import { backendLogger } from "../lib/logger";
-import { Result } from "../lib/types";
+import { Result, TemplateRepoLoadResult } from "../lib/types";
 import { logError } from "../lib/utils";
 import type { GitService } from "../core/infra/git-service";
+import { CacheService } from "../core/infra/cache-service";
 import { TemplateRegistry } from "../core/templates/TemplateRegistry";
 import { TemplateTreeBuilder } from "../core/templates/TemplateTreeBuilder";
 import type { Template } from "../core/templates/Template";
@@ -35,13 +36,102 @@ export const defaultTemplatePathsProvider: TemplatePathsProvider = async () => {
 
 // now only stores the root templates at: <templateDirPath>/templates/*
 // later also store reference to files and generic templates to allow direct instantiation without saving state of subtemplates
-type RemoteRepoSource = "config" | "manual";
+type RemoteRepoSource = "config" | "manual" | "cache";
 
 interface RemoteRepoEntry {
   url: string;
-  branch: string;
+  branch?: string;
+  revision?: string;
   path: string;
   source: RemoteRepoSource;
+  commitHash?: string;
+}
+
+interface CacheDirDescriptorInfo {
+  branch?: string;
+  hasExplicitRevision: boolean;
+  revisionFromSuffix?: string;
+}
+
+const LONG_REVISION_SUFFIX = /-([0-9a-f]{40})$/i;
+const SHORT_HASH_SUFFIX = /-([0-9a-f]{8})$/i;
+
+function extractDescriptorSegment(dirName: string): string | null {
+  const branchTokenIndex = dirName.lastIndexOf("-branch-");
+  if (branchTokenIndex >= 0) {
+    return dirName.slice(branchTokenIndex + 1);
+  }
+
+  const revisionTokenIndex = dirName.lastIndexOf("-rev-");
+  if (revisionTokenIndex >= 0) {
+    return dirName.slice(revisionTokenIndex + 1);
+  }
+
+  const defaultTokenIndex = dirName.lastIndexOf("-default");
+  if (defaultTokenIndex >= 0) {
+    return dirName.slice(defaultTokenIndex + 1);
+  }
+
+  return null;
+}
+
+function inferCacheDirDescriptor(dirName: string): CacheDirDescriptorInfo {
+  let workingName = dirName;
+  let revisionFromSuffix: string | undefined;
+
+  const revisionMatch = workingName.match(LONG_REVISION_SUFFIX);
+  if (revisionMatch?.[1]) {
+    revisionFromSuffix = revisionMatch[1];
+    const matchedSuffix = revisionMatch[0] ?? "";
+    workingName = workingName.slice(0, -matchedSuffix.length);
+  }
+
+  const shortHashMatch = workingName.match(SHORT_HASH_SUFFIX);
+  if (shortHashMatch?.[0]) {
+    const matchedShortSuffix = shortHashMatch[0];
+    workingName = workingName.slice(0, -matchedShortSuffix.length);
+  }
+
+  const descriptorSegment = extractDescriptorSegment(workingName);
+
+  if (!descriptorSegment || descriptorSegment === "default") {
+    return { branch: undefined, hasExplicitRevision: Boolean(revisionFromSuffix), revisionFromSuffix };
+  }
+
+  if (descriptorSegment.startsWith("branch-")) {
+    const remainder = descriptorSegment.slice("branch-".length);
+    const revisionDelimiter = remainder.lastIndexOf("-rev-");
+
+    if (revisionDelimiter >= 0) {
+      const branchValue = remainder.slice(0, revisionDelimiter).trim();
+      return {
+        branch: branchValue.length ? branchValue : undefined,
+        hasExplicitRevision: true,
+        revisionFromSuffix,
+      };
+    }
+
+    const trimmedBranch = remainder.trim();
+    return {
+      branch: trimmedBranch.length ? trimmedBranch : undefined,
+      hasExplicitRevision: Boolean(revisionFromSuffix),
+      revisionFromSuffix,
+    };
+  }
+
+  if (descriptorSegment.startsWith("rev-")) {
+    return {
+      branch: undefined,
+      hasExplicitRevision: true,
+      revisionFromSuffix,
+    };
+  }
+
+  return {
+    branch: undefined,
+    hasExplicitRevision: Boolean(revisionFromSuffix),
+    revisionFromSuffix,
+  };
 }
 
 @injectable()
@@ -62,33 +152,157 @@ export class RootTemplateRepository {
     this.templatePathsProvider = templatePathsProvider;
   }
 
-  async addRemoteRepo(url: string, branch: string = "main"): Promise<Result<void>> {
+  private async hydrateCachedRepos(): Promise<void> {
+    const cacheDir = CacheService.getCacheDirPath();
+    let entries: Dirent[];
+    try {
+      entries = await fs.readdir(cacheDir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) {
+        continue;
+      }
+
+      const repoPath = path.join(cacheDir, entry.name);
+      const gitDir = await fs
+        .stat(path.join(repoPath, ".git"))
+        .catch(() => null);
+      if (!gitDir || (!gitDir.isDirectory() && !gitDir.isFile())) {
+        continue;
+      }
+
+      const templatesDir = path.join(repoPath, "templates");
+      const hasTemplates = await fs
+        .stat(templatesDir)
+        .then((stat) => stat.isDirectory())
+        .catch(() => false);
+      if (!hasTemplates) {
+        continue;
+      }
+
+      const repoUrlResult = await this.gitService.getRemoteUrl(repoPath);
+      if ("error" in repoUrlResult) {
+        continue;
+      }
+      const branchResult = await this.gitService.getCurrentBranch(repoPath);
+      if ("error" in branchResult) {
+        continue;
+      }
+      const commitHashResult = await this.gitService.getCommitHash(repoPath);
+      if ("error" in commitHashResult) {
+        continue;
+      }
+
+      const descriptorInfo = inferCacheDirDescriptor(entry.name);
+      const branchFromGit = branchResult.data?.trim() || undefined;
+      const branch =
+        branchFromGit && branchFromGit !== "HEAD"
+          ? branchFromGit
+          : descriptorInfo.branch;
+      const revision =
+        descriptorInfo.revisionFromSuffix ??
+        (descriptorInfo.hasExplicitRevision ? commitHashResult.data : undefined);
+      const existing = this.remoteRepos.find(
+        (repo) =>
+          repo.url === repoUrlResult.data &&
+          (repo.branch ?? "") === (branch ?? "") &&
+          (repo.revision ?? "") === (revision ?? ""),
+      );
+
+      if (existing) {
+        existing.path = repoPath;
+        existing.commitHash = commitHashResult.data;
+        existing.source = existing.source ?? "cache";
+        existing.revision = revision;
+        existing.branch = branch;
+      } else {
+        this.remoteRepos.push({
+          url: repoUrlResult.data,
+          branch,
+          revision,
+          path: repoPath,
+          source: "cache",
+          commitHash: commitHashResult.data,
+        });
+      }
+    }
+  }
+
+  async addRemoteRepo(
+    url: string,
+    branch?: string,
+    options?: { refresh?: boolean; revision?: string },
+  ): Promise<Result<TemplateRepoLoadResult>> {
     const normalized = normalizeGitRepositorySpecifier(url);
     const repoUrl = normalized?.repoUrl ?? url;
-    const targetBranch = normalized?.branch ?? branch;
+    const requestedBranch = normalized?.branch ?? branch;
+    const targetRevision = normalized?.revision ?? options?.revision;
+    const shouldInferDefaultBranch = !requestedBranch && !targetRevision;
+
+    let targetBranch = requestedBranch;
+    if (shouldInferDefaultBranch) {
+      const defaultBranchResult = await this.gitService.getRemoteDefaultBranch(
+        repoUrl,
+      );
+      if ("error" in defaultBranchResult) {
+        return { error: defaultBranchResult.error };
+      }
+      targetBranch = defaultBranchResult.data;
+    }
+
+    let existing = this.remoteRepos.find(
+      (r) =>
+        r.url === repoUrl &&
+        (r.branch ?? "") === (targetBranch ?? "") &&
+        (r.revision ?? "") === (targetRevision ?? ""),
+    );
+
+    if (!existing && shouldInferDefaultBranch) {
+      existing = this.remoteRepos.find(
+        (r) =>
+          r.url === repoUrl &&
+          (r.branch ?? "") === "" &&
+          (r.revision ?? "") === "",
+      );
+    }
+
+    if (existing && !options?.refresh) {
+      return { data: { alreadyExisted: true } };
+    }
 
     const cloneResult = await this.gitService.cloneRepoBranchToCache(
       repoUrl,
       targetBranch,
+      { forceRefresh: Boolean(options?.refresh), revision: targetRevision },
     );
     if ("error" in cloneResult) {
       return { error: cloneResult.error };
     }
-    const existing = this.remoteRepos.find(
-      (r) => r.url === repoUrl && r.branch === targetBranch,
-    );
+
     if (existing) {
       existing.path = cloneResult.data;
       existing.source = existing.source ?? "manual";
+      existing.revision = targetRevision;
+      existing.branch = targetBranch;
     } else {
       this.remoteRepos.push({
         url: repoUrl,
         branch: targetBranch,
+        revision: targetRevision,
         path: cloneResult.data,
         source: "manual",
       });
     }
-    return await this.loadTemplates();
+
+    const loadResult = await this.loadTemplates();
+    if ("error" in loadResult) {
+      return loadResult;
+    }
+
+    return { data: { alreadyExisted: Boolean(existing) } };
   }
 
   // load templates from configured paths and cached remote repos
@@ -105,6 +319,8 @@ export class RootTemplateRepository {
     this.remoteRepos = this.remoteRepos.filter(
       (repo) => repo.source === "manual",
     );
+
+    await this.hydrateCachedRepos();
 
     let baseTemplatePaths: string[];
     try {
@@ -129,27 +345,34 @@ export class RootTemplateRepository {
       }
 
       if (parsed.kind === "remote") {
-        const branch = parsed.branch ?? "main";
+        const branch = parsed.branch;
+        const revision = parsed.revision;
         const cloneResult = await this.gitService.cloneRepoBranchToCache(
           parsed.repoUrl,
           branch,
+          { revision },
         );
         if ("error" in cloneResult) {
           backendLogger.warn(
-            `Failed to load remote template repository ${parsed.repoUrl} (${branch}): ${cloneResult.error}`,
+            `Failed to load remote template repository ${parsed.repoUrl} (${branch ?? "default"}): ${cloneResult.error}`,
           );
           continue;
         }
 
         const existing = this.remoteRepos.find(
-          (repo) => repo.url === parsed.repoUrl && repo.branch === branch,
+          (repo) =>
+            repo.url === parsed.repoUrl &&
+            (repo.branch ?? "") === (branch ?? "") &&
+            (repo.revision ?? "") === (revision ?? ""),
         );
         if (existing) {
           existing.path = cloneResult.data;
+          existing.revision = revision;
         } else {
           this.remoteRepos.push({
             url: parsed.repoUrl,
             branch,
+            revision,
             path: cloneResult.data,
             source: "config",
           });
@@ -159,10 +382,9 @@ export class RootTemplateRepository {
       }
     }
 
-    const paths = [
-      ...localTemplatePaths,
-      ...this.remoteRepos.map((r) => r.path),
-    ];
+    const paths = Array.from(
+      new Set([...localTemplatePaths, ...this.remoteRepos.map((r) => r.path)]),
+    );
     for (const templatePath of paths) {
       const repoInfo = this.remoteRepos.find((r) => r.path === templatePath);
       const templatesRootDir = path.join(templatePath, "templates");
@@ -206,6 +428,8 @@ export class RootTemplateRepository {
           {
             repoUrl: repoInfo?.url,
             branchOverride: repoInfo?.branch,
+            trackedRevision: repoInfo?.revision,
+            skipBranchResolution: Boolean(repoInfo),
           },
         );
         if ("error" in templateResult) {
@@ -230,31 +454,32 @@ export class RootTemplateRepository {
   }
 
   async reloadTemplates(): Promise<Result<void>> {
-    // refresh remote repos to latest commit on their branches
-    for (const repo of this.remoteRepos) {
-      const cloneResult = await this.gitService.cloneRepoBranchToCache(
-        repo.url,
-        repo.branch,
-      );
-      if ("error" in cloneResult) {
-        return { error: cloneResult.error };
-      }
-      repo.path = cloneResult.data;
-    }
     return await this.loadTemplates();
   }
 
   async listTemplatesInRepo(
     repoUrl: string,
-    branch: string = "main",
+    branch?: string,
+    options?: { revision?: string },
   ): Promise<Result<Template[]>> {
     const normalized = normalizeGitRepositorySpecifier(repoUrl);
     const resolvedRepoUrl = normalized?.repoUrl ?? repoUrl;
-    const resolvedBranch = normalized?.branch ?? branch;
+    let resolvedBranch = normalized?.branch ?? branch;
+    const resolvedRevision = normalized?.revision ?? options?.revision;
+
+    if (!resolvedBranch && !resolvedRevision) {
+      const defaultBranchResult =
+        await this.gitService.getRemoteDefaultBranch(resolvedRepoUrl);
+      if ("error" in defaultBranchResult) {
+        return { error: defaultBranchResult.error };
+      }
+      resolvedBranch = defaultBranchResult.data;
+    }
 
     const cloneResult = await this.gitService.cloneRepoBranchToCache(
       resolvedRepoUrl,
       resolvedBranch,
+      { revision: resolvedRevision },
     );
     if ("error" in cloneResult) {
       return { error: cloneResult.error };
@@ -286,6 +511,8 @@ export class RootTemplateRepository {
       const templateResult = await this.templateTreeBuilder.build(templateDir, {
         repoUrl: resolvedRepoUrl,
         branchOverride: resolvedBranch,
+        trackedRevision: resolvedRevision,
+        skipBranchResolution: true,
       });
 
       if ("error" in templateResult) {
@@ -303,7 +530,7 @@ export class RootTemplateRepository {
     }
 
     if (!templates.length) {
-      const message = `No templates found in repository ${resolvedRepoUrl} on branch ${resolvedBranch}`;
+      const message = `No templates found in repository ${resolvedRepoUrl} on branch ${resolvedBranch ?? "default"}`;
       logError({ shortMessage: message });
       return { error: message };
     }
@@ -409,6 +636,8 @@ export class RootTemplateRepository {
         repoUrl: sourceTemplate.repoUrl,
         branchOverride: sourceTemplate.branch,
         commitHash: revisionHash,
+        trackedRevision: sourceTemplate.trackedRevision,
+        skipBranchResolution: true,
       },
     );
 

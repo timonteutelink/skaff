@@ -23,6 +23,10 @@ export interface TemplateSummary {
   template: TemplateDTO;
   revisions: string[];
 }
+
+export interface TemplateRepoLoadResult {
+  alreadyExisted: boolean;
+}
 export interface NewTemplateDiffResult {
   diffHash: string;
   parsedDiff: ParsedFile[];
@@ -42,6 +46,7 @@ export interface TemplateDTO {
   isLocal: boolean;
   branch?: string;
   repoUrl?: string;
+  trackedRevision?: string;
   templatesThatDisableThis: TemplateDisablingThis[];
   templateCommands: { title: string; description: string }[];
   refDir?: string;

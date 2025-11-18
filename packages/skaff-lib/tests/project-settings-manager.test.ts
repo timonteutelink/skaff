@@ -95,7 +95,9 @@ describe("ProjectSettingsManager.load", () => {
       possibleParentTemplates: [{ templateName: "root" }],
     });
 
-    const addRemoteRepo = jest.fn().mockResolvedValue({ data: undefined });
+    const addRemoteRepo = jest
+      .fn()
+      .mockResolvedValue({ data: { alreadyExisted: false } });
 
     const loadRevision = jest.fn(
       async (templateName: string): Promise<{ data: Template | null }> => ({
