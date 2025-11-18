@@ -170,6 +170,7 @@ export async function generateNewProjectFromExisting(
 export async function retrieveDiffUpdateProjectNewTemplateRevision(
   projectRepositoryName: string,
   newTemplateRevisionCommitHash: string,
+  templateInstanceId: string,
 ): Promise<Result<NewTemplateDiffResult>> {
   const project = await findProject(projectRepositoryName);
 
@@ -181,9 +182,19 @@ export async function retrieveDiffUpdateProjectNewTemplateRevision(
     return { error: `Project ${projectRepositoryName} not found.` };
   }
 
+  const targetInstance =
+    project.data.instantiatedProjectSettings.instantiatedTemplates.find(
+      (inst) => inst.id === templateInstanceId,
+    );
+
+  if (!targetInstance) {
+    return { error: `Template instance ${templateInstanceId} not found.` };
+  }
+
   return await tempLib.prepareUpdateDiff(
     project.data,
     newTemplateRevisionCommitHash,
+    { treeRootTemplateName: targetInstance.templateName },
   );
 }
 

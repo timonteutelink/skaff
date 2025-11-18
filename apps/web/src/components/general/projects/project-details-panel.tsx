@@ -5,7 +5,7 @@ import type { ProjectTreeNode } from "./types";
 import {
   ProjectDTO,
   TemplateDTO,
-  findTemplate
+  findTemplate,
 } from "@timonteutelink/skaff-lib/browser";
 import { useCallback, useMemo } from "react";
 import { toastNullError } from "@/lib/utils";
@@ -16,7 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
+import { FileDiffIcon, MoreVertical } from "lucide-react";
 import { runProjectCommand } from "@/app/actions/project";
 
 interface ProjectDetailsPanelProps {
@@ -37,12 +37,24 @@ export function ProjectDetailsPanel({
     () =>
       selectedNode?.type === "instantiated"
         ? toastNullError({
-          result: findTemplate(rootTemplate, selectedNode.name),
-          shortMessage: "An error occurred trying to find the template.",
-          nullErrorMessage: "No template was found",
-        }) || null
+            result: findTemplate(rootTemplate, selectedNode.name),
+            shortMessage: "An error occurred trying to find the template.",
+            nullErrorMessage: "No template was found",
+          }) || null
         : null,
     [selectedNode, rootTemplate],
+  );
+
+  const selectedNodeLatestTemplate = useMemo(
+    () =>
+      selectedNode?.type === "instantiated"
+        ? toastNullError({
+            result: findTemplate(latestTemplate, selectedNode.name),
+            shortMessage: "An error occurred trying to find the template.",
+            nullErrorMessage: "No template was found",
+          }) || null
+        : null,
+    [selectedNode, latestTemplate],
   );
 
   const selectedInstantiatedTemplate = useMemo(
@@ -90,6 +102,12 @@ export function ProjectDetailsPanel({
   if (selectedNode.type === "instantiated" && selectedInstantiatedTemplate) {
     const { id, templateName, parentId, templateSettings, templateCommitHash } =
       selectedInstantiatedTemplate;
+    const latestCommitHash = selectedNodeLatestTemplate?.currentCommitHash;
+    const canUpdateTemplate = Boolean(
+      templateCommitHash &&
+        latestCommitHash &&
+        templateCommitHash !== latestCommitHash,
+    );
 
     return (
       <div className="space-y-6">
@@ -122,6 +140,22 @@ export function ProjectDetailsPanel({
                 }}
               >
                 Edit
+              </Button>
+            ) : null}
+            {canUpdateTemplate ? (
+              <Button
+                variant="outline"
+                disabled={!project?.name}
+                onClick={() => {
+                  router.push(
+                    `/projects/instantiate-template/?projectRepositoryName=${project.name}` +
+                      `&newRevisionHash=${latestCommitHash}` +
+                      `&templateInstanceId=${id}`,
+                  );
+                }}
+              >
+                <FileDiffIcon className="w-4 h-4 mr-2" />
+                Update Template
               </Button>
             ) : null}
             {selectedNodeTemplate?.templateCommands?.length ? (

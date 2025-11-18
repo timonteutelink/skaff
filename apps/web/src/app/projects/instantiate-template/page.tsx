@@ -70,6 +70,10 @@ const TemplateInstantiationPage: React.FC = () => {
     () => searchParams.get("newRevisionHash"),
     [searchParams],
   );
+  const templateInstanceIdParam = useMemo(
+    () => searchParams.get("templateInstanceId"),
+    [searchParams],
+  );
   const [project, setProject] = useState<ProjectDTO>();
   const [rootTemplate, setRootTemplate] = useState<TemplateDTO>();
   const [diffToApply, setDiffToApply] = useState<NewTemplateDiffResult | null>(
@@ -94,21 +98,40 @@ const TemplateInstantiationPage: React.FC = () => {
       router.push("/projects");
       return;
     }
+    const providedModes = [
+      selectedDirectoryIdParam,
+      parentTemplateInstanceIdParam,
+      existingTemplateInstanceIdParam,
+      newRevisionHashParam,
+    ].filter(Boolean).length;
+
+    if (newRevisionHashParam && !templateInstanceIdParam) {
+      toastNullError({
+        shortMessage:
+          "Template instance ID is required when updating to a new revision hash.",
+      });
+      router.push("/projects");
+      return;
+    }
+
+    if (!newRevisionHashParam && templateInstanceIdParam) {
+      toastNullError({
+        shortMessage:
+          "Template instance ID can only be provided when updating to a new revision hash.",
+      });
+      router.push("/projects");
+      return;
+    }
+
     if (
-      (selectedDirectoryIdParam && parentTemplateInstanceIdParam) ||
-      (selectedDirectoryIdParam && existingTemplateInstanceIdParam) ||
-      (selectedDirectoryIdParam && newRevisionHashParam) ||
-      (parentTemplateInstanceIdParam && existingTemplateInstanceIdParam) ||
-      (parentTemplateInstanceIdParam && newRevisionHashParam) ||
-      (existingTemplateInstanceIdParam && newRevisionHashParam) ||
-      (!selectedDirectoryIdParam &&
-        !parentTemplateInstanceIdParam &&
-        !existingTemplateInstanceIdParam &&
-        !newRevisionHashParam)
+      providedModes !== 1 ||
+      (selectedDirectoryIdParam && templateInstanceIdParam) ||
+      (parentTemplateInstanceIdParam && templateInstanceIdParam) ||
+      (existingTemplateInstanceIdParam && templateInstanceIdParam)
     ) {
       toastNullError({
         shortMessage:
-          "Cannot only provide one of selectedDirectoryId or parentTemplateInstanceId or existingTemplateInstanceId or newRevisionHash.",
+          "Provide exactly one instantiation mode.",
       });
       router.push("/projects");
       return;
@@ -188,6 +211,7 @@ const TemplateInstantiationPage: React.FC = () => {
         await retrieveDiffUpdateProjectNewTemplateRevision(
           projectRepositoryNameParam,
           newRevisionHashParam,
+          templateInstanceIdParam!,
         );
       const newRevision = toastNullError({
         result: newRevisionResult,
@@ -207,6 +231,7 @@ const TemplateInstantiationPage: React.FC = () => {
     selectedDirectoryIdParam,
     existingTemplateInstanceIdParam,
     newRevisionHashParam,
+    templateInstanceIdParam,
   ]);
 
   const subTemplate = useMemo(() => {

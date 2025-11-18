@@ -341,11 +341,7 @@ export default function ProjectTemplateTreePage() {
   return (
     <div className="flex flex-col h-screen">
       {projectRepositoryNameParam && (
-        <ProjectHeader
-          project={project}
-          onBranchChange={handleBranchChange}
-          latestTemplate={latestTemplate}
-        />
+        <ProjectHeader project={project} onBranchChange={handleBranchChange} />
       )}
 
       <div className="flex flex-1 overflow-hidden">
