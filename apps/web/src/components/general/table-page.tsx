@@ -52,7 +52,7 @@ export default function TablePage<T extends Record<string, any>>({
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">{title}</h1>
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
           {buttons ? (
             buttons
           ) : addButton ? (
