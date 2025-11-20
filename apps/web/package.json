@@ -39,7 +39,7 @@
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@tailwindcss/postcss": "^4.1.17",
-    "@timonteutelink/skaff-lib": "0.0.98",
+    "@timonteutelink/skaff-lib": "0.0.99",
     "@timonteutelink/template-types-lib": "0.0.56",
     "@types/node": "^24.10.1",
     "class-variance-authority": "^0.7.1",
