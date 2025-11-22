@@ -779,36 +779,91 @@ export class GitService {
 
     let currentFile: ParsedFile | null = null;
     let currentHunk: DiffHunk | null = null;
+    const metadataLinePrefixes = [
+      "index ",
+      "--- ",
+      "+++ ",
+      "similarity index",
+      "rename from",
+      "rename to",
+      "copy from",
+      "copy to",
+      "mode ",
+      "old mode",
+      "new mode",
+    ];
+
+    const flushCurrentHunk = () => {
+      if (currentHunk && currentFile) {
+        currentFile.hunks.push(currentHunk);
+      }
+      currentHunk = null;
+    };
+
+    const flushCurrentFile = () => {
+      if (currentHunk && currentFile) {
+        currentFile.hunks.push(currentHunk);
+      }
+      currentHunk = null;
+
+      if (currentFile) {
+        files.push(currentFile);
+      }
+      currentFile = null;
+    };
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i]!;
 
       if (line.startsWith("diff --git")) {
-        if (currentHunk && currentFile) {
-          currentFile.hunks.push(currentHunk);
-          currentHunk = null;
-        }
-
-        if (currentFile) {
-          files.push(currentFile);
-        }
+        flushCurrentFile();
 
         const match = line.match(/diff --git a\/(.+?) b\/(.+)/);
         if (match) {
+          const oldPath = match[1]!;
+          const newPath = match[2]!;
           currentFile = {
-            path: match[1]!,
+            path: newPath || oldPath,
+            oldPath,
+            newPath,
             status: "modified",
             hunks: [],
+            metadata: [],
           };
         }
-      } else if (line.startsWith("new file")) {
-        if (currentFile) currentFile.status = "added";
-      } else if (line.startsWith("deleted file")) {
-        if (currentFile) currentFile.status = "deleted";
-      } else if (line.startsWith("@@")) {
-        if (currentHunk && currentFile) {
-          currentFile.hunks.push(currentHunk);
-        }
+        continue;
+      }
+
+      if (!currentFile) {
+        continue;
+      }
+
+      if (line.startsWith("new file")) {
+        currentFile.status = "added";
+        currentFile.metadata?.push(line);
+        continue;
+      }
+
+      if (line.startsWith("deleted file")) {
+        currentFile.status = "deleted";
+        currentFile.metadata?.push(line);
+        continue;
+      }
+
+      if (line.startsWith("Binary files")) {
+        currentFile.isBinary = true;
+        currentFile.metadata?.push(line);
+        continue;
+      }
+
+      if (line.startsWith("GIT binary patch")) {
+        currentFile.isBinary = true;
+        currentFile.metadata?.push(line);
+        continue;
+      }
+
+      if (line.startsWith("@@")) {
+        flushCurrentHunk();
 
         const match = line.match(/@@ -(\d+),?(\d*) \+(\d+),?(\d*) @@/);
         if (match) {
@@ -820,18 +875,28 @@ export class GitService {
             lines: [],
           };
         }
-      } else if (currentHunk && /^[ +-]/.test(line)) {
+        continue;
+      }
+
+      if (
+        metadataLinePrefixes.some((prefix) => line.startsWith(prefix)) &&
+        currentFile.metadata
+      ) {
+        currentFile.metadata.push(line);
+        continue;
+      }
+
+      if (currentHunk && line.startsWith("\\ No newline")) {
+        currentHunk.lines.push(line);
+        continue;
+      }
+
+      if (currentHunk && /^[ +-]/.test(line)) {
         currentHunk.lines.push(line);
       }
     }
 
-    if (currentHunk && currentFile) {
-      currentFile.hunks.push(currentHunk);
-    }
-
-    if (currentFile) {
-      files.push(currentFile);
-    }
+    flushCurrentFile();
 
     return files;
   }
