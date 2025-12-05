@@ -25,4 +25,5 @@ function registerAll() {
   Handlebars.registerHelper("snakeCase", snakeCaseHelper);
 }
 
+
 export { eqHelper, snakeCaseHelper, registerAll };
