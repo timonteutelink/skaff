@@ -1,11 +1,12 @@
-{ mkBunDerivation, pkgs, lib }:
-
-mkBunDerivation {
+{ bun2nix, pkgs, lib }:
+bun2nix.mkDerivation {
   pname = "skaff-web";
   version = "0.0.1";
 
   src = ./../..;
-  bunNix = ./bun-packages.nix;
+  bunDeps = bun2nix.fetchBunDeps {
+    bunNix = ./bun-packages.nix;
+  };
 
   nativeBuildInputs = with pkgs; [
     makeWrapper

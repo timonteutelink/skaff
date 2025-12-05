@@ -4,7 +4,7 @@
     devenv.url = "github:cachix/devenv";
     flake-parts.url = "github:hercules-ci/flake-parts";
     bun2nix = {
-      url = "github:baileyluTCD/bun2nix";
+      url = "github:baileyluTCD/bun2nix?tag=2.0.5";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

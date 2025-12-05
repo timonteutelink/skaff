@@ -3,7 +3,7 @@ localFlake:
   perSystem = { pkgs, system, ... }:
     {
       packages.skaff-web = pkgs.callPackage ./../../skaff-package/web-package.nix {
-        inherit (inputs.bun2nix.lib.${system}) mkBunDerivation;
+        bun2nix = inputs.bun2nix.packages.${system}.default;
       };
     };
 
