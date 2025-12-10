@@ -8,18 +8,18 @@ import fs from "fs-extra";
 import { backendLogger } from "../../../lib/logger";
 import { anyOrCallbackToAny } from "../../../lib/utils";
 import { isSubset } from "../../../utils/shared-utils";
-import type { Template } from "../../models/template";
-import { TemplateGenerationPipeline } from "./generation-pipeline";
-import type { FileMaterializer } from "./../FileMaterializer";
-import type { GenerationContext } from "./../GenerationContext";
-import type { PathResolver } from "./../PathResolver";
-import type { ProjectSettingsSynchronizer } from "./../ProjectSettingsSynchronizer";
-import type { SideEffectExecutor } from "./../SideEffectExecutor";
-import type { AutoInstantiationPlanner } from "./../AutoInstantiationPlanner";
-import type { GitService } from "../../infra/git-service";
+import type { Template } from "../../../models/template";
 import { makeDir } from "../../infra/file-service";
+import type { GitService } from "../../infra/git-service";
 import type { GeneratorOptions } from "../template-generator-service";
-import type { TemplateGenerationStage } from "./generation-pipeline";
+import type { ProjectSettingsSynchronizer } from "../ProjectSettingsSynchronizer";
+import type { AutoInstantiationCoordinator } from "./AutoInstantiationCoordinator";
+import type { PipelineStage } from "./pipeline-runner";
+import { PipelineRunner } from "./pipeline-runner";
+import type { SideEffectCoordinator } from "./SideEffectCoordinator";
+import type { TargetPathResolver } from "./TargetPathResolver";
+import type { TemplateFileMaterializer } from "./TemplateFileMaterializer";
+import type { TemplatePipelineContext } from "./TemplatePipelineContext";
 
 export interface TemplateInstantiationPipelineContext {
   template: Template;
@@ -42,22 +42,29 @@ export interface ProjectCreationPipelineContext {
 }
 
 export const createTemplateInstantiationPipeline = (
-  stages: TemplateGenerationStage<TemplateInstantiationPipelineContext>[],
-): TemplateGenerationPipeline<TemplateInstantiationPipelineContext> =>
-  new TemplateGenerationPipeline<TemplateInstantiationPipelineContext>(stages);
+  stages: PipelineStage<TemplateInstantiationPipelineContext>[],
+): PipelineRunner<TemplateInstantiationPipelineContext> =>
+  new PipelineRunner<TemplateInstantiationPipelineContext>(stages);
 
 export const createProjectCreationPipeline = (
-  stages: TemplateGenerationStage<ProjectCreationPipelineContext>[],
-): TemplateGenerationPipeline<ProjectCreationPipelineContext> =>
-  new TemplateGenerationPipeline<ProjectCreationPipelineContext>(stages);
+  stages: PipelineStage<ProjectCreationPipelineContext>[],
+): PipelineRunner<ProjectCreationPipelineContext> =>
+  new PipelineRunner<ProjectCreationPipelineContext>(stages);
 
+/**
+ * Initializes pipeline context with resolved template settings.
+ *
+ * This stage validates the template repository, resolves user settings into
+ * final template settings, and stores them on the shared pipeline context so
+ * downstream stages can render files and apply side effects with confidence.
+ */
 export class ContextSetupStage
-  implements TemplateGenerationStage<TemplateInstantiationPipelineContext>
+  implements PipelineStage<TemplateInstantiationPipelineContext>
 {
   public readonly name = "context-setup";
 
   constructor(
-    private readonly generationContext: GenerationContext,
+    private readonly pipelineContext: TemplatePipelineContext,
     private readonly projectSettingsSynchronizer: ProjectSettingsSynchronizer,
   ) { }
 
@@ -84,7 +91,7 @@ export class ContextSetupStage
       return result;
     }
 
-    this.generationContext.setCurrentState({
+    this.pipelineContext.setCurrentState({
       template: context.template,
       finalSettings: result.data,
       parentInstanceId: context.parentInstanceId,
@@ -96,8 +103,15 @@ export class ContextSetupStage
   }
 }
 
+/**
+ * Guards against incompatible template combinations and failing assertions.
+ *
+ * By stopping the pipeline early when a template conflicts with an already
+ * instantiated one or fails custom assertions, the stage prevents wasted work
+ * later in the pipeline.
+ */
 export class TemplateValidationStage
-  implements TemplateGenerationStage<TemplateInstantiationPipelineContext>
+  implements PipelineStage<TemplateInstantiationPipelineContext>
 {
   public readonly name = "template-validation";
 
@@ -170,12 +184,18 @@ export class TemplateValidationStage
   }
 }
 
+/**
+ * Copies and renders template files into the destination directory.
+ *
+ * Relies on the {@link TemplateFileMaterializer} to honor redirects,
+ * overwrites, and Handlebars helpers/partials for the active template.
+ */
 export class RenderStage
-  implements TemplateGenerationStage<TemplateInstantiationPipelineContext>
+  implements PipelineStage<TemplateInstantiationPipelineContext>
 {
   public readonly name = "render";
 
-  constructor(private readonly fileMaterializer: FileMaterializer) { }
+  constructor(private readonly fileMaterializer: TemplateFileMaterializer) { }
 
   public async run(
     context: TemplateInstantiationPipelineContext,
@@ -190,18 +210,24 @@ export class RenderStage
   }
 }
 
+/**
+ * Executes template-defined side-effect functions after rendering.
+ *
+ * This stage allows templates to mutate generated files (for example updating
+ * manifests) while still participating in rollback management.
+ */
 export class SideEffectsStage
-  implements TemplateGenerationStage<TemplateInstantiationPipelineContext>
+  implements PipelineStage<TemplateInstantiationPipelineContext>
 {
   public readonly name = "side-effects";
 
-  constructor(private readonly sideEffectExecutor: SideEffectExecutor) { }
+  constructor(private readonly sideEffectCoordinator: SideEffectCoordinator) { }
 
   public async run(
     context: TemplateInstantiationPipelineContext,
   ): Promise<{ data: TemplateInstantiationPipelineContext } | { error: string }>
   {
-    const sideEffectResult = await this.sideEffectExecutor.applySideEffects();
+    const sideEffectResult = await this.sideEffectCoordinator.applySideEffects();
     if ("error" in sideEffectResult) {
       return sideEffectResult;
     }
@@ -210,8 +236,14 @@ export class SideEffectsStage
   }
 }
 
+/**
+ * Persists the template's resolved settings back to the project configuration.
+ *
+ * Running after rendering ensures the project settings reflect what was
+ * actually generated, enabling reproducible updates and diffs.
+ */
 export class PersistTemplateSettingsStage
-  implements TemplateGenerationStage<TemplateInstantiationPipelineContext>
+  implements PipelineStage<TemplateInstantiationPipelineContext>
 {
   public readonly name = "persist-template-settings";
 
@@ -243,12 +275,19 @@ export class PersistTemplateSettingsStage
   }
 }
 
+/**
+ * Triggers automatic instantiation of child templates declared by the current
+ * template.
+ *
+ * Delegates to the {@link AutoInstantiationCoordinator} to hydrate project
+ * settings and invoke nested pipeline runs when required.
+ */
 export class AutoInstantiationStage
-  implements TemplateGenerationStage<TemplateInstantiationPipelineContext>
+  implements PipelineStage<TemplateInstantiationPipelineContext>
 {
   public readonly name = "auto-instantiation";
 
-  constructor(private readonly autoInstantiationPlanner: AutoInstantiationPlanner) { }
+  constructor(private readonly autoInstantiationCoordinator: AutoInstantiationCoordinator) { }
 
   public async run(
     context: TemplateInstantiationPipelineContext,
@@ -259,7 +298,7 @@ export class AutoInstantiationStage
     }
 
     const templatesToAutoInstantiateResult =
-      this.autoInstantiationPlanner.getTemplatesToAutoInstantiateForCurrentTemplate();
+      this.autoInstantiationCoordinator.getTemplatesToAutoInstantiateForCurrentTemplate();
 
     if ("error" in templatesToAutoInstantiateResult) {
       return templatesToAutoInstantiateResult;
@@ -267,7 +306,7 @@ export class AutoInstantiationStage
 
     if (templatesToAutoInstantiateResult.data.length) {
       const autoInstantiationResult =
-        await this.autoInstantiationPlanner.autoInstantiateSubTemplates(
+        await this.autoInstantiationCoordinator.autoInstantiateSubTemplates(
           context.finalSettings,
           context.instantiatedTemplate.id,
           templatesToAutoInstantiateResult.data,
@@ -282,27 +321,33 @@ export class AutoInstantiationStage
   }
 }
 
+/**
+ * Resolves and stores the final target path for the rendered template.
+ *
+ * This stage must run after settings are finalized so that subsequent steps
+ * (like git commits) know exactly where artifacts landed.
+ */
 export class TargetPathStage
-  implements TemplateGenerationStage<TemplateInstantiationPipelineContext>
+  implements PipelineStage<TemplateInstantiationPipelineContext>
 {
   public readonly name = "target-path";
 
   constructor(
-    private readonly pathResolver: PathResolver,
-    private readonly generationContext: GenerationContext,
+    private readonly targetPathResolver: TargetPathResolver,
+    private readonly pipelineContext: TemplatePipelineContext,
   ) { }
 
   public async run(
     context: TemplateInstantiationPipelineContext,
   ): Promise<{ data: TemplateInstantiationPipelineContext } | { error: string }>
   {
-    const targetPathResult = this.pathResolver.getAbsoluteTargetPath();
+    const targetPathResult = this.targetPathResolver.getAbsoluteTargetPath();
 
     if ("error" in targetPathResult) {
       return targetPathResult;
     }
 
-    const finalSettingsResult = this.generationContext.getFinalSettings();
+    const finalSettingsResult = this.pipelineContext.getFinalSettings();
 
     if ("error" in finalSettingsResult) {
       return finalSettingsResult;
@@ -315,8 +360,14 @@ export class TargetPathStage
   }
 }
 
+/**
+ * Prepares the destination directory and initializes repository state.
+ *
+ * Ensures the project folder exists, initializes git (when enabled), and
+ * persists a fresh project settings file before any rendering occurs.
+ */
 export class ProjectSetupStage
-  implements TemplateGenerationStage<ProjectCreationPipelineContext>
+  implements PipelineStage<ProjectCreationPipelineContext>
 {
   public readonly name = "project-setup";
 
@@ -388,12 +439,18 @@ export class ProjectSetupStage
   }
 }
 
+/**
+ * Renders the root project template into the prepared directory.
+ *
+ * Uses the {@link TemplateFileMaterializer} so project creation follows the
+ * same rendering rules as individual template instantiation.
+ */
 export class ProjectRenderingStage
-  implements TemplateGenerationStage<ProjectCreationPipelineContext>
+  implements PipelineStage<ProjectCreationPipelineContext>
 {
   public readonly name = "project-render";
 
-  constructor(private readonly fileMaterializer: FileMaterializer) { }
+  constructor(private readonly fileMaterializer: TemplateFileMaterializer) { }
 
   public async run(
     context: ProjectCreationPipelineContext,
@@ -408,18 +465,24 @@ export class ProjectRenderingStage
   }
 }
 
+/**
+ * Runs project-level side effects after the main render.
+ *
+ * Allows templates to adjust files (e.g. installing dependencies) while
+ * respecting rollback behaviour shared across the pipeline.
+ */
 export class ProjectSideEffectsStage
-  implements TemplateGenerationStage<ProjectCreationPipelineContext>
+  implements PipelineStage<ProjectCreationPipelineContext>
 {
   public readonly name = "project-side-effects";
 
-  constructor(private readonly sideEffectExecutor: SideEffectExecutor) { }
+  constructor(private readonly sideEffectCoordinator: SideEffectCoordinator) { }
 
   public async run(
     context: ProjectCreationPipelineContext,
   ): Promise<{ data: ProjectCreationPipelineContext } | { error: string }>
   {
-    const sideEffectResult = await this.sideEffectExecutor.applySideEffects();
+    const sideEffectResult = await this.sideEffectCoordinator.applySideEffects();
     if ("error" in sideEffectResult) {
       return sideEffectResult;
     }
@@ -428,12 +491,18 @@ export class ProjectSideEffectsStage
   }
 }
 
+/**
+ * Autoinstantiates subtemplates immediately after the root project is created.
+ *
+ * This stage ensures nested templates are rendered with the same parent
+ * context and settings that were produced during project creation.
+ */
 export class ProjectAutoInstantiationStage
-  implements TemplateGenerationStage<ProjectCreationPipelineContext>
+  implements PipelineStage<ProjectCreationPipelineContext>
 {
   public readonly name = "project-auto-instantiation";
 
-  constructor(private readonly autoInstantiationPlanner: AutoInstantiationPlanner) { }
+  constructor(private readonly autoInstantiationCoordinator: AutoInstantiationCoordinator) { }
 
   public async run(
     context: ProjectCreationPipelineContext,
@@ -444,7 +513,7 @@ export class ProjectAutoInstantiationStage
     }
 
     const templatesToAutoInstantiateResult =
-      this.autoInstantiationPlanner.getTemplatesToAutoInstantiateForCurrentTemplate();
+      this.autoInstantiationCoordinator.getTemplatesToAutoInstantiateForCurrentTemplate();
 
     if ("error" in templatesToAutoInstantiateResult) {
       return templatesToAutoInstantiateResult;
@@ -452,7 +521,7 @@ export class ProjectAutoInstantiationStage
 
     if (templatesToAutoInstantiateResult.data.length) {
       const autoInstantiationResult =
-        await this.autoInstantiationPlanner.autoInstantiateSubTemplates(
+        await this.autoInstantiationCoordinator.autoInstantiateSubTemplates(
           context.finalSettings,
           context.projectSettings.instantiatedTemplates[0]?.id ?? "",
           templatesToAutoInstantiateResult.data,
@@ -469,43 +538,46 @@ export class ProjectAutoInstantiationStage
 
 export const buildDefaultTemplateInstantiationStages = (
   dependencies: {
-    generationContext: GenerationContext;
+    pipelineContext: TemplatePipelineContext;
     projectSettingsSynchronizer: ProjectSettingsSynchronizer;
-    fileMaterializer: FileMaterializer;
-    sideEffectExecutor: SideEffectExecutor;
-    autoInstantiationPlanner: AutoInstantiationPlanner;
-    pathResolver: PathResolver;
+    fileMaterializer: TemplateFileMaterializer;
+    sideEffectCoordinator: SideEffectCoordinator;
+    autoInstantiationCoordinator: AutoInstantiationCoordinator;
+    targetPathResolver: TargetPathResolver;
   },
   options: GeneratorOptions,
   projectSettings: ProjectSettings,
-): TemplateGenerationStage<TemplateInstantiationPipelineContext>[] => [
+): PipelineStage<TemplateInstantiationPipelineContext>[] => [
   new ContextSetupStage(
-    dependencies.generationContext,
+    dependencies.pipelineContext,
     dependencies.projectSettingsSynchronizer,
   ),
   new TemplateValidationStage(projectSettings),
   new RenderStage(dependencies.fileMaterializer),
-  new SideEffectsStage(dependencies.sideEffectExecutor),
+  new SideEffectsStage(dependencies.sideEffectCoordinator),
   new PersistTemplateSettingsStage(
     dependencies.projectSettingsSynchronizer,
     options,
   ),
-  new AutoInstantiationStage(dependencies.autoInstantiationPlanner),
-  new TargetPathStage(dependencies.pathResolver, dependencies.generationContext),
+  new AutoInstantiationStage(dependencies.autoInstantiationCoordinator),
+  new TargetPathStage(
+    dependencies.targetPathResolver,
+    dependencies.pipelineContext,
+  ),
 ];
 
 export const buildDefaultProjectCreationStages = (
   dependencies: {
     projectSettingsSynchronizer: ProjectSettingsSynchronizer;
-    fileMaterializer: FileMaterializer;
-    sideEffectExecutor: SideEffectExecutor;
-    autoInstantiationPlanner: AutoInstantiationPlanner;
+    fileMaterializer: TemplateFileMaterializer;
+    sideEffectCoordinator: SideEffectCoordinator;
+    autoInstantiationCoordinator: AutoInstantiationCoordinator;
   },
   options: GeneratorOptions,
   gitService: GitService,
-): TemplateGenerationStage<ProjectCreationPipelineContext>[] => [
+): PipelineStage<ProjectCreationPipelineContext>[] => [
   new ProjectSetupStage(options, gitService, dependencies.projectSettingsSynchronizer),
   new ProjectRenderingStage(dependencies.fileMaterializer),
-  new ProjectSideEffectsStage(dependencies.sideEffectExecutor),
-  new ProjectAutoInstantiationStage(dependencies.autoInstantiationPlanner),
+  new ProjectSideEffectsStage(dependencies.sideEffectCoordinator),
+  new ProjectAutoInstantiationStage(dependencies.autoInstantiationCoordinator),
 ];

@@ -10,16 +10,16 @@ jest.mock("../src/lib/logger", () => ({
   },
 }));
 
-type GenerationState = {
+type PipelineState = {
   template: any;
   finalSettings: any;
   parentInstanceId?: string;
 };
 
-class StubGenerationContext {
-  private state?: GenerationState;
+class StubPipelineContext {
+  private state?: PipelineState;
 
-  constructor(initialState: GenerationState) {
+  constructor(initialState: PipelineState) {
     this.state = initialState;
   }
 
@@ -27,19 +27,19 @@ class StubGenerationContext {
     return this.state ? { data: this.state } : { error: "no state" };
   }
 
-  public setCurrentState(state: GenerationState) {
+  public setCurrentState(state: PipelineState) {
     this.state = state;
   }
 }
 
-describe("AutoInstantiationPlanner", () => {
+describe("AutoInstantiationCoordinator", () => {
   it("passes instantiated final settings to child mapSettings", async () => {
     jest.resetModules();
     jest.doMock("../src/models/template", () => ({
       Template: class {},
     }));
 
-    const { AutoInstantiationPlanner } = require("../src/core/generation/AutoInstantiationPlanner") as typeof import("../src/core/generation/AutoInstantiationPlanner");
+    const { AutoInstantiationCoordinator } = require("../src/core/generation/pipeline/AutoInstantiationCoordinator") as typeof import("../src/core/generation/pipeline/AutoInstantiationCoordinator");
 
     const parentTemplate: any = {
       config: { templateConfig: { name: "parent" }, autoInstantiatedSubtemplates: undefined },
@@ -65,7 +65,7 @@ describe("AutoInstantiationPlanner", () => {
       name === "grandchild" ? grandchildTemplate : undefined,
     );
 
-    const context = new StubGenerationContext({
+    const context = new StubPipelineContext({
       template: parentTemplate,
       finalSettings: { parent: true },
       parentInstanceId: "root-id",
@@ -98,7 +98,7 @@ describe("AutoInstantiationPlanner", () => {
       addNewTemplate,
     };
 
-    const planner = new AutoInstantiationPlanner(
+    const planner = new AutoInstantiationCoordinator(
       { dontAutoInstantiate: false } as any,
       context as any,
       projectSettingsSynchronizer as any,
@@ -140,7 +140,7 @@ describe("AutoInstantiationPlanner", () => {
       Template: class {},
     }));
 
-    const { AutoInstantiationPlanner } = require("../src/core/generation/AutoInstantiationPlanner") as typeof import("../src/core/generation/AutoInstantiationPlanner");
+    const { AutoInstantiationCoordinator } = require("../src/core/generation/pipeline/AutoInstantiationCoordinator") as typeof import("../src/core/generation/pipeline/AutoInstantiationCoordinator");
 
     const parentTemplate: any = {
       config: {
@@ -161,7 +161,7 @@ describe("AutoInstantiationPlanner", () => {
 
     parentTemplate.findSubTemplate.mockReturnValue(childTemplate);
 
-    const context = new StubGenerationContext({
+    const context = new StubPipelineContext({
       template: parentTemplate,
       finalSettings: { parent: true },
       parentInstanceId: "root-id",
@@ -187,7 +187,7 @@ describe("AutoInstantiationPlanner", () => {
       addNewTemplate,
     };
 
-    const planner = new AutoInstantiationPlanner(
+    const planner = new AutoInstantiationCoordinator(
       { dontAutoInstantiate: false } as any,
       context as any,
       projectSettingsSynchronizer as any,
@@ -226,7 +226,7 @@ describe("AutoInstantiationPlanner", () => {
       Template: class {},
     }));
 
-    const { AutoInstantiationPlanner } = require("../src/core/generation/AutoInstantiationPlanner") as typeof import("../src/core/generation/AutoInstantiationPlanner");
+    const { AutoInstantiationCoordinator } = require("../src/core/generation/pipeline/AutoInstantiationCoordinator") as typeof import("../src/core/generation/pipeline/AutoInstantiationCoordinator");
 
     const parentTemplate: any = {
       config: { templateConfig: { name: "parent" }, autoInstantiatedSubtemplates: undefined },
@@ -257,7 +257,7 @@ describe("AutoInstantiationPlanner", () => {
 
     const parentFinalSettings = { parent: true };
 
-    const context = new StubGenerationContext({
+    const context = new StubPipelineContext({
       template: parentTemplate,
       finalSettings: parentFinalSettings,
       parentInstanceId: "root-id",
@@ -287,7 +287,7 @@ describe("AutoInstantiationPlanner", () => {
       addNewTemplate,
     };
 
-    const planner = new AutoInstantiationPlanner(
+    const planner = new AutoInstantiationCoordinator(
       { dontAutoInstantiate: false } as any,
       context as any,
       projectSettingsSynchronizer as any,
@@ -332,7 +332,7 @@ describe("AutoInstantiationPlanner", () => {
       Template: class {},
     }));
 
-    const { AutoInstantiationPlanner } = require("../src/core/generation/AutoInstantiationPlanner") as typeof import("../src/core/generation/AutoInstantiationPlanner");
+    const { AutoInstantiationCoordinator } = require("../src/core/generation/pipeline/AutoInstantiationCoordinator") as typeof import("../src/core/generation/pipeline/AutoInstantiationCoordinator");
 
     const parentTemplate: any = {
       config: {
@@ -379,7 +379,7 @@ describe("AutoInstantiationPlanner", () => {
       return undefined;
     });
 
-    const context = new StubGenerationContext({
+    const context = new StubPipelineContext({
       template: parentTemplate,
       finalSettings: { parent: true },
       parentInstanceId: "root-id",
@@ -398,7 +398,7 @@ describe("AutoInstantiationPlanner", () => {
       .mockReturnValueOnce({ data: "child-id" })
       .mockReturnValueOnce({ data: "grandchild-id" });
 
-    let plannerRef: import("../src/core/generation/AutoInstantiationPlanner").AutoInstantiationPlanner;
+    let plannerRef: import("../src/core/generation/pipeline/AutoInstantiationCoordinator").AutoInstantiationCoordinator;
 
     const instantiateTemplate = jest.fn(async (templateInstanceId: string) => {
       const currentStateResult = context.getState();
@@ -470,7 +470,7 @@ describe("AutoInstantiationPlanner", () => {
       addNewTemplate,
     };
 
-    const planner = new AutoInstantiationPlanner(
+    const planner = new AutoInstantiationCoordinator(
       { dontAutoInstantiate: false } as any,
       context as any,
       projectSettingsSynchronizer as any,

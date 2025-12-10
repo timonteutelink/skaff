@@ -3,17 +3,25 @@ import {
   FinalTemplateSettings,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
-import { backendLogger } from "../../lib/logger";
-import { Result } from "../../lib/types";
-import { anyOrCallbackToAny, cloneValue } from "../../lib/utils";
-import { GeneratorOptions } from "./template-generator-service";
-import { GenerationContext } from "./GenerationContext";
-import { ProjectSettingsSynchronizer } from "./ProjectSettingsSynchronizer";
+import { backendLogger } from "../../../lib/logger";
+import { Result } from "../../../lib/types";
+import { anyOrCallbackToAny, cloneValue } from "../../../lib/utils";
+import { GeneratorOptions } from "../template-generator-service";
+import { ProjectSettingsSynchronizer } from "../ProjectSettingsSynchronizer";
+import { TemplatePipelineContext } from "./TemplatePipelineContext";
 
-export class AutoInstantiationPlanner {
+/**
+ * Plans and executes automatic subtemplate instantiation during pipeline runs.
+ *
+ * Templates can declare child templates that should be instantiated whenever a
+ * parent is rendered. This coordinator resolves those declarations, registers
+ * new template instances in project settings, and invokes the template
+ * instantiation pipeline recursively while keeping the parent context intact.
+ */
+export class AutoInstantiationCoordinator {
   constructor(
     private readonly options: GeneratorOptions,
-    private readonly context: GenerationContext,
+    private readonly context: TemplatePipelineContext,
     private readonly projectSettingsSynchronizer: ProjectSettingsSynchronizer,
     private readonly instantiateTemplate: (
       templateInstanceId: string,

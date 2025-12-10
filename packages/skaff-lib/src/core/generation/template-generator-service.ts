@@ -18,15 +18,15 @@ import {
   createTemplateInstantiationPipeline,
   ProjectCreationPipelineContext,
   TemplateInstantiationPipelineContext,
-} from "./pipeline/stages";
-import { TemplateGenerationPipeline, TemplateGenerationStage } from "./pipeline/generation-pipeline";
-import { AutoInstantiationPlanner } from "./AutoInstantiationPlanner";
-import { FileMaterializer } from "./FileMaterializer";
-import { GenerationContext } from "./GenerationContext";
-import { PathResolver } from "./PathResolver";
+} from "./pipeline/pipeline-stages";
+import { PipelineRunner, PipelineStage } from "./pipeline/pipeline-runner";
+import { AutoInstantiationCoordinator } from "./pipeline/AutoInstantiationCoordinator";
+import { TemplateFileMaterializer } from "./pipeline/TemplateFileMaterializer";
+import { TemplatePipelineContext } from "./pipeline/TemplatePipelineContext";
+import { TargetPathResolver } from "./pipeline/TargetPathResolver";
 import { ProjectSettingsSynchronizer } from "./ProjectSettingsSynchronizer";
 import { RollbackFileSystem } from "./RollbackFileSystem";
-import { SideEffectExecutor } from "./SideEffectExecutor";
+import { SideEffectCoordinator } from "./pipeline/SideEffectCoordinator";
 import { HandlebarsEnvironment } from "../shared/HandlebarsEnvironment";
 import { Template } from "../../models/template";
 import { FileRollbackManager } from "../shared/FileRollbackManager";
@@ -57,22 +57,29 @@ export interface GeneratorOptions {
 }
 
 export interface TemplateGenerationPipelineOverrides {
-  instantiateTemplateStages?: TemplateGenerationStage<TemplateInstantiationPipelineContext>[];
-  projectCreationStages?: TemplateGenerationStage<ProjectCreationPipelineContext>[];
+  instantiateTemplateStages?: PipelineStage<TemplateInstantiationPipelineContext>[];
+  projectCreationStages?: PipelineStage<ProjectCreationPipelineContext>[];
 }
 
+/**
+ * Orchestrates template and project generation using the pipeline building blocks.
+ *
+ * The session wires together context tracking, path resolution, rendering,
+ * side-effect execution, and auto-instantiation so callers can create new
+ * projects or templates with a single entry point.
+ */
 export class TemplateGenerationSession {
-  private readonly generationContext: GenerationContext;
-  private readonly pathResolver: PathResolver;
+  private readonly pipelineContext: TemplatePipelineContext;
+  private readonly targetPathResolver: TargetPathResolver;
   private readonly fileSystem: RollbackFileSystem;
-  private readonly fileMaterializer: FileMaterializer;
-  private readonly sideEffectExecutor: SideEffectExecutor;
+  private readonly fileMaterializer: TemplateFileMaterializer;
+  private readonly sideEffectCoordinator: SideEffectCoordinator;
   private readonly projectSettingsSynchronizer: ProjectSettingsSynchronizer;
   private readonly gitService: GitService;
-  private readonly autoInstantiationPlanner: AutoInstantiationPlanner;
+  private readonly autoInstantiationCoordinator: AutoInstantiationCoordinator;
   private readonly rootTemplate: Template;
-  private readonly templateInstantiationPipeline: TemplateGenerationPipeline<TemplateInstantiationPipelineContext>;
-  private readonly projectCreationPipeline: TemplateGenerationPipeline<ProjectCreationPipelineContext>;
+  private readonly templateInstantiationPipeline: PipelineRunner<TemplateInstantiationPipelineContext>;
+  private readonly projectCreationPipeline: PipelineRunner<ProjectCreationPipelineContext>;
 
   constructor(
     private readonly options: GeneratorOptions,
@@ -81,22 +88,22 @@ export class TemplateGenerationSession {
     gitService: GitService,
     pipelineOverrides?: TemplateGenerationPipelineOverrides,
   ) {
-    this.generationContext = new GenerationContext(rootTemplate);
-    this.rootTemplate = this.generationContext.getRootTemplate();
-    this.pathResolver = new PathResolver(
+    this.pipelineContext = new TemplatePipelineContext(rootTemplate);
+    this.rootTemplate = this.pipelineContext.getRootTemplate();
+    this.targetPathResolver = new TargetPathResolver(
       this.options.absoluteDestinationPath,
-      this.generationContext,
+      this.pipelineContext,
     );
     this.fileSystem = new RollbackFileSystem();
-    this.fileMaterializer = new FileMaterializer(
-      this.generationContext,
-      this.pathResolver,
+    this.fileMaterializer = new TemplateFileMaterializer(
+      this.pipelineContext,
+      this.targetPathResolver,
       this.fileSystem,
       new HandlebarsEnvironment(),
     );
-    this.sideEffectExecutor = new SideEffectExecutor(
-      this.generationContext,
-      this.pathResolver,
+    this.sideEffectCoordinator = new SideEffectCoordinator(
+      this.pipelineContext,
+      this.targetPathResolver,
       this.fileSystem,
     );
     this.projectSettingsSynchronizer = new ProjectSettingsSynchronizer(
@@ -105,9 +112,9 @@ export class TemplateGenerationSession {
       this.rootTemplate,
     );
     this.gitService = gitService;
-    this.autoInstantiationPlanner = new AutoInstantiationPlanner(
+    this.autoInstantiationCoordinator = new AutoInstantiationCoordinator(
       this.options,
-      this.generationContext,
+      this.pipelineContext,
       this.projectSettingsSynchronizer,
       this.instantiateTemplateInProject.bind(this),
     );
@@ -116,12 +123,12 @@ export class TemplateGenerationSession {
       pipelineOverrides?.instantiateTemplateStages ??
       buildDefaultTemplateInstantiationStages(
         {
-          generationContext: this.generationContext,
+          pipelineContext: this.pipelineContext,
           projectSettingsSynchronizer: this.projectSettingsSynchronizer,
           fileMaterializer: this.fileMaterializer,
-          sideEffectExecutor: this.sideEffectExecutor,
-          autoInstantiationPlanner: this.autoInstantiationPlanner,
-          pathResolver: this.pathResolver,
+          sideEffectCoordinator: this.sideEffectCoordinator,
+          autoInstantiationCoordinator: this.autoInstantiationCoordinator,
+          targetPathResolver: this.targetPathResolver,
         },
         this.options,
         this.projectSettingsSynchronizer.getProjectSettings(),
@@ -137,8 +144,8 @@ export class TemplateGenerationSession {
         {
           projectSettingsSynchronizer: this.projectSettingsSynchronizer,
           fileMaterializer: this.fileMaterializer,
-          sideEffectExecutor: this.sideEffectExecutor,
-          autoInstantiationPlanner: this.autoInstantiationPlanner,
+          sideEffectCoordinator: this.sideEffectCoordinator,
+          autoInstantiationCoordinator: this.autoInstantiationCoordinator,
         },
         this.options,
         this.gitService,
@@ -173,7 +180,7 @@ export class TemplateGenerationSession {
       return result;
     }
 
-    this.generationContext.setCurrentState({
+    this.pipelineContext.setCurrentState({
       template,
       finalSettings: result.data,
       parentInstanceId,
@@ -187,7 +194,7 @@ export class TemplateGenerationSession {
   ): Promise<void> {
     await rollbackManager.rollback();
     this.fileSystem.clearRollbackManager();
-    this.generationContext.clearCurrentState();
+    this.pipelineContext.clearCurrentState();
   }
 
   private async failGeneration<T>(
@@ -349,7 +356,7 @@ export class TemplateGenerationSession {
       }
 
       rollbackManager.clear();
-      this.generationContext.clearCurrentState();
+      this.pipelineContext.clearCurrentState();
 
       return {
         data: {
@@ -413,7 +420,7 @@ export class TemplateGenerationSession {
       return fail(setContextResult);
     }
 
-    const finalSettingsResult = this.generationContext.getFinalSettings();
+    const finalSettingsResult = this.pipelineContext.getFinalSettings();
 
     if ("error" in finalSettingsResult) {
       return fail({ error: "Failed to parse user settings." });
@@ -471,7 +478,7 @@ export class TemplateGenerationSession {
       this.fileSystem.clearRollbackManager();
 
       rollbackManager.clear();
-      this.generationContext.clearCurrentState();
+      this.pipelineContext.clearCurrentState();
     } catch (error) {
       await this.cleanupInstantiationFailure(rollbackManager);
       await cleanupOnFailure();
@@ -557,6 +564,13 @@ export class TemplateGenerationSession {
 }
 
 @injectable()
+/**
+ * DI-friendly entry point that spawns {@link TemplateGenerationSession}s.
+ *
+ * The service itself is thin: it provides git access from the container and
+ * hands back a fully-wired session that drives the pipeline for a specific
+ * template and destination.
+ */
 export class TemplateGeneratorService {
   constructor(
     @inject(GitServiceToken)

@@ -1,17 +1,24 @@
 import { SideEffectFunction } from "@timonteutelink/template-types-lib";
 import fs from "fs-extra";
 import { readFile } from "node:fs/promises";
-import { backendLogger } from "../../lib/logger";
-import { Result } from "../../lib/types";
-import { anyOrCallbackToAny, logError } from "../../lib/utils";
-import { GenerationContext } from "./GenerationContext";
-import { PathResolver } from "./PathResolver";
-import { RollbackFileSystem } from "./RollbackFileSystem";
+import { backendLogger } from "../../../lib/logger";
+import { Result } from "../../../lib/types";
+import { anyOrCallbackToAny, logError } from "../../../lib/utils";
+import { RollbackFileSystem } from "../RollbackFileSystem";
+import { TargetPathResolver } from "./TargetPathResolver";
+import { TemplatePipelineContext } from "./TemplatePipelineContext";
 
-export class SideEffectExecutor {
+/**
+ * Applies side-effect functions after template files are rendered.
+ *
+ * The coordinator resolves the target paths using the current pipeline context
+ * and ensures files are prepared for rollback. It is used as a pipeline stage
+ * to mutate generated files according to template-provided callbacks.
+ */
+export class SideEffectCoordinator {
   constructor(
-    private readonly context: GenerationContext,
-    private readonly pathResolver: PathResolver,
+    private readonly context: TemplatePipelineContext,
+    private readonly pathResolver: TargetPathResolver,
     private readonly fileSystem: RollbackFileSystem,
   ) {}
 
