@@ -6,6 +6,77 @@ export interface PipelineStage<TContext> {
 }
 
 /**
+ * Utility for composing and rearranging pipeline stage sequences.
+ *
+ * Plugins can use the builder to inject, replace, or remove stages without
+ * mutating the original definitions, ensuring custom pipelines remain
+ * predictable and easy to reason about.
+ */
+export class PipelineBuilder<TContext> {
+  private stages: PipelineStage<TContext>[];
+
+  constructor(stages: PipelineStage<TContext>[]) {
+    this.stages = [...stages];
+  }
+
+  public add(stage: PipelineStage<TContext>): this {
+    this.stages.push(stage);
+    return this;
+  }
+
+  public insertBefore(
+    targetStageName: string,
+    stage: PipelineStage<TContext>,
+  ): this {
+    const index = this.stages.findIndex((item) => item.name === targetStageName);
+    if (index === -1) {
+      this.stages.unshift(stage);
+      return this;
+    }
+
+    this.stages.splice(index, 0, stage);
+    return this;
+  }
+
+  public insertAfter(
+    targetStageName: string,
+    stage: PipelineStage<TContext>,
+  ): this {
+    const index = this.stages.findIndex((item) => item.name === targetStageName);
+    if (index === -1) {
+      this.stages.push(stage);
+      return this;
+    }
+
+    this.stages.splice(index + 1, 0, stage);
+    return this;
+  }
+
+  public replace(
+    targetStageName: string,
+    stage: PipelineStage<TContext>,
+  ): this {
+    const index = this.stages.findIndex((item) => item.name === targetStageName);
+    if (index === -1) {
+      this.stages.push(stage);
+      return this;
+    }
+
+    this.stages.splice(index, 1, stage);
+    return this;
+  }
+
+  public remove(targetStageName: string): this {
+    this.stages = this.stages.filter((item) => item.name !== targetStageName);
+    return this;
+  }
+
+  public build(): PipelineStage<TContext>[] {
+    return [...this.stages];
+  }
+}
+
+/**
  * Executes a sequence of pipeline stages while threading context between them.
  *
  * The runner enforces stage ordering and short-circuits on the first failure

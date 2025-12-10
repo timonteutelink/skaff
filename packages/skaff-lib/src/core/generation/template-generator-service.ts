@@ -19,7 +19,11 @@ import {
   ProjectCreationPipelineContext,
   TemplateInstantiationPipelineContext,
 } from "./pipeline/pipeline-stages";
-import { PipelineRunner, PipelineStage } from "./pipeline/pipeline-runner";
+import {
+  PipelineBuilder,
+  PipelineRunner,
+  PipelineStage,
+} from "./pipeline/pipeline-runner";
 import { AutoInstantiationCoordinator } from "./pipeline/AutoInstantiationCoordinator";
 import { TemplateFileMaterializer } from "./pipeline/TemplateFileMaterializer";
 import { TemplatePipelineContext } from "./pipeline/TemplatePipelineContext";
@@ -61,12 +65,45 @@ export interface TemplateGenerationPipelineOverrides {
   projectCreationStages?: PipelineStage<ProjectCreationPipelineContext>[];
 }
 
+export interface TemplatePipelinePluginContext {
+  options: GeneratorOptions;
+  rootTemplate: Template;
+  pipelineContext: TemplatePipelineContext;
+  targetPathResolver: TargetPathResolver;
+  fileMaterializer: TemplateFileMaterializer;
+  sideEffectCoordinator: SideEffectCoordinator;
+  autoInstantiationCoordinator: AutoInstantiationCoordinator;
+  projectSettingsSynchronizer: ProjectSettingsSynchronizer;
+  gitService: GitService;
+}
+
+/**
+ * Plug-in contract for customizing the template generation pipelines.
+ *
+ * Each hook receives a {@link PipelineBuilder} seeded with the default stages
+ * and full access to the core pipeline dependencies so custom steps can be
+ * injected or existing ones swapped out without forking the library.
+ */
+export interface TemplateGenerationPlugin {
+  configureTemplateInstantiationPipeline?(
+    builder: PipelineBuilder<TemplateInstantiationPipelineContext>,
+    context: TemplatePipelinePluginContext,
+  ): void;
+
+  configureProjectCreationPipeline?(
+    builder: PipelineBuilder<ProjectCreationPipelineContext>,
+    context: TemplatePipelinePluginContext,
+  ): void;
+}
+
 /**
  * Orchestrates template and project generation using the pipeline building blocks.
  *
  * The session wires together context tracking, path resolution, rendering,
  * side-effect execution, and auto-instantiation so callers can create new
- * projects or templates with a single entry point.
+ * projects or templates with a single entry point. Plugins can further adjust
+ * the assembled pipelines to add or replace behaviour without duplicating the
+ * orchestration logic.
  */
 export class TemplateGenerationSession {
   private readonly pipelineContext: TemplatePipelineContext;
@@ -80,6 +117,8 @@ export class TemplateGenerationSession {
   private readonly rootTemplate: Template;
   private readonly templateInstantiationPipeline: PipelineRunner<TemplateInstantiationPipelineContext>;
   private readonly projectCreationPipeline: PipelineRunner<ProjectCreationPipelineContext>;
+  private readonly plugins: TemplateGenerationPlugin[];
+  private readonly pluginContext: TemplatePipelinePluginContext;
 
   constructor(
     private readonly options: GeneratorOptions,
@@ -87,7 +126,9 @@ export class TemplateGenerationSession {
     private readonly destinationProjectSettings: ProjectSettings,
     gitService: GitService,
     pipelineOverrides?: TemplateGenerationPipelineOverrides,
+    plugins?: TemplateGenerationPlugin[],
   ) {
+    this.plugins = plugins ?? [];
     this.pipelineContext = new TemplatePipelineContext(rootTemplate);
     this.rootTemplate = this.pipelineContext.getRootTemplate();
     this.targetPathResolver = new TargetPathResolver(
@@ -119,6 +160,18 @@ export class TemplateGenerationSession {
       this.instantiateTemplateInProject.bind(this),
     );
 
+    this.pluginContext = {
+      options: this.options,
+      rootTemplate: this.rootTemplate,
+      pipelineContext: this.pipelineContext,
+      targetPathResolver: this.targetPathResolver,
+      fileMaterializer: this.fileMaterializer,
+      sideEffectCoordinator: this.sideEffectCoordinator,
+      autoInstantiationCoordinator: this.autoInstantiationCoordinator,
+      projectSettingsSynchronizer: this.projectSettingsSynchronizer,
+      gitService: this.gitService,
+    };
+
     const templateInstantiationStages =
       pipelineOverrides?.instantiateTemplateStages ??
       buildDefaultTemplateInstantiationStages(
@@ -134,8 +187,12 @@ export class TemplateGenerationSession {
         this.projectSettingsSynchronizer.getProjectSettings(),
       );
 
-    this.templateInstantiationPipeline = createTemplateInstantiationPipeline(
+    const templateInstantiationBuilder = new PipelineBuilder(
       templateInstantiationStages,
+    );
+    this.applyInstantiationPlugins(templateInstantiationBuilder);
+    this.templateInstantiationPipeline = createTemplateInstantiationPipeline(
+      templateInstantiationBuilder.build(),
     );
 
     const projectCreationStages =
@@ -151,9 +208,30 @@ export class TemplateGenerationSession {
         this.gitService,
       );
 
+    const projectCreationBuilder = new PipelineBuilder(projectCreationStages);
+    this.applyProjectCreationPlugins(projectCreationBuilder);
     this.projectCreationPipeline = createProjectCreationPipeline(
-      projectCreationStages,
+      projectCreationBuilder.build(),
     );
+  }
+
+  private applyInstantiationPlugins(
+    builder: PipelineBuilder<TemplateInstantiationPipelineContext>,
+  ): void {
+    for (const plugin of this.plugins) {
+      plugin.configureTemplateInstantiationPipeline?.(
+        builder,
+        this.pluginContext,
+      );
+    }
+  }
+
+  private applyProjectCreationPlugins(
+    builder: PipelineBuilder<ProjectCreationPipelineContext>,
+  ): void {
+    for (const plugin of this.plugins) {
+      plugin.configureProjectCreationPipeline?.(builder, this.pluginContext);
+    }
   }
 
   private async setTemplateGenerationValues(
@@ -582,6 +660,7 @@ export class TemplateGeneratorService {
     rootTemplate: Template,
     destinationProjectSettings: ProjectSettings,
     pipelineOverrides?: TemplateGenerationPipelineOverrides,
+    plugins?: TemplateGenerationPlugin[],
   ): TemplateGenerationSession {
     return new TemplateGenerationSession(
       options,
@@ -589,6 +668,7 @@ export class TemplateGeneratorService {
       destinationProjectSettings,
       this.gitService,
       pipelineOverrides,
+      plugins,
     );
   }
 }
