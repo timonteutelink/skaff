@@ -1,6 +1,5 @@
 export type {
   UserTemplateSettings,
-  AiResultsObject,
   FinalTemplateSettings,
   StringOrCallback,
   AnyOrCallback,
@@ -15,11 +14,6 @@ export type {
   AllowOverwrite,
   AutoInstantiatedSubtemplate,
   TemplateCommand,
-  LLMTools,
-  AiContext,
-  AiCallbackFunction,
-  AiAutoGenerateSettings,
-  AiUserConversationSettings,
   TemplateConfigModule,
   TemplateMigration,
   TemplateParentReference,

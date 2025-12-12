@@ -11,7 +11,6 @@ declare module "@timonteutelink/template-types-lib" {
     TParentFinalSettings,
     TInputSettingsSchema,
     TFinalSettingsSchema,
-    TAiResultsObject,
     TInputSettings,
     TFinalSettings
   > {

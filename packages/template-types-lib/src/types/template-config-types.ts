@@ -5,7 +5,6 @@ import {
   UserTemplateSettings,
   AnyOrCallback,
   FinalTemplateSettings,
-  AiResultsObject,
 } from "./utils";
 import { ProjectSettings } from "./project-settings-types";
 
@@ -149,47 +148,12 @@ export type TemplateCommand<
   command: StringOrCallback<TFinalSettings>;
 };
 
-export type AiContext = {
-  description: string;
-  relevantFiles?: string[];
-};
-
 export type TemplateParentReference = {
   templateName: string;
   repoUrl?: string;
   versionConstraint?: string;
 };
 
-export type LLMTools = {
-  llm: (input: string) => Promise<string>;
-};
-
-//TODO: Ai settings will go in the tool env vars.
-export type AiCallbackFunction<
-  TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
-> = (
-  llmTools: LLMTools,
-  templateSettings: TFinalSettings,
-) => Promise<Record<string, string>>;
-
-export type AiAutoGenerateSettings<
-  TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
-> = {
-  expectedKeys: AnyOrCallback<TFinalSettings, string[]>;
-  callback: AiCallbackFunction<TFinalSettings>;
-};
-
-export type AiUserConversationSettings<
-  TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
-> = {
-  expectedKeys: AnyOrCallback<TFinalSettings, string[]>;
-
-  expectedResults: AnyOrCallback<TFinalSettings, string[]>;
-
-  prompt: StringOrCallback<TFinalSettings>;
-
-  // tools?
-};
 
 export interface TemplateMigration {
   uuid: string;
@@ -206,7 +170,6 @@ export interface TemplateConfigModule<
   TParentFinalSettings extends FinalTemplateSettings,
   TInputSettingsSchema extends z.ZodObject<UserTemplateSettings>,
   TFinalSettingsSchema extends z.ZodObject<UserTemplateSettings> = TInputSettingsSchema,
-  TAiResultsObject extends AiResultsObject = {},
   TInputSettings extends UserTemplateSettings = z.output<TInputSettingsSchema>,
   TFinalSettings extends FinalTemplateSettings = z.output<TFinalSettingsSchema>
 > {
@@ -241,7 +204,6 @@ export interface TemplateConfigModule<
     fullProjectSettings: ProjectSettings;
     templateSettings: TInputSettings;
     parentSettings?: TParentFinalSettings;
-    aiResults: TAiResultsObject;
   }) => TFinalSettings;
 
   /**
@@ -297,27 +259,6 @@ export interface TemplateConfigModule<
    * A list of commands the user might want to run inside the project. Related to this template. Executed using bash.
    */
   commands?: TemplateCommand<TFinalSettings>[];
-
-  /**
-   * A description of this template. Usefull for the AI.
-   * When instantiating a child template this description will be used to describe the the things this template adds.
-   */
-  aiContext?: AnyOrCallback<TFinalSettings, AiContext>;
-
-  /**
-   * Ai auto generation settings.
-   * This is invoked to add ai generated vars to the template.
-   * Provides the expected keys the ai will produce.
-   * In the template ai_results will be a Record string string where the expected keys are the ones provided here.
-   * These have to be provided to generate the template so this function needs to return these keys.
-   */
-  aiAutoGenerate?: AiAutoGenerateSettings<TFinalSettings>;
-
-  /**
-   * Ai user conversation settings.
-   * These settings are used to start a conversation with the user. After the conversation is resolved the ai will call the final conversation ending tool and the ai should provide the expected keys otherwise generation will fail. Allow the user to retry a conversation if the ai doesnt provide the keys or if the user wants to modify the keys. Show all results to user before actually using the ai generated results in the template. All ai results will also go inside the templateSettings. Bit ugly but otherwise needs to go in a hidden file or a subdir.
-   */
-  aiUserConversationSettings?: AiUserConversationSettings<TFinalSettings>[];
 
   /**
    * Optional references to parent templates that may host this template as a detached subtree.
