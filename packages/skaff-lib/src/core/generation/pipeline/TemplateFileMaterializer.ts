@@ -7,13 +7,13 @@ import { glob } from "glob";
 import { HelperDelegate } from "handlebars";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { backendLogger } from "../../lib/logger";
-import { Result } from "../../lib/types";
-import { anyOrCallbackToAny, logError } from "../../lib/utils";
-import { HandlebarsEnvironment } from "../shared/HandlebarsEnvironment";
-import { GenerationContext } from "./GenerationContext";
-import { PathResolver } from "./PathResolver";
-import { RollbackFileSystem } from "./RollbackFileSystem";
+import { backendLogger } from "../../../lib/logger";
+import { Result } from "../../../lib/types";
+import { anyOrCallbackToAny, logError } from "../../../lib/utils";
+import { HandlebarsEnvironment } from "../../shared/HandlebarsEnvironment";
+import { RollbackFileSystem } from "../RollbackFileSystem";
+import { TargetPathResolver } from "./TargetPathResolver";
+import { TemplatePipelineContext } from "./TemplatePipelineContext";
 
 function isBinaryContent(buffer: Buffer): boolean {
   const length = Math.min(buffer.length, 512);
@@ -36,10 +36,19 @@ function isBinaryContent(buffer: Buffer): boolean {
   return false;
 }
 
-export class FileMaterializer {
+/**
+ * Renders template files into the target path for the current pipeline state.
+ *
+ * The materializer prepares Handlebars helpers/partials, resolves redirects and
+ * overwrite rules, and copies assets to the destination directory tracked by
+ * the {@link TemplatePipelineContext}. It is used by both project creation and
+ * template instantiation stages to ensure file output stays consistent across
+ * pipeline runs.
+ */
+export class TemplateFileMaterializer {
   constructor(
-    private readonly context: GenerationContext,
-    private readonly pathResolver: PathResolver,
+    private readonly context: TemplatePipelineContext,
+    private readonly pathResolver: TargetPathResolver,
     private readonly fileSystem: RollbackFileSystem,
     private readonly handlebars: HandlebarsEnvironment,
   ) {}

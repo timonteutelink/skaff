@@ -11,7 +11,7 @@ sidebar_position: 3
 | `templateConfig`               | Metadata for the template (`name`, `author`, `description`, `multiInstance`, etc.).                                                     |
 | `templateSettingsSchema`       | Zod schema that defines prompts and validation rules. The inferred type drives TypeScript tooling.                                      |
 | `templateFinalSettingsSchema`  | Schema that validates stored settings when Skaff reloads a template or applies migrations.                                              |
-| `mapFinalSettings`             | Modify settings after validation and before rendering. Receives `{ templateSettings, parentSettings, fullProjectSettings, aiResults }`. |
+| `mapFinalSettings`             | Modify settings after validation and before rendering. Receives `{ templateSettings, parentSettings, fullProjectSettings }`. |
 | `targetPath`                   | Absolute or relative path where rendered files are written. Accepts a string or callback.                                               |
 | `autoInstantiatedSubtemplates` | Declare subtemplates to run automatically. Can return a static list or compute it dynamically.                                          |
 | `sideEffects`                  | Apply programmatic edits to existing files. Each entry supplies a `filePath` and an `apply` function.                                   |
@@ -23,4 +23,4 @@ sidebar_position: 3
 | `handlebarHelpers`             | Register additional Handlebars helpers before rendering templates.                                                                      |
 | `assertions`                   | Fail generation early if a predicate returns `false` (for example, when prerequisites are missing).                                     |
 
-Additional helpers cover AI-assisted settings through `aiAutoGenerate` and `aiUserConversationSettings`, plus caching hints and other utility types. Reference the README for repository-level conventions and release steps.
+Reference the README for repository-level conventions and release steps.

@@ -7,6 +7,7 @@ This package provides the shared TypeScript types and Zod schemas used when auth
 - **`TemplateConfig`** – Strongly typed metadata describing a template (name, author, spec version, etc.).
 - **`TemplateConfigModule`** – The contract every `templateConfig.ts` module implements to expose settings schemas, helpers, and lifecycle hooks.
 - **`projectSettingsSchema`** – Zod schema (with matching `ProjectSettings` type) for validating the generated project's global metadata and instantiated templates.
+- **`TemplatePluginConfig`** – Declares the plugin module specifier, optional export name, and options passed to Skaff's plugin loader when a template opts into plugins.
 
 ## Usage
 
@@ -37,10 +38,27 @@ const templateModule: TemplateConfigModule<
   templateSettingsSchema,
   templateFinalSettingsSchema: templateSettingsSchema,
   mapFinalSettings: ({ templateSettings }) => templateSettings,
+  plugins: [
+    // Base greeter template hook plus CLI and web contributions
+    { module: "@timonteutelink/skaff-plugin-greeter", options: { greeting: "hello" } },
+    "@timonteutelink/skaff-plugin-greeter-cli",
+    "@timonteutelink/skaff-plugin-greeter-web",
+  ],
 };
 
 export default templateModule;
 ```
+
+### Plugin configuration
+
+Template authors can opt into plugins by adding a `plugins` array to the exported `TemplateConfigModule`. Each entry is a
+`TemplatePluginConfig` describing the module specifier (resolved from the template repository's `package.json`), the export to
+load (defaults to `default`), and optional plugin-specific options. The Skaff library exposes a shared loader that the CLI and
+Web UI reuse to import these modules at runtime, ensuring plugins only activate for templates that explicitly list them.
+
+Plugins can also persist namespaced data inside `templateSettings.json` under
+`instantiatedTemplates[].plugins[pluginName]`, letting runtime hooks store and retrieve state without colliding with template
+settings.
 
 ## Template Layout Example
 

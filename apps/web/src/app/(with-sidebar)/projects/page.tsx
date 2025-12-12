@@ -2,6 +2,7 @@
 import {
   retrieveProjects,
   retrieveProjectSearchPaths,
+  retrieveProjectPluginNotices,
 } from "@/app/actions/project";
 import { retrieveTemplates } from "@/app/actions/template";
 import TablePage, { type FieldInfo } from "@/components/general/table-page";
@@ -78,6 +79,9 @@ export default function TemplatesListPage() {
   const [projectSearchPaths, setProjectSearchPaths] = useState<
     { id: string; path: string }[]
   >([]);
+  const [pluginNotices, setPluginNotices] = useState<Record<string, string[]>>(
+    {},
+  );
   const [open, setOpen] = useState(false);
 
   const form = useForm<FormValues>({
@@ -114,6 +118,33 @@ export default function TemplatesListPage() {
       setProjectSearchPaths(paths);
     });
   }, []);
+
+  useEffect(() => {
+    if (!projects.length) {
+      setPluginNotices({});
+      return;
+    }
+
+    let canceled = false;
+
+    Promise.all(
+      projects.map(async (project) => {
+        const notices = await retrieveProjectPluginNotices(project.name);
+        if ("error" in notices || !notices.data) {
+          return [project.name, []] as const;
+        }
+        return [project.name, notices.data.notices] as const;
+      }),
+    ).then((entries) => {
+      if (!canceled) {
+        setPluginNotices(Object.fromEntries(entries));
+      }
+    });
+
+    return () => {
+      canceled = true;
+    };
+  }, [projects]);
 
   const onSubmit = useCallback(
     (values: FormValues) => {
@@ -239,15 +270,43 @@ export default function TemplatesListPage() {
   );
 
   return (
-    <TablePage<ProjectDTO>
-      title="Detected Projects"
-      data={projects}
-      columnMapping={columnMapping}
-      caption="A list of your projects."
-      buttons={createProjectDialog}
-      onClick={(item) => {
-        router.push(`/projects/project?projectRepositoryName=${item.name}`);
-      }}
-    />
+    <div className="space-y-6">
+      <TablePage<ProjectDTO>
+        title="Detected Projects"
+        data={projects}
+        columnMapping={columnMapping}
+        caption="A list of your projects."
+        buttons={createProjectDialog}
+        onClick={(item) => {
+          router.push(`/projects/project?projectRepositoryName=${item.name}`);
+        }}
+      />
+
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold">Plugin notices</h2>
+        {projects.map((project) => {
+          const notices = pluginNotices[project.name] || [];
+          return (
+            <div
+              key={project.name}
+              className="rounded-md border border-border p-4"
+            >
+              <div className="font-medium">{project.name}</div>
+              {notices.length ? (
+                <ul className="list-disc pl-5 text-sm text-muted-foreground">
+                  {notices.map((notice, index) => (
+                    <li key={`${project.name}-${index}`}>{notice}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No plugin notices for this project yet.
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

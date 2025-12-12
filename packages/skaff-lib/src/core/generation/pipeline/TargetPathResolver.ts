@@ -1,12 +1,19 @@
 import path from "node:path";
-import { Result } from "../../lib/types";
-import { stringOrCallbackToString } from "../../lib/utils";
-import { GenerationContext } from "./GenerationContext";
+import { Result } from "../../../lib/types";
+import { stringOrCallbackToString } from "../../../lib/utils";
+import { TemplatePipelineContext } from "./TemplatePipelineContext";
 
-export class PathResolver {
+/**
+ * Resolves template-defined paths relative to the pipeline destination root.
+ *
+ * This resolver prevents templates from escaping the project directory and
+ * centralizes the logic for translating relative target paths into absolute
+ * filesystem locations consumed by later pipeline stages.
+ */
+export class TargetPathResolver {
   constructor(
     private readonly absoluteDestinationPath: string,
-    private readonly context: GenerationContext,
+    private readonly context: TemplatePipelineContext,
   ) {}
 
   public getProjectRoot(): string {

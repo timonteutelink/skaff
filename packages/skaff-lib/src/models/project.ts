@@ -153,7 +153,6 @@ export class Project {
         fullProjectSettings: projectSettings,
         templateSettings: parsedUserSettings.data,
         parentSettings: parentFinalSettings,
-        aiResults: {},
       });
     } catch (error) {
       logError({
@@ -251,7 +250,6 @@ export class Project {
         fullProjectSettings: instantiatedProjectSettings,
         templateSettings: parsedUserProvidedSettingsSchema.data,
         parentSettings: parentSettings,
-        aiResults: {},
       });
     } catch (error) {
       logError({

@@ -14,7 +14,7 @@ import {
   writeNewTemplateToSettings,
 } from "../projects/project-settings-service";
 import { getLatestTemplateMigrationUuid } from "../templates/TemplateMigration";
-import { GeneratorOptions } from "./template-generator-service";
+import { GeneratorOptions } from "./template-generation-types";
 
 export class ProjectSettingsSynchronizer {
   constructor(

@@ -15,6 +15,5 @@ Once the basics are in place, extend templates with the hooks below. Every API i
 | `autoInstantiatedSubtemplates`                  | Add child templates automatically based on parent settings. Supports async callbacks for lookup logic.                                        |
 | `commands`                                      | Surface helpful commands (test, lint, launch) in the CLI and web UI after generation.                                                         |
 | `migrations`                                    | Upgrade stored settings when schemas change. Each migration has a UUID and can depend on a predecessor.                                       |
-| `aiAutoGenerate` / `aiUserConversationSettings` | Optional helpers for LLM-assisted scaffolding. Always provide manual fallbacks for accessibility.                                             |
 
 Check the [TemplateConfig reference](../reference/template-config) for full signatures and additional helpers.
