@@ -29,6 +29,7 @@ import {
   TemplateDTO,
   findTemplate,
 } from "@timonteutelink/skaff-lib/browser";
+import { TemplatePluginSettingsStore } from "@timonteutelink/skaff-lib";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -38,6 +39,10 @@ import {
   JsonFile,
 } from "@/components/general/file-upload-dialog";
 import { ConfirmationDialog } from "@/components/general/confirmation-dialog";
+import {
+  loadWebTemplateStages,
+  type WebPluginStageEntry,
+} from "@/lib/plugins/web-stage-loader";
 
 // TODO: when updating to a new template version we should reiterate all settings of all templates for possible changes. Or we fully automate go directly to diff but require the template to setup sensible defaults for possible new options.
 
@@ -82,6 +87,19 @@ const TemplateInstantiationPage: React.FC = () => {
   const [appliedDiff, setAppliedDiff] = useState<ParsedFile[] | null>(null);
   const [storedFormData, setStoredFormData] =
     useState<UserTemplateSettings | null>(null);
+  const [pluginStages, setPluginStages] = useState<WebPluginStageEntry[]>([]);
+  const [stageState, setStageState] = useState<Record<string, unknown>>({});
+  const [beforeStageIndex, setBeforeStageIndex] = useState(0);
+  const [afterStageIndex, setAfterStageIndex] = useState(0);
+  const [flowPhase, setFlowPhase] = useState<
+    "before" | "form" | "after"
+  >("before");
+  const [pendingSettings, setPendingSettings] =
+    useState<UserTemplateSettings | null>(null);
+  const pluginSettingsStore = useMemo(
+    () => (project ? new TemplatePluginSettingsStore(project.settings) : null),
+    [project],
+  );
 
   useEffect(() => {
     if (!projectRepositoryNameParam) {
@@ -241,7 +259,93 @@ const TemplateInstantiationPage: React.FC = () => {
     return findTemplate(rootTemplate, templateNameParam);
   }, [rootTemplate, templateNameParam]);
 
-  const handleSubmitSettings = useCallback(
+  useEffect(() => {
+    let canceled = false;
+    if (!subTemplate || "error" in subTemplate || !subTemplate.data) {
+      setPluginStages([]);
+      setStageState({});
+      setFlowPhase("form");
+      return;
+    }
+
+    loadWebTemplateStages(subTemplate.data).then((stages) => {
+      if (canceled) return;
+      setPluginStages(stages);
+      setStageState({});
+      setBeforeStageIndex(0);
+      setAfterStageIndex(0);
+      setFlowPhase("before");
+    });
+
+    return () => {
+      canceled = true;
+    };
+  }, [subTemplate]);
+
+  const stageKey = useCallback(
+    (entry: WebPluginStageEntry) =>
+      entry.stage.stateKey ?? `${entry.pluginName}:${entry.stage.id}`,
+    [],
+  );
+
+  const beforeStages = useMemo(
+    () => pluginStages.filter((entry) => entry.stage.placement === "before-settings"),
+    [pluginStages],
+  );
+  const afterStages = useMemo(
+    () => pluginStages.filter((entry) => entry.stage.placement === "after-settings"),
+    [pluginStages],
+  );
+
+  const buildStageContext = useCallback(
+    (
+      entry: WebPluginStageEntry,
+      currentSettings: UserTemplateSettings | null,
+    ) => ({
+      templateName: templateNameParam ?? "",
+      projectRepositoryName: projectRepositoryNameParam ?? undefined,
+      currentSettings,
+      pluginSettings: pluginSettingsStore ?? undefined,
+      stageState: stageState[stageKey(entry)],
+    }),
+    [
+      pluginSettingsStore,
+      projectRepositoryNameParam,
+      stageKey,
+      stageState,
+      templateNameParam,
+    ],
+  );
+
+  const updateStageState = useCallback((key: string, value: unknown) => {
+    setStageState((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  const ensureBeforeStage = useCallback(
+    async (startIndex = 0) => {
+      let cursor = startIndex;
+      while (cursor < beforeStages.length) {
+        const entry = beforeStages[cursor]!;
+        const context = buildStageContext(entry, null);
+        const skip = await entry.stage.shouldSkip?.(context);
+
+        if (!skip) {
+          setBeforeStageIndex(cursor);
+          setFlowPhase("before");
+          return;
+        }
+        cursor += 1;
+      }
+      setFlowPhase("form");
+    },
+    [beforeStages, buildStageContext],
+  );
+
+  useEffect(() => {
+    void ensureBeforeStage(0);
+  }, [ensureBeforeStage]);
+
+  const processSettingsSubmission = useCallback(
     async (data: UserTemplateSettings) => {
       if (
         !projectRepositoryNameParam ||
@@ -388,6 +492,55 @@ const TemplateInstantiationPage: React.FC = () => {
       existingTemplateInstanceIdParam,
     ],
   );
+
+  const ensureAfterStage = useCallback(
+    async (startIndex: number, settings: UserTemplateSettings) => {
+      let cursor = startIndex;
+      while (cursor < afterStages.length) {
+        const entry = afterStages[cursor]!;
+        const context = buildStageContext(entry, settings);
+        const skip = await entry.stage.shouldSkip?.(context);
+
+        if (!skip) {
+          setAfterStageIndex(cursor);
+          setFlowPhase("after");
+          return;
+        }
+
+        cursor += 1;
+      }
+
+      setPendingSettings(null);
+      setFlowPhase("form");
+      await processSettingsSubmission(settings);
+    },
+    [afterStages, buildStageContext, processSettingsSubmission],
+  );
+
+  const startAfterStages = useCallback(
+    async (data: UserTemplateSettings) => {
+      setStoredFormData(data);
+      setPendingSettings(data);
+
+      if (afterStages.length === 0) {
+        await processSettingsSubmission(data);
+        setPendingSettings(null);
+        return;
+      }
+
+      await ensureAfterStage(0, data);
+    },
+    [afterStages, ensureAfterStage, processSettingsSubmission],
+  );
+
+  const handleBeforeContinue = useCallback(() => {
+    void ensureBeforeStage(beforeStageIndex + 1);
+  }, [beforeStageIndex, ensureBeforeStage]);
+
+  const handleAfterContinue = useCallback(() => {
+    if (!pendingSettings) return;
+    void ensureAfterStage(afterStageIndex + 1, pendingSettings);
+  }, [afterStageIndex, ensureAfterStage, pendingSettings]);
 
   const handleConfirmAppliedDiff = useCallback(
     async (commitMessage: string) => {
@@ -628,6 +781,48 @@ const TemplateInstantiationPage: React.FC = () => {
     );
   }
 
+  if (flowPhase === "before" && beforeStages[beforeStageIndex]) {
+    const entry = beforeStages[beforeStageIndex]!;
+    const key = stageKey(entry);
+
+    return (
+      <div className="container py-4 mx-auto">
+        {entry.stage.render({
+          templateName: templateNameParam ?? "",
+          projectRepositoryName: projectRepositoryNameParam ?? undefined,
+          currentSettings: storedFormData,
+          pluginSettings: pluginSettingsStore ?? undefined,
+          stageState: stageState[key],
+          setStageState: (value) => updateStageState(key, value),
+          onContinue: handleBeforeContinue,
+        })}
+      </div>
+    );
+  }
+
+  if (
+    flowPhase === "after" &&
+    afterStages[afterStageIndex] &&
+    pendingSettings
+  ) {
+    const entry = afterStages[afterStageIndex]!;
+    const key = stageKey(entry);
+
+    return (
+      <div className="container py-4 mx-auto">
+        {entry.stage.render({
+          templateName: templateNameParam ?? "",
+          projectRepositoryName: projectRepositoryNameParam ?? undefined,
+          currentSettings: pendingSettings,
+          pluginSettings: pluginSettingsStore ?? undefined,
+          stageState: stageState[key],
+          setStageState: (value) => updateStageState(key, value),
+          onContinue: handleAfterContinue,
+        })}
+      </div>
+    );
+  }
+
   if (appliedDiff) {
     return (
       <div className="container py-4 mx-auto">
@@ -740,7 +935,7 @@ const TemplateInstantiationPage: React.FC = () => {
           subTemplate.data.config.templateSettingsSchema
         }
         formDefaultValues={templateSettingsDefaultValues}
-        action={handleSubmitSettings}
+        action={startAfterStages}
         cancel={() => {
           router.push(
             `/projects/${projectRepositoryNameParam && !selectedDirectoryIdParam ? `project/?projectRepositoryName=${projectRepositoryNameParam}` : ""}`,

@@ -11,7 +11,7 @@ import { isSubset } from "../../../utils/shared-utils";
 import type { Template } from "../../../models/template";
 import { makeDir } from "../../infra/file-service";
 import type { GitService } from "../../infra/git-service";
-import type { GeneratorOptions } from "../template-generator-service";
+import type { GeneratorOptions } from "../template-generation-types";
 import type { ProjectSettingsSynchronizer } from "../ProjectSettingsSynchronizer";
 import type { AutoInstantiationCoordinator } from "./AutoInstantiationCoordinator";
 import type { PipelineStage } from "./pipeline-runner";

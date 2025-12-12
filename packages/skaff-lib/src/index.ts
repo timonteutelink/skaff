@@ -36,6 +36,14 @@ export {
   SideEffectCoordinator,
   AutoInstantiationCoordinator,
 } from "./core/generation/pipeline";
+export {
+  GeneratorOptions,
+  TemplateGenerationPipelineOverrides,
+  TemplateGenerationPlugin,
+  TemplatePipelinePluginContext,
+  TemplatePluginEntrypoint,
+} from "./core/generation/template-generation-types";
+export * from "./core/plugins";
 
 export { findTemplate, projectSearchPathKey } from "./utils/shared-utils";
 export { CacheService, resolveCacheService } from "./core/infra/cache-service";

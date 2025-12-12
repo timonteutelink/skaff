@@ -154,6 +154,22 @@ export type TemplateParentReference = {
   versionConstraint?: string;
 };
 
+export type TemplatePluginConfig = {
+  /** Module specifier that resolves from the template repository. */
+  module: string;
+
+  /**
+   * Optional named export to use instead of the module's default export.
+   * When omitted, the default export is treated as the plugin entry.
+   */
+  exportName?: string;
+
+  /**
+   * Arbitrary configuration passed to the plugin factory (if it exposes one).
+   */
+  options?: unknown;
+};
+
 
 export interface TemplateMigration {
   uuid: string;
@@ -264,4 +280,9 @@ export interface TemplateConfigModule<
    * Optional references to parent templates that may host this template as a detached subtree.
    */
   possibleParentTemplates?: TemplateParentReference[];
+
+  /**
+   * Optional plugins that should participate when this template is generated.
+   */
+  plugins?: TemplatePluginConfig[];
 }

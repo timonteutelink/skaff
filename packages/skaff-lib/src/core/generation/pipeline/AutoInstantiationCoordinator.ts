@@ -6,7 +6,7 @@ import {
 import { backendLogger } from "../../../lib/logger";
 import { Result } from "../../../lib/types";
 import { anyOrCallbackToAny, cloneValue } from "../../../lib/utils";
-import { GeneratorOptions } from "../template-generator-service";
+import { GeneratorOptions } from "../template-generation-types";
 import { ProjectSettingsSynchronizer } from "../ProjectSettingsSynchronizer";
 import { TemplatePipelineContext } from "./TemplatePipelineContext";
 

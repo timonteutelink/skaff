@@ -12,6 +12,12 @@ import { inject, injectable } from "tsyringe";
 import { GitServiceToken, TemplateGeneratorServiceToken } from "../../di/tokens";
 import type { GitService } from "../infra/git-service";
 import {
+  GeneratorOptions,
+  TemplateGenerationPipelineOverrides,
+  TemplateGenerationPlugin,
+  TemplatePipelinePluginContext,
+} from "./template-generation-types";
+import {
   buildDefaultProjectCreationStages,
   buildDefaultTemplateInstantiationStages,
   createProjectCreationPipeline,
@@ -19,11 +25,7 @@ import {
   ProjectCreationPipelineContext,
   TemplateInstantiationPipelineContext,
 } from "./pipeline/pipeline-stages";
-import {
-  PipelineBuilder,
-  PipelineRunner,
-  PipelineStage,
-} from "./pipeline/pipeline-runner";
+import { PipelineBuilder, PipelineRunner, PipelineStage } from "./pipeline/pipeline-runner";
 import { AutoInstantiationCoordinator } from "./pipeline/AutoInstantiationCoordinator";
 import { TemplateFileMaterializer } from "./pipeline/TemplateFileMaterializer";
 import { TemplatePipelineContext } from "./pipeline/TemplatePipelineContext";
@@ -34,67 +36,8 @@ import { SideEffectCoordinator } from "./pipeline/SideEffectCoordinator";
 import { HandlebarsEnvironment } from "../shared/HandlebarsEnvironment";
 import { Template } from "../../models/template";
 import { FileRollbackManager } from "../shared/FileRollbackManager";
-
-export interface GeneratorOptions {
-  /**
-   * Don't add git.
-   */
-  dontDoGit?: boolean;
-
-  /**
-   * If true, the template generator will not generate the template settings file.
-   * This mode allows subtemplates to be generated but will never save the template settings so after generation is complete all settings are lost.
-   */
-  dontGenerateTemplateSettings?: boolean;
-
-  /**
-   * If true do not auto instantiate child templates. Ignores this field.
-   */
-  dontAutoInstantiate?: boolean;
-
-  /**
-   * The absolute path to the destination directory where the template will be generated.
-   * Should be the root project dir or the directory where the individual template should be stored.
-   * This should be a valid path on the filesystem.
-   */
-  absoluteDestinationPath: string;
-}
-
-export interface TemplateGenerationPipelineOverrides {
-  instantiateTemplateStages?: PipelineStage<TemplateInstantiationPipelineContext>[];
-  projectCreationStages?: PipelineStage<ProjectCreationPipelineContext>[];
-}
-
-export interface TemplatePipelinePluginContext {
-  options: GeneratorOptions;
-  rootTemplate: Template;
-  pipelineContext: TemplatePipelineContext;
-  targetPathResolver: TargetPathResolver;
-  fileMaterializer: TemplateFileMaterializer;
-  sideEffectCoordinator: SideEffectCoordinator;
-  autoInstantiationCoordinator: AutoInstantiationCoordinator;
-  projectSettingsSynchronizer: ProjectSettingsSynchronizer;
-  gitService: GitService;
-}
-
-/**
- * Plug-in contract for customizing the template generation pipelines.
- *
- * Each hook receives a {@link PipelineBuilder} seeded with the default stages
- * and full access to the core pipeline dependencies so custom steps can be
- * injected or existing ones swapped out without forking the library.
- */
-export interface TemplateGenerationPlugin {
-  configureTemplateInstantiationPipeline?(
-    builder: PipelineBuilder<TemplateInstantiationPipelineContext>,
-    context: TemplatePipelinePluginContext,
-  ): void;
-
-  configureProjectCreationPipeline?(
-    builder: PipelineBuilder<ProjectCreationPipelineContext>,
-    context: TemplatePipelinePluginContext,
-  ): void;
-}
+import { loadPluginsForTemplate, type LoadedTemplatePlugin } from "../plugins";
+import { TemplatePluginSettingsStore } from "../plugins/plugin-settings-store";
 
 /**
  * Orchestrates template and project generation using the pipeline building blocks.
@@ -114,10 +57,12 @@ export class TemplateGenerationSession {
   private readonly projectSettingsSynchronizer: ProjectSettingsSynchronizer;
   private readonly gitService: GitService;
   private readonly autoInstantiationCoordinator: AutoInstantiationCoordinator;
+  private readonly pluginSettingsStore: TemplatePluginSettingsStore;
   private readonly rootTemplate: Template;
-  private readonly templateInstantiationPipeline: PipelineRunner<TemplateInstantiationPipelineContext>;
-  private readonly projectCreationPipeline: PipelineRunner<ProjectCreationPipelineContext>;
-  private readonly plugins: TemplateGenerationPlugin[];
+  private readonly templateInstantiationStages: PipelineStage<TemplateInstantiationPipelineContext>[];
+  private readonly projectCreationStages: PipelineStage<ProjectCreationPipelineContext>[];
+  private readonly pluginCache = new Map<string, LoadedTemplatePlugin[]>();
+  private readonly additionalPlugins: TemplateGenerationPlugin[];
   private readonly pluginContext: TemplatePipelinePluginContext;
 
   constructor(
@@ -128,7 +73,7 @@ export class TemplateGenerationSession {
     pipelineOverrides?: TemplateGenerationPipelineOverrides,
     plugins?: TemplateGenerationPlugin[],
   ) {
-    this.plugins = plugins ?? [];
+    this.additionalPlugins = plugins ?? [];
     this.pipelineContext = new TemplatePipelineContext(rootTemplate);
     this.rootTemplate = this.pipelineContext.getRootTemplate();
     this.targetPathResolver = new TargetPathResolver(
@@ -153,6 +98,9 @@ export class TemplateGenerationSession {
       this.rootTemplate,
     );
     this.gitService = gitService;
+    this.pluginSettingsStore = new TemplatePluginSettingsStore(
+      this.projectSettingsSynchronizer.getProjectSettings(),
+    );
     this.autoInstantiationCoordinator = new AutoInstantiationCoordinator(
       this.options,
       this.pipelineContext,
@@ -170,9 +118,10 @@ export class TemplateGenerationSession {
       autoInstantiationCoordinator: this.autoInstantiationCoordinator,
       projectSettingsSynchronizer: this.projectSettingsSynchronizer,
       gitService: this.gitService,
+      pluginSettingsStore: this.pluginSettingsStore,
     };
 
-    const templateInstantiationStages =
+    this.templateInstantiationStages =
       pipelineOverrides?.instantiateTemplateStages ??
       buildDefaultTemplateInstantiationStages(
         {
@@ -187,15 +136,7 @@ export class TemplateGenerationSession {
         this.projectSettingsSynchronizer.getProjectSettings(),
       );
 
-    const templateInstantiationBuilder = new PipelineBuilder(
-      templateInstantiationStages,
-    );
-    this.applyInstantiationPlugins(templateInstantiationBuilder);
-    this.templateInstantiationPipeline = createTemplateInstantiationPipeline(
-      templateInstantiationBuilder.build(),
-    );
-
-    const projectCreationStages =
+    this.projectCreationStages =
       pipelineOverrides?.projectCreationStages ??
       buildDefaultProjectCreationStages(
         {
@@ -207,18 +148,13 @@ export class TemplateGenerationSession {
         this.options,
         this.gitService,
       );
-
-    const projectCreationBuilder = new PipelineBuilder(projectCreationStages);
-    this.applyProjectCreationPlugins(projectCreationBuilder);
-    this.projectCreationPipeline = createProjectCreationPipeline(
-      projectCreationBuilder.build(),
-    );
   }
 
   private applyInstantiationPlugins(
     builder: PipelineBuilder<TemplateInstantiationPipelineContext>,
+    plugins: TemplateGenerationPlugin[],
   ): void {
-    for (const plugin of this.plugins) {
+    for (const plugin of plugins) {
       plugin.configureTemplateInstantiationPipeline?.(
         builder,
         this.pluginContext,
@@ -228,10 +164,60 @@ export class TemplateGenerationSession {
 
   private applyProjectCreationPlugins(
     builder: PipelineBuilder<ProjectCreationPipelineContext>,
+    plugins: TemplateGenerationPlugin[],
   ): void {
-    for (const plugin of this.plugins) {
-      plugin.configureProjectCreationPipeline?.(builder, this.pluginContext);
+    for (const plugin of plugins) {
+      plugin.configureProjectCreationPipeline?.(
+        builder,
+        this.pluginContext,
+      );
     }
+  }
+
+  private createTemplateInstantiationPipeline(
+    plugins: TemplateGenerationPlugin[],
+  ): PipelineRunner<TemplateInstantiationPipelineContext> {
+    const builder = new PipelineBuilder(this.templateInstantiationStages);
+    this.applyInstantiationPlugins(builder, plugins);
+    return createTemplateInstantiationPipeline(builder.build());
+  }
+
+  private createProjectCreationPipeline(
+    plugins: TemplateGenerationPlugin[],
+  ): PipelineRunner<ProjectCreationPipelineContext> {
+    const builder = new PipelineBuilder(this.projectCreationStages);
+    this.applyProjectCreationPlugins(builder, plugins);
+    return createProjectCreationPipeline(builder.build());
+  }
+
+  private async loadGenerationPlugins(
+    template: Template,
+  ): Promise<Result<TemplateGenerationPlugin[]>> {
+    const cached = this.pluginCache.get(template.absoluteDir);
+
+    if (cached) {
+      const cachedPlugins = cached
+        .map((entry) => entry.templatePlugin)
+        .filter((plugin): plugin is TemplateGenerationPlugin => Boolean(plugin));
+      return { data: [...cachedPlugins, ...this.additionalPlugins] };
+    }
+
+    const loaded = await loadPluginsForTemplate(
+      template,
+      this.projectSettingsSynchronizer.getProjectSettings(),
+    );
+
+    if ("error" in loaded) {
+      return loaded;
+    }
+
+    this.pluginCache.set(template.absoluteDir, loaded.data);
+
+    const generationPlugins = loaded.data
+      .map((entry) => entry.templatePlugin)
+      .filter((plugin): plugin is TemplateGenerationPlugin => Boolean(plugin));
+
+    return { data: [...generationPlugins, ...this.additionalPlugins] };
   }
 
   private async setTemplateGenerationValues(
@@ -417,11 +403,19 @@ export class TemplateGenerationSession {
     }
 
     try {
+      const pluginsResult = await this.loadGenerationPlugins(template);
+
+      if ("error" in pluginsResult) {
+        return fail({ error: pluginsResult.error });
+      }
+
+      const pipeline = this.createTemplateInstantiationPipeline(
+        pluginsResult.data,
+      );
+
       this.fileSystem.setRollbackManager(rollbackManager);
 
-      const pipelineResult = await this.templateInstantiationPipeline.run(
-        pipelineContext,
-      );
+      const pipelineResult = await pipeline.run(pipelineContext);
 
       if ("error" in pipelineResult) {
         return fail(pipelineResult);
@@ -543,11 +537,17 @@ export class TemplateGenerationSession {
       this.failGeneration(rollbackManager, cleanupOnFailure, result);
 
     try {
+      const pluginsResult = await this.loadGenerationPlugins(template);
+
+      if ("error" in pluginsResult) {
+        return fail({ error: pluginsResult.error });
+      }
+
+      const pipeline = this.createProjectCreationPipeline(pluginsResult.data);
+
       this.fileSystem.setRollbackManager(rollbackManager);
 
-      const pipelineResult = await this.projectCreationPipeline.run(
-        pipelineContext,
-      );
+      const pipelineResult = await pipeline.run(pipelineContext);
 
       if ("error" in pipelineResult) {
         return fail(pipelineResult);

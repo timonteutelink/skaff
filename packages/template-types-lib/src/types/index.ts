@@ -17,6 +17,7 @@ export type {
   TemplateConfigModule,
   TemplateMigration,
   TemplateParentReference,
+  TemplatePluginConfig,
 } from "./template-config-types";
 
 export type {
