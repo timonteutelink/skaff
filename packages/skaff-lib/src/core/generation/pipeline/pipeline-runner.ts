@@ -1,7 +1,21 @@
 import type { Result } from "../../../lib/types";
 
+export type PipelinePhase = "setup" | "configure" | "run" | "finalize" | "after";
+
+export const DEFAULT_PIPELINE_PHASE_ORDER: PipelinePhase[] = [
+  "setup",
+  "configure",
+  "run",
+  "finalize",
+  "after",
+];
+
 export interface PipelineStage<TContext> {
+  readonly key: string;
   readonly name: string;
+  readonly phase?: PipelinePhase;
+  readonly priority?: number;
+  readonly source?: string;
   run(context: TContext): Promise<Result<TContext>>;
 }
 
@@ -13,66 +27,100 @@ export interface PipelineStage<TContext> {
  * predictable and easy to reason about.
  */
 export class PipelineBuilder<TContext> {
-  private stages: PipelineStage<TContext>[];
+  private stages: Map<string, PipelineStage<TContext>>;
+  private readonly phaseOrder: PipelinePhase[];
 
-  constructor(stages: PipelineStage<TContext>[]) {
-    this.stages = [...stages];
+  constructor(stages: PipelineStage<TContext>[], phaseOrder = DEFAULT_PIPELINE_PHASE_ORDER) {
+    this.stages = new Map();
+    this.phaseOrder = phaseOrder;
+    for (const stage of stages) {
+      this.registerStage(stage);
+    }
+  }
+
+  private registerStage(stage: PipelineStage<TContext>): this {
+    if (this.stages.has(stage.key)) {
+      throw new Error(`Pipeline already contains a stage with key ${stage.key}`);
+    }
+
+    this.stages.set(stage.key, {
+      priority: 0,
+      phase: "run",
+      ...stage,
+    });
+    return this;
   }
 
   public add(stage: PipelineStage<TContext>): this {
-    this.stages.push(stage);
-    return this;
+    return this.registerStage(stage);
   }
 
   public insertBefore(
-    targetStageName: string,
+    targetStageKey: string,
     stage: PipelineStage<TContext>,
   ): this {
-    const index = this.stages.findIndex((item) => item.name === targetStageName);
-    if (index === -1) {
-      this.stages.unshift(stage);
-      return this;
+    const target = this.stages.get(targetStageKey);
+    if (!target) {
+      throw new Error(`Stage ${targetStageKey} not found when inserting before`);
     }
-
-    this.stages.splice(index, 0, stage);
-    return this;
+    return this.registerStage({
+      ...stage,
+      priority: (target.priority ?? 0) - 1,
+      phase: stage.phase ?? target.phase,
+    });
   }
 
   public insertAfter(
-    targetStageName: string,
+    targetStageKey: string,
     stage: PipelineStage<TContext>,
   ): this {
-    const index = this.stages.findIndex((item) => item.name === targetStageName);
-    if (index === -1) {
-      this.stages.push(stage);
-      return this;
+    const target = this.stages.get(targetStageKey);
+    if (!target) {
+      throw new Error(`Stage ${targetStageKey} not found when inserting after`);
     }
-
-    this.stages.splice(index + 1, 0, stage);
-    return this;
+    return this.registerStage({
+      ...stage,
+      priority: (target.priority ?? 0) + 1,
+      phase: stage.phase ?? target.phase,
+    });
   }
 
   public replace(
-    targetStageName: string,
+    targetStageKey: string,
     stage: PipelineStage<TContext>,
   ): this {
-    const index = this.stages.findIndex((item) => item.name === targetStageName);
-    if (index === -1) {
-      this.stages.push(stage);
-      return this;
+    if (stage.key !== targetStageKey) {
+      throw new Error(`Replacement stage key ${stage.key} must match target ${targetStageKey}`);
     }
-
-    this.stages.splice(index, 1, stage);
+    if (!this.stages.has(targetStageKey)) {
+      throw new Error(`Cannot replace missing stage ${targetStageKey}`);
+    }
+    this.stages.set(targetStageKey, {
+      priority: 0,
+      phase: "run",
+      ...stage,
+    });
     return this;
   }
 
-  public remove(targetStageName: string): this {
-    this.stages = this.stages.filter((item) => item.name !== targetStageName);
+  public remove(targetStageKey: string): this {
+    this.stages.delete(targetStageKey);
     return this;
   }
 
   public build(): PipelineStage<TContext>[] {
-    return [...this.stages];
+    const phases = new Map(this.phaseOrder.map((phase, index) => [phase, index] as const));
+    return Array.from(this.stages.values()).sort((a, b) => {
+      const phaseScoreA = phases.get(a.phase ?? "run") ?? this.phaseOrder.length;
+      const phaseScoreB = phases.get(b.phase ?? "run") ?? this.phaseOrder.length;
+      if (phaseScoreA !== phaseScoreB) return phaseScoreA - phaseScoreB;
+
+      const priorityA = a.priority ?? 0;
+      const priorityB = b.priority ?? 0;
+      if (priorityA !== priorityB) return priorityA - priorityB;
+
+      return a.key.localeCompare(b.key);
+    });
   }
 }
 

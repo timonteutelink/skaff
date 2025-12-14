@@ -10,9 +10,11 @@ import type { GenericTemplateConfigModule } from "../src/lib/types";
 import { loadPluginsForTemplate } from "../src/core/plugins";
 import { PipelineBuilder } from "../src/core/generation/pipeline/pipeline-runner";
 
-function stage(name: string) {
+function stage(name: string, priority = 0) {
   return {
+    key: name,
     name,
+    priority,
     async run(context: any) {
       return { data: context };
     },
@@ -80,12 +82,20 @@ describe("plugin loading", () => {
       pluginPath,
       [
         "module.exports = {",
-        "  name: 'test-plugin',",
+        "  manifest: {",
+        "    name: 'test-plugin',",
+        "    version: '0.0.0',",
+        "    capabilities: ['template'],",
+        "    supportedHooks: { template: ['configureTemplateInstantiationPipeline'], cli: [], web: [] },",
+        "    schemas: { additionalTemplateSettings: false, pluginFinalSettings: false },",
+        "  },",
         "  template: ({ options }) => ({",
         "    captured: options,",
         "    configureTemplateInstantiationPipeline(builder) {",
         "      builder.insertAfter('base', {",
+        "        key: 'plugin-stage',",
         "        name: 'plugin-stage',",
+        "        source: 'test-plugin',",
         "        async run(ctx) { return { data: ctx }; }",
         "      });",
         "    },",
@@ -108,7 +118,10 @@ describe("plugin loading", () => {
     const loaded = pluginsResult.data[0]!;
     expect((loaded.templatePlugin as any).captured).toEqual({ flag: true });
 
-    const builder = new PipelineBuilder<any>([stage("base"), stage("final")]);
+    const builder = new PipelineBuilder<any>([
+      stage("base", 0),
+      stage("final", 10),
+    ]);
     pluginsResult.data[0]!.templatePlugin?.configureTemplateInstantiationPipeline?.(
       builder,
       {} as any,
@@ -126,10 +139,17 @@ describe("plugin loading", () => {
       pluginPath,
       [
         "module.exports = {",
-        "  name: 'test-plugin',",
+        "  manifest: {",
+        "    name: 'test-plugin',",
+        "    version: '0.0.0',",
+        "    capabilities: ['template', 'cli', 'web'],",
+        "    supportedHooks: { template: ['configureTemplateInstantiationPipeline'], cli: [], web: [] },",
+        "    schemas: { additionalTemplateSettings: false, pluginFinalSettings: false },",
+        "  },",
         "  template: {",
         "    configureTemplateInstantiationPipeline(builder) {",
         "      builder.add({",
+        "        key: 'touch-settings',",
         "        name: 'touch-settings',",
         "        async run(pipelineCtx) {",
         "          return { data: pipelineCtx };",

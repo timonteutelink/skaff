@@ -37,6 +37,7 @@ import { HandlebarsEnvironment } from "../shared/HandlebarsEnvironment";
 import { Template } from "../../models/template";
 import { FileRollbackManager } from "../shared/FileRollbackManager";
 import { loadPluginsForTemplate, type LoadedTemplatePlugin } from "../plugins";
+import { HelperDelegate } from "handlebars";
 
 /**
  * Orchestrates template and project generation using the pipeline building blocks.
@@ -61,6 +62,7 @@ export class TemplateGenerationSession {
   private readonly projectCreationStages: PipelineStage<ProjectCreationPipelineContext>[];
   private readonly pluginCache = new Map<string, LoadedTemplatePlugin[]>();
   private readonly additionalPlugins: TemplateGenerationPlugin[];
+  private readonly pluginHandlebarHelpers: Record<string, HelperDelegate> = {};
   private readonly pluginContext: TemplatePipelinePluginContext;
 
   constructor(
@@ -84,6 +86,7 @@ export class TemplateGenerationSession {
       this.targetPathResolver,
       this.fileSystem,
       new HandlebarsEnvironment(),
+      () => this.pluginHandlebarHelpers,
     );
     this.sideEffectCoordinator = new SideEffectCoordinator(
       this.pipelineContext,
@@ -107,13 +110,7 @@ export class TemplateGenerationSession {
     this.pluginContext = {
       options: this.options,
       rootTemplate: this.rootTemplate,
-      pipelineContext: this.pipelineContext,
-      targetPathResolver: this.targetPathResolver,
-      fileMaterializer: this.fileMaterializer,
-      sideEffectCoordinator: this.sideEffectCoordinator,
-      autoInstantiationCoordinator: this.autoInstantiationCoordinator,
-      projectSettingsSynchronizer: this.projectSettingsSynchronizer,
-      gitService: this.gitService,
+      registerHandlebarHelpers: this.registerHandlebarHelpers.bind(this),
     };
 
     this.templateInstantiationStages =
@@ -145,6 +142,19 @@ export class TemplateGenerationSession {
       );
   }
 
+  private registerHandlebarHelpers(
+    helpers: Record<string, HelperDelegate>,
+  ): void {
+    for (const [name, helper] of Object.entries(helpers)) {
+      if (this.pluginHandlebarHelpers[name]) {
+        throw new Error(
+          `Handlebars helper ${name} has already been registered by another plugin.`,
+        );
+      }
+      this.pluginHandlebarHelpers[name] = helper;
+    }
+  }
+
   private applyInstantiationPlugins(
     builder: PipelineBuilder<TemplateInstantiationPipelineContext>,
     plugins: TemplateGenerationPlugin[],
@@ -169,12 +179,27 @@ export class TemplateGenerationSession {
     }
   }
 
+  private logPipeline(
+    kind: "template-instantiation" | "project-creation",
+    stages: PipelineStage<any>[],
+  ): void {
+    const sequence = stages
+      .map(
+        (stage) =>
+          `${stage.key}@${stage.phase ?? "run"}#${stage.priority ?? 0} (${stage.source ?? "unknown"})`,
+      )
+      .join(" -> ");
+    backendLogger.info(`Composed ${kind} pipeline: ${sequence}`);
+  }
+
   private createTemplateInstantiationPipeline(
     plugins: TemplateGenerationPlugin[],
   ): PipelineRunner<TemplateInstantiationPipelineContext> {
     const builder = new PipelineBuilder(this.templateInstantiationStages);
     this.applyInstantiationPlugins(builder, plugins);
-    return createTemplateInstantiationPipeline(builder.build());
+    const stages = builder.build();
+    this.logPipeline("template-instantiation", stages);
+    return createTemplateInstantiationPipeline(stages);
   }
 
   private createProjectCreationPipeline(
@@ -182,7 +207,9 @@ export class TemplateGenerationSession {
   ): PipelineRunner<ProjectCreationPipelineContext> {
     const builder = new PipelineBuilder(this.projectCreationStages);
     this.applyProjectCreationPlugins(builder, plugins);
-    return createProjectCreationPipeline(builder.build());
+    const stages = builder.build();
+    this.logPipeline("project-creation", stages);
+    return createProjectCreationPipeline(stages);
   }
 
   private async loadTemplatePlugins(

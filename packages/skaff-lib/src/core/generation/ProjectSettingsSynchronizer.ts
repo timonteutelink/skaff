@@ -22,7 +22,7 @@ function allowPluginTemplateSettings(
   templateSettingsSchema: z.ZodObject<any>,
 ): z.ZodObject<any> {
   const pluginShape = z.object({
-    plugins: z.record(z.string(), z.unknown()).optional(),
+    plugins: z.object({}).strict().optional(),
   });
 
   return templateSettingsSchema.merge(pluginShape);

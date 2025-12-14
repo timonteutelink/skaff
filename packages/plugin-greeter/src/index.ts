@@ -20,7 +20,9 @@ function createGreetingStage(
     "Hello from the greeter plugin!";
 
   return {
+    key: "greeter-greeting",
     name: "greeter-greeting",
+    source: GREETER_PLUGIN_NAME,
     async run(context) {
       // eslint-disable-next-line no-console
       console.log(`👋 ${message}`);
@@ -47,7 +49,20 @@ function createGreeterTemplatePlugin(
 }
 
 const greeterPlugin = {
-  name: GREETER_PLUGIN_NAME,
+  manifest: {
+    name: GREETER_PLUGIN_NAME,
+    version: "0.0.0",
+    capabilities: ["template"],
+    supportedHooks: {
+      template: ["configureTemplateInstantiationPipeline"],
+      cli: [],
+      web: [],
+    },
+    schemas: {
+      additionalTemplateSettings: true,
+      pluginFinalSettings: true,
+    },
+  },
   additionalTemplateSettingsSchema: pluginAdditionalTemplateSettingsSchema,
   pluginFinalSettingsSchema: pluginFinalSettingsSchema.merge(
     z.object({

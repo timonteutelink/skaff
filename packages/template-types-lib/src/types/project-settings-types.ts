@@ -15,7 +15,15 @@ export const instantiatedTemplateSchema = z.object({
   lastMigration: z.string().optional(),
 
   plugins: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
+    .record(
+      z.string(),
+      z
+        .object({
+          version: z.string(),
+          settings: z.unknown(),
+        })
+        .strict(),
+    )
     .optional(),
 });
 

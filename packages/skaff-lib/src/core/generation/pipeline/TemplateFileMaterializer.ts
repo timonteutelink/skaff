@@ -51,6 +51,9 @@ export class TemplateFileMaterializer {
     private readonly pathResolver: TargetPathResolver,
     private readonly fileSystem: RollbackFileSystem,
     private readonly handlebars: HandlebarsEnvironment,
+    private readonly pluginHelpersProvider?: () =>
+      | Record<string, HelperDelegate>
+      | undefined,
   ) {}
 
   private getRedirects(): Result<RedirectFile[]> {
@@ -98,7 +101,19 @@ export class TemplateFileMaterializer {
       return stateResult;
     }
 
-    return { data: stateResult.data.template.config.handlebarHelpers || {} };
+    const templateHelpers =
+      stateResult.data.template.config.handlebarHelpers || {};
+    const pluginHelpers = this.pluginHelpersProvider?.() ?? {};
+
+    for (const helperName of Object.keys(pluginHelpers)) {
+      if (helperName in templateHelpers) {
+        return {
+          error: `Handlebars helper ${helperName} is already defined by the template and cannot be overridden by a plugin.`,
+        };
+      }
+    }
+
+    return { data: { ...pluginHelpers, ...templateHelpers } };
   }
 
   private registerHandlebarHelpers(

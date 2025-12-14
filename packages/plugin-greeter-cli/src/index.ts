@@ -27,13 +27,15 @@ const greeterCliCommand: PluginCliCommand = {
       (entry) => entry.id === targetInstanceId,
     );
 
-    const state = targetInstance?.plugins?.[GREETER_PLUGIN_NAME];
+    const pluginState = targetInstance?.plugins?.[GREETER_PLUGIN_NAME];
+    const persistedMessage = (pluginState?.settings as { message?: string } | undefined)
+      ?.message;
 
     // eslint-disable-next-line no-console
     console.log(
       `👋 Hello from greeter for instance ${targetInstanceId} at ${
         projectPath ?? ""
-      }.${state?.message ? ` Stored message: ${state.message}` : ""}`,
+      }.${persistedMessage ? ` Stored message: ${persistedMessage}` : ""}`,
     );
   },
 };
@@ -71,7 +73,12 @@ const greeterCliContribution: CliPluginContribution = {
 };
 
 const greeterCliPlugin = {
-  name: GREETER_PLUGIN_NAME,
+  manifest: {
+    name: GREETER_PLUGIN_NAME,
+    version: "0.0.0",
+    capabilities: ["cli"],
+    supportedHooks: { template: [], cli: [], web: [] },
+  },
   cli: greeterCliContribution,
 };
 

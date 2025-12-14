@@ -1,17 +1,11 @@
 import { ProjectSettings } from "@timonteutelink/template-types-lib";
 
 import type { Template } from "../templates/Template";
-import type { GitService } from "../infra/git-service";
 import type {
   ProjectCreationPipelineContext,
   TemplateInstantiationPipelineContext,
 } from "./pipeline/pipeline-stages";
-import { TemplatePipelineContext } from "./pipeline/TemplatePipelineContext";
-import { TargetPathResolver } from "./pipeline/TargetPathResolver";
-import { TemplateFileMaterializer } from "./pipeline/TemplateFileMaterializer";
-import { SideEffectCoordinator } from "./pipeline/SideEffectCoordinator";
-import { AutoInstantiationCoordinator } from "./pipeline/AutoInstantiationCoordinator";
-import { ProjectSettingsSynchronizer } from "./ProjectSettingsSynchronizer";
+import { HelperDelegate } from "handlebars";
 import type { PipelineBuilder, PipelineStage } from "./pipeline/pipeline-runner";
 
 export interface GeneratorOptions {
@@ -48,13 +42,7 @@ export interface TemplateGenerationPipelineOverrides {
 export interface TemplatePipelinePluginContext {
   options: GeneratorOptions;
   rootTemplate: Template;
-  pipelineContext: TemplatePipelineContext;
-  targetPathResolver: TargetPathResolver;
-  fileMaterializer: TemplateFileMaterializer;
-  sideEffectCoordinator: SideEffectCoordinator;
-  autoInstantiationCoordinator: AutoInstantiationCoordinator;
-  projectSettingsSynchronizer: ProjectSettingsSynchronizer;
-  gitService: GitService;
+  registerHandlebarHelpers: (helpers: Record<string, HelperDelegate>) => void;
 }
 
 /**

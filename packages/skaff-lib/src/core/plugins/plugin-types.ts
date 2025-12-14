@@ -15,6 +15,43 @@ import type { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { z } from "zod";
 import type React from "react";
 
+export type PluginCapability = "template" | "cli" | "web";
+
+export type TemplateHook =
+  | "configureTemplateInstantiationPipeline"
+  | "configureProjectCreationPipeline";
+
+export const pluginManifestSchema = z.object({
+  name: z
+    .string()
+    .min(1)
+    .regex(/^[a-zA-Z0-9-_.:@/]+$/, "Plugin names must be identifier-like."),
+  version: z
+    .string()
+    .regex(/^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-.]+)?$/, "Version must be semver."),
+  capabilities: z
+    .array(z.enum(["template", "cli", "web"]))
+    .min(1),
+  supportedHooks: z
+    .object({
+      template: z.array(z.enum(["configureTemplateInstantiationPipeline", "configureProjectCreationPipeline"]))
+        .default([]),
+      cli: z.array(z.string()).default([]),
+      web: z.array(z.string()).default([]),
+    })
+    .default({ template: [], cli: [], web: [] }),
+  schemas: z
+    .object({
+      systemSettings: z.boolean().optional(),
+      additionalTemplateSettings: z.boolean().optional(),
+      pluginFinalSettings: z.boolean().optional(),
+    })
+    .optional(),
+  requiredSettingsKeys: z.array(z.string()).optional(),
+});
+
+export type PluginManifest = z.infer<typeof pluginManifestSchema>;
+
 export interface PluginCommandHandlerContext {
   argv: string[];
   projectPath?: string;
@@ -104,7 +141,7 @@ export interface CliTemplateStage {
 }
 
 export interface SkaffPluginModule {
-  name?: string;
+  manifest: PluginManifest;
   /**
    * Optional plugin-scoped configuration schemas.
    */
@@ -125,6 +162,8 @@ export interface LoadedTemplatePlugin {
   reference: NormalizedTemplatePluginConfig;
   module: SkaffPluginModule;
   name: string;
+  version: string;
+  requiredSettingsKeys?: string[];
   systemSettings?: PluginSystemSettings;
   additionalTemplateSettingsSchema?: z.ZodType<PluginAdditionalTemplateSettings>;
   pluginFinalSettingsSchema?: z.ZodType<PluginFinalSettings>;

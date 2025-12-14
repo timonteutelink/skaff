@@ -10,11 +10,14 @@ import {
   SkaffPluginModule,
   WebPluginContribution,
   normalizeTemplatePlugins,
+  PluginManifest,
+  pluginManifestSchema,
 } from "./plugin-types";
 import {
   TemplateGenerationPlugin,
   TemplateGenerationPluginFactory,
 } from "../generation/template-generation-types";
+import { z } from "zod";
 
 function isTemplateGenerationPlugin(value: unknown): value is TemplateGenerationPlugin {
   if (!value || typeof value !== "object") return false;
@@ -26,14 +29,8 @@ function isTemplateGenerationPlugin(value: unknown): value is TemplateGeneration
 }
 
 function coerceToPluginModule(entry: unknown): SkaffPluginModule | null {
-  if (!entry) return null;
-  if (isTemplateGenerationPlugin(entry)) {
-    return { template: entry } satisfies SkaffPluginModule;
-  }
-  if (typeof entry === "function") {
-    return { template: entry as TemplateGenerationPluginFactory };
-  }
-  if (typeof entry === "object") {
+  if (!entry || typeof entry !== "object") return null;
+  if ("manifest" in (entry as Record<string, unknown>)) {
     return entry as SkaffPluginModule;
   }
   return null;
@@ -110,6 +107,81 @@ async function importPluginModule(
   }
 }
 
+function validateManifest(
+  manifest: PluginManifest,
+  module: SkaffPluginModule,
+): Result<PluginManifest> {
+  const parsed = pluginManifestSchema.safeParse(manifest);
+
+  if (!parsed.success) {
+    return { error: `Invalid plugin manifest: ${parsed.error}` };
+  }
+
+  const declaresSchema = parsed.data.schemas ?? {};
+
+  if (module.systemSettingsSchema && !declaresSchema.systemSettings) {
+    return {
+      error: `Plugin ${parsed.data.name} must declare systemSettings schema support in its manifest.schemas.systemSettings field when exporting systemSettingsSchema`,
+    };
+  }
+
+  if (
+    module.additionalTemplateSettingsSchema &&
+    !declaresSchema.additionalTemplateSettings
+  ) {
+    return {
+      error: `Plugin ${parsed.data.name} must declare additionalTemplateSettings schema support in its manifest when exporting additionalTemplateSettingsSchema`,
+    };
+  }
+
+  if (module.pluginFinalSettingsSchema && !declaresSchema.pluginFinalSettings) {
+    return {
+      error: `Plugin ${parsed.data.name} must declare pluginFinalSettings schema support in its manifest when exporting pluginFinalSettingsSchema`,
+    };
+  }
+
+  if (
+    parsed.data.requiredSettingsKeys?.length &&
+    (!module.additionalTemplateSettingsSchema || !module.pluginFinalSettingsSchema)
+  ) {
+    return {
+      error: `Plugin ${parsed.data.name} declares required settings keys but does not export both additionalTemplateSettingsSchema and pluginFinalSettingsSchema`,
+    };
+  }
+
+  return { data: parsed.data };
+}
+
+function ensureCapabilities(
+  manifest: PluginManifest,
+  module: SkaffPluginModule,
+): Result<void> {
+  if (module.template && !manifest.capabilities.includes("template")) {
+    return {
+      error: `Plugin ${manifest.name} exposes a template hook but does not declare the 'template' capability in its manifest`,
+    };
+  }
+  if (!module.template && manifest.supportedHooks.template.length) {
+    return {
+      error: `Plugin ${manifest.name} declares template hooks but does not export a template entrypoint`,
+    };
+  }
+
+  if (module.cli && !manifest.capabilities.includes("cli")) {
+    return {
+      error: `Plugin ${manifest.name} exposes CLI contributions but does not declare the 'cli' capability in its manifest`,
+    };
+  }
+
+  if (module.web && !manifest.capabilities.includes("web")) {
+    return {
+      error: `Plugin ${manifest.name} exposes web contributions but does not declare the 'web' capability in its manifest`,
+    };
+  }
+
+  return { data: undefined };
+}
+
 async function readSystemSettings(
   pluginModule: SkaffPluginModule,
   pluginName: string,
@@ -151,17 +223,27 @@ export async function loadPluginsForTemplate(
     const pluginModule = coerceToPluginModule(entry);
     if (!pluginModule) {
       return {
-        error: `Plugin ${reference.module} did not export a usable entry point`,
+        error: `Plugin ${reference.module} did not export a usable entry point with a manifest`,
       };
     }
 
-    const pluginName = pluginModule.name;
+    const manifestResult = validateManifest(
+      pluginModule.manifest,
+      pluginModule,
+    );
 
-    if (!pluginName) {
-      return {
-        error: `Plugin ${reference.module} must provide a name to store settings under plugin.<name>.`,
-      };
+    if ("error" in manifestResult) {
+      return manifestResult;
     }
+
+    const manifest = manifestResult.data;
+    const capabilityCheck = ensureCapabilities(manifest, pluginModule);
+
+    if ("error" in capabilityCheck) {
+      return capabilityCheck;
+    }
+
+    const pluginName = manifest.name;
 
     const systemSettingsResult = await readSystemSettings(pluginModule, pluginName);
 
@@ -185,10 +267,15 @@ export async function loadPluginsForTemplate(
       reference,
       module: pluginModule,
       name: pluginName,
+      version: manifest.version,
+      requiredSettingsKeys: manifest.requiredSettingsKeys,
       systemSettings: systemSettingsResult.data,
       additionalTemplateSettingsSchema:
-        pluginModule.additionalTemplateSettingsSchema,
-      pluginFinalSettingsSchema: pluginModule.pluginFinalSettingsSchema,
+        pluginModule.additionalTemplateSettingsSchema ??
+        (z.object({}).strict() as z.ZodTypeAny),
+      pluginFinalSettingsSchema:
+        pluginModule.pluginFinalSettingsSchema ??
+        (z.object({}).strict() as z.ZodTypeAny),
       getFinalTemplateSettings: pluginModule.getFinalTemplateSettings,
       templatePlugin,
       cliPlugin,

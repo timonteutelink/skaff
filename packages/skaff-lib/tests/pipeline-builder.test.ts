@@ -6,9 +6,15 @@ import {
 
 type TraceContext = string[];
 
-function stage(name: string): PipelineStage<TraceContext> {
+function stage(
+  name: string,
+  priority = 0,
+  key: string = name,
+): PipelineStage<TraceContext> {
   return {
+    key,
     name,
+    priority,
     async run(context) {
       return { data: [...context, name] };
     },
@@ -18,13 +24,13 @@ function stage(name: string): PipelineStage<TraceContext> {
 describe("PipelineBuilder", () => {
   it("reorders pipelines without mutating the originals", async () => {
     const builder = new PipelineBuilder<TraceContext>([
-      stage("first"),
-      stage("third"),
+      stage("first", 0),
+      stage("third", 20),
     ]);
 
     builder.insertBefore("third", stage("second"));
     builder.insertAfter("third", stage("after-third"));
-    builder.replace("first", stage("start"));
+    builder.replace("first", stage("start", 0, "first"));
     builder.remove("after-third");
 
     const runner = new PipelineRunner(builder.build());
@@ -33,18 +39,17 @@ describe("PipelineBuilder", () => {
     expect(result).toEqual({ data: ["start", "second", "third"] });
   });
 
-  it("falls back to appending stages when anchors are missing", () => {
+  it("throws for missing anchors to keep ordering explicit", () => {
     const builder = new PipelineBuilder<TraceContext>([stage("base")]);
 
-    builder.insertBefore("missing", stage("before"));
-    builder.insertAfter("missing", stage("after"));
-    builder.replace("unknown", stage("replacement"));
-
-    expect(builder.build().map((item) => item.name)).toEqual([
-      "before",
-      "base",
-      "after",
-      "replacement",
-    ]);
+    expect(() => builder.insertBefore("missing", stage("before"))).toThrow(
+      /not found when inserting before/,
+    );
+    expect(() => builder.insertAfter("missing", stage("after"))).toThrow(
+      /not found when inserting after/,
+    );
+    expect(() => builder.replace("unknown", stage("replacement", 0, "unknown"))).toThrow(
+      /Cannot replace missing stage/,
+    );
   });
 });

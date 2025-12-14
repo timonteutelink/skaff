@@ -1,12 +1,12 @@
 import { z } from "zod";
 
-export const pluginSystemSettingsSchema = z.object({}).passthrough();
+export const pluginSystemSettingsSchema = z.object({}).strict();
 
 export const pluginAdditionalTemplateSettingsSchema = z
   .object({})
-  .passthrough();
+  .strict();
 
-export const pluginFinalSettingsSchema = z.object({}).passthrough();
+export const pluginFinalSettingsSchema = z.object({}).strict();
 
 export type PluginSystemSettings = z.infer<typeof pluginSystemSettingsSchema>;
 export type PluginAdditionalTemplateSettings = z.infer<

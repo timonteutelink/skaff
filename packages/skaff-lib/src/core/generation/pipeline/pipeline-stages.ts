@@ -14,7 +14,7 @@ import type { GitService } from "../../infra/git-service";
 import type { GeneratorOptions } from "../template-generation-types";
 import type { ProjectSettingsSynchronizer } from "../ProjectSettingsSynchronizer";
 import type { AutoInstantiationCoordinator } from "./AutoInstantiationCoordinator";
-import type { PipelineStage } from "./pipeline-runner";
+import type { PipelinePhase, PipelineStage } from "./pipeline-runner";
 import { PipelineRunner } from "./pipeline-runner";
 import type { SideEffectCoordinator } from "./SideEffectCoordinator";
 import type { TargetPathResolver } from "./TargetPathResolver";
@@ -62,7 +62,11 @@ export const createProjectCreationPipeline = (
 export class ContextSetupStage
   implements PipelineStage<TemplateInstantiationPipelineContext>
 {
+  public readonly key = "context-setup";
   public readonly name = "context-setup";
+  public readonly phase: PipelinePhase = "setup";
+  public readonly priority = 10;
+  public readonly source = "core";
 
   constructor(
     private readonly pipelineContext: TemplatePipelineContext,
@@ -118,7 +122,11 @@ export class ContextSetupStage
 export class TemplateValidationStage
   implements PipelineStage<TemplateInstantiationPipelineContext>
 {
+  public readonly key = "template-validation";
   public readonly name = "template-validation";
+  public readonly phase: PipelinePhase = "configure";
+  public readonly priority = 20;
+  public readonly source = "core";
 
   constructor(private readonly projectSettings: ProjectSettings) { }
 
@@ -198,7 +206,11 @@ export class TemplateValidationStage
 export class RenderStage
   implements PipelineStage<TemplateInstantiationPipelineContext>
 {
+  public readonly key = "render";
   public readonly name = "render";
+  public readonly phase: PipelinePhase = "run";
+  public readonly priority = 30;
+  public readonly source = "core";
 
   constructor(private readonly fileMaterializer: TemplateFileMaterializer) { }
 
@@ -224,7 +236,11 @@ export class RenderStage
 export class SideEffectsStage
   implements PipelineStage<TemplateInstantiationPipelineContext>
 {
+  public readonly key = "side-effects";
   public readonly name = "side-effects";
+  public readonly phase: PipelinePhase = "run";
+  public readonly priority = 40;
+  public readonly source = "core";
 
   constructor(private readonly sideEffectCoordinator: SideEffectCoordinator) { }
 
@@ -250,7 +266,11 @@ export class SideEffectsStage
 export class PersistTemplateSettingsStage
   implements PipelineStage<TemplateInstantiationPipelineContext>
 {
+  public readonly key = "persist-template-settings";
   public readonly name = "persist-template-settings";
+  public readonly phase: PipelinePhase = "finalize";
+  public readonly priority = 50;
+  public readonly source = "core";
 
   constructor(
     private readonly projectSettingsSynchronizer: ProjectSettingsSynchronizer,
@@ -290,7 +310,11 @@ export class PersistTemplateSettingsStage
 export class AutoInstantiationStage
   implements PipelineStage<TemplateInstantiationPipelineContext>
 {
+  public readonly key = "auto-instantiation";
   public readonly name = "auto-instantiation";
+  public readonly phase: PipelinePhase = "after";
+  public readonly priority = 60;
+  public readonly source = "core";
 
   constructor(private readonly autoInstantiationCoordinator: AutoInstantiationCoordinator) { }
 
@@ -335,7 +359,11 @@ export class AutoInstantiationStage
 export class TargetPathStage
   implements PipelineStage<TemplateInstantiationPipelineContext>
 {
+  public readonly key = "target-path";
   public readonly name = "target-path";
+  public readonly phase: PipelinePhase = "after";
+  public readonly priority = 70;
+  public readonly source = "core";
 
   constructor(
     private readonly targetPathResolver: TargetPathResolver,
@@ -374,7 +402,11 @@ export class TargetPathStage
 export class ProjectSetupStage
   implements PipelineStage<ProjectCreationPipelineContext>
 {
+  public readonly key = "project-setup";
   public readonly name = "project-setup";
+  public readonly phase: PipelinePhase = "setup";
+  public readonly priority = 10;
+  public readonly source = "core";
 
   constructor(
     private readonly options: GeneratorOptions,
@@ -453,7 +485,11 @@ export class ProjectSetupStage
 export class ProjectRenderingStage
   implements PipelineStage<ProjectCreationPipelineContext>
 {
+  public readonly key = "project-render";
   public readonly name = "project-render";
+  public readonly phase: PipelinePhase = "run";
+  public readonly priority = 30;
+  public readonly source = "core";
 
   constructor(private readonly fileMaterializer: TemplateFileMaterializer) { }
 
@@ -479,7 +515,11 @@ export class ProjectRenderingStage
 export class ProjectSideEffectsStage
   implements PipelineStage<ProjectCreationPipelineContext>
 {
+  public readonly key = "project-side-effects";
   public readonly name = "project-side-effects";
+  public readonly phase: PipelinePhase = "run";
+  public readonly priority = 40;
+  public readonly source = "core";
 
   constructor(private readonly sideEffectCoordinator: SideEffectCoordinator) { }
 
@@ -505,7 +545,11 @@ export class ProjectSideEffectsStage
 export class ProjectAutoInstantiationStage
   implements PipelineStage<ProjectCreationPipelineContext>
 {
+  public readonly key = "project-auto-instantiation";
   public readonly name = "project-auto-instantiation";
+  public readonly phase: PipelinePhase = "after";
+  public readonly priority = 60;
+  public readonly source = "core";
 
   constructor(private readonly autoInstantiationCoordinator: AutoInstantiationCoordinator) { }
 

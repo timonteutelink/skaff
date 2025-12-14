@@ -83,7 +83,12 @@ const greeterWebContribution: WebPluginContribution = {
 };
 
 const greeterWebPlugin = {
-  name: GREETER_PLUGIN_NAME,
+  manifest: {
+    name: GREETER_PLUGIN_NAME,
+    version: "0.0.0",
+    capabilities: ["web"],
+    supportedHooks: { template: [], cli: [], web: [] },
+  },
   web: greeterWebContribution,
 };
 

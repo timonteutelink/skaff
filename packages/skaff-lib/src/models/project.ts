@@ -69,17 +69,17 @@ function buildPluginTemplateSettingsSchema(
   plugins?: LoadedTemplatePlugin[],
 ): z.ZodTypeAny {
   if (!plugins?.length) {
-    return z.record(z.string(), z.unknown()).optional();
+    return z.object({}).strict().optional();
   }
 
   const shape: Record<string, z.ZodTypeAny> = {};
 
   for (const plugin of plugins) {
     shape[plugin.name] =
-      plugin.additionalTemplateSettingsSchema ?? z.object({}).passthrough();
+      plugin.additionalTemplateSettingsSchema ?? z.object({}).strict();
   }
 
-  return z.object(shape).partial();
+  return z.object(shape).partial().strict();
 }
 
 export class Project {
@@ -201,19 +201,21 @@ export class Project {
       };
     }
 
-    const pluginFinalSettings: Record<string, unknown> = {};
+    const pluginFinalSettings: Record<
+      string,
+      { version: string; settings: unknown }
+    > = {};
 
     if (options?.plugins?.length) {
       for (const plugin of options.plugins) {
-        const rawPluginSettings = (parsedUserSettings.data.plugins?.[
+        const rawPluginSettings = parsedUserSettings.data.plugins?.[
           plugin.name
-        ] ?? {}) as unknown;
+        ];
 
         const additionalSchema =
-          plugin.additionalTemplateSettingsSchema ??
-          z.object({}).passthrough();
+          plugin.additionalTemplateSettingsSchema ?? z.object({}).strict();
         const parsedPluginSettings = additionalSchema.safeParse(
-          rawPluginSettings,
+          rawPluginSettings ?? {},
         );
 
         if (!parsedPluginSettings.success) {
@@ -238,19 +240,19 @@ export class Project {
           }
         }
 
-        if (plugin.pluginFinalSettingsSchema) {
-          const parsed = plugin.pluginFinalSettingsSchema.safeParse(
-            pluginFinalSettingsValue,
-          );
-          if (!parsed.success) {
-            return {
-              error: `Invalid final settings for plugin ${plugin.name}: ${parsed.error}`,
-            };
-          }
-          pluginFinalSettingsValue = parsed.data;
+        const pluginFinalSchema =
+          plugin.pluginFinalSettingsSchema ?? z.object({}).strict();
+        const parsed = pluginFinalSchema.safeParse(pluginFinalSettingsValue);
+        if (!parsed.success) {
+          return {
+            error: `Invalid final settings for plugin ${plugin.name}: ${parsed.error}`,
+          };
         }
 
-        pluginFinalSettings[plugin.name] = pluginFinalSettingsValue;
+        pluginFinalSettings[plugin.name] = {
+          version: plugin.version,
+          settings: parsed.data,
+        };
       }
     }
 

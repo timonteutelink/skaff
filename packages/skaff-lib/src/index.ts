@@ -11,6 +11,8 @@ export {
   PipelineBuilder,
   PipelineRunner,
   type PipelineStage,
+  type PipelinePhase,
+  DEFAULT_PIPELINE_PHASE_ORDER,
 } from "./core/generation/pipeline/pipeline-runner";
 export {
   buildDefaultProjectCreationStages,
