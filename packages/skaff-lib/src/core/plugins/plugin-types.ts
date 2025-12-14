@@ -4,17 +4,21 @@ import type {
   TemplateGenerationPlugin,
   TemplatePluginEntrypoint,
 } from "../generation/template-generation-types";
-import type { ProjectSettings } from "@timonteutelink/template-types-lib";
-import type { TemplatePluginSettingsStore } from "./plugin-settings-store";
+import type {
+  ProjectSettings,
+  PluginSystemSettings,
+  PluginAdditionalTemplateSettings,
+  PluginFinalSettings,
+} from "@timonteutelink/template-types-lib";
 import type { Template } from "../templates/Template";
 import type { UserTemplateSettings } from "@timonteutelink/template-types-lib";
+import { z } from "zod";
 import type React from "react";
 
 export interface PluginCommandHandlerContext {
   argv: string[];
   projectPath?: string;
   projectSettings: ProjectSettings;
-  pluginSettings: TemplatePluginSettingsStore;
 }
 
 export interface PluginCliCommand {
@@ -36,7 +40,6 @@ export interface WebPluginContribution {
   getNotices?(
     context: {
       projectSettings: ProjectSettings;
-      pluginSettings: TemplatePluginSettingsStore;
       rootTemplate?: Template;
     },
   ): Promise<string[]> | string[];
@@ -59,7 +62,6 @@ export interface WebTemplateStageContext {
   templateName: string;
   projectRepositoryName?: string;
   currentSettings?: UserTemplateSettings | null;
-  pluginSettings?: TemplatePluginSettingsStore;
   stageState: unknown;
 }
 
@@ -82,7 +84,6 @@ export interface CliTemplateStageContext {
   templateName: string;
   rootTemplateName: string;
   projectSettings?: ProjectSettings;
-  pluginSettings?: TemplatePluginSettingsStore;
   currentSettings?: UserTemplateSettings | null;
   stageState: unknown;
   setStageState: (value: unknown) => void;
@@ -104,6 +105,17 @@ export interface CliTemplateStage {
 
 export interface SkaffPluginModule {
   name?: string;
+  /**
+   * Optional plugin-scoped configuration schemas.
+   */
+  systemSettingsSchema?: z.ZodType<PluginSystemSettings>;
+  additionalTemplateSettingsSchema?: z.ZodType<PluginAdditionalTemplateSettings>;
+  pluginFinalSettingsSchema?: z.ZodType<PluginFinalSettings>;
+  getFinalTemplateSettings?: (input: {
+    templateFinalSettings: PluginFinalSettings;
+    additionalTemplateSettings: PluginAdditionalTemplateSettings;
+    systemSettings: PluginSystemSettings | undefined;
+  }) => PluginFinalSettings;
   template?: TemplatePluginEntrypoint;
   cli?: CliPluginEntrypoint;
   web?: WebPluginEntrypoint;
@@ -112,6 +124,11 @@ export interface SkaffPluginModule {
 export interface LoadedTemplatePlugin {
   reference: NormalizedTemplatePluginConfig;
   module: SkaffPluginModule;
+  name: string;
+  systemSettings?: PluginSystemSettings;
+  additionalTemplateSettingsSchema?: z.ZodType<PluginAdditionalTemplateSettings>;
+  pluginFinalSettingsSchema?: z.ZodType<PluginFinalSettings>;
+  getFinalTemplateSettings?: SkaffPluginModule["getFinalTemplateSettings"];
   templatePlugin?: TemplateGenerationPlugin;
   cliPlugin?: CliPluginContribution;
   webPlugin?: WebPluginContribution;

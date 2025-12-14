@@ -24,6 +24,17 @@ export type {
   InstantiatedTemplate,
   ProjectSettings,
 } from "./project-settings-types";
+export type {
+  PluginSystemSettings,
+  PluginAdditionalTemplateSettings,
+  PluginFinalSettings,
+} from "./plugin-settings-schemas";
+
+export {
+  pluginSystemSettingsSchema,
+  pluginAdditionalTemplateSettingsSchema,
+  pluginFinalSettingsSchema,
+} from "./plugin-settings-schemas";
 
 export {
   instantiatedTemplateSchema,

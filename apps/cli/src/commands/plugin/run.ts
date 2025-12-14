@@ -1,8 +1,5 @@
 import { Flags } from "@oclif/core";
-import {
-  loadPluginsForTemplate,
-  TemplatePluginSettingsStore,
-} from "@timonteutelink/skaff-lib";
+import { loadPluginsForTemplate } from "@timonteutelink/skaff-lib";
 
 import Base from "../../base-command.js";
 import { getCurrentProject } from "../../utils/cli-utils.js";
@@ -42,10 +39,6 @@ export default class PluginRun extends Base {
     }
 
     const project = projectResult.data;
-    const pluginStore = new TemplatePluginSettingsStore(
-      project.instantiatedProjectSettings,
-    );
-
     const pluginLoadResult = await loadPluginsForTemplate(
       project.rootTemplate,
       project.instantiatedProjectSettings,
@@ -57,7 +50,7 @@ export default class PluginRun extends Base {
 
     const commandEntries = pluginLoadResult.data.flatMap((plugin) => {
       const pluginName =
-        plugin.module.name || plugin.reference.module || "unnamed-plugin";
+        plugin.name || plugin.reference.module || "unnamed-plugin";
       return (
         plugin.cliPlugin?.commands?.map((command) => ({
           pluginName,
@@ -99,7 +92,6 @@ export default class PluginRun extends Base {
       argv: flags.args ?? [],
       projectPath: project.absoluteRootDir,
       projectSettings: project.instantiatedProjectSettings,
-      pluginSettings: pluginStore,
     });
   }
 }

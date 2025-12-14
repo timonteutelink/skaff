@@ -1,10 +1,7 @@
-import path from "node:path";
-import { createRequire } from "module";
-import { pathToFileURL } from "node:url";
-
 import { ProjectSettings } from "@timonteutelink/template-types-lib";
 
 import type { Result } from "../../lib/types";
+import { getPluginSystemSettings } from "../../lib/config";
 import type { Template } from "../templates/Template";
 import {
   CliPluginContribution,
@@ -98,23 +95,39 @@ async function buildWebPlugin(
   return resolveEntrypoint<WebPluginContribution>(module.web);
 }
 
-async function importFromTemplate(
-  specifier: string,
-  templateBaseDir: string,
+async function importPluginModule(
+  reference: NormalizedTemplatePluginConfig,
+  template: Template,
 ): Promise<Result<any>> {
   try {
-    const requireFromTemplate = createRequire(
-      path.join(templateBaseDir, "package.json"),
-    );
-    const resolved = requireFromTemplate.resolve(specifier);
-    const imported = await import(pathToFileURL(resolved).href);
+    const imported = await import(reference.module);
     return { data: imported };
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     return {
-      error: `Failed to load plugin ${specifier} from ${templateBaseDir}: ${reason}`,
+      error: `Failed to load plugin ${reference.module} required by template ${template.config.templateConfig.name}: ${reason}. Ensure the plugin is installed in the current Skaff environment.`,
     };
   }
+}
+
+async function readSystemSettings(
+  pluginModule: SkaffPluginModule,
+  pluginName: string,
+): Promise<Result<any>> {
+  if (!pluginModule.systemSettingsSchema) {
+    return { data: undefined };
+  }
+
+  const rawSettings = await getPluginSystemSettings(pluginName);
+  const parsed = pluginModule.systemSettingsSchema.safeParse(rawSettings ?? {});
+
+  if (!parsed.success) {
+    return {
+      error: `Invalid system settings for plugin ${pluginName}: ${parsed.error}`,
+    };
+  }
+
+  return { data: parsed.data };
 }
 
 export async function loadPluginsForTemplate(
@@ -129,10 +142,7 @@ export async function loadPluginsForTemplate(
   const loaded: LoadedTemplatePlugin[] = [];
 
   for (const reference of normalized) {
-    const moduleResult = await importFromTemplate(
-      reference.module,
-      template.absoluteBaseDir,
-    );
+    const moduleResult = await importPluginModule(reference, template);
     if ("error" in moduleResult) {
       return { error: moduleResult.error };
     }
@@ -143,6 +153,20 @@ export async function loadPluginsForTemplate(
       return {
         error: `Plugin ${reference.module} did not export a usable entry point`,
       };
+    }
+
+    const pluginName = pluginModule.name;
+
+    if (!pluginName) {
+      return {
+        error: `Plugin ${reference.module} must provide a name to store settings under plugin.<name>.`,
+      };
+    }
+
+    const systemSettingsResult = await readSystemSettings(pluginModule, pluginName);
+
+    if ("error" in systemSettingsResult) {
+      return systemSettingsResult;
     }
 
     const templatePlugin = buildTemplatePlugin(
@@ -160,6 +184,12 @@ export async function loadPluginsForTemplate(
     loaded.push({
       reference,
       module: pluginModule,
+      name: pluginName,
+      systemSettings: systemSettingsResult.data,
+      additionalTemplateSettingsSchema:
+        pluginModule.additionalTemplateSettingsSchema,
+      pluginFinalSettingsSchema: pluginModule.pluginFinalSettingsSchema,
+      getFinalTemplateSettings: pluginModule.getFinalTemplateSettings,
       templatePlugin,
       cliPlugin,
       webPlugin,

@@ -3,6 +3,8 @@ import {
   ProjectSettings,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
+import { LoadedTemplatePlugin } from "../plugins";
+import z from "zod";
 import crypto from "node:crypto";
 import { backendLogger } from "../../lib/logger";
 import { Result } from "../../lib/types";
@@ -15,6 +17,16 @@ import {
 } from "../projects/project-settings-service";
 import { getLatestTemplateMigrationUuid } from "../templates/TemplateMigration";
 import { GeneratorOptions } from "./template-generation-types";
+
+function allowPluginTemplateSettings(
+  templateSettingsSchema: z.ZodObject<any>,
+): z.ZodObject<any> {
+  const pluginShape = z.object({
+    plugins: z.record(z.string(), z.unknown()).optional(),
+  });
+
+  return templateSettingsSchema.merge(pluginShape);
+}
 
 export class ProjectSettingsSynchronizer {
   constructor(
@@ -98,8 +110,9 @@ export class ProjectSettingsSynchronizer {
       };
     }
 
-    const parsedUserSettings =
-      this.rootTemplate.config.templateSettingsSchema.safeParse(userSettings);
+    const parsedUserSettings = allowPluginTemplateSettings(
+      this.rootTemplate.config.templateSettingsSchema,
+    ).safeParse(userSettings);
     if (!parsedUserSettings.success) {
       backendLogger.error(
         `Failed to parse user settings: ${parsedUserSettings.error}`,
@@ -144,8 +157,9 @@ export class ProjectSettingsSynchronizer {
       };
     }
 
-    const parsedUserSettings =
-      template.config.templateSettingsSchema.safeParse(userSettings);
+    const parsedUserSettings = allowPluginTemplateSettings(
+      template.config.templateSettingsSchema,
+    ).safeParse(userSettings);
     if (!parsedUserSettings.success) {
       backendLogger.error(
         `Failed to parse user settings: ${parsedUserSettings.error}`,
@@ -206,12 +220,14 @@ export class ProjectSettingsSynchronizer {
     template: Template,
     userSettings: UserTemplateSettings,
     parentInstanceId?: string,
+    options?: { templateInstanceId?: string; plugins?: LoadedTemplatePlugin[] },
   ): Result<FinalTemplateSettings> {
     return Project.getFinalTemplateSettings(
       template,
       this.destinationProjectSettings,
       userSettings,
       parentInstanceId,
+      options,
     );
   }
 

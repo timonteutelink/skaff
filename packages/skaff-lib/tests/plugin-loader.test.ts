@@ -7,7 +7,7 @@ import { z } from "zod";
 import type { ProjectSettings } from "@timonteutelink/template-types-lib";
 import type { Template } from "../src/core/templates/Template";
 import type { GenericTemplateConfigModule } from "../src/lib/types";
-import { TemplatePluginSettingsStore, loadPluginsForTemplate } from "../src/core/plugins";
+import { loadPluginsForTemplate } from "../src/core/plugins";
 import { PipelineBuilder } from "../src/core/generation/pipeline/pipeline-runner";
 
 function stage(name: string) {
@@ -80,6 +80,7 @@ describe("plugin loading", () => {
       pluginPath,
       [
         "module.exports = {",
+        "  name: 'test-plugin',",
         "  template: ({ options }) => ({",
         "    captured: options,",
         "    configureTemplateInstantiationPipeline(builder) {",
@@ -95,7 +96,7 @@ describe("plugin loading", () => {
     );
 
     template.config.plugins = [
-      { module: "./plugin.mjs", options: { flag: true } },
+      { module: pluginPath, options: { flag: true } },
     ];
 
     const pluginsResult = await loadPluginsForTemplate(template, projectSettings);
@@ -127,11 +128,10 @@ describe("plugin loading", () => {
         "module.exports = {",
         "  name: 'test-plugin',",
         "  template: {",
-        "    configureTemplateInstantiationPipeline(builder, ctx) {",
+        "    configureTemplateInstantiationPipeline(builder) {",
         "      builder.add({",
         "        name: 'touch-settings',",
         "        async run(pipelineCtx) {",
-        "          ctx.pluginSettingsStore.setPluginSettings(pipelineCtx.instantiatedTemplate.id, 'test-plugin', { flag: true });",
         "          return { data: pipelineCtx };",
         "        }",
         "      });",
@@ -148,7 +148,7 @@ describe("plugin loading", () => {
       "utf8",
     );
 
-    template.config.plugins = [{ module: "./plugin.mjs" }];
+    template.config.plugins = [{ module: pluginPath }];
 
     const pluginsResult = await loadPluginsForTemplate(template, projectSettings);
     if ("error" in pluginsResult) {
@@ -159,7 +159,6 @@ describe("plugin loading", () => {
     expect(loaded.cliPlugin?.commands?.[0]?.name).toBe("hello");
     const notices = await loaded.webPlugin?.getNotices?.({
       projectSettings,
-      pluginSettings: new TemplatePluginSettingsStore(projectSettings),
     });
     expect(notices).toEqual(["hello web"]);
   });

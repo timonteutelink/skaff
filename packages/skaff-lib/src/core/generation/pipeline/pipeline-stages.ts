@@ -27,6 +27,7 @@ export interface TemplateInstantiationPipelineContext {
   userSettings: UserTemplateSettings;
   projectSettings: ProjectSettings;
   instantiatedTemplate: ProjectSettings["instantiatedTemplates"][number];
+  plugins?: import("../../plugins/plugin-types").LoadedTemplatePlugin[];
   finalSettings?: FinalTemplateSettings;
   targetPath?: string;
   templateSettingsPersisted?: boolean;
@@ -85,6 +86,10 @@ export class ContextSetupStage
       context.template,
       context.userSettings,
       context.parentInstanceId,
+      {
+        templateInstanceId: context.instantiatedTemplate.id,
+        plugins: context.plugins,
+      },
     );
 
     if ("error" in result) {

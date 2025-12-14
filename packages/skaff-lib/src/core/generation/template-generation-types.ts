@@ -13,7 +13,6 @@ import { SideEffectCoordinator } from "./pipeline/SideEffectCoordinator";
 import { AutoInstantiationCoordinator } from "./pipeline/AutoInstantiationCoordinator";
 import { ProjectSettingsSynchronizer } from "./ProjectSettingsSynchronizer";
 import type { PipelineBuilder, PipelineStage } from "./pipeline/pipeline-runner";
-import { TemplatePluginSettingsStore } from "../plugins/plugin-settings-store";
 
 export interface GeneratorOptions {
   /**
@@ -56,7 +55,6 @@ export interface TemplatePipelinePluginContext {
   autoInstantiationCoordinator: AutoInstantiationCoordinator;
   projectSettingsSynchronizer: ProjectSettingsSynchronizer;
   gitService: GitService;
-  pluginSettingsStore: TemplatePluginSettingsStore;
 }
 
 /**

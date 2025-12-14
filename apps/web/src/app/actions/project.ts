@@ -3,7 +3,6 @@
 import { findProject, listProjects } from "@/lib/server-utils";
 import * as tempLib from "@timonteutelink/skaff-lib";
 import { ProjectDTO, Result } from "@timonteutelink/skaff-lib";
-import { TemplatePluginSettingsStore } from "@timonteutelink/skaff-lib";
 
 export async function retrieveProjectSearchPaths(): Promise<
   { id: string; path: string }[]
@@ -69,10 +68,6 @@ export async function retrieveProjectPluginNotices(
     return { error: `Project ${projectRepositoryName} not found.` };
   }
 
-  const pluginStore = new TemplatePluginSettingsStore(
-    project.data.instantiatedProjectSettings,
-  );
-
   const pluginsResult = await tempLib.loadPluginsForTemplate(
     project.data.rootTemplate,
     project.data.instantiatedProjectSettings,
@@ -89,7 +84,6 @@ export async function retrieveProjectPluginNotices(
     try {
       const pluginNotices = await plugin.webPlugin.getNotices({
         projectSettings: project.data.instantiatedProjectSettings,
-        pluginSettings: pluginStore,
         rootTemplate: project.data.rootTemplate,
       });
       if (pluginNotices?.length) {

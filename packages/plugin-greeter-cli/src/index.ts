@@ -13,7 +13,7 @@ type GreeterStageState = { disabled?: boolean };
 const greeterCliCommand: PluginCliCommand = {
   name: "greet",
   description: "Print a friendly greeting and show persisted plugin state",
-  async run({ argv, projectPath, projectSettings, pluginSettings }) {
+  async run({ argv, projectPath, projectSettings }) {
     const targetInstanceId =
       argv[0] ?? projectSettings.instantiatedTemplates[0]?.id;
 
@@ -23,12 +23,11 @@ const greeterCliCommand: PluginCliCommand = {
       return;
     }
 
-    const currentStateResult = pluginSettings.getPluginSettings(
-      targetInstanceId,
-      GREETER_PLUGIN_NAME,
+    const targetInstance = projectSettings.instantiatedTemplates.find(
+      (entry) => entry.id === targetInstanceId,
     );
 
-    const state = "error" in currentStateResult ? undefined : currentStateResult.data;
+    const state = targetInstance?.plugins?.[GREETER_PLUGIN_NAME];
 
     // eslint-disable-next-line no-console
     console.log(

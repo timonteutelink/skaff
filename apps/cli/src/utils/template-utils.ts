@@ -1,4 +1,4 @@
-import { TemplatePluginSettingsStore, getTemplate, loadPluginsForTemplate } from '@timonteutelink/skaff-lib';
+import { getTemplate, loadPluginsForTemplate } from '@timonteutelink/skaff-lib';
 import { ProjectSettings, UserTemplateSettings } from '@timonteutelink/template-types-lib';
 import fs from 'node:fs';
 import * as prompts from '@inquirer/prompts';
@@ -18,7 +18,6 @@ async function runStageSequence(
     templateName: string;
     rootTemplateName: string;
     projectSettings?: ProjectSettings;
-    pluginSettings?: TemplatePluginSettingsStore;
   },
   stageState: Record<string, unknown>,
   currentSettings: UserTemplateSettings | null,
@@ -85,8 +84,6 @@ async function promptUserTemplateSettings(
       ],
     } satisfies ProjectSettings);
 
-  const pluginSettings = new TemplatePluginSettingsStore(projectSettings);
-
   const pluginsResult = await loadPluginsForTemplate(
     rootTpl.data.template,
     projectSettings,
@@ -98,7 +95,7 @@ async function promptUserTemplateSettings(
 
   const pluginStages: StageEntry[] = pluginsResult.data.flatMap((plugin) =>
     (plugin.cliPlugin?.templateStages ?? []).map((stage) => ({
-      pluginName: plugin.module.name || plugin.reference.module,
+      pluginName: plugin.name || plugin.reference.module,
       stage,
     })),
   );
@@ -111,7 +108,6 @@ async function promptUserTemplateSettings(
       templateName,
       rootTemplateName,
       projectSettings,
-      pluginSettings,
     },
     stageState,
     null,
@@ -128,7 +124,6 @@ async function promptUserTemplateSettings(
       templateName,
       rootTemplateName,
       projectSettings,
-      pluginSettings,
     },
     stageState,
     result as UserTemplateSettings,

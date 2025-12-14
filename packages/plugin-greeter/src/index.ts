@@ -1,16 +1,16 @@
 import type { TemplateGenerationPlugin } from "@timonteutelink/skaff-lib";
-import {
-  PipelineStage,
-  TemplatePluginSettingsStore,
-  TemplateInstantiationPipelineContext,
-} from "@timonteutelink/skaff-lib";
+import { PipelineStage, TemplateInstantiationPipelineContext } from "@timonteutelink/skaff-lib";
 import {
   GREETER_PLUGIN_NAME,
   type GreeterPluginOptions,
 } from "@timonteutelink/skaff-plugin-greeter-types";
+import {
+  pluginAdditionalTemplateSettingsSchema,
+  pluginFinalSettingsSchema,
+} from "@timonteutelink/template-types-lib";
+import z from "zod";
 
 function createGreetingStage(
-  pluginSettings: TemplatePluginSettingsStore,
   options?: GreeterPluginOptions,
   templateDescription?: string,
 ): PipelineStage<TemplateInstantiationPipelineContext> {
@@ -24,17 +24,6 @@ function createGreetingStage(
     async run(context) {
       // eslint-disable-next-line no-console
       console.log(`👋 ${message}`);
-      pluginSettings.updatePluginSettings(
-        context.instantiatedTemplate.id,
-        GREETER_PLUGIN_NAME,
-        (previous) => ({
-          ...(previous ?? {}),
-          lastGreeting: new Date().toISOString(),
-          message,
-          audience: options?.audience ?? "developer",
-        }),
-        { defaultValue: {} },
-      );
       return { data: context };
     },
   } satisfies PipelineStage<any>;
@@ -45,11 +34,10 @@ function createGreeterTemplatePlugin(
   templateDescription?: string,
 ): TemplateGenerationPlugin {
   return {
-    configureTemplateInstantiationPipeline(builder, context) {
+    configureTemplateInstantiationPipeline(builder) {
       builder.insertAfter(
         "context-setup",
         createGreetingStage(
-          context.pluginSettingsStore,
           options,
           templateDescription,
         ),
@@ -60,6 +48,17 @@ function createGreeterTemplatePlugin(
 
 const greeterPlugin = {
   name: GREETER_PLUGIN_NAME,
+  additionalTemplateSettingsSchema: pluginAdditionalTemplateSettingsSchema,
+  pluginFinalSettingsSchema: pluginFinalSettingsSchema.merge(
+    z.object({
+      lastGreeting: z.string().optional(),
+      message: z.string().optional(),
+      audience: z.string().optional(),
+    }),
+  ),
+  getFinalTemplateSettings: () => ({
+    lastGreeting: new Date().toISOString(),
+  }),
   template: ({ options, template }) =>
     createGreeterTemplatePlugin(
       options as GreeterPluginOptions | undefined,
