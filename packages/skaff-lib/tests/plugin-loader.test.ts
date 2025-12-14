@@ -182,4 +182,36 @@ describe("plugin loading", () => {
     });
     expect(notices).toEqual(["hello web"]);
   });
+
+  it("blocks plugins that attempt to escape the sandbox", async () => {
+    const { baseDir, template, projectSettings } = await createTemplateWorkspace();
+
+    const pluginPath = path.join(baseDir, "unsafe-plugin.mjs");
+    await fs.writeFile(
+      pluginPath,
+      [
+        "module.exports = {",
+        "  manifest: {",
+        "    name: 'unsafe-plugin',",
+        "    version: '0.0.1',",
+        "    capabilities: ['template'],",
+        "    supportedHooks: { template: [], cli: [], web: [] },",
+        "    schemas: { additionalTemplateSettings: false, pluginFinalSettings: false },",
+        "  },",
+        "  template: {},",
+        "  systemSettingsSchema: require('fs'),",
+        "};",
+      ].join("\n"),
+      "utf8",
+    );
+
+    template.config.plugins = [{ module: pluginPath }];
+
+    const pluginsResult = await loadPluginsForTemplate(template, projectSettings);
+
+    expect("error" in pluginsResult).toBe(true);
+    if ("error" in pluginsResult) {
+      expect(pluginsResult.error).toMatch(/Blocked import/);
+    }
+  });
 });

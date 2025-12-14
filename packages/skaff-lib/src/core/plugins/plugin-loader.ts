@@ -1,4 +1,10 @@
 import { ProjectSettings } from "@timonteutelink/template-types-lib";
+import { builtinModules, createRequire } from "node:module";
+import path from "node:path";
+
+import * as templateTypesLibNS from "@timonteutelink/template-types-lib";
+import * as zodNS from "zod";
+import * as handlebarsNS from "handlebars";
 
 import type { Result } from "../../lib/types";
 import { getPluginSystemSettings } from "../../lib/config";
@@ -18,6 +24,27 @@ import {
   TemplateGenerationPluginFactory,
 } from "../generation/template-generation-types";
 import { z } from "zod";
+import { resolveSandboxService } from "../infra/sandbox-service";
+import { getSkaffContainer } from "../../di/container";
+import { EsbuildInitializerToken } from "../../di/tokens";
+
+const SANDBOX_REACT_STUB = Object.freeze({
+  createElement: () => null,
+  Fragment: Symbol.for("react.fragment"),
+});
+
+const BLOCKED_EXTERNALS = Array.from(
+  new Set([...builtinModules, ...builtinModules.map((entry) => `node:${entry}`)]),
+);
+
+const ALLOWED_PLUGIN_IMPORTS: Record<string, unknown> = {
+  "@timonteutelink/template-types-lib": templateTypesLibNS,
+  zod: zodNS,
+  handlebars: handlebarsNS,
+  react: SANDBOX_REACT_STUB,
+};
+
+const PLUGIN_EXECUTION_TIMEOUT_MS = 1_000;
 
 function isTemplateGenerationPlugin(value: unknown): value is TemplateGenerationPlugin {
   if (!value || typeof value !== "object") return false;
@@ -28,12 +55,81 @@ function isTemplateGenerationPlugin(value: unknown): value is TemplateGeneration
   );
 }
 
+const pluginModuleResolver = createRequire(import.meta.url);
+
+async function resolveEsbuild() {
+  const initializer = getSkaffContainer().resolve(EsbuildInitializerToken);
+  return initializer.init();
+}
+
 function coerceToPluginModule(entry: unknown): SkaffPluginModule | null {
   if (!entry || typeof entry !== "object") return null;
   if ("manifest" in (entry as Record<string, unknown>)) {
     return entry as SkaffPluginModule;
   }
   return null;
+}
+
+async function resolvePluginPath(
+  reference: NormalizedTemplatePluginConfig,
+  template: Template,
+): Promise<Result<string>> {
+  try {
+    const resolved = pluginModuleResolver.resolve(reference.module, {
+      paths: [template.absoluteDir, template.absoluteBaseDir, process.cwd()],
+    });
+    return { data: resolved };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    return {
+      error: `Failed to resolve plugin ${reference.module} required by template ${template.config.templateConfig.name}: ${reason}`,
+    };
+  }
+}
+
+async function bundlePluginModule(
+  reference: NormalizedTemplatePluginConfig,
+  template: Template,
+): Promise<Result<{ code: string; filename: string }>> {
+  const resolvedPathResult = await resolvePluginPath(reference, template);
+  if ("error" in resolvedPathResult) {
+    return resolvedPathResult;
+  }
+
+  const resolvedPath = resolvedPathResult.data;
+
+  try {
+    const esbuild = await resolveEsbuild();
+    const { outputFiles } = await esbuild.build({
+      entryPoints: [resolvedPath],
+      bundle: true,
+      format: "cjs",
+      platform: "neutral",
+      target: "es2022",
+      write: false,
+      minify: true,
+      external: [...Object.keys(ALLOWED_PLUGIN_IMPORTS), ...BLOCKED_EXTERNALS],
+      banner: {
+        js: `;(function(exports, require, module, __filename, __dirname) {`,
+      },
+      footer: { js: `\n})` },
+    });
+    if ("stop" in esbuild && esbuild.stop) await esbuild.stop();
+
+    const code = outputFiles?.[0]?.text;
+    if (!code) {
+      return {
+        error: `Failed to bundle plugin ${reference.module} required by template ${template.config.templateConfig.name}`,
+      };
+    }
+
+    return { data: { code, filename: resolvedPath } };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    return {
+      error: `Failed to bundle plugin ${reference.module} required by template ${template.config.templateConfig.name}: ${reason}`,
+    };
+  }
 }
 
 function pickEntrypoint(moduleExports: any, exportName?: string): unknown {
@@ -96,9 +192,22 @@ async function importPluginModule(
   reference: NormalizedTemplatePluginConfig,
   template: Template,
 ): Promise<Result<any>> {
+  const bundleResult = await bundlePluginModule(reference, template);
+  if ("error" in bundleResult) {
+    return bundleResult;
+  }
+
   try {
-    const imported = await import(reference.module);
-    return { data: imported };
+    const sandbox = resolveSandboxService();
+    const moduleExports = await sandbox.runCommonJsModule<any>({
+      code: bundleResult.data.code,
+      allowedModules: ALLOWED_PLUGIN_IMPORTS,
+      filename: bundleResult.data.filename,
+      dirname: path.dirname(bundleResult.data.filename),
+      timeoutMs: PLUGIN_EXECUTION_TIMEOUT_MS,
+    });
+
+    return { data: moduleExports };
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     return {
