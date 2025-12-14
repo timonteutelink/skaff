@@ -9,6 +9,7 @@ import { CacheService } from "../core/infra/cache-service";
 import { GitService } from "../core/infra/git-service";
 import { NpmService } from "../core/infra/npm-service";
 import { ShellService } from "../core/infra/shell-service";
+import { SandboxService } from "../core/infra/sandbox-service";
 import { TemplateGeneratorService } from "../core/generation/template-generator-service";
 import { ProjectCreationManager } from "../core/projects/ProjectCreationManager";
 import { TemplateConfigLoader } from "../core/templates/config/TemplateConfigLoader";
@@ -32,6 +33,7 @@ import {
   ProjectRepositoryToken,
   RootTemplateRepositoryToken,
   ShellServiceToken,
+  SandboxServiceToken,
   TemplateConfigLoaderToken,
   TemplateGeneratorServiceToken,
   TemplatePathsProviderToken,
@@ -56,6 +58,7 @@ export function registerInfrastructure(
   registerClassSingleton(container, GitServiceToken, GitService);
   registerClassSingleton(container, NpmServiceToken, NpmService);
   registerClassSingleton(container, ShellServiceToken, ShellService);
+  registerClassSingleton(container, SandboxServiceToken, SandboxService);
   registerClassSingleton(container, DiffCacheToken, DiffCache);
   registerClassSingleton(
     container,

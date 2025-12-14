@@ -16,6 +16,7 @@ import type { ProjectRepository } from "../repositories/project-repository";
 import type { RootTemplateRepository } from "../repositories/root-template-repository";
 import type { TemplatePathsProvider } from "../repositories/root-template-repository";
 import type { EsbuildInitializer } from "../utils/get-esbuild";
+import type { SandboxService } from "../core/infra/sandbox-service";
 
 function createToken<T>(description: string): InjectionToken<T> {
   return Symbol.for(`skaff:${description}`);
@@ -50,6 +51,9 @@ export const TemplatePathsProviderToken =
   createToken<TemplatePathsProvider>("TemplatePathsProvider");
 export const EsbuildInitializerToken =
   createToken<EsbuildInitializer>("EsbuildInitializer");
+export const SandboxServiceToken = createToken<SandboxService>(
+  "SandboxService",
+);
 
 export const TOKENS = {
   CacheService: CacheServiceToken,
@@ -68,4 +72,5 @@ export const TOKENS = {
   TemplateTreeBuilder: TemplateTreeBuilderToken,
   TemplatePathsProvider: TemplatePathsProviderToken,
   EsbuildInitializer: EsbuildInitializerToken,
+  SandboxService: SandboxServiceToken,
 } as const;

@@ -217,6 +217,7 @@ export class Template {
       trackedRevision: this.trackedRevision,
       possibleParentTemplates: this.possibleParentTemplates,
       isDetachedSubtreeRoot: this.isDetachedSubtreeRoot,
+      plugins: this.config.plugins ?? [],
     };
   }
 

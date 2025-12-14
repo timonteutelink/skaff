@@ -17,10 +17,12 @@ import { getSkaffContainer } from "../../../di/container";
 import {
   CacheServiceToken,
   EsbuildInitializerToken,
+  SandboxServiceToken,
   TemplateConfigLoaderToken,
 } from "../../../di/tokens";
 import type { CacheService } from "../../../core/infra/cache-service";
 import type { EsbuildInitializer } from "../../../utils/get-esbuild";
+import type { SandboxService } from "../../../core/infra/sandbox-service";
 
 const { templateConfigSchema } = templateTypesLibNS;
 
@@ -283,31 +285,7 @@ async function findTemplateConfigFiles(
   return results;
 }
 
-// Very simple and minimal sandbox
-async function evaluateBundledCode(
-  code: string,
-): Promise<Record<string, TemplateConfigWithFileInfo>> {
-  const { Script, createContext } = await import(/* webpackIgnore: true */ "node:vm");
-
-  function safeRequire(id: string) {
-    if (id in SANDBOX_LIBS) return SANDBOX_LIBS[id];
-    const rootId = id.split("/", 1)[0]!;
-    if (rootId in SANDBOX_LIBS) return SANDBOX_LIBS[rootId];
-    throw new Error(`Blocked import: ${id}`);
-  }
-
-  const contextModule = { exports: {} };
-  const context = createContext({
-    exports: contextModule.exports,
-    require: safeRequire,
-    module: contextModule,
-    __filename: "",
-    __dirname: "",
-  });
-  const script = new Script(code + "(exports, require, module, __filename, __dirname);", { filename: "template-bundle.cjs" });
-  script.runInContext(context);
-  return (contextModule.exports as any).configs;
-}
+const SANDBOX_TIMEOUT_MS = 1_000;
 
 @injectable()
 export class TemplateConfigLoader {
@@ -315,7 +293,24 @@ export class TemplateConfigLoader {
     @inject(CacheServiceToken) private readonly cacheService: CacheService,
     @inject(EsbuildInitializerToken)
     private readonly esbuildInitializer: EsbuildInitializer,
+    @inject(SandboxServiceToken)
+    private readonly sandboxService: SandboxService,
   ) { }
+
+  private async evaluateBundledCode(
+    code: string,
+  ): Promise<Record<string, TemplateConfigWithFileInfo>> {
+    const exports = await this.sandboxService.runCommonJsModule<{
+      configs: Record<string, TemplateConfigWithFileInfo>;
+    }>({
+      code,
+      allowedModules: SANDBOX_LIBS,
+      filename: "template-config-bundle.cjs",
+      timeoutMs: SANDBOX_TIMEOUT_MS,
+    });
+
+    return exports.configs;
+  }
 
   public async loadAllTemplateConfigs(
     rootDir: string,
@@ -344,7 +339,7 @@ export class TemplateConfigLoader {
     );
     if ("data" in cached && cached.data) {
       const code = await fs.readFile(cached.data.path, "utf8");
-      const configs = await evaluateBundledCode(code);
+      const configs = await this.evaluateBundledCode(code);
       return { configs, remoteRefs: discovery.remoteRefs };
     }
 
@@ -415,7 +410,7 @@ export class TemplateConfigLoader {
       throw new Error(`Failed to cache bundle: ${saved.error}`);
     }
 
-    const configs = await evaluateBundledCode(bundle);
+    const configs = await this.evaluateBundledCode(bundle);
 
     for (const key of Object.keys(configs)) {
       const mod = configs[key]!;

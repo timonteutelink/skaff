@@ -6,6 +6,46 @@ export * from "./repositories";
 export * from "./models";
 export * from "./lib";
 export * from "./actions";
+export * from "./core/generation/template-generator-service";
+export {
+  PipelineBuilder,
+  PipelineRunner,
+  type PipelineStage,
+  type PipelinePhase,
+  DEFAULT_PIPELINE_PHASE_ORDER,
+} from "./core/generation/pipeline/pipeline-runner";
+export {
+  buildDefaultProjectCreationStages,
+  buildDefaultTemplateInstantiationStages,
+  ContextSetupStage,
+  TemplateValidationStage,
+  RenderStage,
+  SideEffectsStage,
+  PersistTemplateSettingsStage,
+  AutoInstantiationStage,
+  TargetPathStage,
+  ProjectSetupStage,
+  ProjectRenderingStage,
+  ProjectSideEffectsStage,
+  ProjectAutoInstantiationStage,
+  type ProjectCreationPipelineContext,
+  type TemplateInstantiationPipelineContext,
+} from "./core/generation/pipeline/pipeline-stages";
+export {
+  TemplatePipelineContext,
+  TargetPathResolver,
+  TemplateFileMaterializer,
+  SideEffectCoordinator,
+  AutoInstantiationCoordinator,
+} from "./core/generation/pipeline";
+export {
+  GeneratorOptions,
+  TemplateGenerationPipelineOverrides,
+  TemplateGenerationPlugin,
+  TemplatePipelinePluginContext,
+  TemplatePluginEntrypoint,
+} from "./core/generation/template-generation-types";
+export * from "./core/plugins";
 
 export { findTemplate, projectSearchPathKey } from "./utils/shared-utils";
 export { CacheService, resolveCacheService } from "./core/infra/cache-service";

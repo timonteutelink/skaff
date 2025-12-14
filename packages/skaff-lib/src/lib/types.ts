@@ -4,6 +4,7 @@ import {
   TemplateConfig,
   TemplateConfigModule,
   TemplateDisablingThis,
+  TemplatePluginConfig,
   TemplateParentReference,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
@@ -52,6 +53,7 @@ export interface TemplateDTO {
   refDir?: string;
   possibleParentTemplates?: TemplateParentReference[];
   isDetachedSubtreeRoot?: boolean;
+  plugins?: TemplatePluginConfig[];
 }
 
 export interface GitStatus {
@@ -87,4 +89,10 @@ export interface DiffHunk {
   lines: string[];
 }
 
-export type GenericTemplateConfigModule = TemplateConfigModule<FinalTemplateSettings, z.ZodObject<UserTemplateSettings>, z.ZodObject<UserTemplateSettings>, Record<string, string>, UserTemplateSettings, FinalTemplateSettings>;
+export type GenericTemplateConfigModule = TemplateConfigModule<
+  FinalTemplateSettings,
+  z.ZodObject<UserTemplateSettings>,
+  z.ZodObject<UserTemplateSettings>,
+  UserTemplateSettings,
+  FinalTemplateSettings
+>;

@@ -1,0 +1,396 @@
+import { ProjectSettings } from "@timonteutelink/template-types-lib";
+import { builtinModules, createRequire } from "node:module";
+import path from "node:path";
+
+import * as templateTypesLibNS from "@timonteutelink/template-types-lib";
+import * as zodNS from "zod";
+import * as handlebarsNS from "handlebars";
+
+import type { Result } from "../../lib/types";
+import { getPluginSystemSettings } from "../../lib/config";
+import type { Template } from "../templates/Template";
+import {
+  CliPluginContribution,
+  LoadedTemplatePlugin,
+  NormalizedTemplatePluginConfig,
+  SkaffPluginModule,
+  WebPluginContribution,
+  normalizeTemplatePlugins,
+  PluginManifest,
+  pluginManifestSchema,
+} from "./plugin-types";
+import {
+  TemplateGenerationPlugin,
+  TemplateGenerationPluginFactory,
+} from "../generation/template-generation-types";
+import { z } from "zod";
+import { resolveSandboxService } from "../infra/sandbox-service";
+import { getSkaffContainer } from "../../di/container";
+import { EsbuildInitializerToken } from "../../di/tokens";
+
+const SANDBOX_REACT_STUB = Object.freeze({
+  createElement: () => null,
+  Fragment: Symbol.for("react.fragment"),
+});
+
+const BLOCKED_EXTERNALS = Array.from(
+  new Set([...builtinModules, ...builtinModules.map((entry) => `node:${entry}`)]),
+);
+
+const ALLOWED_PLUGIN_IMPORTS: Record<string, unknown> = {
+  "@timonteutelink/template-types-lib": templateTypesLibNS,
+  zod: zodNS,
+  handlebars: handlebarsNS,
+  react: SANDBOX_REACT_STUB,
+};
+
+const PLUGIN_EXECUTION_TIMEOUT_MS = 1_000;
+
+function isTemplateGenerationPlugin(value: unknown): value is TemplateGenerationPlugin {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.configureTemplateInstantiationPipeline === "function" ||
+    typeof candidate.configureProjectCreationPipeline === "function"
+  );
+}
+
+const pluginModuleResolver = createRequire(import.meta.url);
+
+async function resolveEsbuild() {
+  const initializer = getSkaffContainer().resolve(EsbuildInitializerToken);
+  return initializer.init();
+}
+
+function coerceToPluginModule(entry: unknown): SkaffPluginModule | null {
+  if (!entry || typeof entry !== "object") return null;
+  if ("manifest" in (entry as Record<string, unknown>)) {
+    return entry as SkaffPluginModule;
+  }
+  return null;
+}
+
+async function resolvePluginPath(
+  reference: NormalizedTemplatePluginConfig,
+  template: Template,
+): Promise<Result<string>> {
+  try {
+    const resolved = pluginModuleResolver.resolve(reference.module, {
+      paths: [template.absoluteDir, template.absoluteBaseDir, process.cwd()],
+    });
+    return { data: resolved };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    return {
+      error: `Failed to resolve plugin ${reference.module} required by template ${template.config.templateConfig.name}: ${reason}`,
+    };
+  }
+}
+
+async function bundlePluginModule(
+  reference: NormalizedTemplatePluginConfig,
+  template: Template,
+): Promise<Result<{ code: string; filename: string }>> {
+  const resolvedPathResult = await resolvePluginPath(reference, template);
+  if ("error" in resolvedPathResult) {
+    return resolvedPathResult;
+  }
+
+  const resolvedPath = resolvedPathResult.data;
+
+  try {
+    const esbuild = await resolveEsbuild();
+    const { outputFiles } = await esbuild.build({
+      entryPoints: [resolvedPath],
+      bundle: true,
+      format: "cjs",
+      platform: "neutral",
+      target: "es2022",
+      write: false,
+      minify: true,
+      external: [...Object.keys(ALLOWED_PLUGIN_IMPORTS), ...BLOCKED_EXTERNALS],
+      banner: {
+        js: `;(function(exports, require, module, __filename, __dirname) {`,
+      },
+      footer: { js: `\n})` },
+    });
+    if ("stop" in esbuild && esbuild.stop) await esbuild.stop();
+
+    const code = outputFiles?.[0]?.text;
+    if (!code) {
+      return {
+        error: `Failed to bundle plugin ${reference.module} required by template ${template.config.templateConfig.name}`,
+      };
+    }
+
+    return { data: { code, filename: resolvedPath } };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    return {
+      error: `Failed to bundle plugin ${reference.module} required by template ${template.config.templateConfig.name}: ${reason}`,
+    };
+  }
+}
+
+function pickEntrypoint(moduleExports: any, exportName?: string): unknown {
+  if (exportName && moduleExports && exportName in moduleExports) {
+    return moduleExports[exportName];
+  }
+  if (moduleExports && "default" in moduleExports) {
+    return moduleExports.default;
+  }
+  return moduleExports;
+}
+
+function buildTemplatePlugin(
+  module: SkaffPluginModule,
+  template: Template,
+  reference: NormalizedTemplatePluginConfig,
+  projectSettings: ProjectSettings,
+): TemplateGenerationPlugin | undefined {
+  const entrypoint = module.template;
+  if (!entrypoint) return undefined;
+
+  if (typeof entrypoint === "function") {
+    return (entrypoint as TemplateGenerationPluginFactory)({
+      template,
+      options: reference.options,
+      projectSettings,
+    });
+  }
+
+  if (isTemplateGenerationPlugin(entrypoint)) {
+    return entrypoint;
+  }
+
+  return undefined;
+}
+
+async function resolveEntrypoint<TEntry>(
+  entry?: (() => TEntry | Promise<TEntry>) | TEntry,
+): Promise<TEntry | undefined> {
+  if (!entry) return undefined;
+  if (typeof entry === "function") {
+    return await (entry as () => TEntry | Promise<TEntry>)();
+  }
+  return entry;
+}
+
+async function buildCliPlugin(
+  module: SkaffPluginModule,
+): Promise<CliPluginContribution | undefined> {
+  return resolveEntrypoint<CliPluginContribution>(module.cli);
+}
+
+async function buildWebPlugin(
+  module: SkaffPluginModule,
+): Promise<WebPluginContribution | undefined> {
+  return resolveEntrypoint<WebPluginContribution>(module.web);
+}
+
+async function importPluginModule(
+  reference: NormalizedTemplatePluginConfig,
+  template: Template,
+): Promise<Result<any>> {
+  const bundleResult = await bundlePluginModule(reference, template);
+  if ("error" in bundleResult) {
+    return bundleResult;
+  }
+
+  try {
+    const sandbox = resolveSandboxService();
+    const moduleExports = await sandbox.runCommonJsModule<any>({
+      code: bundleResult.data.code,
+      allowedModules: ALLOWED_PLUGIN_IMPORTS,
+      filename: bundleResult.data.filename,
+      dirname: path.dirname(bundleResult.data.filename),
+      timeoutMs: PLUGIN_EXECUTION_TIMEOUT_MS,
+    });
+
+    return { data: moduleExports };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    return {
+      error: `Failed to load plugin ${reference.module} required by template ${template.config.templateConfig.name}: ${reason}. Ensure the plugin is installed in the current Skaff environment.`,
+    };
+  }
+}
+
+function validateManifest(
+  manifest: PluginManifest,
+  module: SkaffPluginModule,
+): Result<PluginManifest> {
+  const parsed = pluginManifestSchema.safeParse(manifest);
+
+  if (!parsed.success) {
+    return { error: `Invalid plugin manifest: ${parsed.error}` };
+  }
+
+  const declaresSchema = parsed.data.schemas ?? {};
+
+  if (module.systemSettingsSchema && !declaresSchema.systemSettings) {
+    return {
+      error: `Plugin ${parsed.data.name} must declare systemSettings schema support in its manifest.schemas.systemSettings field when exporting systemSettingsSchema`,
+    };
+  }
+
+  if (
+    module.additionalTemplateSettingsSchema &&
+    !declaresSchema.additionalTemplateSettings
+  ) {
+    return {
+      error: `Plugin ${parsed.data.name} must declare additionalTemplateSettings schema support in its manifest when exporting additionalTemplateSettingsSchema`,
+    };
+  }
+
+  if (module.pluginFinalSettingsSchema && !declaresSchema.pluginFinalSettings) {
+    return {
+      error: `Plugin ${parsed.data.name} must declare pluginFinalSettings schema support in its manifest when exporting pluginFinalSettingsSchema`,
+    };
+  }
+
+  if (
+    parsed.data.requiredSettingsKeys?.length &&
+    (!module.additionalTemplateSettingsSchema || !module.pluginFinalSettingsSchema)
+  ) {
+    return {
+      error: `Plugin ${parsed.data.name} declares required settings keys but does not export both additionalTemplateSettingsSchema and pluginFinalSettingsSchema`,
+    };
+  }
+
+  return { data: parsed.data };
+}
+
+function ensureCapabilities(
+  manifest: PluginManifest,
+  module: SkaffPluginModule,
+): Result<void> {
+  if (module.template && !manifest.capabilities.includes("template")) {
+    return {
+      error: `Plugin ${manifest.name} exposes a template hook but does not declare the 'template' capability in its manifest`,
+    };
+  }
+  if (!module.template && manifest.supportedHooks.template.length) {
+    return {
+      error: `Plugin ${manifest.name} declares template hooks but does not export a template entrypoint`,
+    };
+  }
+
+  if (module.cli && !manifest.capabilities.includes("cli")) {
+    return {
+      error: `Plugin ${manifest.name} exposes CLI contributions but does not declare the 'cli' capability in its manifest`,
+    };
+  }
+
+  if (module.web && !manifest.capabilities.includes("web")) {
+    return {
+      error: `Plugin ${manifest.name} exposes web contributions but does not declare the 'web' capability in its manifest`,
+    };
+  }
+
+  return { data: undefined };
+}
+
+async function readSystemSettings(
+  pluginModule: SkaffPluginModule,
+  pluginName: string,
+): Promise<Result<any>> {
+  if (!pluginModule.systemSettingsSchema) {
+    return { data: undefined };
+  }
+
+  const rawSettings = await getPluginSystemSettings(pluginName);
+  const parsed = pluginModule.systemSettingsSchema.safeParse(rawSettings ?? {});
+
+  if (!parsed.success) {
+    return {
+      error: `Invalid system settings for plugin ${pluginName}: ${parsed.error}`,
+    };
+  }
+
+  return { data: parsed.data };
+}
+
+export async function loadPluginsForTemplate(
+  template: Template,
+  projectSettings: ProjectSettings,
+): Promise<Result<LoadedTemplatePlugin[]>> {
+  const normalized = normalizeTemplatePlugins(template.config.plugins);
+  if (!normalized.length) {
+    return { data: [] };
+  }
+
+  const loaded: LoadedTemplatePlugin[] = [];
+
+  for (const reference of normalized) {
+    const moduleResult = await importPluginModule(reference, template);
+    if ("error" in moduleResult) {
+      return { error: moduleResult.error };
+    }
+
+    const entry = pickEntrypoint(moduleResult.data, reference.exportName);
+    const pluginModule = coerceToPluginModule(entry);
+    if (!pluginModule) {
+      return {
+        error: `Plugin ${reference.module} did not export a usable entry point with a manifest`,
+      };
+    }
+
+    const manifestResult = validateManifest(
+      pluginModule.manifest,
+      pluginModule,
+    );
+
+    if ("error" in manifestResult) {
+      return manifestResult;
+    }
+
+    const manifest = manifestResult.data;
+    const capabilityCheck = ensureCapabilities(manifest, pluginModule);
+
+    if ("error" in capabilityCheck) {
+      return capabilityCheck;
+    }
+
+    const pluginName = manifest.name;
+
+    const systemSettingsResult = await readSystemSettings(pluginModule, pluginName);
+
+    if ("error" in systemSettingsResult) {
+      return systemSettingsResult;
+    }
+
+    const templatePlugin = buildTemplatePlugin(
+      pluginModule,
+      template,
+      reference,
+      projectSettings,
+    );
+
+    const [cliPlugin, webPlugin] = await Promise.all([
+      buildCliPlugin(pluginModule),
+      buildWebPlugin(pluginModule),
+    ]);
+
+    loaded.push({
+      reference,
+      module: pluginModule,
+      name: pluginName,
+      version: manifest.version,
+      requiredSettingsKeys: manifest.requiredSettingsKeys,
+      systemSettings: systemSettingsResult.data,
+      additionalTemplateSettingsSchema:
+        pluginModule.additionalTemplateSettingsSchema ??
+        (z.object({}).strict() as z.ZodTypeAny),
+      pluginFinalSettingsSchema:
+        pluginModule.pluginFinalSettingsSchema ??
+        (z.object({}).strict() as z.ZodTypeAny),
+      getFinalTemplateSettings: pluginModule.getFinalTemplateSettings,
+      templatePlugin,
+      cliPlugin,
+      webPlugin,
+    });
+  }
+
+  return { data: loaded };
+}

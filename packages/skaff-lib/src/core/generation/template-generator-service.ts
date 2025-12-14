@@ -6,82 +6,91 @@ import {
 import fs from "fs-extra";
 import { backendLogger } from "../../lib/logger";
 import { Result } from "../../lib/types";
-import { anyOrCallbackToAny, logError } from "../../lib/utils";
-import { AutoInstantiationPlanner } from "./AutoInstantiationPlanner";
-import { FileMaterializer } from "./FileMaterializer";
-import { GenerationContext } from "./GenerationContext";
-import { PathResolver } from "./PathResolver";
-import { ProjectSettingsSynchronizer } from "./ProjectSettingsSynchronizer";
-import { RollbackFileSystem } from "./RollbackFileSystem";
-import { SideEffectExecutor } from "./SideEffectExecutor";
-import { HandlebarsEnvironment } from "../shared/HandlebarsEnvironment";
-import { Template } from "../../models/template";
-import { isSubset } from "../../utils/shared-utils";
-import { FileRollbackManager } from "../shared/FileRollbackManager";
+import { logError } from "../../lib/utils";
 import { getSkaffContainer } from "../../di/container";
 import { inject, injectable } from "tsyringe";
 import { GitServiceToken, TemplateGeneratorServiceToken } from "../../di/tokens";
 import type { GitService } from "../infra/git-service";
-import { makeDir } from "../infra/file-service";
+import {
+  GeneratorOptions,
+  TemplateGenerationPipelineOverrides,
+  TemplateGenerationPlugin,
+  TemplatePipelinePluginContext,
+} from "./template-generation-types";
+import {
+  buildDefaultProjectCreationStages,
+  buildDefaultTemplateInstantiationStages,
+  createProjectCreationPipeline,
+  createTemplateInstantiationPipeline,
+  ProjectCreationPipelineContext,
+  TemplateInstantiationPipelineContext,
+} from "./pipeline/pipeline-stages";
+import { PipelineBuilder, PipelineRunner, PipelineStage } from "./pipeline/pipeline-runner";
+import { AutoInstantiationCoordinator } from "./pipeline/AutoInstantiationCoordinator";
+import { TemplateFileMaterializer } from "./pipeline/TemplateFileMaterializer";
+import { TemplatePipelineContext } from "./pipeline/TemplatePipelineContext";
+import { TargetPathResolver } from "./pipeline/TargetPathResolver";
+import { ProjectSettingsSynchronizer } from "./ProjectSettingsSynchronizer";
+import { RollbackFileSystem } from "./RollbackFileSystem";
+import { SideEffectCoordinator } from "./pipeline/SideEffectCoordinator";
+import { HandlebarsEnvironment } from "../shared/HandlebarsEnvironment";
+import { Template } from "../../models/template";
+import { FileRollbackManager } from "../shared/FileRollbackManager";
+import { loadPluginsForTemplate, type LoadedTemplatePlugin } from "../plugins";
+import { HelperDelegate } from "handlebars";
 
-export interface GeneratorOptions {
-  /**
-   * Don't add git.
-   */
-  dontDoGit?: boolean;
-
-  /**
-   * If true, the template generator will not generate the template settings file.
-   * This mode allows subtemplates to be generated but will never save the template settings so after generation is complete all settings are lost.
-   */
-  dontGenerateTemplateSettings?: boolean;
-
-  /**
-   * If true do not auto instantiate child templates. Ignores this field.
-   */
-  dontAutoInstantiate?: boolean;
-
-  /**
-   * The absolute path to the destination directory where the template will be generated.
-   * Should be the root project dir or the directory where the individual template should be stored.
-   * This should be a valid path on the filesystem.
-   */
-  absoluteDestinationPath: string;
-}
-
+/**
+ * Orchestrates template and project generation using the pipeline building blocks.
+ *
+ * The session wires together context tracking, path resolution, rendering,
+ * side-effect execution, and auto-instantiation so callers can create new
+ * projects or templates with a single entry point. Plugins can further adjust
+ * the assembled pipelines to add or replace behaviour without duplicating the
+ * orchestration logic.
+ */
 export class TemplateGenerationSession {
-  private readonly generationContext: GenerationContext;
-  private readonly pathResolver: PathResolver;
+  private readonly pipelineContext: TemplatePipelineContext;
+  private readonly targetPathResolver: TargetPathResolver;
   private readonly fileSystem: RollbackFileSystem;
-  private readonly fileMaterializer: FileMaterializer;
-  private readonly sideEffectExecutor: SideEffectExecutor;
+  private readonly fileMaterializer: TemplateFileMaterializer;
+  private readonly sideEffectCoordinator: SideEffectCoordinator;
   private readonly projectSettingsSynchronizer: ProjectSettingsSynchronizer;
   private readonly gitService: GitService;
-  private readonly autoInstantiationPlanner: AutoInstantiationPlanner;
+  private readonly autoInstantiationCoordinator: AutoInstantiationCoordinator;
   private readonly rootTemplate: Template;
+  private readonly templateInstantiationStages: PipelineStage<TemplateInstantiationPipelineContext>[];
+  private readonly projectCreationStages: PipelineStage<ProjectCreationPipelineContext>[];
+  private readonly pluginCache = new Map<string, LoadedTemplatePlugin[]>();
+  private readonly additionalPlugins: TemplateGenerationPlugin[];
+  private readonly pluginHandlebarHelpers: Record<string, HelperDelegate> = {};
+  private readonly pluginContext: TemplatePipelinePluginContext;
 
   constructor(
     private readonly options: GeneratorOptions,
     rootTemplate: Template,
     private readonly destinationProjectSettings: ProjectSettings,
     gitService: GitService,
+    pipelineOverrides?: TemplateGenerationPipelineOverrides,
+    plugins?: TemplateGenerationPlugin[],
   ) {
-    this.generationContext = new GenerationContext(rootTemplate);
-    this.rootTemplate = this.generationContext.getRootTemplate();
-    this.pathResolver = new PathResolver(
+    this.additionalPlugins = plugins ?? [];
+    this.pipelineContext = new TemplatePipelineContext(rootTemplate);
+    this.rootTemplate = this.pipelineContext.getRootTemplate();
+    this.targetPathResolver = new TargetPathResolver(
       this.options.absoluteDestinationPath,
-      this.generationContext,
+      this.pipelineContext,
     );
     this.fileSystem = new RollbackFileSystem();
-    this.fileMaterializer = new FileMaterializer(
-      this.generationContext,
-      this.pathResolver,
+    this.fileMaterializer = new TemplateFileMaterializer(
+      this.pipelineContext,
+      this.targetPathResolver,
       this.fileSystem,
       new HandlebarsEnvironment(),
+      () => this.pluginHandlebarHelpers,
     );
-    this.sideEffectExecutor = new SideEffectExecutor(
-      this.generationContext,
-      this.pathResolver,
+    this.sideEffectCoordinator = new SideEffectCoordinator(
+      this.pipelineContext,
+      this.targetPathResolver,
       this.fileSystem,
     );
     this.projectSettingsSynchronizer = new ProjectSettingsSynchronizer(
@@ -90,19 +99,163 @@ export class TemplateGenerationSession {
       this.rootTemplate,
     );
     this.gitService = gitService;
-    this.autoInstantiationPlanner = new AutoInstantiationPlanner(
+    this.autoInstantiationCoordinator = new AutoInstantiationCoordinator(
       this.options,
-      this.generationContext,
+      this.pipelineContext,
       this.projectSettingsSynchronizer,
+      this.loadTemplatePlugins.bind(this),
       this.instantiateTemplateInProject.bind(this),
     );
+
+    this.pluginContext = {
+      options: this.options,
+      rootTemplate: this.rootTemplate,
+      registerHandlebarHelpers: this.registerHandlebarHelpers.bind(this),
+    };
+
+    this.templateInstantiationStages =
+      pipelineOverrides?.instantiateTemplateStages ??
+      buildDefaultTemplateInstantiationStages(
+        {
+          pipelineContext: this.pipelineContext,
+          projectSettingsSynchronizer: this.projectSettingsSynchronizer,
+          fileMaterializer: this.fileMaterializer,
+          sideEffectCoordinator: this.sideEffectCoordinator,
+          autoInstantiationCoordinator: this.autoInstantiationCoordinator,
+          targetPathResolver: this.targetPathResolver,
+        },
+        this.options,
+        this.projectSettingsSynchronizer.getProjectSettings(),
+      );
+
+    this.projectCreationStages =
+      pipelineOverrides?.projectCreationStages ??
+      buildDefaultProjectCreationStages(
+        {
+          projectSettingsSynchronizer: this.projectSettingsSynchronizer,
+          fileMaterializer: this.fileMaterializer,
+          sideEffectCoordinator: this.sideEffectCoordinator,
+          autoInstantiationCoordinator: this.autoInstantiationCoordinator,
+        },
+        this.options,
+        this.gitService,
+      );
+  }
+
+  private registerHandlebarHelpers(
+    helpers: Record<string, HelperDelegate>,
+  ): void {
+    for (const [name, helper] of Object.entries(helpers)) {
+      if (this.pluginHandlebarHelpers[name]) {
+        throw new Error(
+          `Handlebars helper ${name} has already been registered by another plugin.`,
+        );
+      }
+      this.pluginHandlebarHelpers[name] = helper;
+    }
+  }
+
+  private applyInstantiationPlugins(
+    builder: PipelineBuilder<TemplateInstantiationPipelineContext>,
+    plugins: TemplateGenerationPlugin[],
+  ): void {
+    for (const plugin of plugins) {
+      plugin.configureTemplateInstantiationPipeline?.(
+        builder,
+        this.pluginContext,
+      );
+    }
+  }
+
+  private applyProjectCreationPlugins(
+    builder: PipelineBuilder<ProjectCreationPipelineContext>,
+    plugins: TemplateGenerationPlugin[],
+  ): void {
+    for (const plugin of plugins) {
+      plugin.configureProjectCreationPipeline?.(
+        builder,
+        this.pluginContext,
+      );
+    }
+  }
+
+  private logPipeline(
+    kind: "template-instantiation" | "project-creation",
+    stages: PipelineStage<any>[],
+  ): void {
+    const sequence = stages
+      .map(
+        (stage) =>
+          `${stage.key}@${stage.phase ?? "run"}#${stage.priority ?? 0} (${stage.source ?? "unknown"})`,
+      )
+      .join(" -> ");
+    backendLogger.info(`Composed ${kind} pipeline: ${sequence}`);
+  }
+
+  private createTemplateInstantiationPipeline(
+    plugins: TemplateGenerationPlugin[],
+  ): PipelineRunner<TemplateInstantiationPipelineContext> {
+    const builder = new PipelineBuilder(this.templateInstantiationStages);
+    this.applyInstantiationPlugins(builder, plugins);
+    const stages = builder.build();
+    this.logPipeline("template-instantiation", stages);
+    return createTemplateInstantiationPipeline(stages);
+  }
+
+  private createProjectCreationPipeline(
+    plugins: TemplateGenerationPlugin[],
+  ): PipelineRunner<ProjectCreationPipelineContext> {
+    const builder = new PipelineBuilder(this.projectCreationStages);
+    this.applyProjectCreationPlugins(builder, plugins);
+    const stages = builder.build();
+    this.logPipeline("project-creation", stages);
+    return createProjectCreationPipeline(stages);
+  }
+
+  private async loadTemplatePlugins(
+    template: Template,
+  ): Promise<Result<LoadedTemplatePlugin[]>> {
+    const cached = this.pluginCache.get(template.absoluteDir);
+
+    if (cached) {
+      return { data: cached };
+    }
+
+    const loaded = await loadPluginsForTemplate(
+      template,
+      this.projectSettingsSynchronizer.getProjectSettings(),
+    );
+
+    if ("error" in loaded) {
+      return loaded;
+    }
+
+    this.pluginCache.set(template.absoluteDir, loaded.data);
+    return loaded;
+  }
+
+  private async loadGenerationPlugins(
+    template: Template,
+  ): Promise<Result<TemplateGenerationPlugin[]>> {
+    const loaded = await this.loadTemplatePlugins(template);
+
+    if ("error" in loaded) {
+      return loaded;
+    }
+
+    const generationPlugins = loaded.data
+      .map((entry) => entry.templatePlugin)
+      .filter((plugin): plugin is TemplateGenerationPlugin => Boolean(plugin));
+
+    return { data: [...generationPlugins, ...this.additionalPlugins] };
   }
 
   private async setTemplateGenerationValues(
     userSettings: UserTemplateSettings,
     template: Template,
     parentInstanceId?: string,
-  ): Promise<Result<void>> {
+    options?: { templateInstanceId?: string; plugins?: LoadedTemplatePlugin[] },
+  ): Promise<Result<LoadedTemplatePlugin[]>> {
     if (!await template.isValid()) {
       backendLogger.error(
         `Template repo is not clean or template commit hash is not valid.`,
@@ -112,23 +265,35 @@ export class TemplateGenerationSession {
       };
     }
 
+    const pluginsResult = options?.plugins
+      ? { data: options.plugins }
+      : await this.loadTemplatePlugins(template);
+
+    if ("error" in pluginsResult) {
+      return pluginsResult;
+    }
+
     const result = this.projectSettingsSynchronizer.getFinalTemplateSettings(
       template,
       userSettings,
       parentInstanceId,
+      {
+        plugins: pluginsResult.data,
+        templateInstanceId: options?.templateInstanceId,
+      },
     );
 
     if ("error" in result) {
       return result;
     }
 
-    this.generationContext.setCurrentState({
+    this.pipelineContext.setCurrentState({
       template,
       finalSettings: result.data,
       parentInstanceId,
     });
 
-    return { data: undefined };
+    return { data: pluginsResult.data };
   }
 
   private async cleanupInstantiationFailure(
@@ -136,7 +301,7 @@ export class TemplateGenerationSession {
   ): Promise<void> {
     await rollbackManager.rollback();
     this.fileSystem.clearRollbackManager();
-    this.generationContext.clearCurrentState();
+    this.pipelineContext.clearCurrentState();
   }
 
   private async failGeneration<T>(
@@ -201,25 +366,8 @@ export class TemplateGenerationSession {
     const templateName = instantiatedTemplate.templateName;
     const userSettings = instantiatedTemplate.templateSettings;
     const parentInstanceId = instantiatedTemplate.parentId;
-
-    let templateSettingsPersisted = false;
     const rollbackManager = new FileRollbackManager();
-
-    const cleanupOnFailure = async () => {
-      if (!removeOnFailure) {
-        return;
-      }
-
-      const idsToRemove =
-        this.projectSettingsSynchronizer.collectTemplateTreeIds(
-          newTemplateInstanceId,
-        );
-
-      await this.projectSettingsSynchronizer.removeTemplatesFromProjectSettings(
-        idsToRemove,
-        { removeFromFile: templateSettingsPersisted },
-      );
-    };
+    let pipelineContext: TemplateInstantiationPipelineContext | null = null;
 
     const fail = async <T>(
       result: Result<T>,
@@ -269,118 +417,75 @@ export class TemplateGenerationSession {
       );
     }
 
-    const setContextResult = await this.setTemplateGenerationValues(
-      userSettings,
+    const pluginLoadResult = await this.loadTemplatePlugins(template);
+
+    if ("error" in pluginLoadResult) {
+      return fail(pluginLoadResult);
+    }
+
+    pipelineContext = {
       template,
       parentInstanceId,
-    );
+      userSettings,
+      projectSettings,
+      instantiatedTemplate,
+      plugins: pluginLoadResult.data,
+    };
 
-    if ("error" in setContextResult) {
-      return fail(setContextResult);
-    }
-
-    const finalSettingsResult = this.generationContext.getFinalSettings();
-
-    if ("error" in finalSettingsResult) {
-      return fail(finalSettingsResult);
-    }
-
-    this.fileSystem.setRollbackManager(rollbackManager);
-
-    const templatesThatDisableThisTemplate = anyOrCallbackToAny(
-      template.config.templatesThatDisableThis,
-      finalSettingsResult.data,
-    );
-
-    if ("error" in templatesThatDisableThisTemplate) {
-      return fail(templatesThatDisableThisTemplate);
-    }
-
-    for (const existingTemplate of projectSettings.instantiatedTemplates) {
-      if (
-        templatesThatDisableThisTemplate.data
-          ?.filter(
-            (templateThatDisableThis) =>
-              !templateThatDisableThis.specificSettings ||
-              isSubset(
-                templateThatDisableThis.specificSettings,
-                existingTemplate.templateSettings,
-              ),
-          )
-          .map(
-            (templateThatDisableThis) =>
-              templateThatDisableThis.templateName,
-          )
-          .includes(existingTemplate.templateName)
-      ) {
-        backendLogger.error(
-          `Template ${templateName} cannot be instantiated because ${existingTemplate.templateName} is already instantiated.`,
-        );
-        return failWithMessage(
-          `Template ${templateName} cannot be instantiated because ${existingTemplate.templateName} is already instantiated.`,
-        );
+    const cleanupOnFailure = async () => {
+      if (!removeOnFailure || !pipelineContext) {
+        return;
       }
-    }
 
-    const assertions = anyOrCallbackToAny(
-      template.config.assertions,
-      finalSettingsResult.data,
-    );
+      const idsToRemove =
+        this.projectSettingsSynchronizer.collectTemplateTreeIds(
+          newTemplateInstanceId,
+        );
 
-    if ("error" in assertions) {
-      return fail(assertions);
-    }
+      await this.projectSettingsSynchronizer.removeTemplatesFromProjectSettings(
+        idsToRemove,
+        { removeFromFile: pipelineContext.templateSettingsPersisted ?? false },
+      );
+    };
 
-    if (assertions.data !== undefined && !assertions.data) {
-      backendLogger.error(`Template ${templateName} failed assertions.`);
-      return failWithMessage(`Template ${templateName} failed assertions.`);
+    if (!pipelineContext) {
+      return fail({ error: "Template generation failed unexpectedly." });
     }
 
     try {
-      const copyResult = await this.fileMaterializer.copyTemplateDirectory();
-      if ("error" in copyResult) {
-        return fail(copyResult);
+      const pluginsResult = await this.loadGenerationPlugins(template);
+
+      if ("error" in pluginsResult) {
+        return fail({ error: pluginsResult.error });
       }
 
-      const sideEffectResult = await this.sideEffectExecutor.applySideEffects();
-      if ("error" in sideEffectResult) {
-        return fail(sideEffectResult);
+      const pipeline = this.createTemplateInstantiationPipeline(
+        pluginsResult.data,
+      );
+
+      this.fileSystem.setRollbackManager(rollbackManager);
+
+      const pipelineResult = await pipeline.run(pipelineContext);
+
+      if ("error" in pipelineResult) {
+        return fail(pipelineResult);
       }
 
       this.fileSystem.clearRollbackManager();
 
-      if (!this.options.dontGenerateTemplateSettings) {
-        const newTemplateResult =
-          await this.projectSettingsSynchronizer.persistNewTemplate(
-            instantiatedTemplate,
-          );
-
-        if ("error" in newTemplateResult) {
-          return fail(newTemplateResult);
-        }
-
-        templateSettingsPersisted = true;
+      if (!pipelineResult.data.targetPath || !pipelineResult.data.finalSettings) {
+        return fail({ error: "Template generation failed unexpectedly." });
       }
 
-      const templatesToAutoInstantiateResult =
-        this.autoInstantiationPlanner.getTemplatesToAutoInstantiateForCurrentTemplate();
+      rollbackManager.clear();
+      this.pipelineContext.clearCurrentState();
 
-      if ("error" in templatesToAutoInstantiateResult) {
-        return fail(templatesToAutoInstantiateResult);
-      }
-
-      if (templatesToAutoInstantiateResult.data.length) {
-        const autoInstantiationResult =
-          await this.autoInstantiationPlanner.autoInstantiateSubTemplates(
-            finalSettingsResult.data,
-            instantiatedTemplate.id,
-            templatesToAutoInstantiateResult.data,
-          );
-
-        if ("error" in autoInstantiationResult) {
-          return fail(autoInstantiationResult);
-        }
-      }
+      return {
+        data: {
+          targetPath: pipelineResult.data.targetPath,
+          finalSettings: pipelineResult.data.finalSettings,
+        },
+      };
     } catch (error) {
       logError({
         shortMessage: `Failed to instantiate template`,
@@ -388,34 +493,6 @@ export class TemplateGenerationSession {
       });
       return fail({ error: `Failed to instantiate template: ${error}` });
     }
-
-    const targetPathResult = this.pathResolver.getAbsoluteTargetPath();
-
-    if ("error" in targetPathResult) {
-      rollbackManager.clear();
-      this.generationContext.clearCurrentState();
-      return { error: targetPathResult.error };
-    }
-
-    const finalSettingsAtEnd = this.generationContext.getFinalSettings();
-
-    if ("error" in finalSettingsAtEnd) {
-      rollbackManager.clear();
-      this.generationContext.clearCurrentState();
-      return {
-        error: finalSettingsAtEnd.error,
-      };
-    }
-
-    rollbackManager.clear();
-    this.generationContext.clearCurrentState();
-
-    return {
-      data: {
-        targetPath: targetPathResult.data,
-        finalSettings: finalSettingsAtEnd.data,
-      },
-    };
   }
 
   public async instantiateNewProject(): Promise<Result<string>> {
@@ -454,10 +531,40 @@ export class TemplateGenerationSession {
 
     const template = this.rootTemplate;
     const userSettings = instantiatedTemplate.templateSettings;
-
-    let projectDirCreated = false;
-    let projectSettingsPersisted = false;
     const rollbackManager = new FileRollbackManager();
+
+    const pluginLoadResult = await this.loadTemplatePlugins(template);
+
+    if ("error" in pluginLoadResult) {
+      return { error: pluginLoadResult.error };
+    }
+
+    const setContextResult = await this.setTemplateGenerationValues(
+      userSettings,
+      template,
+      undefined,
+      {
+        templateInstanceId: projectRootInstanceId,
+        plugins: pluginLoadResult.data,
+      },
+    );
+
+    if ("error" in setContextResult) {
+      return { error: setContextResult.error };
+    }
+
+    const finalSettingsResult = this.pipelineContext.getFinalSettings();
+
+    if ("error" in finalSettingsResult) {
+      return fail({ error: "Failed to parse user settings." });
+    }
+
+    const pipelineContext: ProjectCreationPipelineContext = {
+      template,
+      userSettings,
+      projectSettings,
+      finalSettings: finalSettingsResult.data,
+    };
 
     const cleanupOnFailure = async () => {
       const idsToRemove =
@@ -466,10 +573,10 @@ export class TemplateGenerationSession {
         );
       await this.projectSettingsSynchronizer.removeTemplatesFromProjectSettings(
         idsToRemove,
-        { removeFromFile: projectSettingsPersisted },
+        { removeFromFile: pipelineContext.projectSettingsPersisted ?? false },
       );
 
-      if (!projectDirCreated) {
+      if (!pipelineContext.projectDirCreated) {
         return;
       }
 
@@ -478,7 +585,7 @@ export class TemplateGenerationSession {
           recursive: true,
           force: true,
         });
-        projectDirCreated = false;
+        pipelineContext.projectDirCreated = false;
       } catch (error) {
         logError({
           shortMessage: `Failed to clean up project directory ${this.options.absoluteDestinationPath}`,
@@ -490,106 +597,27 @@ export class TemplateGenerationSession {
     const fail = async <T>(result: Result<T>): Promise<Result<T>> =>
       this.failGeneration(rollbackManager, cleanupOnFailure, result);
 
-    const dirStat = await fs
-      .stat(this.options.absoluteDestinationPath)
-      .catch(() => null);
-    if (dirStat && dirStat.isDirectory()) {
-      backendLogger.error(
-        `Directory ${this.options.absoluteDestinationPath} already exists.`,
-      );
-      return fail({
-        error: `Directory ${this.options.absoluteDestinationPath} already exists.`,
-      });
-    }
-
-    const setContextResult = await this.setTemplateGenerationValues(
-      userSettings,
-      template,
-    );
-
-    if ("error" in setContextResult) {
-      return fail(setContextResult);
-    }
-
-    const finalSettingsResult = this.generationContext.getFinalSettings();
-
-    if ("error" in finalSettingsResult) {
-      return fail({ error: "Failed to parse user settings." });
-    }
-
     try {
-      const ensureProjectDirResult = await makeDir(
-        this.options.absoluteDestinationPath,
-      );
+      const pluginsResult = await this.loadGenerationPlugins(template);
 
-      if ("error" in ensureProjectDirResult) {
-        return fail(ensureProjectDirResult);
-      }
-      projectDirCreated = true;
-
-      if (!this.options.dontDoGit) {
-        const createRepoResult = await this.gitService.createGitRepo(
-          this.options.absoluteDestinationPath,
-        );
-        if ("error" in createRepoResult) {
-          return fail(createRepoResult);
-        }
+      if ("error" in pluginsResult) {
+        return fail({ error: pluginsResult.error });
       }
 
-      if (!this.options.dontGenerateTemplateSettings) {
-        const writeSettingsResult =
-          await this.projectSettingsSynchronizer.persistNewProjectSettings();
-        if ("error" in writeSettingsResult) {
-          return fail(writeSettingsResult);
-        }
-        projectSettingsPersisted = true;
-      }
-
-      if (!this.options.dontDoGit) {
-        const commitResult = await this.gitService.commitAll(
-          this.options.absoluteDestinationPath,
-          `Initial commit for ${projectSettings.projectRepositoryName}`,
-        );
-        if ("error" in commitResult) {
-          return fail(commitResult);
-        }
-      }
+      const pipeline = this.createProjectCreationPipeline(pluginsResult.data);
 
       this.fileSystem.setRollbackManager(rollbackManager);
-      const copyResult = await this.fileMaterializer.copyTemplateDirectory();
-      if ("error" in copyResult) {
-        return fail(copyResult);
-      }
 
-      const sideEffectResult = await this.sideEffectExecutor.applySideEffects();
-      if ("error" in sideEffectResult) {
-        return fail(sideEffectResult);
+      const pipelineResult = await pipeline.run(pipelineContext);
+
+      if ("error" in pipelineResult) {
+        return fail(pipelineResult);
       }
 
       this.fileSystem.clearRollbackManager();
 
-      const templatesToAutoInstantiateResult =
-        this.autoInstantiationPlanner.getTemplatesToAutoInstantiateForCurrentTemplate();
-
-      if ("error" in templatesToAutoInstantiateResult) {
-        return fail(templatesToAutoInstantiateResult);
-      }
-
-      if (templatesToAutoInstantiateResult.data.length) {
-        const autoInstantiationResult =
-          await this.autoInstantiationPlanner.autoInstantiateSubTemplates(
-            finalSettingsResult.data,
-            instantiatedTemplate.id,
-            templatesToAutoInstantiateResult.data,
-          );
-
-        if ("error" in autoInstantiationResult) {
-          return fail(autoInstantiationResult);
-        }
-      }
-
       rollbackManager.clear();
-      this.generationContext.clearCurrentState();
+      this.pipelineContext.clearCurrentState();
     } catch (error) {
       await this.cleanupInstantiationFailure(rollbackManager);
       await cleanupOnFailure();
@@ -675,6 +703,13 @@ export class TemplateGenerationSession {
 }
 
 @injectable()
+/**
+ * DI-friendly entry point that spawns {@link TemplateGenerationSession}s.
+ *
+ * The service itself is thin: it provides git access from the container and
+ * hands back a fully-wired session that drives the pipeline for a specific
+ * template and destination.
+ */
 export class TemplateGeneratorService {
   constructor(
     @inject(GitServiceToken)
@@ -685,12 +720,16 @@ export class TemplateGeneratorService {
     options: GeneratorOptions,
     rootTemplate: Template,
     destinationProjectSettings: ProjectSettings,
+    pipelineOverrides?: TemplateGenerationPipelineOverrides,
+    plugins?: TemplateGenerationPlugin[],
   ): TemplateGenerationSession {
     return new TemplateGenerationSession(
       options,
       rootTemplate,
       destinationProjectSettings,
       this.gitService,
+      pipelineOverrides,
+      plugins,
     );
   }
 }

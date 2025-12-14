@@ -109,6 +109,27 @@ When you invoke skaff, it will:
 
 Templates may also include tasks, linting and formatting setups so that your new project is productive out of the box.
 
+## Plugin discovery and extensibility
+
+- Each `templateConfig.ts` can declare an optional `plugins` array describing plugin module specifiers and options. Skaff only
+  activates a plugin when that specific template is being generated.
+- A shared loader exported from `@timonteutelink/skaff-lib` (`loadPluginsForTemplate`) resolves these modules relative to the
+  template repository's `package.json`, making the same discovery rules available to both the CLI and the Web UI.
+- Plugins target the `TemplateGenerationPlugin` interface, which receives a `PipelineBuilder` seeded with the default stages so
+  they can inject, replace or remove steps while keeping the base pipeline intact and deterministic when no plugins load.
+- Plugins can persist namespaced data under `instantiatedTemplates.<id>.plugins.<pluginName>` using the shared
+  `TemplatePluginSettingsStore`; these values are written to `templateSettings.json` alongside other template settings.
+- CLI plugins can surface commands through `skaff plugin run --list` / `--command <name>` while web plugins return lightweight
+  notices that the UI can render next to project details.
+- Template authors who publish plugin-specific type helpers can keep them separate from runtime code—for example, the
+  `@timonteutelink/skaff-plugin-greeter-types` package demonstrates a declaration-only helper that templates can import to type
+  their plugin options without adding runtime weight.
+- Example plugins can be split by surface area: the greeter sample ships as
+  `@timonteutelink/skaff-plugin-greeter` (generation pipeline),
+  `@timonteutelink/skaff-plugin-greeter-cli` (commands and interactive
+  settings wrappers), and `@timonteutelink/skaff-plugin-greeter-web` (React UI
+  stages) so templates only depend on the pieces they need.
+
 ## CLI
 
 The CLI follows the standard `skaff <command> [options]` pattern. Common commands include:

@@ -35,6 +35,10 @@ export default class ProjectAddSubtemplate extends Base {
       args.rootTemplateName,
       args.templateName,
       flags.settings,
+      undefined,
+      {
+        projectSettings: proj.data.instantiatedProjectSettings,
+      },
     );
 
     const res = await prepareInstantiationDiff(

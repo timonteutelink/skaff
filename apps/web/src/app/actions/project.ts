@@ -55,6 +55,50 @@ export async function retrieveProject(
   return { data: projectDTOResult.data };
 }
 
+export async function retrieveProjectPluginNotices(
+  projectRepositoryName: string,
+): Promise<Result<{ project: string; notices: string[] }>> {
+  const project = await findProject(projectRepositoryName);
+
+  if ("error" in project) {
+    return { error: project.error };
+  }
+
+  if (!project.data) {
+    return { error: `Project ${projectRepositoryName} not found.` };
+  }
+
+  const pluginsResult = await tempLib.loadPluginsForTemplate(
+    project.data.rootTemplate,
+    project.data.instantiatedProjectSettings,
+  );
+
+  if ("error" in pluginsResult) {
+    return { error: pluginsResult.error };
+  }
+
+  const notices: string[] = [];
+
+  for (const plugin of pluginsResult.data) {
+    if (!plugin.webPlugin?.getNotices) continue;
+    try {
+      const pluginNotices = await plugin.webPlugin.getNotices({
+        projectSettings: project.data.instantiatedProjectSettings,
+        rootTemplate: project.data.rootTemplate,
+      });
+      if (pluginNotices?.length) {
+        notices.push(...pluginNotices);
+      }
+    } catch (error) {
+      return {
+        error: `Failed to resolve plugin notices: ${error}`,
+      };
+    }
+  }
+
+  return { data: { project: projectRepositoryName, notices } };
+}
+
 export async function runProjectCommand(
   projectRepositoryName: string,
   templateInstanceId: string,

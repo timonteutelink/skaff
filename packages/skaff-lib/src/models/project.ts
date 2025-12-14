@@ -3,6 +3,7 @@ import {
   ProjectSettings,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
+import { LoadedTemplatePlugin } from "../core/plugins";
 import path from "node:path";
 import { GitStatus, ProjectDTO, Result } from "../lib/types";
 import { logError, stringOrCallbackToString } from "../lib/utils";
@@ -11,6 +12,7 @@ import { loadProjectSettings } from "../core/projects/project-settings-service";
 import { resolveShellService } from "../core/infra/shell-service";
 import { Template } from "./template";
 import { backendLogger } from "../lib";
+import z from "zod";
 
 // Every project repository name inside a root project should be unique.
 // The root project can be uniquely identified by its repository name and author (and version).
@@ -63,6 +65,23 @@ function validateParentFinalSettings(
   return { data: parsed.data };
 }
 
+function buildPluginTemplateSettingsSchema(
+  plugins?: LoadedTemplatePlugin[],
+): z.ZodTypeAny {
+  if (!plugins?.length) {
+    return z.object({}).strict().optional();
+  }
+
+  const shape: Record<string, z.ZodTypeAny> = {};
+
+  for (const plugin of plugins) {
+    shape[plugin.name] =
+      plugin.additionalTemplateSettingsSchema ?? z.object({}).strict();
+  }
+
+  return z.object(shape).partial().strict();
+}
+
 export class Project {
   public absoluteRootDir: string;
 
@@ -106,8 +125,15 @@ export class Project {
     projectSettings: ProjectSettings,
     userProvidedSettings: UserTemplateSettings,
     parentInstanceId?: string,
+    options?: { templateInstanceId?: string; plugins?: LoadedTemplatePlugin[] },
   ): Result<FinalTemplateSettings> {
-    const parsedUserSettings = template.config.templateSettingsSchema.safeParse(
+    const templateSettingsSchema = template.config.templateSettingsSchema.merge(
+      z
+        .object({ plugins: buildPluginTemplateSettingsSchema(options?.plugins) })
+        .partial(),
+    );
+
+    const parsedUserSettings = templateSettingsSchema.safeParse(
       userProvidedSettings,
     );
 
@@ -153,7 +179,6 @@ export class Project {
         fullProjectSettings: projectSettings,
         templateSettings: parsedUserSettings.data,
         parentSettings: parentFinalSettings,
-        aiResults: {},
       });
     } catch (error) {
       logError({
@@ -176,7 +201,77 @@ export class Project {
       };
     }
 
-    return { data: parsedFinalSettings.data };
+    const pluginFinalSettings: Record<
+      string,
+      { version: string; settings: unknown }
+    > = {};
+
+    if (options?.plugins?.length) {
+      for (const plugin of options.plugins) {
+        const rawPluginSettings = parsedUserSettings.data.plugins?.[
+          plugin.name
+        ];
+
+        const additionalSchema =
+          plugin.additionalTemplateSettingsSchema ?? z.object({}).strict();
+        const parsedPluginSettings = additionalSchema.safeParse(
+          rawPluginSettings ?? {},
+        );
+
+        if (!parsedPluginSettings.success) {
+          return {
+            error: `Invalid settings for plugin ${plugin.name}: ${parsedPluginSettings.error}`,
+          };
+        }
+
+        let pluginFinalSettingsValue: unknown = parsedPluginSettings.data;
+
+        if (plugin.getFinalTemplateSettings) {
+          try {
+            pluginFinalSettingsValue = plugin.getFinalTemplateSettings({
+              templateFinalSettings: parsedFinalSettings.data,
+              additionalTemplateSettings: parsedPluginSettings.data,
+              systemSettings: plugin.systemSettings,
+            });
+          } catch (error) {
+            return {
+              error: `Failed to resolve final settings for plugin ${plugin.name}: ${error}`,
+            };
+          }
+        }
+
+        const pluginFinalSchema =
+          plugin.pluginFinalSettingsSchema ?? z.object({}).strict();
+        const parsed = pluginFinalSchema.safeParse(pluginFinalSettingsValue);
+        if (!parsed.success) {
+          return {
+            error: `Invalid final settings for plugin ${plugin.name}: ${parsed.error}`,
+          };
+        }
+
+        pluginFinalSettings[plugin.name] = {
+          version: plugin.version,
+          settings: parsed.data,
+        };
+      }
+    }
+
+    const finalSettingsWithPlugins: FinalTemplateSettings = {
+      ...parsedFinalSettings.data,
+      plugins: pluginFinalSettings,
+    };
+
+    if (options?.templateInstanceId) {
+      const instantiated = projectSettings.instantiatedTemplates.find(
+        (entry) => entry.id === options.templateInstanceId,
+      );
+
+      if (instantiated) {
+        instantiated.plugins = pluginFinalSettings;
+      }
+    }
+
+    return { data: finalSettingsWithPlugins };
   }
 
   /**
@@ -251,7 +346,6 @@ export class Project {
         fullProjectSettings: instantiatedProjectSettings,
         templateSettings: parsedUserProvidedSettingsSchema.data,
         parentSettings: parentSettings,
-        aiResults: {},
       });
     } catch (error) {
       logError({
@@ -274,7 +368,12 @@ export class Project {
       };
     }
 
-    return { data: parsedFinalSettings.data };
+    return {
+      data: {
+        ...parsedFinalSettings.data,
+        plugins: projectTemplateSettings.plugins ?? {},
+      },
+    };
   }
 
   static async create(absDir: string): Promise<Result<Project>> {

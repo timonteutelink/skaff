@@ -1,0 +1,22 @@
+{
+  "name": "@timonteutelink/skaff-plugin-greeter-cli",
+  "version": "0.0.1",
+  "description": "CLI contribution for the Skaff greeter plugin",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@timonteutelink/skaff-lib": "0.0.56",
+    "@timonteutelink/skaff-plugin-greeter-types": "0.0.1"
+  },
+  "devDependencies": {
+    "@inquirer/prompts": "^5.3.8",
+    "typescript": "5.9.3"
+  }
+}

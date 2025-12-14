@@ -13,6 +13,18 @@ export const instantiatedTemplateSchema = z.object({
   automaticallyInstantiatedByParent: z.boolean().optional(),
 
   lastMigration: z.string().optional(),
+
+  plugins: z
+    .record(
+      z.string(),
+      z
+        .object({
+          version: z.string(),
+          settings: z.unknown(),
+        })
+        .strict(),
+    )
+    .optional(),
 });
 
 export type InstantiatedTemplate = z.infer<typeof instantiatedTemplateSchema>;

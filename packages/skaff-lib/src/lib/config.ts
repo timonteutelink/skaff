@@ -91,6 +91,24 @@ function loadEnvSettings(): Partial<Settings> {
   return envSettings;
 }
 
+export async function getRawSettings(): Promise<Record<string, unknown>> {
+  const fileSettings = await loadFileSettings();
+  return fileSettings as Record<string, unknown>;
+}
+
+export async function getPluginSystemSettings(
+  pluginName: string,
+): Promise<unknown> {
+  const fileSettings = await loadFileSettings();
+  const plugins = (fileSettings as Record<string, unknown>).plugins;
+
+  if (plugins && typeof plugins === "object") {
+    return (plugins as Record<string, unknown>)[pluginName];
+  }
+
+  return undefined;
+}
+
 export async function getConfig(): Promise<Settings> {
   const fileSettings = await loadFileSettings();
   const envSettings = loadEnvSettings();

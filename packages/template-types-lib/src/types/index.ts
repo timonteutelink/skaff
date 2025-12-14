@@ -1,6 +1,5 @@
 export type {
   UserTemplateSettings,
-  AiResultsObject,
   FinalTemplateSettings,
   StringOrCallback,
   AnyOrCallback,
@@ -15,20 +14,27 @@ export type {
   AllowOverwrite,
   AutoInstantiatedSubtemplate,
   TemplateCommand,
-  LLMTools,
-  AiContext,
-  AiCallbackFunction,
-  AiAutoGenerateSettings,
-  AiUserConversationSettings,
   TemplateConfigModule,
   TemplateMigration,
   TemplateParentReference,
+  TemplatePluginConfig,
 } from "./template-config-types";
 
 export type {
   InstantiatedTemplate,
   ProjectSettings,
 } from "./project-settings-types";
+export type {
+  PluginSystemSettings,
+  PluginAdditionalTemplateSettings,
+  PluginFinalSettings,
+} from "./plugin-settings-schemas";
+
+export {
+  pluginSystemSettingsSchema,
+  pluginAdditionalTemplateSettingsSchema,
+  pluginFinalSettingsSchema,
+} from "./plugin-settings-schemas";
 
 export {
   instantiatedTemplateSchema,
