@@ -1,4 +1,10 @@
-import { ProjectSettings } from "@timonteutelink/template-types-lib";
+import {
+  ProjectSettings,
+  createReadonlyProjectSettings,
+  createReadonlyTemplateView,
+  ReadonlyProjectSettings,
+  ReadonlyTemplateView,
+} from "@timonteutelink/template-types-lib";
 import { builtinModules, createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,6 +25,7 @@ import {
 import {
   TemplateGenerationPlugin,
   TemplateGenerationPluginFactory,
+  TemplatePluginFactoryInput,
 } from "../generation/template-generation-types";
 import { z } from "zod";
 import { resolveHardenedSandbox } from "../infra/hardened-sandbox";
@@ -151,11 +158,39 @@ function buildTemplatePlugin(
   if (!entrypoint) return undefined;
 
   if (typeof entrypoint === "function") {
-    return (entrypoint as TemplateGenerationPluginFactory)({
-      template,
+    // Create readonly views for the plugin factory
+    // Get all child template names from the subTemplates record
+    const childTemplateNames: string[] = Object.values(template.subTemplates)
+      .flat()
+      .map((t) => t.config.templateConfig.name);
+
+    const readonlyTemplateView = createReadonlyTemplateView(
+      template.config.templateConfig,
+      childTemplateNames,
+    );
+
+    const readonlyProjectSettings =
+      createReadonlyProjectSettings(projectSettings);
+
+    // Build the scoped context with only necessary information
+    const scopedContext: TemplatePluginFactoryInput["context"] = {
+      project: {
+        name: readonlyProjectSettings.projectRepositoryName,
+        author: readonlyProjectSettings.projectAuthor,
+        rootTemplateName: readonlyProjectSettings.rootTemplateName,
+      },
+      template: readonlyTemplateView,
+      pluginOptions: reference.options,
+    };
+
+    // Call factory with the new secure interface
+    const factoryInput: TemplatePluginFactoryInput = {
+      template: readonlyTemplateView,
       options: reference.options,
-      projectSettings,
-    });
+      context: scopedContext,
+    };
+
+    return (entrypoint as TemplateGenerationPluginFactory)(factoryInput);
   }
 
   if (isTemplateGenerationPlugin(entrypoint)) {

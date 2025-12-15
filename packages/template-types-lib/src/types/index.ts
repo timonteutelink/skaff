@@ -32,6 +32,22 @@ export type {
   PluginFinalSettings,
 } from "./plugin-settings-schemas";
 
+// Sandbox-safe types for secure plugin/template execution
+export type {
+  ReadonlyInstantiatedTemplate,
+  ReadonlyProjectSettings,
+  ReadonlyTemplateView,
+  PluginScopedContext,
+  MapFinalSettingsInput,
+  PluginFinalSettingsInput,
+  TemplateCallbackContext,
+} from "./sandbox-safe-types";
+
+export {
+  createReadonlyProjectSettings,
+  createReadonlyTemplateView,
+} from "./sandbox-safe-types";
+
 export {
   pluginSystemSettingsSchema,
   pluginAdditionalTemplateSettingsSchema,

@@ -8,6 +8,7 @@ import type {
   FinalTemplateSettings,
   ProjectSettings,
   PluginSystemSettings,
+  ReadonlyProjectSettings,
 } from "@timonteutelink/template-types-lib";
 import type { Template } from "../templates/Template";
 import type { UserTemplateSettings } from "@timonteutelink/template-types-lib";
@@ -61,7 +62,8 @@ export type PluginManifest = z.infer<typeof pluginManifestSchema>;
 export interface PluginCommandHandlerContext {
   argv: string[];
   projectPath?: string;
-  projectSettings: ProjectSettings;
+  /** Read-only project settings to prevent plugins from mutating shared state */
+  projectSettings: ReadonlyProjectSettings;
 }
 
 export interface PluginCliCommand {
@@ -81,7 +83,8 @@ export type CliPluginEntrypoint =
 
 export interface WebPluginContribution {
   getNotices?(context: {
-    projectSettings: ProjectSettings;
+    /** Read-only project settings to prevent plugins from mutating shared state */
+    projectSettings: ReadonlyProjectSettings;
     rootTemplate?: Template;
   }): Promise<string[]> | string[];
   templateStages?: WebTemplateStage[];
@@ -122,7 +125,8 @@ export interface WebTemplateStage {
 export interface CliTemplateStageContext {
   templateName: string;
   rootTemplateName: string;
-  projectSettings?: ProjectSettings;
+  /** Read-only project settings to prevent plugins from mutating shared state */
+  projectSettings?: ReadonlyProjectSettings;
   currentSettings?: UserTemplateSettings | null;
   stageState: unknown;
   setStageState: (value: unknown) => void;

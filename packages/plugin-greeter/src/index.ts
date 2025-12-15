@@ -1,5 +1,11 @@
-import type { TemplateGenerationPlugin } from "@timonteutelink/skaff-lib";
-import { PipelineStage, TemplateInstantiationPipelineContext } from "@timonteutelink/skaff-lib";
+import type {
+  TemplateGenerationPlugin,
+  TemplatePluginFactoryInput,
+} from "@timonteutelink/skaff-lib";
+import {
+  PipelineStage,
+  TemplateInstantiationPipelineContext,
+} from "@timonteutelink/skaff-lib";
 import {
   GREETER_PLUGIN_NAME,
   type GreeterPluginOptions,
@@ -39,10 +45,7 @@ function createGreeterTemplatePlugin(
     configureTemplateInstantiationPipeline(builder) {
       builder.insertAfter(
         "context-setup",
-        createGreetingStage(
-          options,
-          templateDescription,
-        ),
+        createGreetingStage(options, templateDescription),
       );
     },
   } satisfies TemplateGenerationPlugin;
@@ -66,19 +69,19 @@ const greeterPlugin = {
   additionalTemplateSettingsSchema: pluginAdditionalTemplateSettingsSchema,
   pluginFinalSettingsSchema: pluginFinalSettingsSchema.merge(
     z.object({
-      lastGreeting: z.string().optional(),
       message: z.string().optional(),
       audience: z.string().optional(),
     }),
   ),
-  getFinalTemplateSettings: () => ({
-    lastGreeting: new Date().toISOString(),
-  }),
-  template: ({ options, template }) =>
+  // NOTE: getFinalTemplateSettings removed - it was using non-deterministic
+  // new Date().toISOString() which breaks the bijectional guarantee.
+  // If plugins need timestamps, they should receive them from the host context.
+  template: ({ options, template }: TemplatePluginFactoryInput) =>
     createGreeterTemplatePlugin(
       options as GreeterPluginOptions | undefined,
-      typeof template.config.templateConfig.description === "string"
-        ? template.config.templateConfig.description
+      // template is now ReadonlyTemplateView which has description directly
+      typeof template.description === "string"
+        ? template.description
         : undefined,
     ),
 };

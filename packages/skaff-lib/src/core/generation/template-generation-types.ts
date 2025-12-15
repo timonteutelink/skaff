@@ -1,4 +1,9 @@
-import { ProjectSettings } from "@timonteutelink/template-types-lib";
+import {
+  ProjectSettings,
+  ReadonlyProjectSettings,
+  ReadonlyTemplateView,
+  PluginScopedContext,
+} from "@timonteutelink/template-types-lib";
 
 import type { Template } from "../templates/Template";
 import type {
@@ -6,7 +11,10 @@ import type {
   TemplateInstantiationPipelineContext,
 } from "./pipeline/pipeline-stages";
 import { HelperDelegate } from "handlebars";
-import type { PipelineBuilder, PipelineStage } from "./pipeline/pipeline-runner";
+import type {
+  PipelineBuilder,
+  PipelineStage,
+} from "./pipeline/pipeline-runner";
 
 export interface GeneratorOptions {
   /**
@@ -64,11 +72,43 @@ export interface TemplateGenerationPlugin {
   ): void;
 }
 
-export type TemplateGenerationPluginFactory = (input: {
+/**
+ * Input provided to plugin factory functions.
+ *
+ * SECURITY: Uses scoped context to prevent plugins from accessing or
+ * mutating the full project settings. Plugins only see what they need.
+ */
+export interface TemplatePluginFactoryInput {
+  /** Read-only view of the template (no filesystem paths) */
+  template: ReadonlyTemplateView;
+
+  /** Plugin-specific options from template config */
+  options?: unknown;
+
+  /** Scoped context with project metadata (read-only) */
+  context: PluginScopedContext;
+}
+
+/**
+ * @deprecated Use TemplatePluginFactoryInput instead.
+ * This interface is kept for backward compatibility but passes mutable ProjectSettings.
+ */
+export interface LegacyTemplatePluginFactoryInput {
   template: Template;
   options?: unknown;
   projectSettings: ProjectSettings;
-}) => TemplateGenerationPlugin;
+}
+
+export type TemplateGenerationPluginFactory = (
+  input: TemplatePluginFactoryInput,
+) => TemplateGenerationPlugin;
+
+/**
+ * @deprecated Use TemplateGenerationPluginFactory instead.
+ */
+export type LegacyTemplateGenerationPluginFactory = (
+  input: LegacyTemplatePluginFactoryInput,
+) => TemplateGenerationPlugin;
 
 export type TemplatePluginEntrypoint =
   | TemplateGenerationPlugin
