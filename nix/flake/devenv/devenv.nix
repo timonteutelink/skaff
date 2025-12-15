@@ -21,7 +21,7 @@ localFlake:
 
           NPM_PATH = "${pkgs.bun}/bin/bun";
 
-          NODE_OPTIONS = "--experimental-vm-modules";
+          NODE_OPTIONS = "";
           DENO_UNSTABLE_SLOPPY_IMPORTS = "1";
         };
 
@@ -66,18 +66,6 @@ localFlake:
           {
             clean-cache.exec = ''
               rm -r /tmp/skaff-cache/*
-            '';
-            nix-web.exec = ''
-              jq '.workspaces = ["apps/web", "packages/tailwind-config", "packages/typescript-config", "packages/eslint-config"]' package.json > updated-package.json
-              mv updated-package.json package.json
-            '';
-            nix-cli.exec = ''
-              jq '.workspaces = ["apps/cli", "packages/typescript-config", "packages/eslint-config"]' package.json > updated-package.json
-              mv updated-package.json package.json
-            '';
-            local-dev.exec = ''
-              jq '.workspaces = ["apps/web", "apps/cli", "packages/typescript-config", "packages/eslint-config","packages/tailwind-config", "packages/skaff-lib", "packages/docs"]' package.json > updated-package.json
-              mv updated-package.json package.json
             '';
           };
       };
