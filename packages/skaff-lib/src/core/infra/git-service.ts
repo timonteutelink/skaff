@@ -4,10 +4,9 @@ import path from "node:path";
 
 import fsExtra from "fs-extra";
 import simpleGit, { type SimpleGit } from "simple-git";
-import { inject, injectable } from "tsyringe";
 
 import { getSkaffContainer } from "../../di/container";
-import { CacheServiceToken, GitServiceToken, NpmServiceToken } from "../../di/tokens";
+import { GitServiceToken } from "../../di/tokens";
 import { normalizeGitRepositorySpecifier } from "../../lib/git-repo-spec";
 import { DiffHunk, GitStatus, ParsedFile, Result } from "../../lib/types";
 import { logError } from "../../lib/utils";
@@ -30,12 +29,10 @@ interface WorktreeSpec {
   revision?: string;
 }
 
-@injectable()
 export class GitService {
   constructor(
-    @inject(CacheServiceToken)
     private readonly cacheService: CacheService,
-    @inject(NpmServiceToken) private readonly npmService: NpmService,
+    private readonly npmService: NpmService,
   ) {}
 
   private gitClient(repoPath?: string) {
@@ -51,12 +48,7 @@ export class GitService {
     branchName: string,
   ): Promise<void> {
     const sanitized = this.sanitizeBranchName(branchName);
-    await git.raw([
-      "fetch",
-      "--force",
-      "origin",
-      `${sanitized}:${sanitized}`,
-    ]);
+    await git.raw(["fetch", "--force", "origin", `${sanitized}:${sanitized}`]);
   }
 
   private normalizeRepoUrl(repoUrl: string): string {
@@ -78,10 +70,10 @@ export class GitService {
       const trimmed = spec.revision.slice(0, 12);
       descriptorParts.push(`rev-${this.sanitizeCacheSegment(trimmed)}`);
     }
-    const descriptor = descriptorParts.length ? descriptorParts.join("-") : "default";
-    const hash = this.cacheService
-      .hash(`${repoUrl}:${descriptor}`)
-      .slice(0, 8);
+    const descriptor = descriptorParts.length
+      ? descriptorParts.join("-")
+      : "default";
+    const hash = this.cacheService.hash(`${repoUrl}:${descriptor}`).slice(0, 8);
     return `${repoName}-${descriptor}-${hash}`;
   }
 
@@ -578,7 +570,9 @@ export class GitService {
     }
 
     if (branches.data.length === 0) {
-      logError({ shortMessage: "No branches found or error listing branches." });
+      logError({
+        shortMessage: "No branches found or error listing branches.",
+      });
       return { error: "No branches found or error listing branches." };
     }
 

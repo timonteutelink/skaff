@@ -52,10 +52,33 @@ export const templateConfigSchema = z.object({
 export type TemplateConfig = z.infer<typeof templateConfigSchema>;
 
 /**
- * Type representing a function that has side effects when generating a template.
- * @param templateSettings - The template settings the user inputted when generating the template.
- * @param oldFileContents - The old contents of the file to be edited, if any.
- * @returns The new contents of the file.
+ * Input provided to a side effect transform function.
+ */
+export interface SideEffectInput<
+  TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
+> {
+  /** The final template settings for this template instance */
+  templateSettings: TFinalSettings;
+  /** The existing contents of the file, or undefined if file doesn't exist */
+  existingContents?: string;
+}
+
+/**
+ * Type representing a pure transform function for side effects.
+ *
+ * This function MUST be pure (no side effects, no I/O). It receives the template
+ * settings and existing file contents, and returns the new file contents.
+ * The host environment handles all actual file I/O.
+ *
+ * @param input - The input containing template settings and existing file contents
+ * @returns The new contents of the file, or null to skip writing
+ */
+export type SideEffectTransform<
+  TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
+> = (input: SideEffectInput<TFinalSettings>) => string | null;
+
+/**
+ * @deprecated Use SideEffectTransform instead. This type will be removed in a future version.
  */
 export type SideEffectFunction<
   TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
@@ -67,7 +90,11 @@ export type SideEffectFunction<
 export type SideEffect<
   TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
 > = {
-  apply: SideEffectFunction<TFinalSettings>;
+  /**
+   * Pure transform function that computes new file contents.
+   * Must be synchronous and have no side effects - all I/O is handled by the host.
+   */
+  transform: SideEffectTransform<TFinalSettings>;
   /**
    * The path to the file to be created or edited.
    * relative to project root
@@ -170,7 +197,6 @@ export type TemplatePluginConfig = {
   options?: unknown;
 };
 
-
 export interface TemplateMigration {
   uuid: string;
   previousMigration?: string;
@@ -185,9 +211,10 @@ export interface TemplateMigration {
 export interface TemplateConfigModule<
   TParentFinalSettings extends FinalTemplateSettings,
   TInputSettingsSchema extends z.ZodObject<UserTemplateSettings>,
-  TFinalSettingsSchema extends z.ZodObject<UserTemplateSettings> = TInputSettingsSchema,
+  TFinalSettingsSchema extends
+    z.ZodObject<UserTemplateSettings> = TInputSettingsSchema,
   TInputSettings extends UserTemplateSettings = z.output<TInputSettingsSchema>,
-  TFinalSettings extends FinalTemplateSettings = z.output<TFinalSettingsSchema>
+  TFinalSettings extends FinalTemplateSettings = z.output<TFinalSettingsSchema>,
 > {
   /**
    * The target path for the template. Must be set on subtemplates.
@@ -238,10 +265,7 @@ export interface TemplateConfigModule<
   /**
    * Side effects to be applied when generating the template.
    */
-  sideEffects?: AnyOrCallback<
-    TFinalSettings,
-    SideEffect<TFinalSettings>[]
-  >;
+  sideEffects?: AnyOrCallback<TFinalSettings, SideEffect<TFinalSettings>[]>;
 
   /**
    * Redirects of files or directories to another location based from project root.
@@ -269,7 +293,7 @@ export interface TemplateConfigModule<
   /**
    * A list of helper functions provided to handlebars before rendering the template.
    */
-  handlebarHelpers?: Record<string, HelperDelegate>
+  handlebarHelpers?: Record<string, HelperDelegate>;
 
   /**
    * A list of commands the user might want to run inside the project. Related to this template. Executed using bash.

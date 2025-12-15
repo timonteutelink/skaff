@@ -1,19 +1,17 @@
 import * as fs from "node:fs/promises";
 import path from "node:path";
-import { injectable } from "tsyringe";
 
 import { backendLogger } from "../lib/logger";
 import { Result } from "../lib/types";
 import { Project } from "../models/project";
 import { logError } from "../lib";
 
-@injectable()
 export class ProjectRepository {
   private projectsCache: Map<string, Project> = new Map();
 
-  constructor() { }
-
-  private async loadProjectFromPath(projectPath: string): Promise<Result<Project>> {
+  private async loadProjectFromPath(
+    projectPath: string,
+  ): Promise<Result<Project>> {
     try {
       const settingsPath = path.join(projectPath, "templateSettings.json");
       const [dirStat, settingsStat] = await Promise.all([
@@ -32,7 +30,10 @@ export class ProjectRepository {
 
       return { data: projectResult.data };
     } catch (error) {
-      backendLogger.debug(`Failed to load project from path ${projectPath}`, error);
+      backendLogger.debug(
+        `Failed to load project from path ${projectPath}`,
+        error,
+      );
       return { error: "Failed to load project due to an error." };
     }
   }
@@ -65,7 +66,11 @@ export class ProjectRepository {
         return { data: null };
       }
     } catch (error) {
-      logError({ level: 'debug', error, shortMessage: `Project path ${projectPath} does not exist.` });
+      logError({
+        level: "debug",
+        error,
+        shortMessage: `Project path ${projectPath} does not exist.`,
+      });
       return { data: null };
     }
 
@@ -99,7 +104,10 @@ export class ProjectRepository {
 
       return { data: projects };
     } catch (error) {
-      backendLogger.warn(`Failed to find projects in path ${searchPath}`, error);
+      backendLogger.warn(
+        `Failed to find projects in path ${searchPath}`,
+        error,
+      );
       return { error: "Failed to find projects due to an error." };
     }
   }
@@ -112,4 +120,3 @@ export class ProjectRepository {
     }
   }
 }
-

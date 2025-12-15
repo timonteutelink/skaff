@@ -8,8 +8,7 @@ import { backendLogger } from "../../lib/logger";
 import { Result } from "../../lib/types";
 import { logError } from "../../lib/utils";
 import { getSkaffContainer } from "../../di/container";
-import { inject, injectable } from "tsyringe";
-import { GitServiceToken, TemplateGeneratorServiceToken } from "../../di/tokens";
+import { TemplateGeneratorServiceToken } from "../../di/tokens";
 import type { GitService } from "../infra/git-service";
 import {
   GeneratorOptions,
@@ -25,7 +24,11 @@ import {
   ProjectCreationPipelineContext,
   TemplateInstantiationPipelineContext,
 } from "./pipeline/pipeline-stages";
-import { PipelineBuilder, PipelineRunner, PipelineStage } from "./pipeline/pipeline-runner";
+import {
+  PipelineBuilder,
+  PipelineRunner,
+  PipelineStage,
+} from "./pipeline/pipeline-runner";
 import { AutoInstantiationCoordinator } from "./pipeline/AutoInstantiationCoordinator";
 import { TemplateFileMaterializer } from "./pipeline/TemplateFileMaterializer";
 import { TemplatePipelineContext } from "./pipeline/TemplatePipelineContext";
@@ -172,10 +175,7 @@ export class TemplateGenerationSession {
     plugins: TemplateGenerationPlugin[],
   ): void {
     for (const plugin of plugins) {
-      plugin.configureProjectCreationPipeline?.(
-        builder,
-        this.pluginContext,
-      );
+      plugin.configureProjectCreationPipeline?.(builder, this.pluginContext);
     }
   }
 
@@ -256,7 +256,7 @@ export class TemplateGenerationSession {
     parentInstanceId?: string,
     options?: { templateInstanceId?: string; plugins?: LoadedTemplatePlugin[] },
   ): Promise<Result<LoadedTemplatePlugin[]>> {
-    if (!await template.isValid()) {
+    if (!(await template.isValid())) {
       backendLogger.error(
         `Template repo is not clean or template commit hash is not valid.`,
       );
@@ -343,12 +343,15 @@ export class TemplateGenerationSession {
   public async instantiateTemplateInProject(
     newTemplateInstanceId: string,
     options?: { removeOnFailure?: boolean },
-  ): Promise<Result<{
-    targetPath: string;
-    finalSettings: FinalTemplateSettings;
-  }>> {
+  ): Promise<
+    Result<{
+      targetPath: string;
+      finalSettings: FinalTemplateSettings;
+    }>
+  > {
     const removeOnFailure = options?.removeOnFailure ?? false;
-    const projectSettings = this.projectSettingsSynchronizer.getProjectSettings();
+    const projectSettings =
+      this.projectSettingsSynchronizer.getProjectSettings();
 
     const instantiatedTemplateIndex =
       projectSettings.instantiatedTemplates.findIndex(
@@ -356,7 +359,9 @@ export class TemplateGenerationSession {
       );
 
     if (instantiatedTemplateIndex === -1) {
-      backendLogger.error(`Template with id ${newTemplateInstanceId} not found.`);
+      backendLogger.error(
+        `Template with id ${newTemplateInstanceId} not found.`,
+      );
       return { error: `Template with id ${newTemplateInstanceId} not found.` };
     }
 
@@ -371,10 +376,12 @@ export class TemplateGenerationSession {
 
     const fail = async <T>(
       result: Result<T>,
-    ): Promise<Result<{
-      targetPath: string;
-      finalSettings: FinalTemplateSettings;
-    }>> => {
+    ): Promise<
+      Result<{
+        targetPath: string;
+        finalSettings: FinalTemplateSettings;
+      }>
+    > => {
       const failure = await this.failGeneration(
         rollbackManager,
         cleanupOnFailure,
@@ -392,11 +399,12 @@ export class TemplateGenerationSession {
 
     const failWithMessage = (
       message: string,
-    ): Promise<Result<{
-      targetPath: string;
-      finalSettings: FinalTemplateSettings;
-    }>> =>
-      fail({ error: message });
+    ): Promise<
+      Result<{
+        targetPath: string;
+        finalSettings: FinalTemplateSettings;
+      }>
+    > => fail({ error: message });
 
     if (!parentInstanceId) {
       backendLogger.error(
@@ -473,7 +481,10 @@ export class TemplateGenerationSession {
 
       this.fileSystem.clearRollbackManager();
 
-      if (!pipelineResult.data.targetPath || !pipelineResult.data.finalSettings) {
+      if (
+        !pipelineResult.data.targetPath ||
+        !pipelineResult.data.finalSettings
+      ) {
         return fail({ error: "Template generation failed unexpectedly." });
       }
 
@@ -496,7 +507,8 @@ export class TemplateGenerationSession {
   }
 
   public async instantiateNewProject(): Promise<Result<string>> {
-    const projectSettings = this.projectSettingsSynchronizer.getProjectSettings();
+    const projectSettings =
+      this.projectSettingsSynchronizer.getProjectSettings();
     const instantiatedTemplate = projectSettings.instantiatedTemplates[0];
 
     if (!instantiatedTemplate) {
@@ -556,7 +568,7 @@ export class TemplateGenerationSession {
     const finalSettingsResult = this.pipelineContext.getFinalSettings();
 
     if ("error" in finalSettingsResult) {
-      return fail({ error: "Failed to parse user settings." });
+      return { error: "Failed to parse user settings." };
     }
 
     const pipelineContext: ProjectCreationPipelineContext = {
@@ -631,9 +643,7 @@ export class TemplateGenerationSession {
     return { data: this.options.absoluteDestinationPath };
   }
 
-  public async instantiateFullProjectFromSettings(): Promise<
-    Result<string>
-  > {
+  public async instantiateFullProjectFromSettings(): Promise<Result<string>> {
     if (!this.options.dontAutoInstantiate) {
       backendLogger.error(
         "Please make sure child templates are not autoinstantiated before generating a full project from existing settings.",
@@ -645,7 +655,8 @@ export class TemplateGenerationSession {
     }
 
     try {
-      const projectSettings = this.projectSettingsSynchronizer.getProjectSettings();
+      const projectSettings =
+        this.projectSettingsSynchronizer.getProjectSettings();
       if (
         this.rootTemplate.config.templateConfig.name !==
         projectSettings.rootTemplateName
@@ -655,7 +666,9 @@ export class TemplateGenerationSession {
       }
 
       if (projectSettings.instantiatedTemplates.length === 0) {
-        backendLogger.error("No instantiated templates found in project settings.");
+        backendLogger.error(
+          "No instantiated templates found in project settings.",
+        );
         return {
           error: "No instantiated templates found in project settings.",
         };
@@ -702,7 +715,6 @@ export class TemplateGenerationSession {
   }
 }
 
-@injectable()
 /**
  * DI-friendly entry point that spawns {@link TemplateGenerationSession}s.
  *
@@ -711,10 +723,7 @@ export class TemplateGenerationSession {
  * template and destination.
  */
 export class TemplateGeneratorService {
-  constructor(
-    @inject(GitServiceToken)
-    private readonly gitService: GitService,
-  ) { }
+  constructor(private readonly gitService: GitService) {}
 
   public createSession(
     options: GeneratorOptions,

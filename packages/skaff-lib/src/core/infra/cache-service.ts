@@ -2,7 +2,6 @@ import { createHash } from "node:crypto";
 import * as fs from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { injectable } from "tsyringe";
 
 import { getSkaffContainer } from "../../di/container";
 import { CacheServiceToken } from "../../di/tokens";
@@ -15,21 +14,15 @@ export type CacheKey =
   | "template-config"
   | "new-template-diff"
   | "project-from-template-diff"
-  | "temp-diff"
+  | "temp-diff";
 
-@injectable()
 export class CacheService {
-  constructor(
-  ) { }
-
   public hash(stringToHash: string): string {
     return createHash("sha256").update(stringToHash).digest("hex");
   }
 
   public static getCacheDirPath(): string {
-    return (
-      process.env.SKAFF_CACHE_PATH || path.join(tmpdir(), "skaff-cache")
-    );
+    return process.env.SKAFF_CACHE_PATH || path.join(tmpdir(), "skaff-cache");
   }
 
   public async getCacheDir(): Promise<Result<string>> {

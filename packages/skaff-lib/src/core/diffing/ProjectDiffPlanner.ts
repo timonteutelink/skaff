@@ -5,17 +5,8 @@ import {
 } from "@timonteutelink/template-types-lib";
 import crypto from "node:crypto";
 
-import { inject, injectable } from "tsyringe";
-
 import { getSkaffContainer } from "../../di/container";
-import {
-  AutoInstantiationSettingsAdjusterToken,
-  DiffCacheToken,
-  GitServiceToken,
-  ProjectDiffPlannerToken,
-  RootTemplateRepositoryToken,
-  TemporaryProjectFactoryToken,
-} from "../../di/tokens";
+import { ProjectDiffPlannerToken } from "../../di/tokens";
 import { backendLogger } from "../../lib/logger";
 import { Result, NewTemplateDiffResult, ParsedFile } from "../../lib/types";
 import { logError } from "../../lib/utils";
@@ -30,7 +21,7 @@ import {
   applyTemplateMigrationSequence,
   getLatestTemplateMigrationUuid,
 } from "../templates/TemplateMigration";
-@injectable()
+
 export class ProjectDiffPlanner {
   private readonly cache: DiffCache;
   private readonly autoInstantiationAdjuster: AutoInstantiationSettingsAdjuster;
@@ -39,15 +30,10 @@ export class ProjectDiffPlanner {
   private readonly rootTemplateRepository: RootTemplateRepository;
 
   constructor(
-    @inject(DiffCacheToken)
     cache: DiffCache,
-    @inject(AutoInstantiationSettingsAdjusterToken)
     autoInstantiationAdjuster: AutoInstantiationSettingsAdjuster,
-    @inject(TemporaryProjectFactoryToken)
     tempProjectFactory: TemporaryProjectFactory,
-    @inject(RootTemplateRepositoryToken)
     rootTemplateRepository: RootTemplateRepository,
-    @inject(GitServiceToken)
     gitService: GitService,
   ) {
     this.cache = cache;
@@ -200,7 +186,9 @@ export class ProjectDiffPlanner {
       backendLogger.error(
         `Template ${instantiatedTemplate.templateName} not found`,
       );
-      return { error: `Template ${instantiatedTemplate.templateName} not found` };
+      return {
+        error: `Template ${instantiatedTemplate.templateName} not found`,
+      };
     }
 
     const newProjectSettings: ProjectSettings = {
@@ -291,13 +279,14 @@ export class ProjectDiffPlanner {
       ],
     };
 
-    const addResult = await this.autoInstantiationAdjuster.addAutoInstantiatedTemplates(
-      newProjectSettings,
-      template,
-      templateInstanceId,
-      parentInstanceId,
-      userTemplateSettings,
-    );
+    const addResult =
+      await this.autoInstantiationAdjuster.addAutoInstantiatedTemplates(
+        newProjectSettings,
+        template,
+        templateInstanceId,
+        parentInstanceId,
+        userTemplateSettings,
+      );
 
     if ("error" in addResult) {
       return addResult;
@@ -331,9 +320,8 @@ export class ProjectDiffPlanner {
       return { error: "Template not found" };
     }
 
-    const projectTemplate = project.rootTemplate.findSubTemplate(
-      targetTemplateName,
-    );
+    const projectTemplate =
+      project.rootTemplate.findSubTemplate(targetTemplateName);
 
     if (!projectTemplate) {
       backendLogger.error(
@@ -560,10 +548,11 @@ export class ProjectDiffPlanner {
     }
 
     const tempProjectRepositoryName = `${project.instantiatedProjectSettings.projectRepositoryName}-${crypto.randomUUID()}`;
-    const tempProjectResult = await this.tempProjectFactory.createFromExistingProject(
-      project,
-      tempProjectRepositoryName,
-    );
+    const tempProjectResult =
+      await this.tempProjectFactory.createFromExistingProject(
+        project,
+        tempProjectRepositoryName,
+      );
 
     if ("error" in tempProjectResult) {
       return tempProjectResult;

@@ -7,24 +7,16 @@ import { Project } from "../../models/project";
 import { ProjectCreationManager } from "../projects/ProjectCreationManager";
 import { DiffCache } from "./DiffCache";
 import { getSkaffContainer } from "../../di/container";
-import { inject, injectable } from "tsyringe";
-import {
-  DiffCacheToken,
-  ProjectCreationManagerToken,
-  TemporaryProjectFactoryToken,
-} from "../../di/tokens";
+import { TemporaryProjectFactoryToken } from "../../di/tokens";
 
 interface TemporaryProject {
   path: string;
   cleanup: () => Promise<void>;
 }
 
-@injectable()
 export class TemporaryProjectFactory {
   constructor(
-    @inject(DiffCacheToken)
     private readonly cache: DiffCache,
-    @inject(ProjectCreationManagerToken)
     private readonly manager: ProjectCreationManager,
   ) {}
 

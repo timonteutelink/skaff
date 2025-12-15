@@ -5,7 +5,10 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "@jest/globals";
 import z from "zod";
 
-import type { ProjectSettings, UserTemplateSettings } from "@timonteutelink/template-types-lib";
+import type {
+  ProjectSettings,
+  UserTemplateSettings,
+} from "@timonteutelink/template-types-lib";
 import type { GenericTemplateConfigModule } from "../src/lib/types";
 
 jest.mock("../src/lib/logger", () => ({
@@ -57,8 +60,10 @@ jest.mock("../src/core/projects/ProjectCreationManager", () => ({
   resolveProjectCreationManager: () => mockProjectCreationManager,
 }));
 
-const { Project } = require("../src/models/project") as typeof import("../src/models/project");
-const { Template } = require("../src/core/templates/Template") as typeof import("../src/core/templates/Template");
+const { Project } =
+  require("../src/models/project") as typeof import("../src/models/project");
+const { Template } =
+  require("../src/core/templates/Template") as typeof import("../src/core/templates/Template");
 
 const cleanups: Array<() => Promise<void>> = [];
 
@@ -101,7 +106,10 @@ async function createTemplate({
 }
 
 describe("Project parent final settings validation", () => {
-  function buildProjectSettings(parentName: string, parentValue: string): ProjectSettings {
+  function buildProjectSettings(
+    parentName: string,
+    parentValue: string,
+  ): ProjectSettings {
     return {
       projectRepositoryName: "test-project",
       projectAuthor: "tester",

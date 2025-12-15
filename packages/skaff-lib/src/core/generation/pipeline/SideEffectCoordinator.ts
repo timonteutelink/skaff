@@ -1,4 +1,7 @@
-import { SideEffectFunction } from "@timonteutelink/template-types-lib";
+import {
+  SideEffectTransform,
+  SideEffectInput,
+} from "@timonteutelink/template-types-lib";
 import fs from "fs-extra";
 import { readFile } from "node:fs/promises";
 import { backendLogger } from "../../../lib/logger";
@@ -7,6 +10,7 @@ import { anyOrCallbackToAny, logError } from "../../../lib/utils";
 import { RollbackFileSystem } from "../RollbackFileSystem";
 import { TargetPathResolver } from "./TargetPathResolver";
 import { TemplatePipelineContext } from "./TemplatePipelineContext";
+import { resolveHardenedSandbox } from "../../infra/hardened-sandbox";
 
 /**
  * Applies side-effect functions after template files are rendered.
@@ -14,6 +18,11 @@ import { TemplatePipelineContext } from "./TemplatePipelineContext";
  * The coordinator resolves the target paths using the current pipeline context
  * and ensures files are prepared for rollback. It is used as a pipeline stage
  * to mutate generated files according to template-provided callbacks.
+ *
+ * Side effect transforms are executed in the hardened sandbox to ensure
+ * template code cannot perform I/O or access system resources directly.
+ * The transform functions are pure - they receive input and return output,
+ * and the host performs actual file writes.
  */
 export class SideEffectCoordinator {
   constructor(
@@ -41,7 +50,7 @@ export class SideEffectCoordinator {
     for (const sideEffect of sideEffects.data || []) {
       const applyResult = await this.applySideEffect(
         sideEffect.filePath,
-        sideEffect.apply,
+        sideEffect.transform,
       );
 
       if ("error" in applyResult) {
@@ -54,7 +63,7 @@ export class SideEffectCoordinator {
 
   public async applySideEffect(
     filePath: string,
-    sideEffectFunction: SideEffectFunction,
+    transformFn: SideEffectTransform,
   ): Promise<Result<void>> {
     const stateResult = this.context.getState();
 
@@ -71,43 +80,48 @@ export class SideEffectCoordinator {
 
     const absoluteFilePath = absoluteFilePathResult.data;
 
-    let oldFileContents = "";
+    let existingContents: string | undefined;
     try {
-      oldFileContents = await readFile(absoluteFilePath, { encoding: "utf8" });
+      existingContents = await readFile(absoluteFilePath, { encoding: "utf8" });
     } catch {
-      // ignore, file may not exist yet
+      // File doesn't exist yet, existingContents stays undefined
     }
 
-    let sideEffectResult: string | null | undefined;
+    // Build the input for the pure transform function
+    const transformInput: SideEffectInput = {
+      templateSettings: stateResult.data.finalSettings,
+      existingContents,
+    };
+
+    // Execute the transform in the hardened sandbox
+    let transformResult: string | null;
     try {
-      sideEffectResult = await sideEffectFunction(
-        stateResult.data.finalSettings,
-        oldFileContents,
-      );
+      const sandbox = resolveHardenedSandbox();
+      transformResult = sandbox.invokeFunction(transformFn, transformInput);
     } catch (error) {
       logError({
-        shortMessage: `Failed to apply side effect function`,
+        shortMessage: `Failed to apply side effect transform`,
         error,
       });
       return { error: `Failed to apply side effect: ${error}` };
     }
 
-    if (!sideEffectResult) {
+    if (transformResult === null) {
       backendLogger.debug(
-        `Side effect function returned null. Skipping file write.`,
+        `Side effect transform returned null. Skipping file write.`,
       );
       return { data: undefined };
     }
 
-    const prepareResult = await this.fileSystem.prepareFileForWrite(
-      absoluteFilePath,
-    );
+    const prepareResult =
+      await this.fileSystem.prepareFileForWrite(absoluteFilePath);
     if ("error" in prepareResult) {
       return prepareResult;
     }
 
+    // Host performs the actual file write
     try {
-      await fs.writeFile(absoluteFilePath, sideEffectResult, "utf8");
+      await fs.writeFile(absoluteFilePath, transformResult, "utf8");
     } catch (error) {
       logError({
         shortMessage: `Failed to write file`,

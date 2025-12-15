@@ -2,8 +2,6 @@ import type { Dirent } from "node:fs";
 import * as fs from "node:fs/promises";
 import path from "node:path";
 
-import { inject, injectable } from "tsyringe";
-
 import { TemplateParentReference } from "@timonteutelink/template-types-lib";
 
 import { getConfig } from "../lib";
@@ -19,11 +17,6 @@ import {
   normalizeGitRepositorySpecifier,
   parseTemplatePathEntry,
 } from "../lib/git-repo-spec";
-import {
-  GitServiceToken,
-  TemplatePathsProviderToken,
-  TemplateTreeBuilderToken,
-} from "../di/tokens";
 
 export type TemplatePathsProvider = () => Promise<string[]>;
 
@@ -95,7 +88,11 @@ function inferCacheDirDescriptor(dirName: string): CacheDirDescriptorInfo {
   const descriptorSegment = extractDescriptorSegment(workingName);
 
   if (!descriptorSegment || descriptorSegment === "default") {
-    return { branch: undefined, hasExplicitRevision: Boolean(revisionFromSuffix), revisionFromSuffix };
+    return {
+      branch: undefined,
+      hasExplicitRevision: Boolean(revisionFromSuffix),
+      revisionFromSuffix,
+    };
   }
 
   if (descriptorSegment.startsWith("branch-")) {
@@ -134,7 +131,6 @@ function inferCacheDirDescriptor(dirName: string): CacheDirDescriptorInfo {
   };
 }
 
-@injectable()
 export class RootTemplateRepository {
   private loading: boolean = false;
   private readonly templatePathsProvider: TemplatePathsProvider;
@@ -143,10 +139,8 @@ export class RootTemplateRepository {
   public templates: Template[] = [];
 
   constructor(
-    @inject(TemplateTreeBuilderToken)
     private readonly templateTreeBuilder: TemplateTreeBuilder,
-    @inject(GitServiceToken) private readonly gitService: GitService,
-    @inject(TemplatePathsProviderToken)
+    private readonly gitService: GitService,
     templatePathsProvider: TemplatePathsProvider = defaultTemplatePathsProvider,
   ) {
     this.templatePathsProvider = templatePathsProvider;
@@ -204,7 +198,9 @@ export class RootTemplateRepository {
           : descriptorInfo.branch;
       const revision =
         descriptorInfo.revisionFromSuffix ??
-        (descriptorInfo.hasExplicitRevision ? commitHashResult.data : undefined);
+        (descriptorInfo.hasExplicitRevision
+          ? commitHashResult.data
+          : undefined);
       const existing = this.remoteRepos.find(
         (repo) =>
           repo.url === repoUrlResult.data &&
@@ -244,9 +240,8 @@ export class RootTemplateRepository {
 
     let targetBranch = requestedBranch;
     if (shouldInferDefaultBranch) {
-      const defaultBranchResult = await this.gitService.getRemoteDefaultBranch(
-        repoUrl,
-      );
+      const defaultBranchResult =
+        await this.gitService.getRemoteDefaultBranch(repoUrl);
       if ("error" in defaultBranchResult) {
         return { error: defaultBranchResult.error };
       }
@@ -404,10 +399,7 @@ export class RootTemplateRepository {
         if (!entry.isDirectory()) {
           continue;
         }
-        const rootTemplateDirPath = path.join(
-          templatesRootDir,
-          entry.name,
-        );
+        const rootTemplateDirPath = path.join(templatesRootDir, entry.name);
         try {
           const stat = await fs.stat(rootTemplateDirPath);
           if (!stat.isDirectory()) {
@@ -611,10 +603,8 @@ export class RootTemplateRepository {
       return { data: null };
     }
 
-    const saveRevisionInCacheResult = await this.gitService.cloneRevisionToCache(
-      sourceTemplate,
-      revisionHash,
-    );
+    const saveRevisionInCacheResult =
+      await this.gitService.cloneRevisionToCache(sourceTemplate, revisionHash);
 
     if ("error" in saveRevisionInCacheResult) {
       return saveRevisionInCacheResult;

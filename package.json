@@ -21,7 +21,9 @@
     "apps/cli",
     "apps/web",
     "packages/eslint-config",
+    "packages/skaff-lib",
     "packages/tailwind-config",
+    "packages/template-types-lib",
     "packages/typescript-config"
   ],
   "resolutions": {

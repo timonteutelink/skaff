@@ -15,17 +15,12 @@ const config: Config = {
           parser: {
             syntax: "typescript",
             tsx: false,
-            decorators: true,
-          },
-          transform: {
-            legacyDecorator: true,
-            decoratorMetadata: true,
           },
         },
       },
     ],
   },
-  setupFiles: ["<rootDir>/tests/setup-env.js"],
+  setupFiles: ["<rootDir>/tests/setup-env.ts"],
 
   collectCoverage: true,
   coverageDirectory: "coverage",

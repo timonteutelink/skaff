@@ -1,4 +1,6 @@
-import "reflect-metadata";
+// Initialize the hardened environment as early as possible
+import { initializeHardenedEnvironment } from "./core/infra/hardened-sandbox";
+initializeHardenedEnvironment();
 
 import type { CacheKey } from "./core/infra/cache-service";
 
@@ -39,17 +41,27 @@ export {
   AutoInstantiationCoordinator,
 } from "./core/generation/pipeline";
 export {
-  GeneratorOptions,
-  TemplateGenerationPipelineOverrides,
-  TemplateGenerationPlugin,
-  TemplatePipelinePluginContext,
-  TemplatePluginEntrypoint,
+  type GeneratorOptions,
+  type TemplateGenerationPipelineOverrides,
+  type TemplateGenerationPlugin,
+  type TemplatePipelinePluginContext,
+  type TemplatePluginEntrypoint,
 } from "./core/generation/template-generation-types";
 export * from "./core/plugins";
 
 export { findTemplate, projectSearchPathKey } from "./utils/shared-utils";
 export { CacheService, resolveCacheService } from "./core/infra/cache-service";
 export { GitService, resolveGitService } from "./core/infra/git-service";
+export {
+  initializeHardenedEnvironment,
+  isHardenedEnvironmentInitialized,
+  HardenedSandboxService,
+  resolveHardenedSandbox,
+} from "./core/infra/hardened-sandbox";
+export {
+  getSandboxLibraries,
+  getPluginSandboxLibraries,
+} from "./core/infra/sandbox-endowments";
 export {
   createDefaultContainer,
   getSkaffContainer,

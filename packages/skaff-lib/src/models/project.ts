@@ -10,6 +10,7 @@ import { logError, stringOrCallbackToString } from "../lib/utils";
 import { resolveGitService } from "../core/infra/git-service";
 import { loadProjectSettings } from "../core/projects/project-settings-service";
 import { resolveShellService } from "../core/infra/shell-service";
+import { resolveHardenedSandbox } from "../core/infra/hardened-sandbox";
 import { Template } from "./template";
 import { backendLogger } from "../lib";
 import z from "zod";
@@ -36,8 +37,7 @@ function validateParentFinalSettings(
   const schema = template.config.parentFinalSettingsSchema;
 
   if (requiresSchema && !schema) {
-    const errorMessage =
-      `Template ${template.config.templateConfig.name} cannot be used as a child of a template from another repository because it does not define parentFinalSettingsSchema.`;
+    const errorMessage = `Template ${template.config.templateConfig.name} cannot be used as a child of a template from another repository because it does not define parentFinalSettingsSchema.`;
     backendLogger.error(errorMessage);
     return { error: errorMessage };
   }
@@ -47,8 +47,7 @@ function validateParentFinalSettings(
   }
 
   if (parentSettings === undefined) {
-    const errorMessage =
-      `Template ${template.config.templateConfig.name} requires parent final settings but none were provided.`;
+    const errorMessage = `Template ${template.config.templateConfig.name} requires parent final settings but none were provided.`;
     backendLogger.error(errorMessage);
     return { error: errorMessage };
   }
@@ -56,8 +55,7 @@ function validateParentFinalSettings(
   const parsed = schema.safeParse(parentSettings);
 
   if (!parsed.success) {
-    const errorMessage =
-      `Parent final settings validation failed for template ${template.config.templateConfig.name}: ${parsed.error}`;
+    const errorMessage = `Parent final settings validation failed for template ${template.config.templateConfig.name}: ${parsed.error}`;
     backendLogger.error(errorMessage);
     return { error: errorMessage };
   }
@@ -129,16 +127,19 @@ export class Project {
   ): Result<FinalTemplateSettings> {
     const templateSettingsSchema = template.config.templateSettingsSchema.merge(
       z
-        .object({ plugins: buildPluginTemplateSettingsSchema(options?.plugins) })
+        .object({
+          plugins: buildPluginTemplateSettingsSchema(options?.plugins),
+        })
         .partial(),
     );
 
-    const parsedUserSettings = templateSettingsSchema.safeParse(
-      userProvidedSettings,
-    );
+    const parsedUserSettings =
+      templateSettingsSchema.safeParse(userProvidedSettings);
 
     if (!parsedUserSettings?.success) {
-      backendLogger.error(`Failed to parse user settings: ${parsedUserSettings?.error}`);
+      backendLogger.error(
+        `Failed to parse user settings: ${parsedUserSettings?.error}`,
+      );
       return {
         error: `Failed to parse user settings: ${parsedUserSettings?.error}`,
       };
@@ -146,15 +147,13 @@ export class Project {
 
     let parentFinalSettings: FinalTemplateSettings | undefined;
 
-    if (
-      template?.parentTemplate &&
-      parentInstanceId
-    ) {
-      const newInstantiatedSettings = Project.getFinalTemplateSettingsForInstantiatedTemplate(
-        template.parentTemplate,
-        parentInstanceId,
-        projectSettings,
-      );
+    if (template?.parentTemplate && parentInstanceId) {
+      const newInstantiatedSettings =
+        Project.getFinalTemplateSettingsForInstantiatedTemplate(
+          template.parentTemplate,
+          parentInstanceId,
+          projectSettings,
+        );
 
       if ("error" in newInstantiatedSettings) {
         return newInstantiatedSettings;
@@ -175,7 +174,10 @@ export class Project {
     const templateName = template.config.templateConfig.name;
     let mappedSettings: FinalTemplateSettings;
     try {
-      mappedSettings = template.config.mapFinalSettings({
+      // Execute mapFinalSettings in the hardened sandbox
+      const sandbox = resolveHardenedSandbox();
+      const mapFn = template.config.mapFinalSettings;
+      mappedSettings = sandbox.invokeFunction(mapFn, {
         fullProjectSettings: projectSettings,
         templateSettings: parsedUserSettings.data,
         parentSettings: parentFinalSettings,
@@ -208,9 +210,10 @@ export class Project {
 
     if (options?.plugins?.length) {
       for (const plugin of options.plugins) {
-        const rawPluginSettings = parsedUserSettings.data.plugins?.[
-          plugin.name
-        ];
+        const pluginsData = parsedUserSettings.data.plugins as
+          | Record<string, unknown>
+          | undefined;
+        const rawPluginSettings = pluginsData?.[plugin.name];
 
         const additionalSchema =
           plugin.additionalTemplateSettingsSchema ?? z.object({}).strict();
@@ -228,11 +231,19 @@ export class Project {
 
         if (plugin.getFinalTemplateSettings) {
           try {
-            pluginFinalSettingsValue = plugin.getFinalTemplateSettings({
-              templateFinalSettings: parsedFinalSettings.data,
-              additionalTemplateSettings: parsedPluginSettings.data,
-              systemSettings: plugin.systemSettings,
-            });
+            // SECURITY: Execute plugin function in hardened sandbox
+            const sandbox = resolveHardenedSandbox();
+            pluginFinalSettingsValue = sandbox.invokeFunction(
+              plugin.getFinalTemplateSettings,
+              {
+                templateFinalSettings: parsedFinalSettings.data,
+                additionalTemplateSettings: parsedPluginSettings.data as Record<
+                  string,
+                  unknown
+                >,
+                systemSettings: plugin.systemSettings,
+              },
+            );
           } catch (error) {
             return {
               error: `Failed to resolve final settings for plugin ${plugin.name}: ${error}`,
@@ -282,23 +293,24 @@ export class Project {
     instanceId: string,
     instantiatedProjectSettings: ProjectSettings,
   ): Result<FinalTemplateSettings> {
-    const projectTemplateSettings = instantiatedProjectSettings.instantiatedTemplates.find(
-      (t) =>
-        t.id === instanceId &&
-        t.templateName === template.config.templateConfig.name,
-    );
+    const projectTemplateSettings =
+      instantiatedProjectSettings.instantiatedTemplates.find(
+        (t) =>
+          t.id === instanceId &&
+          t.templateName === template.config.templateConfig.name,
+      );
     if (!projectTemplateSettings) {
-      const errorMessage =
-        `Template ${template.config.templateConfig.name} with id ${instanceId} not found in project settings`;
+      const errorMessage = `Template ${template.config.templateConfig.name} with id ${instanceId} not found in project settings`;
       logError({
         shortMessage: errorMessage,
       });
       return { error: errorMessage };
     }
 
-    const parsedUserProvidedSettingsSchema = template.config.templateSettingsSchema.safeParse(
-      projectTemplateSettings.templateSettings,
-    );
+    const parsedUserProvidedSettingsSchema =
+      template.config.templateSettingsSchema.safeParse(
+        projectTemplateSettings.templateSettings,
+      );
 
     if (!parsedUserProvidedSettingsSchema.success) {
       logError({
@@ -312,11 +324,12 @@ export class Project {
     let parentSettings: FinalTemplateSettings | undefined;
 
     if (parentTemplate && projectTemplateSettings.parentId) {
-      const finalParentSettings = Project.getFinalTemplateSettingsForInstantiatedTemplate(
-        parentTemplate,
-        projectTemplateSettings.parentId,
-        instantiatedProjectSettings,
-      );
+      const finalParentSettings =
+        Project.getFinalTemplateSettingsForInstantiatedTemplate(
+          parentTemplate,
+          projectTemplateSettings.parentId,
+          instantiatedProjectSettings,
+        );
       if ("error" in finalParentSettings) {
         return { error: finalParentSettings.error };
       }
@@ -342,7 +355,10 @@ export class Project {
     const templateName = template.config.templateConfig.name;
     let mappedSettings: FinalTemplateSettings;
     try {
-      mappedSettings = template.config.mapFinalSettings({
+      // Execute mapFinalSettings in the hardened sandbox
+      const sandbox = resolveHardenedSandbox();
+      const mapFn = template.config.mapFinalSettings;
+      mappedSettings = sandbox.invokeFunction(mapFn, {
         fullProjectSettings: instantiatedProjectSettings,
         templateSettings: parsedUserProvidedSettingsSchema.data,
         parentSettings: parentSettings,
@@ -391,7 +407,7 @@ export class Project {
       return { error: isGitRepoResult.error };
     }
 
-    let gitStatus: GitStatus | undefined
+    let gitStatus: GitStatus | undefined;
 
     if (isGitRepoResult.data) {
       const gitStatusResult = await gitService.loadGitStatus(absDir);
@@ -456,11 +472,12 @@ export class Project {
       };
     }
 
-    const fullSettings = Project.getFinalTemplateSettingsForInstantiatedTemplate(
-      template,
-      templateInstanceId,
-      this.instantiatedProjectSettings,
-    );
+    const fullSettings =
+      Project.getFinalTemplateSettingsForInstantiatedTemplate(
+        template,
+        templateInstanceId,
+        this.instantiatedProjectSettings,
+      );
 
     if ("error" in fullSettings) {
       return fullSettings;

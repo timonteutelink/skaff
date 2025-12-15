@@ -14,6 +14,7 @@ import { HandlebarsEnvironment } from "../../shared/HandlebarsEnvironment";
 import { RollbackFileSystem } from "../RollbackFileSystem";
 import { TargetPathResolver } from "./TargetPathResolver";
 import { TemplatePipelineContext } from "./TemplatePipelineContext";
+import { resolveHardenedSandbox } from "../../infra/hardened-sandbox";
 
 function isBinaryContent(buffer: Buffer): boolean {
   const length = Math.min(buffer.length, 512);
@@ -34,6 +35,33 @@ function isBinaryContent(buffer: Buffer): boolean {
   }
 
   return false;
+}
+
+/**
+ * Wraps a Handlebars helper function to execute in the hardened sandbox.
+ *
+ * This ensures template-provided helpers cannot access the filesystem,
+ * network, or other ambient authority.
+ */
+function wrapHelperInSandbox(
+  helperName: string,
+  helper: HelperDelegate,
+): HelperDelegate {
+  return function sandboxedHelper(this: unknown, ...args: unknown[]): unknown {
+    try {
+      const sandbox = resolveHardenedSandbox();
+      // Handlebars helpers receive context as `this` and args include options
+      // We need to invoke the helper with proper context
+      return sandbox.invokeFunctionWithArgs(
+        helper.bind(this) as (...args: unknown[]) => unknown,
+        ...args,
+      );
+    } catch (error) {
+      throw new Error(
+        `Sandboxed Handlebars helper "${helperName}" failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  };
 }
 
 /**
@@ -113,7 +141,16 @@ export class TemplateFileMaterializer {
       }
     }
 
-    return { data: { ...pluginHelpers, ...templateHelpers } };
+    // Combine all helpers
+    const allHelpers = { ...pluginHelpers, ...templateHelpers };
+
+    // Wrap each helper in the sandbox for secure execution
+    const sandboxedHelpers: Record<string, HelperDelegate> = {};
+    for (const [name, helper] of Object.entries(allHelpers)) {
+      sandboxedHelpers[name] = wrapHelperInSandbox(name, helper);
+    }
+
+    return { data: sandboxedHelpers };
   }
 
   private registerHandlebarHelpers(
@@ -232,7 +269,9 @@ export class TemplateFileMaterializer {
       await this.registerAllPartials(true);
     };
 
-    const ensureDestDirResult = await this.fileSystem.ensureDirectory(dest.data);
+    const ensureDestDirResult = await this.fileSystem.ensureDirectory(
+      dest.data,
+    );
 
     if ("error" in ensureDestDirResult) {
       await cleanup();
@@ -256,9 +295,8 @@ export class TemplateFileMaterializer {
         }
       }
 
-      const normalizedDestPath = this.pathResolver.ensurePathWithinProjectRoot(
-        destPath,
-      );
+      const normalizedDestPath =
+        this.pathResolver.ensurePathWithinProjectRoot(destPath);
 
       if ("error" in normalizedDestPath) {
         await cleanup();
@@ -301,9 +339,8 @@ export class TemplateFileMaterializer {
           // File does not exist yet.
         }
 
-        const prepareResult = await this.fileSystem.prepareFileForWrite(
-          finalDestinationPath,
-        );
+        const prepareResult =
+          await this.fileSystem.prepareFileForWrite(finalDestinationPath);
         if ("error" in prepareResult) {
           await cleanup();
           return prepareResult;

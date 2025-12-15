@@ -27,7 +27,6 @@
   <a href="https://discord.gg/efVC93Cr">Discord</a>
 </p>
 
-
 ## Installation
 
 The CLI can be used without a global install.
@@ -91,7 +90,7 @@ skaff --help
 
 - **One‑command scaffolding.** Generate a new project or apply a subtemplate with a single command or click. A guided prompt collects the name, options and feature flags and applies them consistently across all files and configs.
 - **Diff preview and patching.** skaff shows you exactly what will be created or changed. For existing projects it generates a git patch so you can inspect and commit the changes yourself.
-![Preview Patching](assets/previewPatching.png)
+  ![Preview Patching](assets/previewPatching.png)
 - **Multi‑platform distribution.** Use it instantly via `npx` or `bunx`, install globally with npm or bun, download a prebuilt binary, or run it as a reproducible Nix flake.
 - **Visual Web UI.** A Next.js powered interface allows you to browse templates, fill in form fields, preview the resulting file tree or diff, and apply patches without touching the terminal
 - **Flexible configuration.** Configure where your templates live and where to create projects through a simple JSON config or environment variables like `TEMPLATE_DIR_PATHS`, `PROJECT_SEARCH_PATHS`. Point Skaff at local directories or GitHub repositories and it will clone the latest templates for you. Skaff recognises GitHub repositories declared as shorthand (`github:`/`gh:`), full HTTPS or SSH URLs, and even `file://` URIs. Append `@branch` (for shorthands) or `#branch` (for URLs) to pin a specific branch when loading templates.
@@ -129,6 +128,38 @@ Templates may also include tasks, linting and formatting setups so that your new
   `@timonteutelink/skaff-plugin-greeter-cli` (commands and interactive
   settings wrappers), and `@timonteutelink/skaff-plugin-greeter-web` (React UI
   stages) so templates only depend on the pieces they need.
+
+## Security
+
+Skaff executes user‑provided template code (such as `templateConfig.ts` and plugins) in a hardened sandbox powered by [SES (Secure ECMAScript)](https://github.com/endojs/endo/tree/master/packages/ses). This ensures that untrusted code cannot escape its boundaries.
+
+### Sandbox guarantees
+
+| Property                    | Description                                                                                                                                                                    |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **No filesystem access**    | Sandboxed code cannot read, write or list files.                                                                                                                               |
+| **No network access**       | No `fetch`, `XMLHttpRequest` or Node.js `http` available.                                                                                                                      |
+| **No process/environment**  | `process`, `child_process` and environment variables are blocked.                                                                                                              |
+| **Frozen intrinsics**       | All built‑in prototypes (`Object`, `Array`, `Function`, etc.) are frozen after `lockdown()`, preventing prototype pollution.                                                   |
+| **Deterministic execution** | `Date.now()` and `Math.random()` are disabled by default for reproducible builds.                                                                                              |
+| **Whitelisted imports**     | Only explicitly allowed modules can be `require()`d: `yaml`, `zod`, `handlebars`, and `@timonteutelink/template-types-lib`. Plugins additionally receive a minimal React stub. |
+
+### Where sandboxing is applied
+
+All untrusted code paths go through `HardenedSandboxService`:
+
+1. **Template configuration** – `templateConfig.ts` files are bundled and evaluated via `evaluateCommonJs()`.
+2. **Plugin code** – Plugins declared by templates are loaded and executed in the same sandbox.
+3. **`mapFinalSettings`** – Custom settings transformers run via `invokeFunction()`.
+4. **Side‑effect transforms** – Transform functions in side effects execute sandboxed.
+5. **Handlebars helpers** – Helpers defined in templates run via `invokeFunctionWithArgs()`.
+
+### Limitations
+
+- **No timeout enforcement.** SES accepts a `timeoutMs` option but does not enforce it. Infinite loops in template code will block execution.
+- **Memory limits.** There is currently no memory cap; a template could allocate unbounded memory.
+
+For details see `packages/skaff-lib/src/core/infra/hardened-sandbox.ts`.
 
 ## CLI
 

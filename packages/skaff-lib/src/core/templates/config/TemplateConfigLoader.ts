@@ -4,36 +4,18 @@ import * as path from "node:path";
 import ts from "typescript";
 
 import * as templateTypesLibNS from "@timonteutelink/template-types-lib";
-import * as handlebarsNS from "handlebars";
-import * as yamlNS from "yaml";
-import * as zodNS from "zod"; // full namespace object
-
-import { inject, injectable } from "tsyringe";
 
 import { existsSync } from "node:fs";
 import { GenericTemplateConfigModule } from "../../../lib";
 import { normalizeGitRepositorySpecifier } from "../../../lib/git-repo-spec";
 import { getSkaffContainer } from "../../../di/container";
-import {
-  CacheServiceToken,
-  EsbuildInitializerToken,
-  SandboxServiceToken,
-  TemplateConfigLoaderToken,
-} from "../../../di/tokens";
+import { TemplateConfigLoaderToken } from "../../../di/tokens";
 import type { CacheService } from "../../../core/infra/cache-service";
 import type { EsbuildInitializer } from "../../../utils/get-esbuild";
-import type { SandboxService } from "../../../core/infra/sandbox-service";
+import type { HardenedSandboxService } from "../../../core/infra/hardened-sandbox";
+import { getSandboxLibraries } from "../../../core/infra/sandbox-endowments";
 
 const { templateConfigSchema } = templateTypesLibNS;
-
-const SANDBOX_LIBS: Record<string, unknown> = {
-  "@timonteutelink/template-types-lib": templateTypesLibNS,
-  zod: zodNS,
-  handlebars: handlebarsNS,
-
-  // utils
-  yaml: yamlNS,
-};
 
 interface TemplateConfigFileInfo {
   configPath: string;
@@ -41,7 +23,7 @@ interface TemplateConfigFileInfo {
 }
 
 export type TemplateConfigWithFileInfo = {
-  templateConfig: GenericTemplateConfigModule
+  templateConfig: GenericTemplateConfigModule;
 } & TemplateConfigFileInfo;
 
 type TemplateRefEntry =
@@ -122,19 +104,19 @@ function extractTemplateRefEntries(raw: unknown): TemplateRefEntry[] {
 
 async function readTsConfig(): Promise<any> {
   return {
-    "compilerOptions": {
-      "target": "ES2022",
-      "lib": ["ES2022"],
+    compilerOptions: {
+      target: "ES2022",
+      lib: ["ES2022"],
 
-      "module": "NodeNext",
-      "moduleResolution": "NodeNext",
+      module: "NodeNext",
+      moduleResolution: "NodeNext",
 
-      "types": ["node"],
+      types: ["node"],
 
-      "strict": true,
-      "skipLibCheck": true         // speeds up builds; safe for CLIs
-    }
-  }
+      strict: true,
+      skipLibCheck: true, // speeds up builds; safe for CLIs
+    },
+  };
 }
 
 // async function readTsConfig() {
@@ -150,7 +132,7 @@ function findTypesDirectory(startDir: string): string | null {
   let currentDir = startDir;
 
   while (currentDir !== path.parse(currentDir).root) {
-    const typesPath = path.join(currentDir, 'node_modules', '@types');
+    const typesPath = path.join(currentDir, "node_modules", "@types");
     if (existsSync(typesPath)) {
       return typesPath;
     }
@@ -158,7 +140,7 @@ function findTypesDirectory(startDir: string): string | null {
   }
 
   // Fallback to the current working directory if @types exists there
-  const fallbackPath = path.join(process.cwd(), 'node_modules', '@types');
+  const fallbackPath = path.join(process.cwd(), "node_modules", "@types");
   return existsSync(fallbackPath) ? fallbackPath : null;
 }
 
@@ -166,7 +148,8 @@ async function typeCheckFile(filePath: string): Promise<void> {
   const templateDir = path.dirname(filePath);
 
   const typeRoots = [
-    findTypesDirectory(templateDir) || path.join(process.cwd(), 'node_modules', '@types'),
+    findTypesDirectory(templateDir) ||
+      path.join(process.cwd(), "node_modules", "@types"),
   ];
 
   const tsConfig = await readTsConfig();
@@ -248,14 +231,14 @@ async function findTemplateConfigFiles(
         }
 
         for (const reference of references) {
-        if (reference.type === "remote") {
-          results.remoteRefs.push({
-            refDir: path.relative(rootDir, full),
-            repoUrl: reference.repoUrl,
-            branch: reference.branch,
-            revision: reference.revision,
-            templatePath: reference.path,
-          });
+          if (reference.type === "remote") {
+            results.remoteRefs.push({
+              refDir: path.relative(rootDir, full),
+              repoUrl: reference.repoUrl,
+              branch: reference.branch,
+              revision: reference.revision,
+              templatePath: reference.path,
+            });
             continue;
           }
 
@@ -287,24 +270,21 @@ async function findTemplateConfigFiles(
 
 const SANDBOX_TIMEOUT_MS = 1_000;
 
-@injectable()
 export class TemplateConfigLoader {
   constructor(
-    @inject(CacheServiceToken) private readonly cacheService: CacheService,
-    @inject(EsbuildInitializerToken)
+    private readonly cacheService: CacheService,
     private readonly esbuildInitializer: EsbuildInitializer,
-    @inject(SandboxServiceToken)
-    private readonly sandboxService: SandboxService,
-  ) { }
+    private readonly sandboxService: HardenedSandboxService,
+  ) {}
 
-  private async evaluateBundledCode(
+  private evaluateBundledCode(
     code: string,
-  ): Promise<Record<string, TemplateConfigWithFileInfo>> {
-    const exports = await this.sandboxService.runCommonJsModule<{
+  ): Record<string, TemplateConfigWithFileInfo> {
+    const exports = this.sandboxService.evaluateCommonJs<{
       configs: Record<string, TemplateConfigWithFileInfo>;
     }>({
       code,
-      allowedModules: SANDBOX_LIBS,
+      allowedModules: getSandboxLibraries(),
       filename: "template-config-bundle.cjs",
       timeoutMs: SANDBOX_TIMEOUT_MS,
     });
@@ -339,7 +319,7 @@ export class TemplateConfigLoader {
     );
     if ("data" in cached && cached.data) {
       const code = await fs.readFile(cached.data.path, "utf8");
-      const configs = await this.evaluateBundledCode(code);
+      const configs = this.evaluateBundledCode(code);
       return { configs, remoteRefs: discovery.remoteRefs };
     }
 
@@ -353,9 +333,7 @@ export class TemplateConfigLoader {
         imports.push(`import ${alias} from "./${rel.slice(0, -3)}";`);
         let entry = `"${rel}": { templateConfig: ${alias}, configPath: "${rel}"`;
         if (fi.refDir) {
-          const refRel = path
-            .relative(rootDir, fi.refDir)
-            .replace(/\\/g, "/");
+          const refRel = path.relative(rootDir, fi.refDir).replace(/\\/g, "/");
           entry += `, refDir: "${refRel}"`;
         }
         exports.push(entry + "}");
@@ -386,14 +364,14 @@ export class TemplateConfigLoader {
       format: "cjs",
       platform: "neutral",
       target: "es2022",
-      external: Object.keys(SANDBOX_LIBS),
+      external: Object.keys(getSandboxLibraries()),
       write: false,
       minify: true,
       banner: {
-        js: `;(function(exports, require, module, __filename, __dirname) {`
+        js: `;(function(exports, require, module, __filename, __dirname) {`,
       },
       footer: {
-        js: `\n})`
+        js: `\n})`,
       },
     });
     if ("stop" in esbuild && esbuild.stop) await esbuild.stop();
@@ -410,7 +388,7 @@ export class TemplateConfigLoader {
       throw new Error(`Failed to cache bundle: ${saved.error}`);
     }
 
-    const configs = await this.evaluateBundledCode(bundle);
+    const configs = this.evaluateBundledCode(bundle);
 
     for (const key of Object.keys(configs)) {
       const mod = configs[key]!;

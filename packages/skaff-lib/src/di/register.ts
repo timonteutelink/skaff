@@ -1,5 +1,4 @@
-import type { DependencyContainer, InjectionToken } from "tsyringe";
-import { Lifecycle } from "tsyringe";
+import type { ServiceContainer } from "./container";
 
 import { AutoInstantiationSettingsAdjuster } from "../core/diffing/AutoInstantiationSettingsAdjuster";
 import { DiffCache } from "../core/diffing/DiffCache";
@@ -9,14 +8,13 @@ import { CacheService } from "../core/infra/cache-service";
 import { GitService } from "../core/infra/git-service";
 import { NpmService } from "../core/infra/npm-service";
 import { ShellService } from "../core/infra/shell-service";
-import { SandboxService } from "../core/infra/sandbox-service";
+import { HardenedSandboxService } from "../core/infra/hardened-sandbox";
 import { TemplateGeneratorService } from "../core/generation/template-generator-service";
 import { ProjectCreationManager } from "../core/projects/ProjectCreationManager";
 import { TemplateConfigLoader } from "../core/templates/config/TemplateConfigLoader";
 import { TemplateTreeBuilder } from "../core/templates/TemplateTreeBuilder";
 import { ProjectRepository } from "../repositories/project-repository";
 import {
-  TemplatePathsProvider,
   RootTemplateRepository,
   defaultTemplatePathsProvider,
 } from "../repositories/root-template-repository";
@@ -33,7 +31,7 @@ import {
   ProjectRepositoryToken,
   RootTemplateRepositoryToken,
   ShellServiceToken,
-  SandboxServiceToken,
+  HardenedSandboxServiceToken,
   TemplateConfigLoaderToken,
   TemplateGeneratorServiceToken,
   TemplatePathsProviderToken,
@@ -41,64 +39,122 @@ import {
   TemporaryProjectFactoryToken,
 } from "./tokens";
 
-type Constructor<T> = new (...args: any[]) => T;
+/**
+ * Registers all infrastructure and application services with the container.
+ * Services are registered with factory functions that receive the container
+ * for resolving their dependencies.
+ */
+export function registerDefaultServices(container: ServiceContainer): void {
+  // --- Infrastructure services (no dependencies) ---
 
-function registerClassSingleton<T>(
-  container: DependencyContainer,
-  token: InjectionToken<T>,
-  ctor: Constructor<T>,
-): void {
-  container.register(token, { useClass: ctor }, { lifecycle: Lifecycle.Singleton });
-}
+  container.register(CacheServiceToken, () => new CacheService());
 
-export function registerInfrastructure(
-  container: DependencyContainer,
-): void {
-  registerClassSingleton(container, CacheServiceToken, CacheService);
-  registerClassSingleton(container, GitServiceToken, GitService);
-  registerClassSingleton(container, NpmServiceToken, NpmService);
-  registerClassSingleton(container, ShellServiceToken, ShellService);
-  registerClassSingleton(container, SandboxServiceToken, SandboxService);
-  registerClassSingleton(container, DiffCacheToken, DiffCache);
-  registerClassSingleton(
-    container,
+  container.register(NpmServiceToken, () => new NpmService());
+
+  container.register(ShellServiceToken, () => new ShellService());
+
+  container.register(
+    HardenedSandboxServiceToken,
+    () => new HardenedSandboxService(),
+  );
+
+  container.register(EsbuildInitializerToken, () => new EsbuildInitializer());
+
+  container.register(
     AutoInstantiationSettingsAdjusterToken,
-    AutoInstantiationSettingsAdjuster,
+    () => new AutoInstantiationSettingsAdjuster(),
   );
-  registerClassSingleton(
-    container,
-    TemporaryProjectFactoryToken,
-    TemporaryProjectFactory,
-  );
-  registerClassSingleton(container, ProjectDiffPlannerToken, ProjectDiffPlanner);
-  registerClassSingleton(container, ProjectRepositoryToken, ProjectRepository);
-  container.register<TemplatePathsProvider>(TemplatePathsProviderToken, {
-    useValue: defaultTemplatePathsProvider,
-  });
-  registerClassSingleton(
-    container,
-    TemplateConfigLoaderToken,
-    TemplateConfigLoader,
-  );
-  registerClassSingleton(container, TemplateTreeBuilderToken, TemplateTreeBuilder);
-  registerClassSingleton(
-    container,
-    RootTemplateRepositoryToken,
-    RootTemplateRepository,
-  );
-  registerClassSingleton(
-    container,
-    TemplateGeneratorServiceToken,
-    TemplateGeneratorService,
-  );
-  registerClassSingleton(
-    container,
-    ProjectCreationManagerToken,
-    ProjectCreationManager,
-  );
-  registerClassSingleton(container, EsbuildInitializerToken, EsbuildInitializer);
-}
 
-export function registerDefaultServices(container: DependencyContainer): void {
-  registerInfrastructure(container);
+  container.register(ProjectRepositoryToken, () => new ProjectRepository());
+
+  // --- Infrastructure services (with dependencies) ---
+
+  container.register(
+    GitServiceToken,
+    (c) =>
+      new GitService(c.resolve(CacheServiceToken), c.resolve(NpmServiceToken)),
+  );
+
+  container.register(
+    DiffCacheToken,
+    (c) => new DiffCache(c.resolve(CacheServiceToken)),
+  );
+
+  // --- Template services ---
+
+  container.register(
+    TemplateConfigLoaderToken,
+    (c) =>
+      new TemplateConfigLoader(
+        c.resolve(CacheServiceToken),
+        c.resolve(EsbuildInitializerToken),
+        c.resolve(HardenedSandboxServiceToken),
+      ),
+  );
+
+  container.register(
+    TemplateTreeBuilderToken,
+    (c) =>
+      new TemplateTreeBuilder(
+        c.resolve(GitServiceToken),
+        c.resolve(TemplateConfigLoaderToken),
+      ),
+  );
+
+  // TemplatePathsProvider is a function, not a class
+  container.registerInstance(
+    TemplatePathsProviderToken,
+    defaultTemplatePathsProvider,
+  );
+
+  container.register(
+    RootTemplateRepositoryToken,
+    (c) =>
+      new RootTemplateRepository(
+        c.resolve(TemplateTreeBuilderToken),
+        c.resolve(GitServiceToken),
+        c.resolve(TemplatePathsProviderToken),
+      ),
+  );
+
+  // --- Generation services ---
+
+  container.register(
+    TemplateGeneratorServiceToken,
+    (c) => new TemplateGeneratorService(c.resolve(GitServiceToken)),
+  );
+
+  container.register(
+    ProjectCreationManagerToken,
+    (c) =>
+      new ProjectCreationManager(
+        c.resolve(ProjectRepositoryToken),
+        c.resolve(RootTemplateRepositoryToken),
+        c.resolve(GitServiceToken),
+        c.resolve(TemplateGeneratorServiceToken),
+      ),
+  );
+
+  // --- Diffing services ---
+
+  container.register(
+    TemporaryProjectFactoryToken,
+    (c) =>
+      new TemporaryProjectFactory(
+        c.resolve(DiffCacheToken),
+        c.resolve(ProjectCreationManagerToken),
+      ),
+  );
+
+  container.register(
+    ProjectDiffPlannerToken,
+    (c) =>
+      new ProjectDiffPlanner(
+        c.resolve(DiffCacheToken),
+        c.resolve(AutoInstantiationSettingsAdjusterToken),
+        c.resolve(TemporaryProjectFactoryToken),
+        c.resolve(RootTemplateRepositoryToken),
+        c.resolve(GitServiceToken),
+      ),
+  );
 }

@@ -5,10 +5,9 @@ import type {
   TemplatePluginEntrypoint,
 } from "../generation/template-generation-types";
 import type {
+  FinalTemplateSettings,
   ProjectSettings,
   PluginSystemSettings,
-  PluginAdditionalTemplateSettings,
-  PluginFinalSettings,
 } from "@timonteutelink/template-types-lib";
 import type { Template } from "../templates/Template";
 import type { UserTemplateSettings } from "@timonteutelink/template-types-lib";
@@ -28,13 +27,20 @@ export const pluginManifestSchema = z.object({
     .regex(/^[a-zA-Z0-9-_.:@/]+$/, "Plugin names must be identifier-like."),
   version: z
     .string()
-    .regex(/^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-.]+)?$/, "Version must be semver."),
-  capabilities: z
-    .array(z.enum(["template", "cli", "web"]))
-    .min(1),
+    .regex(
+      /^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-.]+)?$/,
+      "Version must be semver.",
+    ),
+  capabilities: z.array(z.enum(["template", "cli", "web"])).min(1),
   supportedHooks: z
     .object({
-      template: z.array(z.enum(["configureTemplateInstantiationPipeline", "configureProjectCreationPipeline"]))
+      template: z
+        .array(
+          z.enum([
+            "configureTemplateInstantiationPipeline",
+            "configureProjectCreationPipeline",
+          ]),
+        )
         .default([]),
       cli: z.array(z.string()).default([]),
       web: z.array(z.string()).default([]),
@@ -74,12 +80,10 @@ export type CliPluginEntrypoint =
   | (() => CliPluginContribution | Promise<CliPluginContribution>);
 
 export interface WebPluginContribution {
-  getNotices?(
-    context: {
-      projectSettings: ProjectSettings;
-      rootTemplate?: Template;
-    },
-  ): Promise<string[]> | string[];
+  getNotices?(context: {
+    projectSettings: ProjectSettings;
+    rootTemplate?: Template;
+  }): Promise<string[]> | string[];
   templateStages?: WebTemplateStage[];
 }
 
@@ -111,9 +115,7 @@ export interface WebTemplateStage {
   id: string;
   placement: TemplateStagePlacement;
   stateKey?: string;
-  shouldSkip?: (
-    context: WebTemplateStageContext,
-  ) => boolean | Promise<boolean>;
+  shouldSkip?: (context: WebTemplateStageContext) => boolean | Promise<boolean>;
   render: (props: WebTemplateStageRenderProps) => React.ReactNode;
 }
 
@@ -130,9 +132,7 @@ export interface CliTemplateStage {
   id: string;
   placement: TemplateStagePlacement;
   stateKey?: string;
-  shouldSkip?: (
-    context: CliTemplateStageContext,
-  ) => boolean | Promise<boolean>;
+  shouldSkip?: (context: CliTemplateStageContext) => boolean | Promise<boolean>;
   run: (
     context: CliTemplateStageContext & {
       prompts: typeof import("@inquirer/prompts");
@@ -146,13 +146,13 @@ export interface SkaffPluginModule {
    * Optional plugin-scoped configuration schemas.
    */
   systemSettingsSchema?: z.ZodType<PluginSystemSettings>;
-  additionalTemplateSettingsSchema?: z.ZodType<PluginAdditionalTemplateSettings>;
-  pluginFinalSettingsSchema?: z.ZodType<PluginFinalSettings>;
+  additionalTemplateSettingsSchema?: z.ZodTypeAny;
+  pluginFinalSettingsSchema?: z.ZodTypeAny;
   getFinalTemplateSettings?: (input: {
-    templateFinalSettings: PluginFinalSettings;
-    additionalTemplateSettings: PluginAdditionalTemplateSettings;
+    templateFinalSettings: FinalTemplateSettings;
+    additionalTemplateSettings: Record<string, unknown>;
     systemSettings: PluginSystemSettings | undefined;
-  }) => PluginFinalSettings;
+  }) => Record<string, unknown>;
   template?: TemplatePluginEntrypoint;
   cli?: CliPluginEntrypoint;
   web?: WebPluginEntrypoint;
@@ -165,8 +165,8 @@ export interface LoadedTemplatePlugin {
   version: string;
   requiredSettingsKeys?: string[];
   systemSettings?: PluginSystemSettings;
-  additionalTemplateSettingsSchema?: z.ZodType<PluginAdditionalTemplateSettings>;
-  pluginFinalSettingsSchema?: z.ZodType<PluginFinalSettings>;
+  additionalTemplateSettingsSchema?: z.ZodTypeAny;
+  pluginFinalSettingsSchema?: z.ZodTypeAny;
   getFinalTemplateSettings?: SkaffPluginModule["getFinalTemplateSettings"];
   templatePlugin?: TemplateGenerationPlugin;
   cliPlugin?: CliPluginContribution;

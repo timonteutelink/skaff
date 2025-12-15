@@ -2,12 +2,9 @@ import { randomUUID } from "node:crypto";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 
-import { injectable } from "tsyringe";
-
 import { getSkaffContainer } from "../di/container";
 import { EsbuildInitializerToken } from "../di/tokens";
 
-@injectable()
 export class EsbuildInitializer {
   private cachedModule: typeof import("esbuild") | null = null;
 
@@ -33,8 +30,12 @@ export class EsbuildInitializer {
     }
 
     if (typeof (globalThis as any).Deno !== "undefined") {
-      // @ts-ignore remote import for Deno
-      const mod = await import(/* webpackIgnore: true */ "https://deno.land/x/esbuild@v0.25.2/mod.js");
+      // Dynamic import of Deno-specific esbuild - use indirection to avoid TS module resolution
+      const denoEsbuildUrl = "https://deno.land/x/esbuild@v0.25.2/mod.js";
+      const mod = await (Function(
+        "url",
+        "return import(url)",
+      )(denoEsbuildUrl) as Promise<unknown>);
       return mod as unknown as typeof import("esbuild");
     }
 
@@ -48,7 +49,9 @@ export class EsbuildInitializer {
   }
 
   private async createBunEsbuildShim(): Promise<any> {
-    const mapTarget = (target: unknown): "browser" | "bun" | "node" | undefined => {
+    const mapTarget = (
+      target: unknown,
+    ): "browser" | "bun" | "node" | undefined => {
       if (typeof target !== "string") return undefined;
       if (["browser", "bun", "node"].includes(target)) return target as any;
       return "bun";
@@ -60,7 +63,11 @@ export class EsbuildInitializer {
         text: await o.text(),
         contents: new Uint8Array(o.arrayBuffer()),
       }));
-      return { outputFiles: await Promise.all(outputFiles), warnings: [], errors: [] };
+      return {
+        outputFiles: await Promise.all(outputFiles),
+        warnings: [],
+        errors: [],
+      };
     };
 
     const build = async (opts: any): Promise<any> => {
@@ -90,7 +97,7 @@ export class EsbuildInitializer {
           });
           return await bunToEsbuild(bunOut);
         } finally {
-          await fs.unlink(tmpFile).catch(() => { });
+          await fs.unlink(tmpFile).catch(() => {});
         }
       }
 
@@ -118,4 +125,3 @@ export async function initEsbuild(): Promise<typeof import("esbuild")> {
   const initializer = getSkaffContainer().resolve(EsbuildInitializerToken);
   return initializer.init();
 }
-

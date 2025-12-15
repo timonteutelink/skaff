@@ -15,27 +15,15 @@ import { Project } from "../../models/project";
 import type { ProjectRepository } from "../../repositories/project-repository";
 import type { RootTemplateRepository } from "../../repositories/root-template-repository";
 import type { GitService } from "../infra/git-service";
-import { inject, injectable } from "tsyringe";
 import type { TemplateGeneratorService } from "../generation/template-generator-service";
 import { getSkaffContainer } from "../../di/container";
-import {
-  GitServiceToken,
-  ProjectCreationManagerToken,
-  ProjectRepositoryToken,
-  RootTemplateRepositoryToken,
-  TemplateGeneratorServiceToken,
-} from "../../di/tokens";
+import { ProjectCreationManagerToken } from "../../di/tokens";
 
-@injectable()
 export class ProjectCreationManager {
   constructor(
-    @inject(ProjectRepositoryToken)
     private readonly projectRepository: ProjectRepository,
-    @inject(RootTemplateRepositoryToken)
     private readonly rootTemplateRepository: RootTemplateRepository,
-    @inject(GitServiceToken)
     private readonly gitService: GitService,
-    @inject(TemplateGeneratorServiceToken)
     private readonly templateGenerator: TemplateGeneratorService,
   ) {}
 
@@ -57,7 +45,9 @@ export class ProjectCreationManager {
     }
 
     if (!project.data) {
-      backendLogger.error(`Project ${newProjectRepositoryName} not found after creation`);
+      backendLogger.error(
+        `Project ${newProjectRepositoryName} not found after creation`,
+      );
       return {
         error: "Failed to create project, project not found after creation",
       };
@@ -99,9 +89,8 @@ export class ProjectCreationManager {
     userTemplateSettings: UserTemplateSettings,
     projectCreationOptions?: ProjectCreationOptions,
   ): Promise<Result<ProjectCreationResult>> {
-    const template = await this.rootTemplateRepository.findTemplate(
-      rootTemplateName,
-    );
+    const template =
+      await this.rootTemplateRepository.findTemplate(rootTemplateName);
 
     if ("error" in template) {
       return template;
@@ -215,4 +204,3 @@ export class ProjectCreationManager {
 export function resolveProjectCreationManager(): ProjectCreationManager {
   return getSkaffContainer().resolve(ProjectCreationManagerToken);
 }
-

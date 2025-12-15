@@ -1,10 +1,7 @@
 import { ProjectSettings } from "@timonteutelink/template-types-lib";
 import { builtinModules, createRequire } from "node:module";
 import path from "node:path";
-
-import * as templateTypesLibNS from "@timonteutelink/template-types-lib";
-import * as zodNS from "zod";
-import * as handlebarsNS from "handlebars";
+import { fileURLToPath } from "node:url";
 
 import type { Result } from "../../lib/types";
 import { getPluginSystemSettings } from "../../lib/config";
@@ -24,29 +21,21 @@ import {
   TemplateGenerationPluginFactory,
 } from "../generation/template-generation-types";
 import { z } from "zod";
-import { resolveSandboxService } from "../infra/sandbox-service";
+import { resolveHardenedSandbox } from "../infra/hardened-sandbox";
+import { getPluginSandboxLibraries } from "../infra/sandbox-endowments";
 import { getSkaffContainer } from "../../di/container";
 import { EsbuildInitializerToken } from "../../di/tokens";
 
-const SANDBOX_REACT_STUB = Object.freeze({
-  createElement: () => null,
-  Fragment: Symbol.for("react.fragment"),
-});
-
 const BLOCKED_EXTERNALS = Array.from(
-  new Set([...builtinModules, ...builtinModules.map((entry) => `node:${entry}`)]),
+  new Set([
+    ...builtinModules,
+    ...builtinModules.map((entry) => `node:${entry}`),
+  ]),
 );
 
-const ALLOWED_PLUGIN_IMPORTS: Record<string, unknown> = {
-  "@timonteutelink/template-types-lib": templateTypesLibNS,
-  zod: zodNS,
-  handlebars: handlebarsNS,
-  react: SANDBOX_REACT_STUB,
-};
-
-const PLUGIN_EXECUTION_TIMEOUT_MS = 1_000;
-
-function isTemplateGenerationPlugin(value: unknown): value is TemplateGenerationPlugin {
+function isTemplateGenerationPlugin(
+  value: unknown,
+): value is TemplateGenerationPlugin {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Record<string, unknown>;
   return (
@@ -55,7 +44,19 @@ function isTemplateGenerationPlugin(value: unknown): value is TemplateGeneration
   );
 }
 
-const pluginModuleResolver = createRequire(import.meta.url);
+// Create a module resolver that works in both ESM and CommonJS contexts
+const getModuleUrl = (): string => {
+  // In ESM, import.meta.url is available
+  // In CommonJS, we fall back to __filename converted to URL
+  if (typeof __filename !== "undefined") {
+    return `file://${__filename}`;
+  }
+  // This branch is for ESM (when compiled to ESM or run with --experimental-vm-modules)
+  // @ts-expect-error - import.meta only available in ESM context
+  return import.meta.url;
+};
+
+const pluginModuleResolver = createRequire(getModuleUrl());
 
 async function resolveEsbuild() {
   const initializer = getSkaffContainer().resolve(EsbuildInitializerToken);
@@ -97,6 +98,7 @@ async function bundlePluginModule(
   }
 
   const resolvedPath = resolvedPathResult.data;
+  const allowedModuleNames = Object.keys(getPluginSandboxLibraries());
 
   try {
     const esbuild = await resolveEsbuild();
@@ -108,11 +110,8 @@ async function bundlePluginModule(
       target: "es2022",
       write: false,
       minify: true,
-      external: [...Object.keys(ALLOWED_PLUGIN_IMPORTS), ...BLOCKED_EXTERNALS],
-      banner: {
-        js: `;(function(exports, require, module, __filename, __dirname) {`,
-      },
-      footer: { js: `\n})` },
+      external: [...allowedModuleNames, ...BLOCKED_EXTERNALS],
+      // NOTE: No banner/footer - the sandbox's evaluateCommonJs provides the CommonJS wrapper
     });
     if ("stop" in esbuild && esbuild.stop) await esbuild.stop();
 
@@ -198,13 +197,11 @@ async function importPluginModule(
   }
 
   try {
-    const sandbox = resolveSandboxService();
-    const moduleExports = await sandbox.runCommonJsModule<any>({
+    const sandbox = resolveHardenedSandbox();
+    const moduleExports = sandbox.evaluateCommonJs<any>({
       code: bundleResult.data.code,
-      allowedModules: ALLOWED_PLUGIN_IMPORTS,
+      allowedModules: getPluginSandboxLibraries(),
       filename: bundleResult.data.filename,
-      dirname: path.dirname(bundleResult.data.filename),
-      timeoutMs: PLUGIN_EXECUTION_TIMEOUT_MS,
     });
 
     return { data: moduleExports };
@@ -251,7 +248,8 @@ function validateManifest(
 
   if (
     parsed.data.requiredSettingsKeys?.length &&
-    (!module.additionalTemplateSettingsSchema || !module.pluginFinalSettingsSchema)
+    (!module.additionalTemplateSettingsSchema ||
+      !module.pluginFinalSettingsSchema)
   ) {
     return {
       error: `Plugin ${parsed.data.name} declares required settings keys but does not export both additionalTemplateSettingsSchema and pluginFinalSettingsSchema`,
@@ -354,7 +352,10 @@ export async function loadPluginsForTemplate(
 
     const pluginName = manifest.name;
 
-    const systemSettingsResult = await readSystemSettings(pluginModule, pluginName);
+    const systemSettingsResult = await readSystemSettings(
+      pluginModule,
+      pluginName,
+    );
 
     if ("error" in systemSettingsResult) {
       return systemSettingsResult;

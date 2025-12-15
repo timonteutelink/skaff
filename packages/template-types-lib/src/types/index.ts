@@ -8,6 +8,8 @@ export type {
 export type {
   TemplateConfig,
   SideEffectFunction,
+  SideEffectInput,
+  SideEffectTransform,
   SideEffect,
   RedirectFile,
   TemplateDisablingThis,
