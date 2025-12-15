@@ -7,7 +7,6 @@ export type {
 
 export type {
   TemplateConfig,
-  SideEffectFunction,
   SideEffectInput,
   SideEffectTransform,
   SideEffect,
@@ -27,7 +26,23 @@ export type {
   ProjectSettings,
 } from "./project-settings-types";
 
-// New naming convention for plugin settings
+// Sandbox-safe types for template and plugin code
+export type {
+  ReadonlyProjectContext,
+  ReadonlyInstantiatedTemplate,
+  ReadonlyTemplateView,
+  PluginScopedContext,
+  MapFinalSettingsInput,
+  PluginComputeOutputInput,
+  TemplateCallbackContext,
+} from "./sandbox-safe-types";
+
+export {
+  createReadonlyProjectContext,
+  createReadonlyTemplateView,
+} from "./sandbox-safe-types";
+
+// Plugin settings types
 export type {
   PluginGlobalConfig,
   PluginInputSettings,
@@ -38,20 +53,6 @@ export {
   pluginGlobalConfigSchema,
   pluginInputSchema,
   pluginOutputSchema,
-} from "./plugin-settings-schemas";
-
-// DEPRECATED: Legacy exports for backwards compatibility
-// These will be removed in a future major version.
-export type {
-  PluginSystemSettings,
-  PluginAdditionalTemplateSettings,
-  PluginFinalSettings,
-} from "./plugin-settings-schemas";
-
-export {
-  pluginSystemSettingsSchema,
-  pluginAdditionalTemplateSettingsSchema,
-  pluginFinalSettingsSchema,
 } from "./plugin-settings-schemas";
 
 export {

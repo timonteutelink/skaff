@@ -6,7 +6,7 @@ import {
   AnyOrCallback,
   FinalTemplateSettings,
 } from "./utils";
-import { ProjectSettings } from "./project-settings-types";
+import { ReadonlyProjectContext } from "./sandbox-safe-types";
 
 /**
  * Interface representing all mandatory options for a template.
@@ -211,8 +211,8 @@ export interface TemplateMigration {
 export interface TemplateConfigModule<
   TParentFinalSettings extends FinalTemplateSettings,
   TInputSettingsSchema extends z.ZodObject<UserTemplateSettings>,
-  TFinalSettingsSchema extends
-    z.ZodObject<UserTemplateSettings> = TInputSettingsSchema,
+  TFinalSettingsSchema extends z.ZodObject<UserTemplateSettings> =
+    TInputSettingsSchema,
   TInputSettings extends UserTemplateSettings = z.output<TInputSettingsSchema>,
   TFinalSettings extends FinalTemplateSettings = z.output<TFinalSettingsSchema>,
 > {
@@ -242,9 +242,15 @@ export interface TemplateConfigModule<
   /**
    * The final settings type mapping after the user inputted settings are merged with the template settings.
    * This is the type that will be used to generate the template.
+   *
+   * BIJECTIONAL GENERATION: Templates receive only their own settings, parent
+   * settings, and basic project metadata. They cannot access other templates'
+   * settings, ensuring the same input always produces the same output regardless
+   * of which other templates exist in the project.
    */
   mapFinalSettings: (inputSettings: {
-    fullProjectSettings: ProjectSettings;
+    /** Read-only project metadata (name, author, root template) */
+    projectContext: ReadonlyProjectContext;
     templateSettings: TInputSettings;
     parentSettings?: TParentFinalSettings;
   }) => TFinalSettings;

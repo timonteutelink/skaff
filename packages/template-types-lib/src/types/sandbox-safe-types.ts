@@ -22,6 +22,9 @@ import type { TemplateConfig } from "./template-config-types";
  *
  * This type excludes sensitive information like filesystem paths and
  * repository URLs that could be used for attacks or information gathering.
+ *
+ * NOTE: Plugin input is stored within `templateSettings.plugins` to maintain
+ * bijectional generation. Plugin output is computed at runtime, not stored.
  */
 export interface ReadonlyInstantiatedTemplate {
   /** Unique identifier for this template instance */
@@ -33,22 +36,15 @@ export interface ReadonlyInstantiatedTemplate {
   /** Template name */
   readonly templateName: string;
 
-  /** User-provided settings (frozen copy) */
+  /**
+   * User-provided settings (frozen copy).
+   * Plugin input is stored under the `plugins` key if plugins are used.
+   * Example: { name: "foo", plugins: { greeter: { greeting: "Hello!" } } }
+   */
   readonly templateSettings: Readonly<UserTemplateSettings>;
 
   /** Whether this was auto-instantiated by its parent */
   readonly automaticallyInstantiatedByParent?: boolean;
-
-  /** Plugin settings (frozen copy) */
-  readonly plugins?: Readonly<
-    Record<
-      string,
-      Readonly<{
-        version: string;
-        settings: unknown;
-      }>
-    >
-  >;
 }
 
 /**
@@ -123,16 +119,50 @@ export interface PluginScopedContext {
 }
 
 /**
+ * Read-only project metadata for mapFinalSettings.
+ *
+ * This provides only essential project-level information without exposing
+ * other templates' settings. This ensures bijectional generation by preventing
+ * hidden dependencies between templates.
+ *
+ * Templates should derive their settings from:
+ * 1. Their own templateSettings (user input)
+ * 2. parentSettings (if they have a parent template)
+ * 3. Basic project metadata (name, author)
+ *
+ * Templates should NOT access other templates' settings as this creates
+ * non-deterministic behavior based on evaluation order.
+ */
+export interface ReadonlyProjectContext {
+  /** Project repository name */
+  readonly projectRepositoryName: string;
+
+  /** Project author */
+  readonly projectAuthor: string;
+
+  /** Root template name */
+  readonly rootTemplateName: string;
+}
+
+/**
  * Input for the mapFinalSettings function (sandboxed).
  *
  * All properties are readonly to prevent mutation during settings computation.
+ *
+ * BIJECTIONAL GENERATION: Templates receive only their own settings, parent
+ * settings, and basic project metadata. They cannot access other templates'
+ * settings, ensuring the same input always produces the same output regardless
+ * of which other templates exist in the project.
  */
 export interface MapFinalSettingsInput<
   TInputSettings extends UserTemplateSettings = UserTemplateSettings,
   TParentSettings extends FinalTemplateSettings = FinalTemplateSettings,
 > {
-  /** Read-only copy of the full project settings */
-  readonly fullProjectSettings: ReadonlyProjectSettings;
+  /**
+   * Read-only project metadata (name, author, root template).
+   * Does NOT include other templates' settings to ensure bijectional generation.
+   */
+  readonly projectContext: ReadonlyProjectContext;
 
   /** User-provided template settings (frozen copy) */
   readonly templateSettings: Readonly<TInputSettings>;
@@ -146,12 +176,20 @@ export interface MapFinalSettingsInput<
  *
  * All properties are readonly to ensure deterministic, pure computation.
  *
+ * BIJECTIONAL GENERATION: The templateFinalSettings does NOT include a
+ * `.plugins` field. This prevents plugins from reading other plugins'
+ * input or output, ensuring each plugin's computation is independent
+ * and deterministic.
+ *
  * IMPORTANT: The computeOutput function must be pure and deterministic.
  * Given the same input, it must always produce the same output.
  * Do not use Date.now(), Math.random(), or any non-deterministic operations.
  */
 export interface PluginComputeOutputInput {
-  /** The template's computed final settings (frozen copy) */
+  /**
+   * The template's computed final settings (frozen copy).
+   * Does NOT include `.plugins` - only pure template settings.
+   */
   readonly templateFinalSettings: Readonly<FinalTemplateSettings>;
 
   /** User-provided plugin input settings (frozen copy) */
@@ -159,20 +197,6 @@ export interface PluginComputeOutputInput {
 
   /** Global plugin configuration (frozen copy) */
   readonly globalConfig: Readonly<Record<string, unknown>> | undefined;
-}
-
-/**
- * @deprecated Use `PluginComputeOutputInput` instead
- */
-export interface PluginFinalSettingsInput {
-  /** @deprecated Use templateFinalSettings */
-  readonly templateFinalSettings: Readonly<FinalTemplateSettings>;
-
-  /** @deprecated Use inputSettings */
-  readonly additionalTemplateSettings: Readonly<Record<string, unknown>>;
-
-  /** @deprecated Use globalConfig */
-  readonly systemSettings: Readonly<Record<string, unknown>> | undefined;
 }
 
 /**
@@ -188,50 +212,23 @@ export interface TemplateCallbackContext<
 }
 
 /**
- * Creates a readonly project settings view from full project settings.
+ * Creates a readonly project context from project settings.
  *
- * This function strips sensitive data and returns a frozen, read-only view
- * suitable for passing into sandboxed code.
+ * This function extracts only essential project metadata, explicitly excluding
+ * other templates' settings to ensure bijectional generation.
  *
- * @param settings - The full project settings object
- * @returns A frozen readonly view of the project settings
+ * @param settings - The project settings object
+ * @returns A frozen readonly project context with only metadata
  */
-export function createReadonlyProjectSettings(settings: {
+export function createReadonlyProjectContext(settings: {
   projectRepositoryName: string;
   projectAuthor: string;
   rootTemplateName: string;
-  instantiatedTemplates: Array<{
-    id: string;
-    parentId?: string;
-    templateName: string;
-    templateSettings: UserTemplateSettings;
-    templateCommitHash?: string;
-    templateRepoUrl?: string;
-    templateBranch?: string;
-    automaticallyInstantiatedByParent?: boolean;
-    lastMigration?: string;
-    plugins?: Record<string, { version: string; settings: unknown }>;
-  }>;
-}): ReadonlyProjectSettings {
+}): ReadonlyProjectContext {
   return {
     projectRepositoryName: settings.projectRepositoryName,
     projectAuthor: settings.projectAuthor,
     rootTemplateName: settings.rootTemplateName,
-    instantiatedTemplates: settings.instantiatedTemplates.map((t) => ({
-      id: t.id,
-      parentId: t.parentId,
-      templateName: t.templateName,
-      templateSettings: { ...t.templateSettings },
-      automaticallyInstantiatedByParent: t.automaticallyInstantiatedByParent,
-      plugins: t.plugins
-        ? Object.fromEntries(
-            Object.entries(t.plugins).map(([k, v]) => [
-              k,
-              { version: v.version, settings: v.settings },
-            ]),
-          )
-        : undefined,
-    })),
   };
 }
 

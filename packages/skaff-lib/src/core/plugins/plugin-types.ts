@@ -521,12 +521,20 @@ export interface CliTemplateStage<TState = unknown> {
  *
  * All properties are readonly to ensure deterministic, pure computation.
  *
+ * BIJECTIONAL GENERATION: The templateFinalSettings does NOT include a
+ * `.plugins` field. This prevents plugins from reading other plugins'
+ * input or output, ensuring each plugin's computation is independent
+ * and deterministic.
+ *
  * IMPORTANT: The computeOutput function must be pure and deterministic.
  * Given the same input, it must always produce the same output.
  * Do not use Date.now(), Math.random(), or any non-deterministic operations.
  */
 export interface ComputeOutputInput {
-  /** The template's computed final settings (frozen copy) */
+  /**
+   * The template's computed final settings (frozen copy).
+   * Does NOT include `.plugins` - only pure template settings.
+   */
   readonly templateFinalSettings: Readonly<FinalTemplateSettings>;
 
   /** User-provided plugin input settings (frozen copy) */

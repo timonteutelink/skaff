@@ -177,7 +177,12 @@ export class Project {
       const sandbox = resolveHardenedSandbox();
       const mapFn = template.config.mapFinalSettings;
       mappedSettings = sandbox.invokeFunction(mapFn, {
-        fullProjectSettings: projectSettings,
+        // Only project metadata - no access to other templates' settings
+        projectContext: {
+          projectRepositoryName: projectSettings.projectRepositoryName,
+          projectAuthor: projectSettings.projectAuthor,
+          rootTemplateName: projectSettings.rootTemplateName,
+        },
         templateSettings: parsedUserSettings.data,
         parentSettings: parentFinalSettings,
       });
@@ -201,6 +206,12 @@ export class Project {
         error: `Invalid final template settings for template ${templateName}: ${parsedFinalSettings.error}`,
       };
     }
+
+    // Strip .plugins from templateFinalSettings to ensure plugins only see
+    // pure template settings, not plugin input/output. This ensures bijectional
+    // generation by preventing plugins from depending on other plugins' data.
+    const { plugins: _pluginsStripped, ...templateSettingsWithoutPlugins } =
+      parsedFinalSettings.data;
 
     const pluginOutputSettings: Record<
       string,
@@ -228,9 +239,10 @@ export class Project {
         if (plugin.computeOutput) {
           try {
             // SECURITY: Execute plugin function in hardened sandbox
+            // Pass template settings WITHOUT .plugins to prevent cross-plugin dependencies
             const sandbox = resolveHardenedSandbox();
             outputValue = sandbox.invokeFunction(plugin.computeOutput, {
-              templateFinalSettings: parsedFinalSettings.data,
+              templateFinalSettings: templateSettingsWithoutPlugins,
               inputSettings: parsedInput.data as Record<string, unknown>,
               globalConfig: plugin.globalConfig,
             });
@@ -256,26 +268,27 @@ export class Project {
       }
     }
 
+    // Plugin output is computed at runtime, not stored.
+    // Only input is stored in templateSettings.plugins to ensure bijectional generation.
     const finalSettingsWithPlugins: FinalTemplateSettings = {
-      ...parsedFinalSettings.data,
+      ...templateSettingsWithoutPlugins,
       plugins: pluginOutputSettings,
     };
-
-    if (options?.templateInstanceId) {
-      const instantiated = projectSettings.instantiatedTemplates.find(
-        (entry) => entry.id === options.templateInstanceId,
-      );
-
-      if (instantiated) {
-        instantiated.plugins = pluginOutputSettings;
-      }
-    }
 
     return { data: finalSettingsWithPlugins };
   }
 
   /**
    * Retrieves the final template settings for an instantiated template.
+   *
+   * NOTE: This returns template settings WITHOUT plugin output. Plugin output
+   * is computed at generation time from stored input to ensure bijectional generation.
+   * The returned settings will have an empty `plugins` object.
+   *
+   * @param template - The template definition
+   * @param instanceId - The ID of the instantiated template
+   * @param instantiatedProjectSettings - The project settings containing all instantiated templates
+   * @returns The computed final settings (without plugin output)
    */
   public static getFinalTemplateSettingsForInstantiatedTemplate(
     template: Template,
@@ -348,7 +361,13 @@ export class Project {
       const sandbox = resolveHardenedSandbox();
       const mapFn = template.config.mapFinalSettings;
       mappedSettings = sandbox.invokeFunction(mapFn, {
-        fullProjectSettings: instantiatedProjectSettings,
+        // Only project metadata - no access to other templates' settings
+        projectContext: {
+          projectRepositoryName:
+            instantiatedProjectSettings.projectRepositoryName,
+          projectAuthor: instantiatedProjectSettings.projectAuthor,
+          rootTemplateName: instantiatedProjectSettings.rootTemplateName,
+        },
         templateSettings: parsedUserProvidedSettingsSchema.data,
         parentSettings: parentSettings,
       });
@@ -373,10 +392,12 @@ export class Project {
       };
     }
 
+    // Plugin output is NOT computed here - it's computed at generation time only.
+    // This ensures bijectional generation: same input always produces same output.
     return {
       data: {
         ...parsedFinalSettings.data,
-        plugins: projectTemplateSettings.plugins ?? {},
+        plugins: {},
       },
     };
   }
