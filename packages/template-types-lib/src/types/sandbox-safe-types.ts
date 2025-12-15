@@ -142,18 +142,36 @@ export interface MapFinalSettingsInput<
 }
 
 /**
- * Input for plugin's getFinalTemplateSettings function.
+ * Input for plugin's computeOutput function.
  *
  * All properties are readonly to ensure deterministic, pure computation.
+ *
+ * IMPORTANT: The computeOutput function must be pure and deterministic.
+ * Given the same input, it must always produce the same output.
+ * Do not use Date.now(), Math.random(), or any non-deterministic operations.
  */
-export interface PluginFinalSettingsInput {
+export interface PluginComputeOutputInput {
   /** The template's computed final settings (frozen copy) */
   readonly templateFinalSettings: Readonly<FinalTemplateSettings>;
 
-  /** User-provided plugin settings (frozen copy) */
-  readonly additionalTemplateSettings: Readonly<Record<string, unknown>>;
+  /** User-provided plugin input settings (frozen copy) */
+  readonly inputSettings: Readonly<Record<string, unknown>>;
 
   /** Global plugin configuration (frozen copy) */
+  readonly globalConfig: Readonly<Record<string, unknown>> | undefined;
+}
+
+/**
+ * @deprecated Use `PluginComputeOutputInput` instead
+ */
+export interface PluginFinalSettingsInput {
+  /** @deprecated Use templateFinalSettings */
+  readonly templateFinalSettings: Readonly<FinalTemplateSettings>;
+
+  /** @deprecated Use inputSettings */
+  readonly additionalTemplateSettings: Readonly<Record<string, unknown>>;
+
+  /** @deprecated Use globalConfig */
   readonly systemSettings: Readonly<Record<string, unknown>> | undefined;
 }
 

@@ -230,34 +230,30 @@ function validateManifest(
 
   const declaresSchema = parsed.data.schemas ?? {};
 
-  if (module.systemSettingsSchema && !declaresSchema.systemSettings) {
+  if (module.globalConfigSchema && !declaresSchema.globalConfig) {
     return {
-      error: `Plugin ${parsed.data.name} must declare systemSettings schema support in its manifest.schemas.systemSettings field when exporting systemSettingsSchema`,
+      error: `Plugin ${parsed.data.name} must declare globalConfig schema support in its manifest.schemas.globalConfig field when exporting globalConfigSchema`,
     };
   }
 
-  if (
-    module.additionalTemplateSettingsSchema &&
-    !declaresSchema.additionalTemplateSettings
-  ) {
+  if (module.inputSchema && !declaresSchema.input) {
     return {
-      error: `Plugin ${parsed.data.name} must declare additionalTemplateSettings schema support in its manifest when exporting additionalTemplateSettingsSchema`,
+      error: `Plugin ${parsed.data.name} must declare input schema support in its manifest.schemas.input field when exporting inputSchema`,
     };
   }
 
-  if (module.pluginFinalSettingsSchema && !declaresSchema.pluginFinalSettings) {
+  if (module.outputSchema && !declaresSchema.output) {
     return {
-      error: `Plugin ${parsed.data.name} must declare pluginFinalSettings schema support in its manifest when exporting pluginFinalSettingsSchema`,
+      error: `Plugin ${parsed.data.name} must declare output schema support in its manifest.schemas.output field when exporting outputSchema`,
     };
   }
 
   if (
     parsed.data.requiredSettingsKeys?.length &&
-    (!module.additionalTemplateSettingsSchema ||
-      !module.pluginFinalSettingsSchema)
+    (!module.inputSchema || !module.outputSchema)
   ) {
     return {
-      error: `Plugin ${parsed.data.name} declares required settings keys but does not export both additionalTemplateSettingsSchema and pluginFinalSettingsSchema`,
+      error: `Plugin ${parsed.data.name} declares required settings keys but does not export both inputSchema and outputSchema`,
     };
   }
 
@@ -294,20 +290,20 @@ function ensureCapabilities(
   return { data: undefined };
 }
 
-async function readSystemSettings(
+async function readGlobalConfig(
   pluginModule: SkaffPluginModule,
   pluginName: string,
 ): Promise<Result<any>> {
-  if (!pluginModule.systemSettingsSchema) {
+  if (!pluginModule.globalConfigSchema) {
     return { data: undefined };
   }
 
   const rawSettings = await getPluginSystemSettings(pluginName);
-  const parsed = pluginModule.systemSettingsSchema.safeParse(rawSettings ?? {});
+  const parsed = pluginModule.globalConfigSchema.safeParse(rawSettings ?? {});
 
   if (!parsed.success) {
     return {
-      error: `Invalid system settings for plugin ${pluginName}: ${parsed.error}`,
+      error: `Invalid global config for plugin ${pluginName}: ${parsed.error}`,
     };
   }
 
@@ -357,13 +353,10 @@ export async function loadPluginsForTemplate(
 
     const pluginName = manifest.name;
 
-    const systemSettingsResult = await readSystemSettings(
-      pluginModule,
-      pluginName,
-    );
+    const globalConfigResult = await readGlobalConfig(pluginModule, pluginName);
 
-    if ("error" in systemSettingsResult) {
-      return systemSettingsResult;
+    if ("error" in globalConfigResult) {
+      return globalConfigResult;
     }
 
     const templatePlugin = buildTemplatePlugin(
@@ -384,14 +377,12 @@ export async function loadPluginsForTemplate(
       name: pluginName,
       version: manifest.version,
       requiredSettingsKeys: manifest.requiredSettingsKeys,
-      systemSettings: systemSettingsResult.data,
-      additionalTemplateSettingsSchema:
-        pluginModule.additionalTemplateSettingsSchema ??
-        (z.object({}).strict() as z.ZodTypeAny),
-      pluginFinalSettingsSchema:
-        pluginModule.pluginFinalSettingsSchema ??
-        (z.object({}).strict() as z.ZodTypeAny),
-      getFinalTemplateSettings: pluginModule.getFinalTemplateSettings,
+      globalConfig: globalConfigResult.data,
+      inputSchema:
+        pluginModule.inputSchema ?? (z.object({}).strict() as z.ZodTypeAny),
+      outputSchema:
+        pluginModule.outputSchema ?? (z.object({}).strict() as z.ZodTypeAny),
+      computeOutput: pluginModule.computeOutput,
       lifecycle: pluginModule.lifecycle,
       templatePlugin,
       cliPlugin,

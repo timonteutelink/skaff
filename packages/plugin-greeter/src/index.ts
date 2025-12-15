@@ -4,6 +4,7 @@ import type {
   PluginLifecycle,
   PluginLifecycleContext,
   PluginGenerationResult,
+  ComputeOutputInput,
 } from "@timonteutelink/skaff-lib";
 import {
   PipelineStage,
@@ -14,8 +15,8 @@ import {
   type GreeterPluginOptions,
 } from "@timonteutelink/skaff-plugin-greeter-types";
 import {
-  pluginAdditionalTemplateSettingsSchema,
-  pluginFinalSettingsSchema,
+  pluginInputSchema,
+  pluginOutputSchema,
 } from "@timonteutelink/template-types-lib";
 import z from "zod";
 
@@ -126,21 +127,25 @@ const greeterPlugin = {
       web: [],
     },
     schemas: {
-      additionalTemplateSettings: true,
-      pluginFinalSettings: true,
+      input: true,
+      output: true,
     },
   },
   lifecycle: greeterLifecycle,
-  additionalTemplateSettingsSchema: pluginAdditionalTemplateSettingsSchema,
-  pluginFinalSettingsSchema: pluginFinalSettingsSchema.merge(
-    z.object({
-      lastGreeting: z.string().optional(),
-      message: z.string().optional(),
-      audience: z.string().optional(),
-    }),
-  ),
-  getFinalTemplateSettings: () => ({
-    lastGreeting: new Date().toISOString(),
+  inputSchema: pluginInputSchema,
+  outputSchema: pluginOutputSchema.extend({
+    message: z.string().optional(),
+    audience: z.string().optional(),
+  }),
+  /**
+   * Computes output settings from input.
+   *
+   * NOTE: This function must be deterministic. Avoid using Date.now(),
+   * Math.random(), or any non-deterministic operations.
+   */
+  computeOutput: ({ inputSettings }: ComputeOutputInput) => ({
+    message: (inputSettings as Record<string, unknown>).message ?? "Hello!",
+    audience: (inputSettings as Record<string, unknown>).audience ?? "World",
   }),
   template: createGreeterTemplatePlugin,
 };

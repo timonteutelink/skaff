@@ -26,6 +26,22 @@ export type {
   InstantiatedTemplate,
   ProjectSettings,
 } from "./project-settings-types";
+
+// New naming convention for plugin settings
+export type {
+  PluginGlobalConfig,
+  PluginInputSettings,
+  PluginOutputSettings,
+} from "./plugin-settings-schemas";
+
+export {
+  pluginGlobalConfigSchema,
+  pluginInputSchema,
+  pluginOutputSchema,
+} from "./plugin-settings-schemas";
+
+// DEPRECATED: Legacy exports for backwards compatibility
+// These will be removed in a future major version.
 export type {
   PluginSystemSettings,
   PluginAdditionalTemplateSettings,

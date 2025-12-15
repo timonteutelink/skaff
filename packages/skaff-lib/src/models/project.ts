@@ -63,7 +63,7 @@ function validateParentFinalSettings(
   return { data: parsed.data };
 }
 
-function buildPluginTemplateSettingsSchema(
+function buildPluginInputSchema(
   plugins?: LoadedTemplatePlugin[],
 ): z.ZodTypeAny {
   if (!plugins?.length) {
@@ -73,8 +73,7 @@ function buildPluginTemplateSettingsSchema(
   const shape: Record<string, z.ZodTypeAny> = {};
 
   for (const plugin of plugins) {
-    shape[plugin.name] =
-      plugin.additionalTemplateSettingsSchema ?? z.object({}).strict();
+    shape[plugin.name] = plugin.inputSchema ?? z.object({}).strict();
   }
 
   return z.object(shape).partial().strict();
@@ -128,7 +127,7 @@ export class Project {
     const templateSettingsSchema = template.config.templateSettingsSchema.merge(
       z
         .object({
-          plugins: buildPluginTemplateSettingsSchema(options?.plugins),
+          plugins: buildPluginInputSchema(options?.plugins),
         })
         .partial(),
     );
@@ -203,7 +202,7 @@ export class Project {
       };
     }
 
-    const pluginFinalSettings: Record<
+    const pluginOutputSettings: Record<
       string,
       { version: string; settings: unknown }
     > = {};
@@ -213,63 +212,53 @@ export class Project {
         const pluginsData = parsedUserSettings.data.plugins as
           | Record<string, unknown>
           | undefined;
-        const rawPluginSettings = pluginsData?.[plugin.name];
+        const rawPluginInput = pluginsData?.[plugin.name];
 
-        const additionalSchema =
-          plugin.additionalTemplateSettingsSchema ?? z.object({}).strict();
-        const parsedPluginSettings = additionalSchema.safeParse(
-          rawPluginSettings ?? {},
-        );
+        const inputSchema = plugin.inputSchema ?? z.object({}).strict();
+        const parsedInput = inputSchema.safeParse(rawPluginInput ?? {});
 
-        if (!parsedPluginSettings.success) {
+        if (!parsedInput.success) {
           return {
-            error: `Invalid settings for plugin ${plugin.name}: ${parsedPluginSettings.error}`,
+            error: `Invalid input settings for plugin ${plugin.name}: ${parsedInput.error}`,
           };
         }
 
-        let pluginFinalSettingsValue: unknown = parsedPluginSettings.data;
+        let outputValue: unknown = parsedInput.data;
 
-        if (plugin.getFinalTemplateSettings) {
+        if (plugin.computeOutput) {
           try {
             // SECURITY: Execute plugin function in hardened sandbox
             const sandbox = resolveHardenedSandbox();
-            pluginFinalSettingsValue = sandbox.invokeFunction(
-              plugin.getFinalTemplateSettings,
-              {
-                templateFinalSettings: parsedFinalSettings.data,
-                additionalTemplateSettings: parsedPluginSettings.data as Record<
-                  string,
-                  unknown
-                >,
-                systemSettings: plugin.systemSettings,
-              },
-            );
+            outputValue = sandbox.invokeFunction(plugin.computeOutput, {
+              templateFinalSettings: parsedFinalSettings.data,
+              inputSettings: parsedInput.data as Record<string, unknown>,
+              globalConfig: plugin.globalConfig,
+            });
           } catch (error) {
             return {
-              error: `Failed to resolve final settings for plugin ${plugin.name}: ${error}`,
+              error: `Failed to compute output for plugin ${plugin.name}: ${error}`,
             };
           }
         }
 
-        const pluginFinalSchema =
-          plugin.pluginFinalSettingsSchema ?? z.object({}).strict();
-        const parsed = pluginFinalSchema.safeParse(pluginFinalSettingsValue);
-        if (!parsed.success) {
+        const outputSchema = plugin.outputSchema ?? z.object({}).strict();
+        const parsedOutput = outputSchema.safeParse(outputValue);
+        if (!parsedOutput.success) {
           return {
-            error: `Invalid final settings for plugin ${plugin.name}: ${parsed.error}`,
+            error: `Invalid output settings for plugin ${plugin.name}: ${parsedOutput.error}`,
           };
         }
 
-        pluginFinalSettings[plugin.name] = {
+        pluginOutputSettings[plugin.name] = {
           version: plugin.version,
-          settings: parsed.data,
+          settings: parsedOutput.data,
         };
       }
     }
 
     const finalSettingsWithPlugins: FinalTemplateSettings = {
       ...parsedFinalSettings.data,
-      plugins: pluginFinalSettings,
+      plugins: pluginOutputSettings,
     };
 
     if (options?.templateInstanceId) {
@@ -278,7 +267,7 @@ export class Project {
       );
 
       if (instantiated) {
-        instantiated.plugins = pluginFinalSettings;
+        instantiated.plugins = pluginOutputSettings;
       }
     }
 
