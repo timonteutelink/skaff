@@ -5,6 +5,11 @@
     ".": "./dist/index.js",
     "./browser": "./dist/browser.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/timonteutelink/skaff.git",
+    "directory": "packages/skaff-lib"
+  },
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"

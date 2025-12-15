@@ -8,6 +8,11 @@
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/timonteutelink/skaff.git",
+    "directory": "packages/template-types-lib"
+  },
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"

@@ -3,13 +3,14 @@ name: Release Skaff Lib
 on:
   push:
     tags:
-      - 'lib-v*'
+      - "lib-v*"
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -17,22 +18,17 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+      - name: Setup Node.js for npm publishing
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
       - name: Install dependencies
         run: bun install --frozen-lockfile
         working-directory: packages/skaff-lib
       - name: Build library
         run: bun run build
         working-directory: packages/skaff-lib
-      - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          cat > .npmrc <<'EOF'
-          //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
-          always-auth=true
-          registry=https://registry.npmjs.org
-          EOF
-
-          npm publish
+      - name: Publish to npm with provenance
+        run: npm publish --provenance --access public
         working-directory: packages/skaff-lib
-

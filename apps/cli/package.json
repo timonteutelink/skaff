@@ -83,7 +83,11 @@
     },
     "repositoryPrefix": "https://github.com/timonteutelink/skaff/tree/main/apps/cli/<%- commandPath %>"
   },
-  "repository": "timonteutelink/skaff",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/timonteutelink/skaff.git",
+    "directory": "apps/cli"
+  },
   "scripts": {
     "rundev": "",
     "build": "rm -rf dist && tsc -b",
