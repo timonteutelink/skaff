@@ -1,11 +1,3 @@
-import {
-  ProjectSettings,
-  ReadonlyProjectSettings,
-  ReadonlyTemplateView,
-  PluginScopedContext,
-} from "@timonteutelink/template-types-lib";
-
-import type { Template } from "../templates/Template";
 import type {
   ProjectCreationPipelineContext,
   TemplateInstantiationPipelineContext,
@@ -15,6 +7,7 @@ import type {
   PipelineBuilder,
   PipelineStage,
 } from "./pipeline/pipeline-runner";
+import type { TemplateView } from "../plugins/plugin-types";
 
 export interface GeneratorOptions {
   /**
@@ -47,9 +40,16 @@ export interface TemplateGenerationPipelineOverrides {
   projectCreationStages?: PipelineStage<ProjectCreationPipelineContext>[];
 }
 
+/**
+ * Context provided to template generation plugins.
+ *
+ * Plugins receive a minimal TemplateView instead of the full Template
+ * to prevent access to sensitive filesystem paths and internal state.
+ */
 export interface TemplatePipelinePluginContext {
   options: GeneratorOptions;
-  rootTemplate: Template;
+  /** Read-only view of the root template with minimal safe information */
+  rootTemplate: TemplateView;
   registerHandlebarHelpers: (helpers: Record<string, HelperDelegate>) => void;
 }
 
@@ -73,41 +73,24 @@ export interface TemplateGenerationPlugin {
 }
 
 /**
- * Input provided to plugin factory functions.
+ * Input provided to template plugin factories.
  *
- * SECURITY: Uses scoped context to prevent plugins from accessing or
- * mutating the full project settings. Plugins only see what they need.
+ * Plugins receive a minimal TemplateView instead of the full Template
+ * to maintain security boundaries and prevent access to internal state.
  */
 export interface TemplatePluginFactoryInput {
-  /** Read-only view of the template (no filesystem paths) */
-  template: ReadonlyTemplateView;
-
-  /** Plugin-specific options from template config */
+  /** Read-only view of the template with minimal safe information */
+  template: TemplateView;
+  /** Plugin-specific options from the template configuration */
   options?: unknown;
-
-  /** Scoped context with project metadata (read-only) */
-  context: PluginScopedContext;
-}
-
-/**
- * @deprecated Use TemplatePluginFactoryInput instead.
- * This interface is kept for backward compatibility but passes mutable ProjectSettings.
- */
-export interface LegacyTemplatePluginFactoryInput {
-  template: Template;
-  options?: unknown;
-  projectSettings: ProjectSettings;
+  /** Read-only project metadata */
+  projectName: string;
+  projectAuthor: string;
+  rootTemplateName: string;
 }
 
 export type TemplateGenerationPluginFactory = (
   input: TemplatePluginFactoryInput,
-) => TemplateGenerationPlugin;
-
-/**
- * @deprecated Use TemplateGenerationPluginFactory instead.
- */
-export type LegacyTemplateGenerationPluginFactory = (
-  input: LegacyTemplatePluginFactoryInput,
 ) => TemplateGenerationPlugin;
 
 export type TemplatePluginEntrypoint =

@@ -3,21 +3,15 @@ import type {
   WebTemplateStage,
 } from "@timonteutelink/skaff-lib";
 import React, { useState } from "react";
-import {
-  GREETER_PLUGIN_NAME,
-  GREETER_STAGE_STATE_KEY,
-} from "@timonteutelink/skaff-plugin-greeter-types";
+import { GREETER_PLUGIN_NAME } from "@timonteutelink/skaff-plugin-greeter-types";
 
 type GreeterStageState = { disabled?: boolean };
 
-const greeterBeforeWebStage: WebTemplateStage = {
+const greeterBeforeWebStage: WebTemplateStage<GreeterStageState> = {
   id: "greeter-before-settings",
   placement: "before-settings",
-  stateKey: GREETER_STAGE_STATE_KEY,
   render: ({ onContinue, stageState, setStageState }) => {
-    const [disabled, setDisabled] = useState(
-      Boolean((stageState as GreeterStageState | undefined)?.disabled),
-    );
+    const [disabled, setDisabled] = useState(Boolean(stageState?.disabled));
 
     return (
       <div className="space-y-4 p-6 border rounded-md bg-white">
@@ -47,12 +41,10 @@ const greeterBeforeWebStage: WebTemplateStage = {
   },
 };
 
-const greeterAfterWebStage: WebTemplateStage = {
+const greeterAfterWebStage: WebTemplateStage<GreeterStageState> = {
   id: "greeter-after-settings",
   placement: "after-settings",
-  stateKey: GREETER_STAGE_STATE_KEY,
-  shouldSkip: ({ stageState }) =>
-    Boolean((stageState as GreeterStageState | undefined)?.disabled),
+  shouldSkip: ({ stageState }) => Boolean(stageState?.disabled),
   render: ({ currentSettings, onContinue }) => (
     <div className="space-y-4 p-6 border rounded-md bg-white">
       <h2 className="text-xl font-semibold">Greeter after settings</h2>
@@ -71,11 +63,10 @@ const greeterAfterWebStage: WebTemplateStage = {
 };
 
 const greeterWebContribution: WebPluginContribution = {
-  getNotices: ({ projectSettings }) => {
-    const instances = projectSettings.instantiatedTemplates.length;
+  getNotices: ({ templateCount }) => {
     return [
-      instances > 0
-        ? `Greeter plugin ready for ${instances} template instance(s).`
+      templateCount > 0
+        ? `Greeter plugin ready for ${templateCount} template instance(s).`
         : "Greeter plugin is ready to welcome you in the UI.",
     ];
   },

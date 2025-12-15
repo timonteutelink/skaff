@@ -1,4 +1,7 @@
-import type { TemplatePluginConfig } from "@timonteutelink/template-types-lib";
+import type {
+  TemplateConfig,
+  TemplatePluginConfig,
+} from "@timonteutelink/template-types-lib";
 
 import type {
   TemplateGenerationPlugin,
@@ -6,16 +9,37 @@ import type {
 } from "../generation/template-generation-types";
 import type {
   FinalTemplateSettings,
-  ProjectSettings,
   PluginSystemSettings,
-  ReadonlyProjectSettings,
 } from "@timonteutelink/template-types-lib";
-import type { Template } from "../templates/Template";
 import type { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { z } from "zod";
 import type React from "react";
 
 export type PluginCapability = "template" | "cli" | "web";
+
+/**
+ * A minimal, read-only view of a template exposed to plugins.
+ *
+ * This interface provides only the information plugins need to operate,
+ * intentionally hiding filesystem paths and internal implementation details
+ * to maintain security and encapsulation boundaries.
+ */
+export interface TemplateView {
+  /** The template's unique name identifier */
+  readonly name: string;
+  /** Human-readable description of the template */
+  readonly description?: string;
+  /** The template configuration (without sensitive internal fields) */
+  readonly config: Readonly<TemplateConfig>;
+  /** Names of available sub-templates */
+  readonly subTemplateNames: readonly string[];
+  /** Whether this template is a detached subtree root */
+  readonly isDetachedSubtreeRoot: boolean;
+  /** Current commit hash if available */
+  readonly commitHash?: string;
+  /** Whether the template is loaded from a local path (not from cache) */
+  readonly isLocal: boolean;
+}
 
 export type TemplateHook =
   | "configureTemplateInstantiationPipeline"
@@ -60,10 +84,16 @@ export const pluginManifestSchema = z.object({
 export type PluginManifest = z.infer<typeof pluginManifestSchema>;
 
 export interface PluginCommandHandlerContext {
+  /** Command-line arguments passed after the command name */
   argv: string[];
+  /** Absolute path to the project directory, if available */
   projectPath?: string;
-  /** Read-only project settings to prevent plugins from mutating shared state */
-  projectSettings: ReadonlyProjectSettings;
+  /** Read-only project metadata */
+  projectName: string;
+  projectAuthor: string;
+  rootTemplateName: string;
+  /** Number of instantiated templates in the project */
+  templateCount: number;
 }
 
 export interface PluginCliCommand {
@@ -83,9 +113,11 @@ export type CliPluginEntrypoint =
 
 export interface WebPluginContribution {
   getNotices?(context: {
-    /** Read-only project settings to prevent plugins from mutating shared state */
-    projectSettings: ReadonlyProjectSettings;
-    rootTemplate?: Template;
+    projectName: string;
+    projectAuthor: string;
+    rootTemplateName: string;
+    templateCount: number;
+    rootTemplate?: TemplateView;
   }): Promise<string[]> | string[];
   templateStages?: WebTemplateStage[];
 }
@@ -100,45 +132,120 @@ export interface NormalizedTemplatePluginConfig {
   options?: unknown;
 }
 
-export type TemplateStagePlacement = "before-settings" | "after-settings";
+/**
+ * Placement phases for plugin template stages.
+ *
+ * Stages run in the following order:
+ * 1. `init` - Initialization, before any user interaction
+ * 2. `before-settings` - After init, before the settings form is shown
+ * 3. `after-settings` - After settings are submitted, before generation
+ * 4. `finalize` - After generation is complete
+ */
+export type TemplateStagePlacement =
+  | "init"
+  | "before-settings"
+  | "after-settings"
+  | "finalize";
 
-export interface WebTemplateStageContext {
+/**
+ * Order in which template stage placements are executed.
+ */
+export const TEMPLATE_STAGE_PLACEMENT_ORDER: readonly TemplateStagePlacement[] =
+  ["init", "before-settings", "after-settings", "finalize"] as const;
+
+/**
+ * Base context available to all template stages.
+ * State is automatically namespaced by plugin to prevent collisions.
+ */
+export interface BaseTemplateStageContext<TState = unknown> {
+  /** Name of the template being instantiated */
   templateName: string;
+  /** Name of the project repository */
   projectRepositoryName?: string;
+  /** Current user-provided settings (null before settings form) */
   currentSettings?: UserTemplateSettings | null;
-  stageState: unknown;
+  /**
+   * Plugin-scoped state for this stage.
+   * Automatically namespaced - plugins cannot see or modify other plugins' state.
+   */
+  stageState: TState;
 }
 
-export interface WebTemplateStageRenderProps extends WebTemplateStageContext {
+export interface WebTemplateStageContext<
+  TState = unknown,
+> extends BaseTemplateStageContext<TState> {}
+
+export interface WebTemplateStageRenderProps<
+  TState = unknown,
+> extends WebTemplateStageContext<TState> {
+  /** Call this to proceed to the next stage */
   onContinue: () => void;
-  setStageState: (value: unknown) => void;
+  /**
+   * Update the stage state.
+   * State is automatically namespaced by plugin name to prevent collisions.
+   */
+  setStageState: (value: TState) => void;
 }
 
-export interface WebTemplateStage {
+/**
+ * A web UI stage contributed by a plugin.
+ *
+ * Stage state is automatically namespaced using the plugin name,
+ * preventing collisions between plugins.
+ */
+export interface WebTemplateStage<TState = unknown> {
+  /** Unique identifier for this stage within the plugin */
   id: string;
+  /** When this stage should run in the template instantiation flow */
   placement: TemplateStagePlacement;
-  stateKey?: string;
-  shouldSkip?: (context: WebTemplateStageContext) => boolean | Promise<boolean>;
-  render: (props: WebTemplateStageRenderProps) => React.ReactNode;
+  /**
+   * Optional Zod schema for validating stage state.
+   * If provided, state will be validated before being passed to the stage.
+   */
+  stateSchema?: z.ZodType<TState>;
+  /** Return true to skip this stage */
+  shouldSkip?: (
+    context: WebTemplateStageContext<TState>,
+  ) => boolean | Promise<boolean>;
+  /** Render the stage UI */
+  render: (props: WebTemplateStageRenderProps<TState>) => React.ReactNode;
 }
 
-export interface CliTemplateStageContext {
-  templateName: string;
+export interface CliTemplateStageContext<
+  TState = unknown,
+> extends BaseTemplateStageContext<TState> {
+  /** Root template name */
   rootTemplateName: string;
-  /** Read-only project settings to prevent plugins from mutating shared state */
-  projectSettings?: ReadonlyProjectSettings;
-  currentSettings?: UserTemplateSettings | null;
-  stageState: unknown;
-  setStageState: (value: unknown) => void;
+  /**
+   * Update the stage state.
+   * State is automatically namespaced by plugin name to prevent collisions.
+   */
+  setStageState: (value: TState) => void;
 }
 
-export interface CliTemplateStage {
+/**
+ * A CLI stage contributed by a plugin.
+ *
+ * Stage state is automatically namespaced using the plugin name,
+ * preventing collisions between plugins.
+ */
+export interface CliTemplateStage<TState = unknown> {
+  /** Unique identifier for this stage within the plugin */
   id: string;
+  /** When this stage should run in the template instantiation flow */
   placement: TemplateStagePlacement;
-  stateKey?: string;
-  shouldSkip?: (context: CliTemplateStageContext) => boolean | Promise<boolean>;
+  /**
+   * Optional Zod schema for validating stage state.
+   * If provided, state will be validated before being passed to the stage.
+   */
+  stateSchema?: z.ZodType<TState>;
+  /** Return true to skip this stage */
+  shouldSkip?: (
+    context: CliTemplateStageContext<TState>,
+  ) => boolean | Promise<boolean>;
+  /** Execute the stage logic */
   run: (
-    context: CliTemplateStageContext & {
+    context: CliTemplateStageContext<TState> & {
       prompts: typeof import("@inquirer/prompts");
     },
   ) => Promise<UserTemplateSettings | void | undefined>;
@@ -198,4 +305,75 @@ export function normalizeTemplatePlugins(
       return null;
     })
     .filter((value): value is NormalizedTemplatePluginConfig => Boolean(value));
+}
+
+/**
+ * Creates a namespaced state key for a plugin stage.
+ *
+ * This ensures that each plugin's stage state is isolated from other plugins,
+ * preventing accidental collisions even if plugins use the same stage IDs.
+ *
+ * @param pluginName - The unique name of the plugin
+ * @param stageId - The stage identifier within the plugin
+ * @returns A namespaced key in the format `pluginName::stageId`
+ */
+export function createPluginStageStateKey(
+  pluginName: string,
+  stageId: string,
+): string {
+  return `${pluginName}::${stageId}`;
+}
+
+/**
+ * Parsed components of a namespaced state key.
+ */
+export interface ParsedStageStateKey {
+  pluginName: string;
+  stageId: string;
+}
+
+/**
+ * Parses a namespaced state key back into its components.
+ *
+ * @param key - The namespaced key to parse
+ * @returns The parsed components, or null if the key format is invalid
+ */
+export function parsePluginStageStateKey(
+  key: string,
+): ParsedStageStateKey | null {
+  const separator = "::";
+  const separatorIndex = key.indexOf(separator);
+  if (separatorIndex === -1) {
+    return null;
+  }
+  return {
+    pluginName: key.slice(0, separatorIndex),
+    stageId: key.slice(separatorIndex + separator.length),
+  };
+}
+
+/**
+ * Entry representing a loaded plugin stage with its source plugin information.
+ */
+export interface PluginStageEntry<TStage> {
+  /** The plugin that contributed this stage */
+  pluginName: string;
+  /** The stage definition */
+  stage: TStage;
+  /** The namespaced state key for this stage */
+  stateKey: string;
+}
+
+/**
+ * Creates a PluginStageEntry with automatic state key namespacing.
+ */
+export function createPluginStageEntry<TStage extends { id: string }>(
+  pluginName: string,
+  stage: TStage,
+): PluginStageEntry<TStage> {
+  return {
+    pluginName,
+    stage,
+    stateKey: createPluginStageStateKey(pluginName, stage.id),
+  };
 }

@@ -38,9 +38,14 @@ function createGreetingStage(
 }
 
 function createGreeterTemplatePlugin(
-  options?: GreeterPluginOptions,
-  templateDescription?: string,
+  input: TemplatePluginFactoryInput,
 ): TemplateGenerationPlugin {
+  const options = input.options as GreeterPluginOptions | undefined;
+  const templateDescription =
+    typeof input.template.config.templateConfig.description === "string"
+      ? input.template.config.templateConfig.description
+      : undefined;
+
   return {
     configureTemplateInstantiationPipeline(builder) {
       builder.insertAfter(
@@ -69,21 +74,15 @@ const greeterPlugin = {
   additionalTemplateSettingsSchema: pluginAdditionalTemplateSettingsSchema,
   pluginFinalSettingsSchema: pluginFinalSettingsSchema.merge(
     z.object({
+      lastGreeting: z.string().optional(),
       message: z.string().optional(),
       audience: z.string().optional(),
     }),
   ),
-  // NOTE: getFinalTemplateSettings removed - it was using non-deterministic
-  // new Date().toISOString() which breaks the bijectional guarantee.
-  // If plugins need timestamps, they should receive them from the host context.
-  template: ({ options, template }: TemplatePluginFactoryInput) =>
-    createGreeterTemplatePlugin(
-      options as GreeterPluginOptions | undefined,
-      // template is now ReadonlyTemplateView which has description directly
-      typeof template.description === "string"
-        ? template.description
-        : undefined,
-    ),
+  getFinalTemplateSettings: () => ({
+    lastGreeting: new Date().toISOString(),
+  }),
+  template: createGreeterTemplatePlugin,
 };
 
 export default greeterPlugin;

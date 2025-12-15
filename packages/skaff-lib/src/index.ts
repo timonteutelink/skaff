@@ -46,7 +46,6 @@ export {
   type TemplateGenerationPlugin,
   type TemplatePipelinePluginContext,
   type TemplatePluginEntrypoint,
-  type TemplatePluginFactoryInput,
 } from "./core/generation/template-generation-types";
 export * from "./core/plugins";
 

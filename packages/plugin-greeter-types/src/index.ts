@@ -1,7 +1,6 @@
 import type { TemplatePluginConfig } from "@timonteutelink/template-types-lib";
 
 export const GREETER_PLUGIN_NAME = "greeter";
-export const GREETER_STAGE_STATE_KEY = "greeter-stage-state";
 
 export type GreeterPluginOptions = {
   greeting?: string;

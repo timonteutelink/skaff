@@ -5,12 +5,16 @@ import {
   type TemplatePluginConfig,
   type WebPluginContribution,
   type WebTemplateStage,
+  type PluginStageEntry,
   normalizeTemplatePlugins,
+  createPluginStageEntry,
 } from "@timonteutelink/skaff-lib";
 
 import type { TemplateDTO } from "@timonteutelink/skaff-lib/browser";
 
-function isTemplateGenerationPluginModule(entry: unknown): entry is SkaffPluginModule {
+function isTemplateGenerationPluginModule(
+  entry: unknown,
+): entry is SkaffPluginModule {
   if (!entry || typeof entry !== "object") return false;
   return (
     "template" in entry || "cli" in entry || "web" in entry || "name" in entry
@@ -20,7 +24,7 @@ function isTemplateGenerationPluginModule(entry: unknown): entry is SkaffPluginM
 function coerceToPluginModule(entry: unknown): SkaffPluginModule | null {
   if (!entry) return null;
   if (typeof entry === "function") {
-    return { template: entry as any } satisfies SkaffPluginModule;
+    return { template: entry } as SkaffPluginModule;
   }
   if (isTemplateGenerationPluginModule(entry)) {
     return entry as SkaffPluginModule;
@@ -28,7 +32,10 @@ function coerceToPluginModule(entry: unknown): SkaffPluginModule | null {
   return null;
 }
 
-function pickEntrypoint(moduleExports: any, exportName?: string): unknown {
+function pickEntrypoint(
+  moduleExports: Record<string, unknown>,
+  exportName?: string,
+): unknown {
   if (exportName && moduleExports && exportName in moduleExports) {
     return moduleExports[exportName];
   }
@@ -63,11 +70,7 @@ async function loadPluginModule(
   }
 }
 
-export type WebPluginStageEntry = {
-  pluginName: string;
-  stage: WebTemplateStage;
-  source: LoadedTemplatePlugin["reference"];
-};
+export type WebPluginStageEntry = PluginStageEntry<WebTemplateStage>;
 
 export async function loadWebTemplateStages(
   template: TemplateDTO,
@@ -89,10 +92,11 @@ export async function loadWebTemplateStages(
     const web = await resolveWebContribution(module);
     if (!web?.templateStages?.length) continue;
 
-    const pluginName = module.name || reference.module;
+    const pluginName = module.manifest?.name || reference.module;
 
     for (const stage of web.templateStages) {
-      stages.push({ pluginName, stage, source: reference });
+      // Use createPluginStageEntry for automatic state key namespacing
+      stages.push(createPluginStageEntry(pluginName, stage));
     }
   }
 

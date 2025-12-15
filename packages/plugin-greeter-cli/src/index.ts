@@ -3,47 +3,30 @@ import type {
   CliTemplateStage,
   PluginCliCommand,
 } from "@timonteutelink/skaff-lib";
-import {
-  GREETER_PLUGIN_NAME,
-  GREETER_STAGE_STATE_KEY,
-} from "@timonteutelink/skaff-plugin-greeter-types";
+import { GREETER_PLUGIN_NAME } from "@timonteutelink/skaff-plugin-greeter-types";
 
 type GreeterStageState = { disabled?: boolean };
 
 const greeterCliCommand: PluginCliCommand = {
   name: "greet",
-  description: "Print a friendly greeting and show persisted plugin state",
-  async run({ argv, projectPath, projectSettings }) {
-    const targetInstanceId =
-      argv[0] ?? projectSettings.instantiatedTemplates[0]?.id;
-
-    if (!targetInstanceId) {
-      // eslint-disable-next-line no-console
-      console.log("No template instances found to greet.");
-      return;
-    }
-
-    const targetInstance = projectSettings.instantiatedTemplates.find(
-      (entry) => entry.id === targetInstanceId,
-    );
-
-    const pluginState = targetInstance?.plugins?.[GREETER_PLUGIN_NAME];
-    const persistedMessage = (pluginState?.settings as { message?: string } | undefined)
-      ?.message;
+  description: "Print a friendly greeting and show plugin information",
+  async run({ argv, projectPath, projectName, templateCount }) {
+    const targetInstanceId = argv[0];
 
     // eslint-disable-next-line no-console
     console.log(
-      `👋 Hello from greeter for instance ${targetInstanceId} at ${
-        projectPath ?? ""
-      }.${persistedMessage ? ` Stored message: ${persistedMessage}` : ""}`,
+      `👋 Hello from greeter for project "${projectName}" at ${
+        projectPath ?? "unknown path"
+      }. ${templateCount} template(s) instantiated.${
+        targetInstanceId ? ` Target instance: ${targetInstanceId}` : ""
+      }`,
     );
   },
 };
 
-const greeterCliBeforeStage: CliTemplateStage = {
+const greeterCliBeforeStage: CliTemplateStage<GreeterStageState> = {
   id: "greeter-cli-before",
   placement: "before-settings",
-  stateKey: GREETER_STAGE_STATE_KEY,
   async run({ prompts, setStageState }) {
     // eslint-disable-next-line no-console
     console.log("👋 hello from the greeter plugin before settings");
@@ -55,12 +38,10 @@ const greeterCliBeforeStage: CliTemplateStage = {
   },
 };
 
-const greeterCliAfterStage: CliTemplateStage = {
+const greeterCliAfterStage: CliTemplateStage<GreeterStageState> = {
   id: "greeter-cli-after",
   placement: "after-settings",
-  stateKey: GREETER_STAGE_STATE_KEY,
-  shouldSkip: ({ stageState }) =>
-    Boolean((stageState as GreeterStageState | undefined)?.disabled),
+  shouldSkip: ({ stageState }) => Boolean(stageState?.disabled),
   async run({ currentSettings }) {
     // eslint-disable-next-line no-console
     console.log(`👋 hello ${JSON.stringify(currentSettings ?? {})}`);

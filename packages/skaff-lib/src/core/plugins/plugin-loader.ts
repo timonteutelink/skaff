@@ -1,13 +1,5 @@
-import {
-  ProjectSettings,
-  createReadonlyProjectSettings,
-  createReadonlyTemplateView,
-  ReadonlyProjectSettings,
-  ReadonlyTemplateView,
-} from "@timonteutelink/template-types-lib";
+import { ProjectSettings } from "@timonteutelink/template-types-lib";
 import { builtinModules, createRequire } from "node:module";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 import type { Result } from "../../lib/types";
 import { getPluginSystemSettings } from "../../lib/config";
@@ -22,6 +14,7 @@ import {
   PluginManifest,
   pluginManifestSchema,
 } from "./plugin-types";
+import { createTemplateView } from "./template-view";
 import {
   TemplateGenerationPlugin,
   TemplateGenerationPluginFactory,
@@ -158,38 +151,15 @@ function buildTemplatePlugin(
   if (!entrypoint) return undefined;
 
   if (typeof entrypoint === "function") {
-    // Create readonly views for the plugin factory
-    // Get all child template names from the subTemplates record
-    const childTemplateNames: string[] = Object.values(template.subTemplates)
-      .flat()
-      .map((t) => t.config.templateConfig.name);
-
-    const readonlyTemplateView = createReadonlyTemplateView(
-      template.config.templateConfig,
-      childTemplateNames,
-    );
-
-    const readonlyProjectSettings =
-      createReadonlyProjectSettings(projectSettings);
-
-    // Build the scoped context with only necessary information
-    const scopedContext: TemplatePluginFactoryInput["context"] = {
-      project: {
-        name: readonlyProjectSettings.projectRepositoryName,
-        author: readonlyProjectSettings.projectAuthor,
-        rootTemplateName: readonlyProjectSettings.rootTemplateName,
-      },
-      template: readonlyTemplateView,
-      pluginOptions: reference.options,
-    };
-
-    // Call factory with the new secure interface
+    // Create a minimal TemplateView instead of passing the full Template
+    const templateView = createTemplateView(template);
     const factoryInput: TemplatePluginFactoryInput = {
-      template: readonlyTemplateView,
+      template: templateView,
       options: reference.options,
-      context: scopedContext,
+      projectName: projectSettings.projectRepositoryName,
+      projectAuthor: projectSettings.projectAuthor,
+      rootTemplateName: projectSettings.rootTemplateName,
     };
-
     return (entrypoint as TemplateGenerationPluginFactory)(factoryInput);
   }
 

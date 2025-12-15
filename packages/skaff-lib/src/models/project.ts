@@ -10,11 +10,7 @@ import { logError, stringOrCallbackToString } from "../lib/utils";
 import { resolveGitService } from "../core/infra/git-service";
 import { loadProjectSettings } from "../core/projects/project-settings-service";
 import { resolveShellService } from "../core/infra/shell-service";
-import {
-  resolveHardenedSandbox,
-  secureInvokeMapFinalSettings,
-  secureInvokePluginGetFinalSettings,
-} from "../core/infra/hardened-sandbox";
+import { resolveHardenedSandbox } from "../core/infra/hardened-sandbox";
 import { Template } from "./template";
 import { backendLogger } from "../lib";
 import z from "zod";
@@ -177,24 +173,24 @@ export class Project {
 
     const templateName = template.config.templateConfig.name;
     let mappedSettings: FinalTemplateSettings;
-
-    // Execute mapFinalSettings using the secure invocation helper
-    const sandbox = resolveHardenedSandbox();
-    const mapFn = template.config.mapFinalSettings;
-    const mapResult = secureInvokeMapFinalSettings(sandbox, mapFn, {
-      fullProjectSettings: projectSettings,
-      templateSettings: parsedUserSettings.data,
-      parentSettings: parentFinalSettings,
-    });
-
-    if (!mapResult.success) {
+    try {
+      // Execute mapFinalSettings in the hardened sandbox
+      const sandbox = resolveHardenedSandbox();
+      const mapFn = template.config.mapFinalSettings;
+      mappedSettings = sandbox.invokeFunction(mapFn, {
+        fullProjectSettings: projectSettings,
+        templateSettings: parsedUserSettings.data,
+        parentSettings: parentFinalSettings,
+      });
+    } catch (error) {
       logError({
         shortMessage: `Failed to map final settings for template ${templateName}`,
-        error: new Error(mapResult.error),
+        error,
       });
-      return { error: mapResult.error };
+      return {
+        error: `Failed to map final settings for template ${templateName}: ${error}`,
+      };
     }
-    mappedSettings = mapResult.data;
 
     const parsedFinalSettings =
       template.config.templateFinalSettingsSchema.safeParse(mappedSettings);
@@ -234,33 +230,25 @@ export class Project {
         let pluginFinalSettingsValue: unknown = parsedPluginSettings.data;
 
         if (plugin.getFinalTemplateSettings) {
-          // SECURITY: Execute plugin function using secure invocation helper
-          // Cast the function to match the generic signature expected by the secure helper
-          const pluginResult = secureInvokePluginGetFinalSettings(
-            sandbox,
-            plugin.getFinalTemplateSettings as (input: {
-              templateFinalSettings: FinalTemplateSettings;
-              additionalTemplateSettings: Record<string, unknown>;
-              systemSettings: Record<string, unknown> | undefined;
-            }) => Record<string, unknown>,
-            {
-              templateFinalSettings: parsedFinalSettings.data,
-              additionalTemplateSettings: parsedPluginSettings.data as Record<
-                string,
-                unknown
-              >,
-              systemSettings: plugin.systemSettings as
-                | Record<string, unknown>
-                | undefined,
-            },
-          );
-
-          if (!pluginResult.success) {
+          try {
+            // SECURITY: Execute plugin function in hardened sandbox
+            const sandbox = resolveHardenedSandbox();
+            pluginFinalSettingsValue = sandbox.invokeFunction(
+              plugin.getFinalTemplateSettings,
+              {
+                templateFinalSettings: parsedFinalSettings.data,
+                additionalTemplateSettings: parsedPluginSettings.data as Record<
+                  string,
+                  unknown
+                >,
+                systemSettings: plugin.systemSettings,
+              },
+            );
+          } catch (error) {
             return {
-              error: `Failed to resolve final settings for plugin ${plugin.name}: ${pluginResult.error}`,
+              error: `Failed to resolve final settings for plugin ${plugin.name}: ${error}`,
             };
           }
-          pluginFinalSettingsValue = pluginResult.data;
         }
 
         const pluginFinalSchema =
@@ -284,10 +272,15 @@ export class Project {
       plugins: pluginFinalSettings,
     };
 
-    // NOTE: Previously this function mutated projectSettings.instantiatedTemplates
-    // as a side effect. This has been removed to make the function pure.
-    // Callers who need to persist plugin settings should do so explicitly.
-    // The plugin settings are already included in the returned FinalTemplateSettings.
+    if (options?.templateInstanceId) {
+      const instantiated = projectSettings.instantiatedTemplates.find(
+        (entry) => entry.id === options.templateInstanceId,
+      );
+
+      if (instantiated) {
+        instantiated.plugins = pluginFinalSettings;
+      }
+    }
 
     return { data: finalSettingsWithPlugins };
   }
@@ -361,24 +354,24 @@ export class Project {
 
     const templateName = template.config.templateConfig.name;
     let mappedSettings: FinalTemplateSettings;
-
-    // Execute mapFinalSettings using the secure invocation helper
-    const sandbox = resolveHardenedSandbox();
-    const mapFn = template.config.mapFinalSettings;
-    const mapResult = secureInvokeMapFinalSettings(sandbox, mapFn, {
-      fullProjectSettings: instantiatedProjectSettings,
-      templateSettings: parsedUserProvidedSettingsSchema.data,
-      parentSettings: parentSettings,
-    });
-
-    if (!mapResult.success) {
+    try {
+      // Execute mapFinalSettings in the hardened sandbox
+      const sandbox = resolveHardenedSandbox();
+      const mapFn = template.config.mapFinalSettings;
+      mappedSettings = sandbox.invokeFunction(mapFn, {
+        fullProjectSettings: instantiatedProjectSettings,
+        templateSettings: parsedUserProvidedSettingsSchema.data,
+        parentSettings: parentSettings,
+      });
+    } catch (error) {
       logError({
         shortMessage: `Failed to map final settings for template ${templateName}`,
-        error: new Error(mapResult.error),
+        error,
       });
-      return { error: mapResult.error };
+      return {
+        error: `Failed to map final settings for template ${templateName}: ${error}`,
+      };
     }
-    mappedSettings = mapResult.data;
 
     const parsedFinalSettings =
       template.config.templateFinalSettingsSchema.safeParse(mappedSettings);

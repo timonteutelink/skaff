@@ -29,7 +29,6 @@ import {
   TemplateDTO,
   findTemplate,
 } from "@timonteutelink/skaff-lib/browser";
-import { TemplatePluginSettingsStore } from "@timonteutelink/skaff-lib";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -91,15 +90,11 @@ const TemplateInstantiationPage: React.FC = () => {
   const [stageState, setStageState] = useState<Record<string, unknown>>({});
   const [beforeStageIndex, setBeforeStageIndex] = useState(0);
   const [afterStageIndex, setAfterStageIndex] = useState(0);
-  const [flowPhase, setFlowPhase] = useState<
-    "before" | "form" | "after"
-  >("before");
+  const [flowPhase, setFlowPhase] = useState<"before" | "form" | "after">(
+    "before",
+  );
   const [pendingSettings, setPendingSettings] =
     useState<UserTemplateSettings | null>(null);
-  const pluginSettingsStore = useMemo(
-    () => (project ? new TemplatePluginSettingsStore(project.settings) : null),
-    [project],
-  );
 
   useEffect(() => {
     if (!projectRepositoryNameParam) {
@@ -148,8 +143,7 @@ const TemplateInstantiationPage: React.FC = () => {
       (existingTemplateInstanceIdParam && templateInstanceIdParam)
     ) {
       toastNullError({
-        shortMessage:
-          "Provide exactly one instantiation mode.",
+        shortMessage: "Provide exactly one instantiation mode.",
       });
       router.push("/projects");
       return;
@@ -159,7 +153,7 @@ const TemplateInstantiationPage: React.FC = () => {
       let projectResult;
       let revisionResult;
       if (selectedDirectoryIdParam) {
-        revisionResult = await retrieveTemplate(templateNameParam!)
+        revisionResult = await retrieveTemplate(templateNameParam!);
       } else {
         [projectResult, revisionResult] = await Promise.all([
           retrieveProject(projectRepositoryNameParam),
@@ -168,9 +162,7 @@ const TemplateInstantiationPage: React.FC = () => {
       }
 
       const revision = toastNullError({
-        result: revisionResult as Result<
-          TemplateSummary | TemplateDTO | null
-        >,
+        result: revisionResult as Result<TemplateSummary | TemplateDTO | null>,
         shortMessage: "Error retrieving template.",
         nullErrorMessage: `Template not found for project: ${projectRepositoryNameParam}`,
         nullRedirectPath: "/projects",
@@ -282,18 +274,24 @@ const TemplateInstantiationPage: React.FC = () => {
     };
   }, [subTemplate]);
 
-  const stageKey = useCallback(
-    (entry: WebPluginStageEntry) =>
-      entry.stage.stateKey ?? `${entry.pluginName}:${entry.stage.id}`,
+  // Now use entry.stateKey directly since it's pre-computed with proper namespacing
+  const getStageKey = useCallback(
+    (entry: WebPluginStageEntry) => entry.stateKey,
     [],
   );
 
   const beforeStages = useMemo(
-    () => pluginStages.filter((entry) => entry.stage.placement === "before-settings"),
+    () =>
+      pluginStages.filter(
+        (entry) => entry.stage.placement === "before-settings",
+      ),
     [pluginStages],
   );
   const afterStages = useMemo(
-    () => pluginStages.filter((entry) => entry.stage.placement === "after-settings"),
+    () =>
+      pluginStages.filter(
+        (entry) => entry.stage.placement === "after-settings",
+      ),
     [pluginStages],
   );
 
@@ -305,16 +303,9 @@ const TemplateInstantiationPage: React.FC = () => {
       templateName: templateNameParam ?? "",
       projectRepositoryName: projectRepositoryNameParam ?? undefined,
       currentSettings,
-      pluginSettings: pluginSettingsStore ?? undefined,
-      stageState: stageState[stageKey(entry)],
+      stageState: stageState[getStageKey(entry)],
     }),
-    [
-      pluginSettingsStore,
-      projectRepositoryNameParam,
-      stageKey,
-      stageState,
-      templateNameParam,
-    ],
+    [projectRepositoryNameParam, getStageKey, stageState, templateNameParam],
   );
 
   const updateStageState = useCallback((key: string, value: unknown) => {
@@ -386,7 +377,9 @@ const TemplateInstantiationPage: React.FC = () => {
           return;
         }
 
-        if (project.settings.projectRepositoryName !== projectRepositoryNameParam) {
+        if (
+          project.settings.projectRepositoryName !== projectRepositoryNameParam
+        ) {
           toastNullError({
             shortMessage: "Project repository name does not match.",
           });
@@ -441,7 +434,9 @@ const TemplateInstantiationPage: React.FC = () => {
           return;
         }
 
-        if (project.settings.projectRepositoryName !== projectRepositoryNameParam) {
+        if (
+          project.settings.projectRepositoryName !== projectRepositoryNameParam
+        ) {
           toastNullError({
             shortMessage: "Project repository name does not match.",
           });
@@ -557,7 +552,10 @@ const TemplateInstantiationPage: React.FC = () => {
         return;
       }
 
-      const commitResult = await commitChanges(projectRepositoryNameParam, commitMessage);
+      const commitResult = await commitChanges(
+        projectRepositoryNameParam,
+        commitMessage,
+      );
 
       const commit = toastNullError({
         result: commitResult,
@@ -567,7 +565,9 @@ const TemplateInstantiationPage: React.FC = () => {
       if (commit === false) {
         return;
       }
-      router.push(`/projects/project/?projectRepositoryName=${projectRepositoryNameParam}`);
+      router.push(
+        `/projects/project/?projectRepositoryName=${projectRepositoryNameParam}`,
+      );
     },
     [router, projectRepositoryNameParam],
   );
@@ -675,7 +675,9 @@ const TemplateInstantiationPage: React.FC = () => {
         return;
       }
 
-      const resolveResult = await resolveConflictsAndDiff(projectRepositoryNameParam);
+      const resolveResult = await resolveConflictsAndDiff(
+        projectRepositoryNameParam,
+      );
 
       const resolved = toastNullError({
         result: resolveResult,
@@ -714,8 +716,9 @@ const TemplateInstantiationPage: React.FC = () => {
         return;
       }
     } else {
-      const restoreResult =
-        await restoreAllChangesToCleanProject(projectRepositoryNameParam);
+      const restoreResult = await restoreAllChangesToCleanProject(
+        projectRepositoryNameParam,
+      );
       const restored = toastNullError({
         result: restoreResult,
         shortMessage: "Error restoring changes.",
@@ -783,7 +786,7 @@ const TemplateInstantiationPage: React.FC = () => {
 
   if (flowPhase === "before" && beforeStages[beforeStageIndex]) {
     const entry = beforeStages[beforeStageIndex]!;
-    const key = stageKey(entry);
+    const key = getStageKey(entry);
 
     return (
       <div className="container py-4 mx-auto">
@@ -791,7 +794,6 @@ const TemplateInstantiationPage: React.FC = () => {
           templateName: templateNameParam ?? "",
           projectRepositoryName: projectRepositoryNameParam ?? undefined,
           currentSettings: storedFormData,
-          pluginSettings: pluginSettingsStore ?? undefined,
           stageState: stageState[key],
           setStageState: (value) => updateStageState(key, value),
           onContinue: handleBeforeContinue,
@@ -806,7 +808,7 @@ const TemplateInstantiationPage: React.FC = () => {
     pendingSettings
   ) {
     const entry = afterStages[afterStageIndex]!;
-    const key = stageKey(entry);
+    const key = getStageKey(entry);
 
     return (
       <div className="container py-4 mx-auto">
@@ -814,7 +816,6 @@ const TemplateInstantiationPage: React.FC = () => {
           templateName: templateNameParam ?? "",
           projectRepositoryName: projectRepositoryNameParam ?? undefined,
           currentSettings: pendingSettings,
-          pluginSettings: pluginSettingsStore ?? undefined,
           stageState: stageState[key],
           setStageState: (value) => updateStageState(key, value),
           onContinue: handleAfterContinue,
@@ -850,7 +851,7 @@ const TemplateInstantiationPage: React.FC = () => {
           )}
           <CommitButton
             onCommit={handleConfirmAppliedDiff}
-            onCancel={() => { }}
+            onCancel={() => {}}
           />
         </div>
       </div>
