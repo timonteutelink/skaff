@@ -45,6 +45,142 @@ export type TemplateHook =
   | "configureTemplateInstantiationPipeline"
   | "configureProjectCreationPipeline";
 
+// =============================================================================
+// Plugin Lifecycle
+// =============================================================================
+
+/**
+ * Context provided to lifecycle hooks during plugin operations.
+ */
+export interface PluginLifecycleContext {
+  /** The name of the plugin */
+  pluginName: string;
+  /** The version of the plugin */
+  pluginVersion: string;
+  /** The template being operated on (if available) */
+  templateName?: string;
+  /** The project name (if available) */
+  projectName?: string;
+}
+
+/**
+ * Context provided to error handlers.
+ */
+export interface PluginErrorContext extends PluginLifecycleContext {
+  /** The error that occurred */
+  error: Error;
+  /** The lifecycle phase where the error occurred */
+  phase: PluginLifecyclePhase;
+}
+
+/**
+ * Result of a generation operation provided to lifecycle hooks.
+ */
+export interface PluginGenerationResult {
+  /** Whether the generation was successful */
+  success: boolean;
+  /** The generated files (paths relative to project root) */
+  generatedFiles?: string[];
+  /** Any warnings that occurred during generation */
+  warnings?: string[];
+  /** The error if generation failed */
+  error?: Error;
+}
+
+/**
+ * Phases of the plugin lifecycle.
+ */
+export type PluginLifecyclePhase =
+  | "load"
+  | "activate"
+  | "before-generate"
+  | "after-generate"
+  | "deactivate"
+  | "error";
+
+/**
+ * Lifecycle hooks that plugins can implement.
+ *
+ * These hooks are called at specific points during plugin and generation operations,
+ * allowing plugins to perform initialization, cleanup, and respond to events.
+ *
+ * @example
+ * ```typescript
+ * const myPlugin = {
+ *   manifest: { ... },
+ *   lifecycle: {
+ *     onActivate: async (ctx) => {
+ *       console.log(`Plugin ${ctx.pluginName} activated`);
+ *     },
+ *     onBeforeGenerate: async (ctx) => {
+ *       // Validate preconditions before generation
+ *     },
+ *     onAfterGenerate: async (ctx, result) => {
+ *       if (result.success) {
+ *         console.log(`Generated ${result.generatedFiles?.length ?? 0} files`);
+ *       }
+ *     },
+ *     onError: (ctx) => {
+ *       console.error(`Error in ${ctx.phase}: ${ctx.error.message}`);
+ *     },
+ *   },
+ * };
+ * ```
+ */
+export interface PluginLifecycle {
+  /**
+   * Called when the plugin is first loaded and its module is resolved.
+   * Use this for one-time initialization that doesn't depend on project context.
+   *
+   * This is called once per plugin load, before any other hooks.
+   */
+  onLoad?(context: PluginLifecycleContext): Promise<void> | void;
+
+  /**
+   * Called when the plugin is activated for a specific template/project.
+   * Use this for context-specific initialization, resource allocation,
+   * or to validate that the plugin can operate in the current environment.
+   *
+   * This is called after onLoad and before any generation operations.
+   */
+  onActivate?(context: PluginLifecycleContext): Promise<void> | void;
+
+  /**
+   * Called before template generation begins.
+   * Use this to validate preconditions, prepare resources, or log diagnostics.
+   *
+   * If this hook throws, generation is aborted and onError is called.
+   */
+  onBeforeGenerate?(context: PluginLifecycleContext): Promise<void> | void;
+
+  /**
+   * Called after template generation completes (whether successful or not).
+   * Use this for cleanup, logging, or post-processing.
+   *
+   * The result contains information about what was generated or what failed.
+   */
+  onAfterGenerate?(
+    context: PluginLifecycleContext,
+    result: PluginGenerationResult,
+  ): Promise<void> | void;
+
+  /**
+   * Called when the plugin is being deactivated.
+   * Use this to release resources, close connections, or perform cleanup.
+   *
+   * This is called when the plugin is unloaded or the process is shutting down.
+   */
+  onDeactivate?(context: PluginLifecycleContext): Promise<void> | void;
+
+  /**
+   * Called when an error occurs during any lifecycle phase.
+   * Use this for error logging, reporting, or recovery.
+   *
+   * Note: This hook should not throw. If it does, the error is logged but not propagated.
+   */
+  onError?(context: PluginErrorContext): void;
+}
+
 export const pluginManifestSchema = z.object({
   name: z
     .string()
@@ -97,9 +233,128 @@ export interface PluginCommandHandlerContext {
 }
 
 export interface PluginCliCommand {
+  /**
+   * Command name within the plugin's namespace.
+   * The final command name will be prefixed with the plugin name: `pluginName:commandName`
+   */
   name: string;
+  /**
+   * Optional short alias for the command.
+   * If provided and unique across all plugins, users can invoke the command directly.
+   * Aliases that collide with other commands or aliases are silently ignored.
+   */
+  alias?: string;
   description?: string;
   run(context: PluginCommandHandlerContext): Promise<void> | void;
+}
+
+/**
+ * A resolved CLI command with its full namespaced name and optional alias.
+ */
+export interface ResolvedPluginCommand {
+  /** The plugin that contributed this command */
+  pluginName: string;
+  /** The fully namespaced command name: `pluginName:commandName` */
+  fullName: string;
+  /** The short alias if available and unique, otherwise undefined */
+  alias?: string;
+  /** The original command definition */
+  command: PluginCliCommand;
+}
+
+/**
+ * Creates a fully namespaced command name.
+ *
+ * @param pluginName - The unique name of the plugin
+ * @param commandName - The command name within the plugin
+ * @returns A namespaced command name in the format `pluginName:commandName`
+ */
+export function createPluginCommandName(
+  pluginName: string,
+  commandName: string,
+): string {
+  return `${pluginName}:${commandName}`;
+}
+
+/**
+ * Resolves plugin commands into a deduplicated list with collision detection.
+ *
+ * - All commands are namespaced with their plugin name to prevent collisions
+ * - Aliases are only available if they don't collide with other aliases or full names
+ * - Throws an error if two plugins register the same full command name
+ *
+ * @param plugins - The loaded plugins to resolve commands from
+ * @returns An array of resolved commands with their full names and valid aliases
+ * @throws Error if duplicate fully namespaced command names are detected
+ */
+export function resolvePluginCommands(
+  plugins: { name: string; cliPlugin?: CliPluginContribution }[],
+): ResolvedPluginCommand[] {
+  const resolved: ResolvedPluginCommand[] = [];
+  const fullNameSet = new Set<string>();
+  const aliasCount = new Map<string, number>();
+
+  // First pass: collect all commands and count alias usage
+  for (const plugin of plugins) {
+    const pluginName = plugin.name;
+    const commands = plugin.cliPlugin?.commands ?? [];
+
+    for (const command of commands) {
+      const fullName = createPluginCommandName(pluginName, command.name);
+
+      if (fullNameSet.has(fullName)) {
+        throw new Error(
+          `Duplicate plugin command detected: "${fullName}". ` +
+            `Each plugin command must have a unique name within its namespace.`,
+        );
+      }
+
+      fullNameSet.add(fullName);
+
+      // Count alias usage for collision detection
+      if (command.alias) {
+        aliasCount.set(command.alias, (aliasCount.get(command.alias) ?? 0) + 1);
+      }
+
+      resolved.push({
+        pluginName,
+        fullName,
+        alias: command.alias,
+        command,
+      });
+    }
+  }
+
+  // Second pass: invalidate aliases that collide with full names or other aliases
+  for (const entry of resolved) {
+    if (entry.alias) {
+      const count = aliasCount.get(entry.alias) ?? 0;
+      const collidesWithFullName = fullNameSet.has(entry.alias);
+
+      if (count > 1 || collidesWithFullName) {
+        // Alias is not unique, remove it
+        entry.alias = undefined;
+      }
+    }
+  }
+
+  return resolved;
+}
+
+/**
+ * Finds a command by name, checking both full names and aliases.
+ *
+ * @param commands - The resolved commands to search
+ * @param name - The command name to find (can be full name or alias)
+ * @returns The matching command entry, or undefined if not found
+ */
+export function findPluginCommand(
+  commands: ResolvedPluginCommand[],
+  name: string,
+): ResolvedPluginCommand | undefined {
+  return commands.find(
+    (entry) => entry.fullName === name || entry.alias === name,
+  );
 }
 
 export interface CliPluginContribution {
@@ -254,6 +509,11 @@ export interface CliTemplateStage<TState = unknown> {
 export interface SkaffPluginModule {
   manifest: PluginManifest;
   /**
+   * Optional lifecycle hooks for the plugin.
+   * These are called at specific points during plugin and generation operations.
+   */
+  lifecycle?: PluginLifecycle;
+  /**
    * Optional plugin-scoped configuration schemas.
    */
   systemSettingsSchema?: z.ZodType<PluginSystemSettings>;
@@ -279,6 +539,7 @@ export interface LoadedTemplatePlugin {
   additionalTemplateSettingsSchema?: z.ZodTypeAny;
   pluginFinalSettingsSchema?: z.ZodTypeAny;
   getFinalTemplateSettings?: SkaffPluginModule["getFinalTemplateSettings"];
+  lifecycle?: PluginLifecycle;
   templatePlugin?: TemplateGenerationPlugin;
   cliPlugin?: CliPluginContribution;
   webPlugin?: WebPluginContribution;

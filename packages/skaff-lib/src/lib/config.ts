@@ -30,7 +30,10 @@ const APP_NAME = "skaff";
 
 function getSettingsFilePath(): string {
   if (process.env.SKAFF_CONFIG_PATH) {
-    return path.join(path.resolve(process.env.SKAFF_CONFIG_PATH), "settings.json");
+    return path.join(
+      path.resolve(process.env.SKAFF_CONFIG_PATH),
+      "settings.json",
+    );
   }
   const configHome =
     process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config");
@@ -107,6 +110,68 @@ export async function getPluginSystemSettings(
   }
 
   return undefined;
+}
+
+/**
+ * Get all plugin system settings.
+ */
+export async function getAllPluginSystemSettings(): Promise<
+  Record<string, unknown>
+> {
+  const fileSettings = await loadFileSettings();
+  const plugins = (fileSettings as Record<string, unknown>).plugins;
+
+  if (plugins && typeof plugins === "object") {
+    return plugins as Record<string, unknown>;
+  }
+
+  return {};
+}
+
+/**
+ * Save system settings for a specific plugin.
+ *
+ * @param pluginName - The name of the plugin
+ * @param settings - The settings to save (will be merged with existing settings)
+ */
+export async function setPluginSystemSettings(
+  pluginName: string,
+  settings: unknown,
+): Promise<void> {
+  const fileSettings = (await loadFileSettings()) as Record<string, unknown>;
+
+  if (!fileSettings.plugins || typeof fileSettings.plugins !== "object") {
+    fileSettings.plugins = {};
+  }
+
+  (fileSettings.plugins as Record<string, unknown>)[pluginName] = settings;
+
+  await fs.writeFile(
+    getSettingsFilePath(),
+    JSON.stringify(fileSettings, null, 2),
+    "utf-8",
+  );
+}
+
+/**
+ * Remove system settings for a specific plugin.
+ *
+ * @param pluginName - The name of the plugin to remove settings for
+ */
+export async function removePluginSystemSettings(
+  pluginName: string,
+): Promise<void> {
+  const fileSettings = (await loadFileSettings()) as Record<string, unknown>;
+
+  if (fileSettings.plugins && typeof fileSettings.plugins === "object") {
+    delete (fileSettings.plugins as Record<string, unknown>)[pluginName];
+  }
+
+  await fs.writeFile(
+    getSettingsFilePath(),
+    JSON.stringify(fileSettings, null, 2),
+    "utf-8",
+  );
 }
 
 export async function getConfig(): Promise<Settings> {

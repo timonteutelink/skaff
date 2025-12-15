@@ -9,6 +9,7 @@ type GreeterStageState = { disabled?: boolean };
 
 const greeterCliCommand: PluginCliCommand = {
   name: "greet",
+  alias: "g",
   description: "Print a friendly greeting and show plugin information",
   async run({ argv, projectPath, projectName, templateCount }) {
     const targetInstanceId = argv[0];

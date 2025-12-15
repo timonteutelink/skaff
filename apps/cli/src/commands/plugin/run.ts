@@ -1,5 +1,5 @@
 import {Flags} from '@oclif/core'
-import {loadPluginsForTemplate} from '@timonteutelink/skaff-lib'
+import {loadPluginsForTemplate, resolvePluginCommands, findPluginCommand} from '@timonteutelink/skaff-lib'
 
 import Base from '../../base-command.js'
 import {getCurrentProject} from '../../utils/cli-utils.js'
@@ -11,7 +11,7 @@ export default class PluginRun extends Base {
     ...Base.flags,
     command: Flags.string({
       char: 'c',
-      description: 'The plugin command to execute',
+      description: 'The plugin command to execute (use full name like "plugin:cmd" or unique alias)',
     }),
     list: Flags.boolean({
       char: 'l',
@@ -44,16 +44,13 @@ export default class PluginRun extends Base {
       this.error(pluginLoadResult.error, {exit: 1})
     }
 
-    const commandEntries = pluginLoadResult.data.flatMap((plugin) => {
-      const pluginName = plugin.name || plugin.reference.module || 'unnamed-plugin'
-      return (
-        plugin.cliPlugin?.commands?.map((command) => ({
-          pluginName,
-          fullName: `${pluginName}:${command.name}`,
-          command,
-        })) ?? []
-      )
-    })
+    // Use the new resolver with collision detection
+    let commandEntries
+    try {
+      commandEntries = resolvePluginCommands(pluginLoadResult.data)
+    } catch (error) {
+      this.error(error instanceof Error ? error.message : String(error), {exit: 1})
+    }
 
     if (!commandEntries.length) {
       this.log('No CLI plugin commands available for this project.')
@@ -64,26 +61,25 @@ export default class PluginRun extends Base {
       this.output(
         commandEntries.map((entry) => ({
           name: entry.fullName,
+          alias: entry.alias ?? '',
           description: entry.command.description ?? '',
         })),
       )
       return
     }
 
-    const selected = commandEntries.find(
-      (entry) => entry.fullName === flags.command || entry.command.name === flags.command,
-    )
+    const selected = findPluginCommand(commandEntries, flags.command)
 
     if (!selected) {
       this.error(
-        `Command ${flags.command} not found. Available commands: ${commandEntries
-          .map((entry) => entry.fullName)
-          .join(', ')}`,
+        `Command "${flags.command}" not found. Available commands:\n${commandEntries
+          .map((entry) => `  ${entry.fullName}${entry.alias ? ` (alias: ${entry.alias})` : ''}`)
+          .join('\n')}`,
         {exit: 1},
       )
     }
 
-    await selected!.command.run({
+    await selected.command.run({
       argv: flags.args ?? [],
       projectPath: project.absoluteRootDir,
       projectName: project.instantiatedProjectSettings.projectName,

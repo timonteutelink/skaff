@@ -392,10 +392,36 @@ export async function loadPluginsForTemplate(
         pluginModule.pluginFinalSettingsSchema ??
         (z.object({}).strict() as z.ZodTypeAny),
       getFinalTemplateSettings: pluginModule.getFinalTemplateSettings,
+      lifecycle: pluginModule.lifecycle,
       templatePlugin,
       cliPlugin,
       webPlugin,
     });
+
+    // Invoke onLoad lifecycle hook after plugin is fully loaded
+    if (pluginModule.lifecycle?.onLoad) {
+      try {
+        await pluginModule.lifecycle.onLoad({
+          pluginName,
+          pluginVersion: manifest.version,
+          templateName: template.config.templateConfig.name,
+          projectName: projectSettings.projectRepositoryName,
+        });
+      } catch (error) {
+        // Call error handler if available
+        if (pluginModule.lifecycle?.onError) {
+          pluginModule.lifecycle.onError({
+            pluginName,
+            pluginVersion: manifest.version,
+            error: error instanceof Error ? error : new Error(String(error)),
+            phase: "load",
+          });
+        }
+        return {
+          error: `Plugin ${pluginName} onLoad hook failed: ${error instanceof Error ? error.message : String(error)}`,
+        };
+      }
+    }
   }
 
   return { data: loaded };
