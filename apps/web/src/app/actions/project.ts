@@ -7,6 +7,7 @@ import {
   Result,
   createTemplateView,
 } from "@timonteutelink/skaff-lib";
+import { createReadonlyProjectContext } from "@timonteutelink/template-types-lib";
 
 export async function retrieveProjectSearchPaths(): Promise<
   { id: string; path: string }[]
@@ -74,7 +75,7 @@ export async function retrieveProjectPluginNotices(
 
   const pluginsResult = await tempLib.loadPluginsForTemplate(
     project.data.rootTemplate,
-    project.data.instantiatedProjectSettings,
+    createReadonlyProjectContext(project.data.instantiatedProjectSettings),
   );
 
   if ("error" in pluginsResult) {
@@ -88,10 +89,9 @@ export async function retrieveProjectPluginNotices(
     try {
       const settings = project.data.instantiatedProjectSettings;
       const pluginNotices = await plugin.webPlugin.getNotices({
-        projectName: settings.projectRepositoryName,
+        projectRepositoryName: settings.projectRepositoryName,
         projectAuthor: settings.projectAuthor,
         rootTemplateName: project.data.rootTemplate.config.templateConfig.name,
-        templateCount: settings.instantiatedTemplates.length,
         rootTemplate: createTemplateView(project.data.rootTemplate),
       });
       if (pluginNotices?.length) {

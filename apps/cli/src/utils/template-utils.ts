@@ -1,5 +1,5 @@
 import {getTemplate, loadPluginsForTemplate, createPluginStageEntry} from '@timonteutelink/skaff-lib'
-import {ProjectSettings, UserTemplateSettings} from '@timonteutelink/template-types-lib'
+import {ProjectSettings, UserTemplateSettings, createReadonlyProjectContext} from '@timonteutelink/template-types-lib'
 import fs from 'node:fs'
 import * as prompts from '@inquirer/prompts'
 
@@ -77,7 +77,10 @@ async function promptUserTemplateSettings(
       ],
     } satisfies ProjectSettings)
 
-  const pluginsResult = await loadPluginsForTemplate(rootTpl.data.template, projectSettings)
+  const pluginsResult = await loadPluginsForTemplate(
+    rootTpl.data.template,
+    createReadonlyProjectContext(projectSettings),
+  )
 
   if ('error' in pluginsResult) {
     throw new Error(pluginsResult.error)

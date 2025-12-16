@@ -2,6 +2,7 @@ import {
   FinalTemplateSettings,
   ProjectSettings,
   UserTemplateSettings,
+  createReadonlyProjectContext,
 } from "@timonteutelink/template-types-lib";
 import fs from "fs-extra";
 import { backendLogger } from "../../lib/logger";
@@ -227,7 +228,7 @@ export class TemplateGenerationSession {
 
     const loaded = await loadPluginsForTemplate(
       template,
-      this.projectSettingsSynchronizer.getProjectSettings(),
+      createReadonlyProjectContext(this.projectSettingsSynchronizer.getProjectSettings()),
     );
 
     if ("error" in loaded) {

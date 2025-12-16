@@ -5,6 +5,7 @@ import path from "node:path";
 import { z } from "zod";
 
 import type { ProjectSettings } from "@timonteutelink/template-types-lib";
+import { createReadonlyProjectContext } from "@timonteutelink/template-types-lib";
 import type { Template } from "../src/core/templates/Template";
 import type { GenericTemplateConfigModule } from "../src/lib/types";
 import { loadPluginsForTemplate } from "../src/core/plugins";
@@ -134,7 +135,7 @@ describeIfSES("plugin loading", () => {
 
     const pluginsResult = await loadPluginsForTemplate(
       template,
-      projectSettings,
+      createReadonlyProjectContext(projectSettings),
     );
     if ("error" in pluginsResult) {
       throw new Error(pluginsResult.error);
@@ -199,7 +200,7 @@ describeIfSES("plugin loading", () => {
 
     const pluginsResult = await loadPluginsForTemplate(
       template,
-      projectSettings,
+      createReadonlyProjectContext(projectSettings),
     );
     if ("error" in pluginsResult) {
       throw new Error(pluginsResult.error);
@@ -208,7 +209,15 @@ describeIfSES("plugin loading", () => {
     const loaded = pluginsResult.data[0]!;
     expect(loaded.cliPlugin?.commands?.[0]?.name).toBe("hello");
     const notices = await loaded.webPlugin?.getNotices?.({
-      projectSettings,
+      projectRepositoryName: projectSettings.projectRepositoryName,
+      projectAuthor: projectSettings.projectAuthor,
+      rootTemplateName: projectSettings.rootTemplateName,
+      rootTemplate: {
+        name: template.config.templateConfig.name,
+        author: template.config.templateConfig.author,
+        specVersion: template.config.templateConfig.specVersion,
+        subTemplateNames: Object.keys(template.subTemplates || {}),
+      },
     });
     expect(notices).toEqual(["hello web"]);
   });
@@ -240,7 +249,7 @@ describeIfSES("plugin loading", () => {
 
     const pluginsResult = await loadPluginsForTemplate(
       template,
-      projectSettings,
+      createReadonlyProjectContext(projectSettings),
     );
 
     expect("error" in pluginsResult).toBe(true);

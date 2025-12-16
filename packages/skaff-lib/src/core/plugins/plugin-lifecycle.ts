@@ -102,11 +102,11 @@ export class PluginLifecycleManager {
    * This should be called before generation starts.
    *
    * @param templateName - The name of the template being generated
-   * @param projectName - The name of the project
+   * @param projectRepositoryName - The name of the project repository
    */
   async invokeActivate(
     templateName?: string,
-    projectName?: string,
+    projectRepositoryName?: string,
   ): Promise<void> {
     for (const plugin of this.plugins) {
       if (this.activatedPlugins.has(plugin.name)) continue;
@@ -119,7 +119,7 @@ export class PluginLifecycleManager {
 
       await this.safeInvoke(plugin, "activate", () =>
         lifecycle.onActivate!(
-          this.createContext(plugin, { templateName, projectName }),
+          this.createContext(plugin, { templateName, projectRepositoryName }),
         ),
       );
       this.activatedPlugins.add(plugin.name);
@@ -131,11 +131,11 @@ export class PluginLifecycleManager {
    * This should be called immediately before template generation starts.
    *
    * @param templateName - The name of the template being generated
-   * @param projectName - The name of the project
+   * @param projectRepositoryName - The name of the project repository
    */
   async invokeBeforeGenerate(
     templateName?: string,
-    projectName?: string,
+    projectRepositoryName?: string,
   ): Promise<void> {
     for (const plugin of this.plugins) {
       const lifecycle = plugin.lifecycle ?? plugin.module.lifecycle;
@@ -143,7 +143,7 @@ export class PluginLifecycleManager {
 
       await this.safeInvoke(plugin, "before-generate", () =>
         lifecycle.onBeforeGenerate!(
-          this.createContext(plugin, { templateName, projectName }),
+          this.createContext(plugin, { templateName, projectRepositoryName }),
         ),
       );
     }
@@ -155,12 +155,12 @@ export class PluginLifecycleManager {
    *
    * @param result - The result of the generation operation
    * @param templateName - The name of the template being generated
-   * @param projectName - The name of the project
+   * @param projectRepositoryName - The name of the project repository
    */
   async invokeAfterGenerate(
     result: PluginGenerationResult,
     templateName?: string,
-    projectName?: string,
+    projectRepositoryName?: string,
   ): Promise<void> {
     for (const plugin of this.plugins) {
       const lifecycle = plugin.lifecycle ?? plugin.module.lifecycle;
@@ -169,7 +169,7 @@ export class PluginLifecycleManager {
       // Don't throw from after-generate - just log errors
       try {
         await lifecycle.onAfterGenerate(
-          this.createContext(plugin, { templateName, projectName }),
+          this.createContext(plugin, { templateName, projectRepositoryName }),
           result,
         );
       } catch (error) {

@@ -7,14 +7,12 @@
  * To add or remove plugins, modify the SKAFF_PLUGINS build argument or
  * update package.json dependencies, then rebuild.
  *
- * This is the default empty registry. Run `bun run generate:plugins` to
- * regenerate this file with any installed plugins.
+ * Generated: 2025-12-16T03:37:02.995Z
  */
 
-import type {
-  SkaffPluginModule,
-  PluginTrustLevel,
-} from "@timonteutelink/skaff-lib";
+import type { SkaffPluginModule, PluginTrustLevel } from "@timonteutelink/skaff-lib";
+
+
 
 export interface InstalledPluginEntry {
   module: SkaffPluginModule;
@@ -34,12 +32,16 @@ export interface PluginManifestEntry {
  * Registry of all installed plugins, keyed by plugin manifest name.
  * These plugins are bundled at build time and available for use.
  */
-export const INSTALLED_PLUGINS: Record<string, InstalledPluginEntry> = {};
+export const INSTALLED_PLUGINS: Record<string, InstalledPluginEntry> = {
+
+};
 
 /**
  * List of installed plugin metadata for display purposes.
  */
-export const PLUGIN_MANIFEST: PluginManifestEntry[] = [];
+export const PLUGIN_MANIFEST: PluginManifestEntry[] = [
+
+];
 
 /**
  * Get a plugin by its manifest name.

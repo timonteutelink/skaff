@@ -1,4 +1,4 @@
-import { ProjectSettings } from "@timonteutelink/template-types-lib";
+import { ReadonlyProjectContext } from "@timonteutelink/template-types-lib";
 import { builtinModules, createRequire } from "node:module";
 
 import type { Result } from "../../lib/types";
@@ -145,7 +145,7 @@ function buildTemplatePlugin(
   module: SkaffPluginModule,
   template: Template,
   reference: NormalizedTemplatePluginConfig,
-  projectSettings: ProjectSettings,
+  projectContext: ReadonlyProjectContext,
 ): TemplateGenerationPlugin | undefined {
   const entrypoint = module.template;
   if (!entrypoint) return undefined;
@@ -156,9 +156,7 @@ function buildTemplatePlugin(
     const factoryInput: TemplatePluginFactoryInput = {
       template: templateView,
       options: reference.options,
-      projectName: projectSettings.projectRepositoryName,
-      projectAuthor: projectSettings.projectAuthor,
-      rootTemplateName: projectSettings.rootTemplateName,
+      projectContext,
     };
     return (entrypoint as TemplateGenerationPluginFactory)(factoryInput);
   }
@@ -310,9 +308,19 @@ async function readGlobalConfig(
   return { data: parsed.data };
 }
 
+/**
+ * Loads plugins for a template using only project metadata (no full ProjectSettings).
+ *
+ * This ensures bijectional generation by preventing plugins from accessing
+ * the instantiatedTemplates array or other templates' settings.
+ *
+ * @param template - The template to load plugins for
+ * @param projectContext - Read-only project metadata (name, author, root template)
+ * @returns Loaded plugins or an error
+ */
 export async function loadPluginsForTemplate(
   template: Template,
-  projectSettings: ProjectSettings,
+  projectContext: ReadonlyProjectContext,
 ): Promise<Result<LoadedTemplatePlugin[]>> {
   const normalized = normalizeTemplatePlugins(template.config.plugins);
   if (!normalized.length) {
@@ -363,7 +371,7 @@ export async function loadPluginsForTemplate(
       pluginModule,
       template,
       reference,
-      projectSettings,
+      projectContext,
     );
 
     const [cliPlugin, webPlugin] = await Promise.all([
@@ -396,7 +404,7 @@ export async function loadPluginsForTemplate(
           pluginName,
           pluginVersion: manifest.version,
           templateName: template.config.templateConfig.name,
-          projectName: projectSettings.projectRepositoryName,
+          projectRepositoryName: projectContext.projectRepositoryName,
         });
       } catch (error) {
         // Call error handler if available

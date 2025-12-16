@@ -2,6 +2,7 @@ import type {
   ProjectCreationPipelineContext,
   TemplateInstantiationPipelineContext,
 } from "./pipeline/pipeline-stages";
+import type { ReadonlyProjectContext } from "@timonteutelink/template-types-lib";
 import { HelperDelegate } from "handlebars";
 import type {
   PipelineBuilder,
@@ -77,16 +78,21 @@ export interface TemplateGenerationPlugin {
  *
  * Plugins receive a minimal TemplateView instead of the full Template
  * to maintain security boundaries and prevent access to internal state.
+ *
+ * Project metadata uses ReadonlyProjectContext fields for consistency.
+ * This ensures plugins cannot access instantiatedTemplates or other
+ * template settings, preserving bijectional generation.
  */
 export interface TemplatePluginFactoryInput {
   /** Read-only view of the template with minimal safe information */
   template: TemplateView;
   /** Plugin-specific options from the template configuration */
   options?: unknown;
-  /** Read-only project metadata */
-  projectName: string;
-  projectAuthor: string;
-  rootTemplateName: string;
+  /**
+   * Read-only project metadata.
+   * Uses ReadonlyProjectContext field names for consistency across all plugin APIs.
+   */
+  projectContext: ReadonlyProjectContext;
 }
 
 export type TemplateGenerationPluginFactory = (

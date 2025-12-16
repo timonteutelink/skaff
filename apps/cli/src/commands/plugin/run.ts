@@ -1,6 +1,7 @@
 import {Flags} from '@oclif/core'
 import {loadPluginsForTemplate, resolvePluginCommands, findPluginCommand} from '@timonteutelink/skaff-lib'
 
+import {createReadonlyProjectContext} from '@timonteutelink/template-types-lib'
 import Base from '../../base-command.js'
 import {getCurrentProject} from '../../utils/cli-utils.js'
 
@@ -38,7 +39,10 @@ export default class PluginRun extends Base {
     }
 
     const project = projectResult.data
-    const pluginLoadResult = await loadPluginsForTemplate(project.rootTemplate, project.instantiatedProjectSettings)
+    const pluginLoadResult = await loadPluginsForTemplate(
+      project.rootTemplate,
+      createReadonlyProjectContext(project.instantiatedProjectSettings),
+    )
 
     if ('error' in pluginLoadResult) {
       this.error(pluginLoadResult.error, {exit: 1})
@@ -82,7 +86,7 @@ export default class PluginRun extends Base {
     await selected.command.run({
       argv: flags.args ?? [],
       projectPath: project.absoluteRootDir,
-      projectName: project.instantiatedProjectSettings.projectRepositoryName,
+      projectRepositoryName: project.instantiatedProjectSettings.projectRepositoryName,
       projectAuthor: project.instantiatedProjectSettings.projectAuthor,
       rootTemplateName: project.instantiatedProjectSettings.rootTemplateName,
       templateCount: project.instantiatedProjectSettings.instantiatedTemplates.length,

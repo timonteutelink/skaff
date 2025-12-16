@@ -1,19 +1,34 @@
 import type {
   TemplateConfig,
   TemplatePluginConfig,
+  ReadonlyProjectContext,
+  FinalTemplateSettings,
+  PluginGlobalConfig,
+  UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 
 import type {
   TemplateGenerationPlugin,
   TemplatePluginEntrypoint,
 } from "../generation/template-generation-types";
-import type {
-  FinalTemplateSettings,
-  PluginGlobalConfig,
-} from "@timonteutelink/template-types-lib";
-import type { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { z } from "zod";
 import type React from "react";
+
+/**
+ * Re-export ReadonlyProjectContext for plugin authors.
+ *
+ * This is the canonical type for project metadata passed to plugins.
+ * It provides ONLY essential project-level information:
+ * - projectRepositoryName
+ * - projectAuthor
+ * - rootTemplateName
+ *
+ * It does NOT provide access to:
+ * - instantiatedTemplates array (would break bijectional generation)
+ * - Other templates' settings (would create hidden dependencies)
+ * - Filesystem paths (security risk)
+ */
+export type { ReadonlyProjectContext } from "@timonteutelink/template-types-lib";
 
 export type PluginCapability = "template" | "cli" | "web";
 
@@ -201,6 +216,9 @@ export type TemplateHook =
 
 /**
  * Context provided to lifecycle hooks during plugin operations.
+ *
+ * Uses ReadonlyProjectContext fields for consistency with other plugin APIs.
+ * Note: projectRepositoryName is used instead of projectName for consistency.
  */
 export interface PluginLifecycleContext {
   /** The name of the plugin */
@@ -209,8 +227,8 @@ export interface PluginLifecycleContext {
   pluginVersion: string;
   /** The template being operated on (if available) */
   templateName?: string;
-  /** The project name (if available) */
-  projectName?: string;
+  /** The project repository name (if available) */
+  projectRepositoryName?: string;
 }
 
 /**
@@ -379,13 +397,19 @@ export const pluginManifestSchema = z.object({
 
 export type PluginManifest = z.infer<typeof pluginManifestSchema>;
 
+/**
+ * Context provided to CLI command handlers.
+ *
+ * Extends ReadonlyProjectContext with CLI-specific fields.
+ * Uses consistent naming (projectRepositoryName) with all plugin APIs.
+ */
 export interface PluginCommandHandlerContext {
   /** Command-line arguments passed after the command name */
   argv: string[];
   /** Absolute path to the project directory, if available */
   projectPath?: string;
-  /** Read-only project metadata */
-  projectName: string;
+  /** Read-only project metadata - uses ReadonlyProjectContext field names */
+  projectRepositoryName: string;
   projectAuthor: string;
   rootTemplateName: string;
   /** Number of instantiated templates in the project */
@@ -526,14 +550,25 @@ export type CliPluginEntrypoint =
   | CliPluginContribution
   | (() => CliPluginContribution | Promise<CliPluginContribution>);
 
+/**
+ * Context provided to web plugin getNotices function.
+ *
+ * Uses ReadonlyProjectContext field names for consistency.
+ * Does NOT include instantiatedTemplates to preserve bijectional generation.
+ */
+export interface WebPluginNoticeContext {
+  /** Project repository name - consistent with ReadonlyProjectContext */
+  projectRepositoryName: string;
+  projectAuthor: string;
+  rootTemplateName: string;
+  /** Number of instantiated templates in the project */
+  templateCount: number;
+  /** Read-only view of the root template (if available) */
+  rootTemplate?: TemplateView;
+}
+
 export interface WebPluginContribution {
-  getNotices?(context: {
-    projectName: string;
-    projectAuthor: string;
-    rootTemplateName: string;
-    templateCount: number;
-    rootTemplate?: TemplateView;
-  }): Promise<string[]> | string[];
+  getNotices?(context: WebPluginNoticeContext): Promise<string[]> | string[];
   templateStages?: WebTemplateStage[];
 }
 
@@ -732,8 +767,10 @@ export interface ComputeOutputInput {
  *   outputSchema: z.object({
  *     computedGreeting: z.string(),
  *   }),
+ *   // NOTE: computeOutput receives templateFinalSettings (the template's computed settings)
+ *   // NOT project settings. Access template-defined fields like 'name' from your template schema.
  *   computeOutput: ({ inputSettings, templateFinalSettings }) => ({
- *     computedGreeting: inputSettings.greeting ?? `Hello, ${templateFinalSettings.projectName}!`,
+ *     computedGreeting: inputSettings.greeting ?? `Hello, ${templateFinalSettings.name}!`,
  *   }),
  *   template: (input) => ({ ... }),
  * };
