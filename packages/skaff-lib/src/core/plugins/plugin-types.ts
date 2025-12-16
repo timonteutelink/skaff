@@ -393,6 +393,8 @@ export type WebPluginEntrypoint =
 
 export interface NormalizedTemplatePluginConfig {
   module: string;
+  /** Semver version constraint for the plugin */
+  version?: string;
   exportName?: string;
   options?: unknown;
 }
@@ -716,6 +718,7 @@ export function normalizeTemplatePlugins(
       if (typeof entry === "object" && "module" in entry && entry.module) {
         return {
           module: entry.module,
+          version: entry.version,
           exportName: entry.exportName,
           options: entry.options,
         } satisfies NormalizedTemplatePluginConfig;

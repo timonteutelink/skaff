@@ -5,10 +5,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack --port 3000",
-    "build": "next build --webpack",
+    "build": "bun run generate:plugins && next build --webpack",
     "start": "next start",
     "lint": "next lint --max-warnings 0",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "generate:plugins": "bun run scripts/generate-plugin-registry.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

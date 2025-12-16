@@ -186,6 +186,17 @@ export type TemplatePluginConfig = {
   module: string;
 
   /**
+   * Semver version constraint for the plugin.
+   * If specified, the installed plugin version must satisfy this constraint.
+   * Uses standard semver range syntax (e.g., "^1.0.0", ">=2.0.0 <3.0.0", "1.x").
+   *
+   * @example "^1.0.0" - Compatible with 1.0.0 and above, but less than 2.0.0
+   * @example ">=2.0.0" - Version 2.0.0 or higher
+   * @example "1.2.3" - Exact version match
+   */
+  version?: string;
+
+  /**
    * Optional named export to use instead of the module's default export.
    * When omitted, the default export is treated as the plugin entry.
    */
