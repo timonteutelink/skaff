@@ -1,4 +1,17 @@
-{ mkBunDerivation, pkgs, lib }:
+{ mkBunDerivation
+, pkgs
+, lib
+, # Optional list of Skaff plugins to install at build time
+  # Example: plugins = [ "@skaff/plugin-greeter@1.0.0" "@myorg/my-plugin" ]
+  plugins ? [ ]
+,
+}:
+
+let
+  # Convert plugin list to space-separated string for environment variable
+  pluginList = lib.concatStringsSep " " plugins;
+  hasPlugins = plugins != [ ];
+in
 
 mkBunDerivation {
   pname = "skaff-web";
@@ -21,6 +34,19 @@ mkBunDerivation {
     export CI=1
 
     cd apps/web
+
+    ${lib.optionalString hasPlugins ''
+      # Install plugins specified via Nix
+      echo "Installing Skaff plugins: ${pluginList}"
+      for plugin in ${pluginList}; do
+        echo "  Installing: $plugin"
+        bun add "$plugin" --no-save
+      done
+      echo "Plugin installation complete"
+
+      # Set environment variable for plugin registry generation
+      export SKAFF_PLUGINS="${pluginList}"
+    ''}
 
     bun run build
 
@@ -68,8 +94,15 @@ mkBunDerivation {
 
   doDist = false;
 
+  # Expose plugin configuration for introspection
+  passthru = {
+    inherit plugins;
+    hasPlugins = hasPlugins;
+  };
+
   meta = with lib; {
-    description = "Next.js web application for skaffolding tool packaged with Bun";
+    description = "Skaff web interface - template scaffolding tool"
+      + lib.optionalString hasPlugins " (with ${toString (builtins.length plugins)} plugin(s))";
     license = licenses.mit;
     platforms = platforms.unix;
     mainProgram = "skaff-web";

@@ -70,6 +70,7 @@
     "commands": "./dist/commands",
     "plugins": [
       "@oclif/plugin-help",
+      "@oclif/plugin-plugins",
       "@oclif/plugin-warn-if-update-available"
     ],
     "macos": {
@@ -79,6 +80,9 @@
     "topics": {
       "code-templating": {
         "description": "Manage code templates"
+      },
+      "plugins": {
+        "description": "Manage Skaff plugins"
       }
     },
     "repositoryPrefix": "https://github.com/timonteutelink/skaff/tree/main/apps/cli/<%- commandPath %>"
