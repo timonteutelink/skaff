@@ -1,3 +1,4 @@
+import type { TemplateConfig } from "@timonteutelink/template-types-lib";
 import type { Template } from "../templates/Template";
 import type { TemplateView } from "./plugin-types";
 
@@ -25,10 +26,20 @@ export function createTemplateView(template: Template): TemplateView {
       ? template.config.templateConfig.description
       : undefined;
 
+  // Create a frozen copy of the template config
+  const templateConfig = template.config.templateConfig;
+
   return Object.freeze({
-    name: template.config.templateConfig.name,
+    name: templateConfig.name,
     description,
-    config: Object.freeze({ ...template.config.templateConfig }),
+    config: Object.freeze({
+      name: templateConfig.name,
+      author: templateConfig.author,
+      specVersion: templateConfig.specVersion,
+      description,
+      multiInstance: templateConfig.multiInstance,
+      isRootTemplate: templateConfig.isRootTemplate,
+    }),
     subTemplateNames: Object.freeze(subTemplateNames),
     isDetachedSubtreeRoot: template.isDetachedSubtreeRoot,
     commitHash: template.commitHash,
@@ -37,14 +48,12 @@ export function createTemplateView(template: Template): TemplateView {
 }
 
 /**
- * Creates a TemplateView from a TemplateDTO (browser-safe representation).
- *
- * This is useful when the full Template is not available but you have
- * the serialized DTO version.
+ * DTO type for template data that can be used to create a TemplateView.
+ * This represents the browser-safe serialized form of a Template.
  */
-export function createTemplateViewFromDTO(dto: {
+export interface TemplateViewDTO {
   config: {
-    templateConfig: { name: string; description?: string | (() => string) };
+    templateConfig: TemplateConfig;
   };
   subTemplates?: Record<
     string,
@@ -53,7 +62,15 @@ export function createTemplateViewFromDTO(dto: {
   isDetachedSubtreeRoot?: boolean;
   currentCommitHash?: string;
   isLocal?: boolean;
-}): TemplateView {
+}
+
+/**
+ * Creates a TemplateView from a TemplateDTO (browser-safe representation).
+ *
+ * This is useful when the full Template is not available but you have
+ * the serialized DTO version.
+ */
+export function createTemplateViewFromDTO(dto: TemplateViewDTO): TemplateView {
   const subTemplateNames: string[] = [];
   if (dto.subTemplates) {
     for (const subTemplates of Object.values(dto.subTemplates)) {
@@ -63,15 +80,23 @@ export function createTemplateViewFromDTO(dto: {
     }
   }
 
+  const templateConfig = dto.config.templateConfig;
   const description =
-    typeof dto.config.templateConfig.description === "string"
-      ? dto.config.templateConfig.description
+    typeof templateConfig.description === "string"
+      ? templateConfig.description
       : undefined;
 
   return Object.freeze({
-    name: dto.config.templateConfig.name,
+    name: templateConfig.name,
     description,
-    config: Object.freeze({ ...dto.config.templateConfig }),
+    config: Object.freeze({
+      name: templateConfig.name,
+      author: templateConfig.author,
+      specVersion: templateConfig.specVersion,
+      description,
+      multiInstance: templateConfig.multiInstance,
+      isRootTemplate: templateConfig.isRootTemplate,
+    }),
     subTemplateNames: Object.freeze(subTemplateNames),
     isDetachedSubtreeRoot: dto.isDetachedSubtreeRoot ?? false,
     commitHash: dto.currentCommitHash,

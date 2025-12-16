@@ -39,7 +39,11 @@ import { SideEffectCoordinator } from "./pipeline/SideEffectCoordinator";
 import { HandlebarsEnvironment } from "../shared/HandlebarsEnvironment";
 import { Template } from "../../models/template";
 import { FileRollbackManager } from "../shared/FileRollbackManager";
-import { loadPluginsForTemplate, type LoadedTemplatePlugin } from "../plugins";
+import {
+  loadPluginsForTemplate,
+  type LoadedTemplatePlugin,
+  createTemplateView,
+} from "../plugins";
 import { HelperDelegate } from "handlebars";
 
 /**
@@ -112,7 +116,7 @@ export class TemplateGenerationSession {
 
     this.pluginContext = {
       options: this.options,
-      rootTemplate: this.rootTemplate,
+      rootTemplate: createTemplateView(this.rootTemplate),
       registerHandlebarHelpers: this.registerHandlebarHelpers.bind(this),
     };
 
@@ -355,7 +359,7 @@ export class TemplateGenerationSession {
 
     const instantiatedTemplateIndex =
       projectSettings.instantiatedTemplates.findIndex(
-        (template) => template.id === newTemplateInstanceId,
+        (template: { id: string }) => template.id === newTemplateInstanceId,
       );
 
     if (instantiatedTemplateIndex === -1) {

@@ -82,7 +82,7 @@ export default class PluginRun extends Base {
     await selected.command.run({
       argv: flags.args ?? [],
       projectPath: project.absoluteRootDir,
-      projectName: project.instantiatedProjectSettings.projectName,
+      projectName: project.instantiatedProjectSettings.projectRepositoryName,
       projectAuthor: project.instantiatedProjectSettings.projectAuthor,
       rootTemplateName: project.instantiatedProjectSettings.rootTemplateName,
       templateCount: project.instantiatedProjectSettings.instantiatedTemplates.length,

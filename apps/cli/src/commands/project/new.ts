@@ -49,9 +49,14 @@ export default class InstantiationProjectNew extends Base {
         this.error(templateResult.error, {exit: 1})
       }
 
-      const template = templateResult.data
-      if (template.config.plugins && template.config.plugins.length > 0) {
-        const compatibility = await checkTemplatePluginsCompatibility(this.config, template.config.plugins)
+      const templateData = templateResult.data
+      if (!templateData) {
+        this.error(`Template "${args.templateName}" not found.`, {exit: 1})
+      }
+
+      const plugins = templateData.template.config.plugins
+      if (plugins && plugins.length > 0) {
+        const compatibility = await checkTemplatePluginsCompatibility(this.config, plugins)
 
         if (!compatibility.allCompatible) {
           this.log('Plugin compatibility check failed:')

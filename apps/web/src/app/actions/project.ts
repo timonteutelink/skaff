@@ -2,7 +2,11 @@
 
 import { findProject, listProjects } from "@/lib/server-utils";
 import * as tempLib from "@timonteutelink/skaff-lib";
-import { ProjectDTO, Result } from "@timonteutelink/skaff-lib";
+import {
+  ProjectDTO,
+  Result,
+  createTemplateView,
+} from "@timonteutelink/skaff-lib";
 
 export async function retrieveProjectSearchPaths(): Promise<
   { id: string; path: string }[]
@@ -18,7 +22,7 @@ export async function retrieveProjects(): Promise<Result<ProjectDTO[]>> {
   const projects = await listProjects();
 
   if ("error" in projects) {
-    return { error: projects.error}
+    return { error: projects.error };
   }
 
   if (!projects.data || projects.data.length === 0) {
@@ -82,9 +86,13 @@ export async function retrieveProjectPluginNotices(
   for (const plugin of pluginsResult.data) {
     if (!plugin.webPlugin?.getNotices) continue;
     try {
+      const settings = project.data.instantiatedProjectSettings;
       const pluginNotices = await plugin.webPlugin.getNotices({
-        projectSettings: project.data.instantiatedProjectSettings,
-        rootTemplate: project.data.rootTemplate,
+        projectName: settings.projectRepositoryName,
+        projectAuthor: settings.projectAuthor,
+        rootTemplateName: project.data.rootTemplate.config.templateConfig.name,
+        templateCount: settings.instantiatedTemplates.length,
+        rootTemplate: createTemplateView(project.data.rootTemplate),
       });
       if (pluginNotices?.length) {
         notices.push(...pluginNotices);
@@ -106,7 +114,7 @@ export async function runProjectCommand(
 ): Promise<Result<string>> {
   const project = await findProject(projectRepositoryName);
 
-  if ('error' in project) {
+  if ("error" in project) {
     return { error: project.error };
   }
 

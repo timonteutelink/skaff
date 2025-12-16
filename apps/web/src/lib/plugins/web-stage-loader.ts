@@ -133,8 +133,7 @@ async function resolveWebContribution(
 export function checkPluginCompatibility(
   template: TemplateDTO,
 ): PluginCompatibilityResult {
-  const plugins = (template.config.templateConfig.plugins ??
-    template.plugins) as TemplatePluginConfig[] | undefined;
+  const plugins = template.plugins;
 
   // Use the skaff-lib compatibility checker with semver support
   const installedPluginsMap = buildInstalledPluginsMap();
@@ -206,8 +205,7 @@ export type WebPluginStageEntry = PluginStageEntry<WebTemplateStage>;
 export async function loadWebTemplateStages(
   template: TemplateDTO,
 ): Promise<WebPluginStageEntry[]> {
-  const plugins = (template.config.templateConfig.plugins ??
-    template.plugins) as TemplatePluginConfig[] | undefined;
+  const plugins = template.plugins;
 
   const normalized = normalizeTemplatePlugins(plugins);
 

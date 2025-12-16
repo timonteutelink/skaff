@@ -10,12 +10,15 @@ import {
 } from "@timonteutelink/template-types-lib";
 import z from "zod";
 
+// Re-export TemplatePluginConfig for consumers
+export type { TemplatePluginConfig };
+
 export type ProjectCreationOptions = {
-  git?: boolean
+  git?: boolean;
 };
 
 export interface ProjectCreationResult {
-  newProjectPath: string
+  newProjectPath: string;
   newProject: ProjectDTO;
   diff?: ParsedFile[];
 }
