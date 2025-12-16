@@ -55,11 +55,47 @@ interface PluginPackageJson {
   };
 }
 
+type PluginTrustLevel =
+  | "official"
+  | "verified"
+  | "community"
+  | "private"
+  | "unknown";
+
+/**
+ * Official Skaff plugin scopes that are fully trusted.
+ */
+const OFFICIAL_PLUGIN_SCOPES = ["@skaff", "@timonteutelink"] as const;
+
 interface DiscoveredPlugin {
   packageName: string;
   version: string;
   importPath: string;
   manifestName?: string;
+  trustLevel: PluginTrustLevel;
+}
+
+/**
+ * Determines if a package name is from an official Skaff scope.
+ */
+function isOfficialPlugin(packageName: string): boolean {
+  return OFFICIAL_PLUGIN_SCOPES.some((scope) =>
+    packageName.startsWith(`${scope}/`),
+  );
+}
+
+/**
+ * Determines the trust level for a plugin package.
+ * Note: Provenance checking would require network access, so we do basic checks here.
+ */
+function determineTrustLevel(packageName: string): PluginTrustLevel {
+  if (isOfficialPlugin(packageName)) {
+    return "official";
+  }
+  // At build time, we can't easily check provenance without network calls
+  // So we mark non-official plugins as "community" by default
+  // The actual provenance check can be done at runtime if needed
+  return "community";
 }
 
 const WEB_ROOT = resolve(dirname(import.meta.url.replace("file://", "")), "..");
@@ -183,11 +219,15 @@ async function discoverPlugins(): Promise<DiscoveredPlugin[]> {
       `    Found: ${validation.manifest.name} v${validation.manifest.version}`,
     );
 
+    const trustLevel = determineTrustLevel(packageName);
+    console.log(`    Trust: ${trustLevel}`);
+
     discovered.push({
       packageName,
       version: pkgJson.version,
       importPath: packageName,
       manifestName: validation.manifest.name,
+      trustLevel,
     });
   }
 
@@ -209,6 +249,7 @@ function generateRegistryFile(plugins: DiscoveredPlugin[]): string {
     module: plugin${i},
     packageName: "${p.packageName}",
     version: "${p.version}",
+    trustLevel: "${p.trustLevel}",
   }`,
     )
     .join(",\n");
@@ -220,6 +261,7 @@ function generateRegistryFile(plugins: DiscoveredPlugin[]): string {
     name: "${p.manifestName ?? p.packageName}",
     packageName: "${p.packageName}",
     version: "${p.version}",
+    trustLevel: "${p.trustLevel}",
   }`,
     )
     .join(",\n");
@@ -236,7 +278,7 @@ function generateRegistryFile(plugins: DiscoveredPlugin[]): string {
  * Generated: ${new Date().toISOString()}
  */
 
-import type { SkaffPluginModule } from "@timonteutelink/skaff-lib";
+import type { SkaffPluginModule, PluginTrustLevel } from "@timonteutelink/skaff-lib";
 
 ${imports}
 
@@ -244,12 +286,14 @@ export interface InstalledPluginEntry {
   module: SkaffPluginModule;
   packageName: string;
   version: string;
+  trustLevel: PluginTrustLevel;
 }
 
 export interface PluginManifestEntry {
   name: string;
   packageName: string;
   version: string;
+  trustLevel: PluginTrustLevel;
 }
 
 /**
@@ -294,6 +338,13 @@ export function isPluginInstalled(name: string): boolean {
 export function getPluginVersion(name: string): string | null {
   return INSTALLED_PLUGINS[name]?.version ?? null;
 }
+
+/**
+ * Get plugin trust level by name.
+ */
+export function getPluginTrustLevel(name: string): PluginTrustLevel | null {
+  return INSTALLED_PLUGINS[name]?.trustLevel ?? null;
+}
 `;
 }
 
@@ -305,6 +356,7 @@ function generateManifestJson(plugins: DiscoveredPlugin[]): string {
     name: p.manifestName ?? p.packageName,
     packageName: p.packageName,
     version: p.version,
+    trustLevel: p.trustLevel,
   }));
 
   return JSON.stringify(manifest, null, 2);

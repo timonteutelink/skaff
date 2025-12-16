@@ -1,12 +1,9 @@
 import {Flags} from '@oclif/core'
+import {determinePluginTrust, extractPluginName, getTrustBadge} from '@timonteutelink/skaff-lib'
 
 import Base from '../../base-command.js'
 import {getCurrentProject} from '../../utils/cli-utils.js'
-import {
-  checkTemplatePluginsCompatibility,
-  formatPluginCompatibilityForCli,
-  OFFICIAL_PLUGIN_SCOPES,
-} from '../../utils/plugin-manager.js'
+import {checkTemplatePluginsCompatibility, formatPluginCompatibilityForCli} from '../../utils/plugin-manager.js'
 
 export default class PluginsCheck extends Base {
   static description = 'Check if required plugins for the current project are installed'
@@ -57,11 +54,26 @@ export default class PluginsCheck extends Base {
       this.log(`All ${result.plugins.length} required plugin(s) are installed and compatible.`)
       this.log('')
 
-      // Show plugin details
+      // Show plugin details with trust badges
+      let hasUntrustedPlugins = false
       for (const plugin of result.plugins) {
-        const isOfficial = OFFICIAL_PLUGIN_SCOPES.some((scope) => plugin.module.startsWith(`${scope}/`))
-        const badge = isOfficial ? '[official]' : '[third-party]'
+        const packageName = extractPluginName(plugin.module)
+        const trust = determinePluginTrust(packageName, {})
+        const badge = getTrustBadge(trust.level)
         this.log(`  ${plugin.module}@${plugin.installedVersion} ${badge}`)
+
+        if (trust.level !== 'official' && trust.level !== 'verified') {
+          hasUntrustedPlugins = true
+        }
+      }
+
+      // Show trust warnings if applicable
+      if (hasUntrustedPlugins) {
+        this.log('')
+        this.warn(
+          'Some plugins are not from official scopes or lack provenance verification. ' +
+            'Review the source code before trusting them with your projects.',
+        )
       }
 
       return

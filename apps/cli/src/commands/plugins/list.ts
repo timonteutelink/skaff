@@ -1,7 +1,8 @@
 import {Flags} from '@oclif/core'
+import {getTrustBadge} from '@timonteutelink/skaff-lib'
 
 import Base from '../../base-command.js'
-import {getInstalledCliPlugins, getInstalledSkaffPlugins, OFFICIAL_PLUGIN_SCOPES} from '../../utils/plugin-manager.js'
+import {getInstalledCliPlugins, getInstalledSkaffPlugins} from '../../utils/plugin-manager.js'
 
 export default class PluginsList extends Base {
   static description = 'List installed Skaff plugins'
@@ -39,13 +40,11 @@ export default class PluginsList extends Base {
 
     // Prepare output data
     const outputData = plugins.map((plugin) => {
-      const isOfficial = OFFICIAL_PLUGIN_SCOPES.some((scope) => plugin.name.startsWith(`${scope}/`))
-
       return {
         name: plugin.name,
         version: plugin.version,
         type: plugin.type,
-        official: isOfficial ? 'yes' : 'no',
+        trust: getTrustBadge(plugin.trustLevel),
         capabilities: plugin.capabilities?.join(', ') ?? '',
       }
     })

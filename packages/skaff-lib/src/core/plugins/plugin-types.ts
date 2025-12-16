@@ -17,6 +17,156 @@ import type React from "react";
 
 export type PluginCapability = "template" | "cli" | "web";
 
+// =============================================================================
+// Plugin Trust Levels
+// =============================================================================
+
+/**
+ * Trust levels for plugins based on their source and verification status.
+ *
+ * The trust hierarchy (from most to least trusted):
+ * 1. `official` - From @skaff/* or @timonteutelink/* scopes, maintained by Skaff team
+ * 2. `verified` - Has npm provenance attestation linking to source repository
+ * 3. `community` - Standard npm package without provenance
+ * 4. `private` - From a private registry (user's responsibility)
+ * 5. `unknown` - Trust level could not be determined
+ */
+export type PluginTrustLevel =
+  | "official"
+  | "verified"
+  | "community"
+  | "private"
+  | "unknown";
+
+/**
+ * Official Skaff plugin scopes that are fully trusted.
+ */
+export const OFFICIAL_PLUGIN_SCOPES = ["@skaff", "@timonteutelink"] as const;
+
+/**
+ * Information about a plugin's trust status.
+ */
+export interface PluginTrustInfo {
+  /** The determined trust level */
+  level: PluginTrustLevel;
+  /** Whether npm provenance attestation was found */
+  hasProvenance: boolean;
+  /** Source repository URL (if available from provenance) */
+  sourceRepository?: string;
+  /** Build workflow that produced the package (if available from provenance) */
+  buildWorkflow?: string;
+  /** Commit SHA the package was built from (if available from provenance) */
+  commitSha?: string;
+  /** Registry the package was fetched from */
+  registry?: string;
+  /** Human-readable explanation of the trust level */
+  reason: string;
+  /** Warnings about the plugin's trust status (for non-official plugins) */
+  warnings: string[];
+}
+
+/**
+ * Determines if a package name is from an official Skaff scope.
+ */
+export function isOfficialPlugin(packageName: string): boolean {
+  return OFFICIAL_PLUGIN_SCOPES.some((scope) =>
+    packageName.startsWith(`${scope}/`),
+  );
+}
+
+/**
+ * Determines if a package is from a private registry.
+ */
+export function isPrivateRegistry(registryUrl?: string): boolean {
+  if (!registryUrl) return false;
+  const publicRegistries = [
+    "https://registry.npmjs.org",
+    "https://registry.yarnpkg.com",
+    "https://registry.npmmirror.com",
+  ];
+  return !publicRegistries.some((pub) => registryUrl.startsWith(pub));
+}
+
+/**
+ * Creates a PluginTrustInfo object for a plugin.
+ *
+ * @param packageName - The npm package name
+ * @param options - Additional information for trust determination
+ * @returns Trust information including level and any warnings
+ */
+export function determinePluginTrust(
+  packageName: string,
+  options: {
+    hasProvenance?: boolean;
+    sourceRepository?: string;
+    buildWorkflow?: string;
+    commitSha?: string;
+    registry?: string;
+  } = {},
+): PluginTrustInfo {
+  const warnings: string[] = [];
+
+  // Check if from official scope
+  if (isOfficialPlugin(packageName)) {
+    return {
+      level: "official",
+      hasProvenance: options.hasProvenance ?? false,
+      sourceRepository: options.sourceRepository,
+      buildWorkflow: options.buildWorkflow,
+      commitSha: options.commitSha,
+      registry: options.registry,
+      reason: "Official Skaff plugin from a trusted scope",
+      warnings: [],
+    };
+  }
+
+  // Check if from private registry
+  if (isPrivateRegistry(options.registry)) {
+    warnings.push(
+      "This plugin is from a private registry. Ensure you trust the source.",
+    );
+    return {
+      level: "private",
+      hasProvenance: options.hasProvenance ?? false,
+      sourceRepository: options.sourceRepository,
+      buildWorkflow: options.buildWorkflow,
+      commitSha: options.commitSha,
+      registry: options.registry,
+      reason: "Plugin from a private npm registry",
+      warnings,
+    };
+  }
+
+  // Check if has npm provenance
+  if (options.hasProvenance && options.sourceRepository) {
+    return {
+      level: "verified",
+      hasProvenance: true,
+      sourceRepository: options.sourceRepository,
+      buildWorkflow: options.buildWorkflow,
+      commitSha: options.commitSha,
+      registry: options.registry,
+      reason: `Verified via npm provenance (source: ${options.sourceRepository})`,
+      warnings: [],
+    };
+  }
+
+  // Community plugin without provenance
+  warnings.push(
+    "This plugin does not have npm provenance attestation.",
+    "The code cannot be verified against a specific source repository.",
+    "Review the plugin source code before trusting it with your projects.",
+  );
+
+  return {
+    level: "community",
+    hasProvenance: false,
+    registry: options.registry,
+    reason: "Community plugin without provenance verification",
+    warnings,
+  };
+}
+
 /**
  * A minimal, read-only view of a template exposed to plugins.
  *

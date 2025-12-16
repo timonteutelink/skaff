@@ -10,8 +10,12 @@ import {
   checkTemplatePluginCompatibility,
   extractPluginName,
   type InstalledPluginInfo,
+  type PluginTrustLevel,
   type SinglePluginCompatibilityResult,
   type TemplatePluginCompatibilityResult,
+  determinePluginTrust,
+  getTrustBadge,
+  isOfficialPlugin,
 } from '@timonteutelink/skaff-lib'
 import type {TemplatePluginConfig} from '@timonteutelink/template-types-lib'
 
@@ -31,6 +35,8 @@ export interface SkaffCliPluginInfo {
   capabilities?: ('template' | 'cli' | 'web')[]
   /** Installation type */
   type: 'user' | 'core' | 'link' | 'dev'
+  /** Trust level of the plugin */
+  trustLevel: PluginTrustLevel
 }
 
 /**
@@ -67,7 +73,7 @@ export function validatePluginPackage(packageSpec: string): PluginValidationResu
   }
 
   // Check if it's from an official scope
-  const isOfficial = OFFICIAL_PLUGIN_SCOPES.some((scope) => packageName.startsWith(`${scope}/`))
+  const isOfficial = isOfficialPlugin(packageName)
 
   // Check if it follows plugin naming convention
   const isPluginNamed =
@@ -89,6 +95,16 @@ export function validatePluginPackage(packageSpec: string): PluginValidationResu
     packageName,
     isOfficial,
   }
+}
+
+/**
+ * Determines the trust level for a CLI plugin.
+ * Note: For now, we do basic scope-based checking. Provenance checking
+ * can be enabled for more thorough verification.
+ */
+export function getCliPluginTrustLevel(packageName: string): PluginTrustLevel {
+  const trust = determinePluginTrust(packageName, {})
+  return trust.level
 }
 
 /**
@@ -120,6 +136,9 @@ export async function getInstalledCliPlugins(config: Config): Promise<SkaffCliPl
       // Plugin doesn't have a loadable Skaff manifest - that's ok
     }
 
+    // Determine trust level
+    const trustLevel = getCliPluginTrustLevel(plugin.name)
+
     plugins.push({
       name: plugin.name,
       version: plugin.version,
@@ -127,6 +146,7 @@ export async function getInstalledCliPlugins(config: Config): Promise<SkaffCliPl
       isSkaffPlugin,
       capabilities,
       type: plugin.type as 'user' | 'core' | 'link' | 'dev',
+      trustLevel,
     })
   }
 

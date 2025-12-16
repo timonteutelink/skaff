@@ -1,8 +1,8 @@
 import {Args, Flags} from '@oclif/core'
-import {extractPluginName} from '@timonteutelink/skaff-lib'
+import {extractPluginName, determinePluginTrust, getTrustBadge, isOfficialPlugin} from '@timonteutelink/skaff-lib'
 
 import Base from '../../base-command.js'
-import {getRequiredLibPlugin, OFFICIAL_PLUGIN_SCOPES, validatePluginPackage} from '../../utils/plugin-manager.js'
+import {getRequiredLibPlugin, validatePluginPackage} from '../../utils/plugin-manager.js'
 
 export default class PluginsInstall extends Base {
   static description = 'Install a Skaff plugin from npm registry'
@@ -83,16 +83,30 @@ export default class PluginsInstall extends Base {
       this.log('')
     }
 
-    // Show official scope info
-    const officialPlugins = pluginsToInstall.filter((p) =>
-      OFFICIAL_PLUGIN_SCOPES.some((scope) => extractPluginName(p).startsWith(`${scope}/`)),
-    )
-    const thirdPartyPlugins = pluginsToInstall.filter(
-      (p) => !OFFICIAL_PLUGIN_SCOPES.some((scope) => extractPluginName(p).startsWith(`${scope}/`)),
-    )
+    // Show trust level info for each plugin
+    const officialPlugins: string[] = []
+    const thirdPartyPlugins: string[] = []
+
+    for (const plugin of pluginsToInstall) {
+      const packageName = extractPluginName(plugin)
+      const trust = determinePluginTrust(packageName, {})
+
+      if (isOfficialPlugin(packageName)) {
+        officialPlugins.push(plugin)
+      } else {
+        thirdPartyPlugins.push(plugin)
+        // Show trust warnings for non-official plugins
+        if (!flags.force && trust.warnings.length > 0) {
+          this.log(`\n${getTrustBadge(trust.level)} ${packageName}`)
+          for (const warning of trust.warnings) {
+            this.log(`  - ${warning}`)
+          }
+        }
+      }
+    }
 
     if (officialPlugins.length > 0) {
-      this.log(`Installing ${officialPlugins.length} official plugin(s)...`)
+      this.log(`\nInstalling ${officialPlugins.length} official plugin(s)...`)
     }
 
     if (thirdPartyPlugins.length > 0) {
@@ -100,7 +114,7 @@ export default class PluginsInstall extends Base {
       if (!flags.force) {
         this.warn(
           'Third-party plugins are not verified by the Skaff team. ' +
-            'Ensure you trust the plugin author before proceeding.',
+            'Review the source code before trusting them with your projects.',
         )
       }
     }

@@ -11,18 +11,23 @@
  * regenerate this file with any installed plugins.
  */
 
-import type { SkaffPluginModule } from "@timonteutelink/skaff-lib";
+import type {
+  SkaffPluginModule,
+  PluginTrustLevel,
+} from "@timonteutelink/skaff-lib";
 
 export interface InstalledPluginEntry {
   module: SkaffPluginModule;
   packageName: string;
   version: string;
+  trustLevel: PluginTrustLevel;
 }
 
 export interface PluginManifestEntry {
   name: string;
   packageName: string;
   version: string;
+  trustLevel: PluginTrustLevel;
 }
 
 /**
@@ -62,4 +67,11 @@ export function isPluginInstalled(name: string): boolean {
  */
 export function getPluginVersion(name: string): string | null {
   return INSTALLED_PLUGINS[name]?.version ?? null;
+}
+
+/**
+ * Get plugin trust level by name.
+ */
+export function getPluginTrustLevel(name: string): PluginTrustLevel | null {
+  return INSTALLED_PLUGINS[name]?.trustLevel ?? null;
 }

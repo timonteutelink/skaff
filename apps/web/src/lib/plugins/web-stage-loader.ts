@@ -15,6 +15,7 @@ import type {
   WebTemplateStage,
   PluginStageEntry,
   TemplatePluginConfig,
+  PluginTrustLevel,
 } from "@timonteutelink/skaff-lib";
 
 import {
@@ -52,6 +53,20 @@ export interface MissingPluginInfo {
 }
 
 /**
+ * Information about an available plugin.
+ */
+export interface AvailablePluginInfo {
+  /** Plugin manifest name */
+  name: string;
+  /** npm package name */
+  packageName: string;
+  /** Installed version */
+  version: string;
+  /** Trust level of the plugin */
+  trustLevel: PluginTrustLevel;
+}
+
+/**
  * Result of checking plugin compatibility for a template.
  */
 export interface PluginCompatibilityResult {
@@ -60,7 +75,11 @@ export interface PluginCompatibilityResult {
   /** List of missing or incompatible plugins */
   missing: MissingPluginInfo[];
   /** List of available and compatible plugins */
-  available: PluginManifestEntry[];
+  available: AvailablePluginInfo[];
+  /** Whether any plugins have trust warnings */
+  hasTrustWarnings: boolean;
+  /** Plugins that are not from official scopes */
+  untrustedPlugins: AvailablePluginInfo[];
 }
 
 /**
@@ -139,21 +158,34 @@ export function checkPluginCompatibility(
     })),
   ];
 
-  const available: PluginManifestEntry[] = result.compatible.map(
+  const available: AvailablePluginInfo[] = result.compatible.map(
     (p: SinglePluginCompatibilityResult) => {
       const pluginName = extractPluginName(p.module);
+      // Look up trust level from the manifest
+      const manifestEntry = PLUGIN_MANIFEST.find(
+        (m) => m.name === pluginName || m.packageName === p.module,
+      );
       return {
         name: pluginName,
         packageName: p.module,
         version: p.installedVersion ?? "",
+        trustLevel:
+          manifestEntry?.trustLevel ?? ("unknown" as PluginTrustLevel),
       };
     },
+  );
+
+  // Identify plugins with trust warnings (not official)
+  const untrustedPlugins = available.filter(
+    (p) => p.trustLevel !== "official" && p.trustLevel !== "verified",
   );
 
   return {
     compatible: result.allCompatible,
     missing,
     available,
+    hasTrustWarnings: untrustedPlugins.length > 0,
+    untrustedPlugins,
   };
 }
 

@@ -129,6 +129,48 @@ Templates may also include tasks, linting and formatting setups so that your new
   settings wrappers), and `@timonteutelink/skaff-plugin-greeter-web` (React UI
   stages) so templates only depend on the pieces they need.
 
+### Plugin installation
+
+Plugins are installed differently depending on the environment:
+
+| Environment      | Installation Method               | When to Use             |
+| ---------------- | --------------------------------- | ----------------------- |
+| **CLI**          | `skaff plugins install <package>` | Interactive development |
+| **Web (Docker)** | `SKAFF_PLUGINS` build arg         | Production deployments  |
+| **Web (Nix)**    | `plugins` parameter               | Nix-based deployments   |
+| **Library**      | npm dependency in `package.json`  | Programmatic usage      |
+
+**CLI Example:**
+
+```bash
+skaff plugins install @skaff/plugin-greeter
+skaff plugins list
+skaff plugins check  # Check if project's required plugins are installed
+```
+
+**Docker Example:**
+
+```bash
+docker build \
+  --build-arg SKAFF_PLUGINS="@skaff/plugin-greeter @skaff/plugin-docker" \
+  -t my-skaff-web .
+```
+
+### Plugin trust levels
+
+Skaff implements a trust hierarchy to help you make informed decisions about third-party plugins:
+
+| Trust Level   | Badge         | Description                                                                 |
+| ------------- | ------------- | --------------------------------------------------------------------------- |
+| **Official**  | `✓ Official`  | From `@skaff/*` or `@timonteutelink/*` scopes, maintained by the Skaff team |
+| **Verified**  | `✓ Verified`  | Has npm provenance attestation linking to source repository                 |
+| **Community** | `⚠ Community` | Standard npm package without provenance verification                        |
+| **Private**   | `◉ Private`   | From a private npm registry                                                 |
+
+When installing or using non-official plugins, Skaff displays warnings to remind you to review the source code. Trust levels are informational—they warn but don't block installation.
+
+Templates that require plugins not installed in your environment are displayed but disabled, with a clear message indicating which plugins are missing.
+
 ## Security
 
 Skaff executes user‑provided template code (such as `templateConfig.ts` and plugins) in a hardened sandbox powered by [SES (Secure ECMAScript)](https://github.com/endojs/endo/tree/master/packages/ses). This ensures that untrusted code cannot escape its boundaries.
