@@ -114,6 +114,8 @@ Templates may also include tasks, linting and formatting setups so that your new
   activates a plugin when that specific template is being generated.
 - A shared loader exported from `@timonteutelink/skaff-lib` (`loadPluginsForTemplate`) resolves these modules relative to the
   template repository's `package.json`, making the same discovery rules available to both the CLI and the Web UI.
+- Plugin declarations can include explicit `dependsOn` and `weight` hints to stabilize hook execution order across runs when
+  multiple plugins are enabled.
 - Plugins target the `TemplateGenerationPlugin` interface, which receives a `PipelineBuilder` seeded with the default stages so
   they can inject, replace or remove steps while keeping the base pipeline intact and deterministic when no plugins load.
 - Plugins can persist namespaced data under `instantiatedTemplates.<id>.plugins.<pluginName>` using the shared

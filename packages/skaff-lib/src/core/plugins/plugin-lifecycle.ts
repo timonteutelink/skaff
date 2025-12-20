@@ -6,6 +6,7 @@ import type {
   PluginErrorContext,
   PluginGenerationResult,
 } from "./plugin-types";
+import { sortLoadedPluginsForLifecycle } from "./plugin-types";
 
 /**
  * Manages the lifecycle of loaded plugins.
@@ -18,7 +19,7 @@ export class PluginLifecycleManager {
   private readonly activatedPlugins: Set<string> = new Set();
 
   constructor(plugins: LoadedTemplatePlugin[]) {
-    this.plugins = plugins;
+    this.plugins = sortLoadedPluginsForLifecycle(plugins);
   }
 
   /**
