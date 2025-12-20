@@ -158,6 +158,54 @@ describeIfSES("plugin loading", () => {
     expect(stages).toEqual(["base", "plugin-stage", "final"]);
   });
 
+  it("does not expose filesystem paths or instantiated templates to plugins", async () => {
+    const { baseDir, template, projectSettings } =
+      await createTemplateWorkspace();
+
+    const pluginPath = path.join(baseDir, "path-guard-plugin.mjs");
+    await fs.writeFile(
+      pluginPath,
+      [
+        "module.exports = {",
+        "  manifest: {",
+        "    name: 'path-guard-plugin',",
+        "    version: '0.0.0',",
+        "    capabilities: ['template'],",
+        "    supportedHooks: { template: [], cli: [], web: [] },",
+        "    schemas: { input: false, output: false },",
+        "  },",
+        "  template: ({ template, projectContext }) => ({",
+        "    captured: {",
+        "      hasAbsoluteDir: Boolean(template.absoluteDir),",
+        "      hasAbsoluteBaseDir: Boolean(template.absoluteBaseDir),",
+        "      hasFilesDir: Boolean(template.absoluteFilesDir),",
+        "      hasInstantiatedTemplates: 'instantiatedTemplates' in projectContext,",
+        "    },",
+        "  }),",
+        "};",
+      ].join("\n"),
+      "utf8",
+    );
+
+    template.config.plugins = [{ module: pluginPath }];
+
+    const pluginsResult = await loadPluginsForTemplate(
+      template,
+      createReadonlyProjectContext(projectSettings),
+    );
+    if ("error" in pluginsResult) {
+      throw new Error(pluginsResult.error);
+    }
+
+    const loaded = pluginsResult.data[0]!;
+    expect((loaded.templatePlugin as any).captured).toEqual({
+      hasAbsoluteDir: false,
+      hasAbsoluteBaseDir: false,
+      hasFilesDir: false,
+      hasInstantiatedTemplates: false,
+    });
+  });
+
   it("exposes cli/web contributions and plugin-scoped settings", async () => {
     const { baseDir, template, projectSettings } =
       await createTemplateWorkspace();
