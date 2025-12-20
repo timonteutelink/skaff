@@ -34,6 +34,43 @@ const BLOCKED_EXTERNALS = Array.from(
   ]),
 );
 
+const projectContextSchema = z
+  .object({
+    projectRepositoryName: z.string(),
+    projectAuthor: z.string(),
+    rootTemplateName: z.string(),
+  })
+  .strict();
+
+const templateViewSchema = z
+  .object({
+    name: z.string(),
+    description: z.string().optional(),
+    config: z
+      .object({
+        name: z.string(),
+        author: z.string(),
+        specVersion: z.string(),
+        description: z.string().optional(),
+        multiInstance: z.boolean().optional(),
+        isRootTemplate: z.boolean().optional(),
+      })
+      .strict(),
+    subTemplateNames: z.array(z.string()),
+    isDetachedSubtreeRoot: z.boolean(),
+    commitHash: z.string().optional(),
+    isLocal: z.boolean(),
+  })
+  .strict();
+
+const templatePluginFactoryInputSchema = z
+  .object({
+    template: templateViewSchema,
+    options: z.unknown().optional(),
+    projectContext: projectContextSchema,
+  })
+  .strict();
+
 function isTemplateGenerationPlugin(
   value: unknown,
 ): value is TemplateGenerationPlugin {
@@ -147,26 +184,46 @@ function buildTemplatePlugin(
   template: Template,
   reference: NormalizedTemplatePluginConfig,
   projectContext: ReadonlyProjectContext,
-): TemplateGenerationPlugin | undefined {
+): Result<TemplateGenerationPlugin | undefined> {
   const entrypoint = module.template;
-  if (!entrypoint) return undefined;
+  if (!entrypoint) return { data: undefined };
 
   if (typeof entrypoint === "function") {
     // Create a minimal TemplateView instead of passing the full Template
     const templateView = createTemplateView(template);
-    const factoryInput: TemplatePluginFactoryInput = {
+    const factoryInputCandidate: TemplatePluginFactoryInput = {
       template: templateView,
       options: reference.options,
       projectContext,
     };
-    return (entrypoint as TemplateGenerationPluginFactory)(factoryInput);
+    const parsedInput =
+      templatePluginFactoryInputSchema.safeParse(factoryInputCandidate);
+    if (!parsedInput.success) {
+      return {
+        error: `Invalid template plugin context for ${reference.module}: ${parsedInput.error}`,
+      };
+    }
+
+    try {
+      const sandbox = resolveHardenedSandbox();
+      const hardenedInput = harden(parsedInput.data);
+      const plugin = sandbox.invokeFunction(
+        entrypoint as TemplateGenerationPluginFactory,
+        hardenedInput,
+      );
+      return { data: plugin };
+    } catch (error) {
+      return {
+        error: `Failed to initialize plugin ${reference.module}: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
   }
 
   if (isTemplateGenerationPlugin(entrypoint)) {
-    return entrypoint;
+    return { data: entrypoint };
   }
 
-  return undefined;
+  return { data: undefined };
 }
 
 async function resolveEntrypoint<TEntry>(
@@ -374,6 +431,9 @@ export async function loadPluginsForTemplate(
       reference,
       projectContext,
     );
+    if ("error" in templatePlugin) {
+      return { error: templatePlugin.error };
+    }
 
     const [cliPlugin, webPlugin] = await Promise.all([
       buildCliPlugin(pluginModule),
@@ -393,7 +453,7 @@ export async function loadPluginsForTemplate(
         pluginModule.outputSchema ?? (z.object({}).strict() as z.ZodTypeAny),
       computeOutput: pluginModule.computeOutput,
       lifecycle: pluginModule.lifecycle,
-      templatePlugin,
+      templatePlugin: templatePlugin.data,
       cliPlugin,
       webPlugin,
     });
