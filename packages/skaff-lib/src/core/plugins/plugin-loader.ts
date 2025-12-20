@@ -33,6 +33,92 @@ const BLOCKED_EXTERNALS = Array.from(
   ]),
 );
 
+const MAX_HARDEN_DEPTH = 50;
+
+const templateViewSchema = z
+  .object({
+    name: z.string(),
+    description: z.string().optional(),
+    config: z
+      .object({
+        name: z.string(),
+        author: z.string(),
+        specVersion: z.string(),
+        description: z.string().optional(),
+        multiInstance: z.boolean().optional(),
+        isRootTemplate: z.boolean().optional(),
+      })
+      .strict(),
+    subTemplateNames: z.array(z.string()),
+    isDetachedSubtreeRoot: z.boolean(),
+    commitHash: z.string().optional(),
+    isLocal: z.boolean(),
+  })
+  .strict();
+
+const projectContextSchema = z
+  .object({
+    projectRepositoryName: z.string(),
+    projectAuthor: z.string(),
+    rootTemplateName: z.string(),
+  })
+  .strict();
+
+const templatePluginContextSchema = z
+  .object({
+    template: templateViewSchema,
+    options: z.unknown().optional(),
+    projectContext: projectContextSchema,
+  })
+  .strict();
+
+function hardenOrDeepFreeze<T>(obj: T, seen = new WeakSet(), depth = 0): T {
+  const hardenFn = (globalThis as { harden?: <T>(value: T) => T }).harden;
+  if (typeof hardenFn === "function") {
+    return hardenFn(obj);
+  }
+
+  if (depth > MAX_HARDEN_DEPTH) {
+    return obj;
+  }
+
+  if (obj === null || typeof obj !== "object") {
+    return obj;
+  }
+
+  if (seen.has(obj as object)) {
+    return obj;
+  }
+  seen.add(obj as object);
+
+  const propNames = Object.getOwnPropertyNames(obj);
+  for (const name of propNames) {
+    try {
+      const descriptor = Object.getOwnPropertyDescriptor(obj, name);
+      if (descriptor && "value" in descriptor) {
+        const value = descriptor.value;
+        if (value !== null && typeof value === "object") {
+          hardenOrDeepFreeze(value, seen, depth + 1);
+        }
+      }
+    } catch {
+      // Ignore inaccessible properties.
+    }
+  }
+
+  return Object.freeze(obj) as T;
+}
+
+function buildWhitelistedProjectContext(
+  projectContext: ReadonlyProjectContext,
+): ReadonlyProjectContext {
+  return {
+    projectRepositoryName: projectContext.projectRepositoryName,
+    projectAuthor: projectContext.projectAuthor,
+    rootTemplateName: projectContext.rootTemplateName,
+  };
+}
+
 function isTemplateGenerationPlugin(
   value: unknown,
 ): value is TemplateGenerationPlugin {
@@ -146,9 +232,9 @@ function buildTemplatePlugin(
   template: Template,
   reference: NormalizedTemplatePluginConfig,
   projectContext: ReadonlyProjectContext,
-): TemplateGenerationPlugin | undefined {
+): Result<TemplateGenerationPlugin | undefined> {
   const entrypoint = module.template;
-  if (!entrypoint) return undefined;
+  if (!entrypoint) return { data: undefined };
 
   if (typeof entrypoint === "function") {
     // Create a minimal TemplateView instead of passing the full Template
@@ -156,16 +242,26 @@ function buildTemplatePlugin(
     const factoryInput: TemplatePluginFactoryInput = {
       template: templateView,
       options: reference.options,
-      projectContext,
+      projectContext: buildWhitelistedProjectContext(projectContext),
     };
-    return (entrypoint as TemplateGenerationPluginFactory)(factoryInput);
+    const parsed = templatePluginContextSchema.safeParse(factoryInput);
+    if (!parsed.success) {
+      return {
+        error: `Invalid template plugin context for ${module.manifest.name}: ${parsed.error}`,
+      };
+    }
+
+    const hardenedInput = hardenOrDeepFreeze(parsed.data);
+    return {
+      data: (entrypoint as TemplateGenerationPluginFactory)(hardenedInput),
+    };
   }
 
   if (isTemplateGenerationPlugin(entrypoint)) {
-    return entrypoint;
+    return { data: entrypoint };
   }
 
-  return undefined;
+  return { data: undefined };
 }
 
 async function resolveEntrypoint<TEntry>(
@@ -367,12 +463,15 @@ export async function loadPluginsForTemplate(
       return globalConfigResult;
     }
 
-    const templatePlugin = buildTemplatePlugin(
+    const templatePluginResult = buildTemplatePlugin(
       pluginModule,
       template,
       reference,
       projectContext,
     );
+    if ("error" in templatePluginResult) {
+      return { error: templatePluginResult.error };
+    }
 
     const [cliPlugin, webPlugin] = await Promise.all([
       buildCliPlugin(pluginModule),
@@ -392,7 +491,7 @@ export async function loadPluginsForTemplate(
         pluginModule.outputSchema ?? (z.object({}).strict() as z.ZodTypeAny),
       computeOutput: pluginModule.computeOutput,
       lifecycle: pluginModule.lifecycle,
-      templatePlugin,
+      templatePlugin: templatePluginResult.data,
       cliPlugin,
       webPlugin,
     });

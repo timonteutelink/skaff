@@ -158,6 +158,54 @@ describeIfSES("plugin loading", () => {
     expect(stages).toEqual(["base", "plugin-stage", "final"]);
   });
 
+  it("whitelists plugin context to avoid file paths and instantiated templates", async () => {
+    const { baseDir, template, projectSettings } =
+      await createTemplateWorkspace();
+
+    const pluginPath = path.join(baseDir, "whitelist-plugin.mjs");
+    await fs.writeFile(
+      pluginPath,
+      [
+        "module.exports = {",
+        "  manifest: {",
+        "    name: 'whitelist-plugin',",
+        "    version: '0.0.0',",
+        "    capabilities: ['template'],",
+        "    supportedHooks: { template: [], cli: [], web: [] },",
+        "    schemas: { input: false, output: false },",
+        "  },",
+        "  template: ({ template, projectContext }) => ({",
+        "    captured: {",
+        "      absoluteDir: template.absoluteDir,",
+        "      absoluteFilesDir: template.absoluteFilesDir,",
+        "      templateConfigPath: template.config?.absoluteDir,",
+        "      instantiatedTemplates: projectContext.instantiatedTemplates,",
+        "    },",
+        "  }),",
+        "};",
+      ].join(\"\\n\"),
+      "utf8",
+    );
+
+    template.config.plugins = [{ module: pluginPath }];
+
+    const pluginsResult = await loadPluginsForTemplate(
+      template,
+      createReadonlyProjectContext(projectSettings),
+    );
+    if ("error" in pluginsResult) {
+      throw new Error(pluginsResult.error);
+    }
+
+    const loaded = pluginsResult.data[0]!;
+    expect((loaded.templatePlugin as any).captured).toEqual({
+      absoluteDir: undefined,
+      absoluteFilesDir: undefined,
+      templateConfigPath: undefined,
+      instantiatedTemplates: undefined,
+    });
+  });
+
   it("exposes cli/web contributions and plugin-scoped settings", async () => {
     const { baseDir, template, projectSettings } =
       await createTemplateWorkspace();
