@@ -582,6 +582,10 @@ export interface NormalizedTemplatePluginConfig {
   version?: string;
   exportName?: string;
   options?: unknown;
+  /** Ordered list of plugin names or module specifiers that must run first */
+  dependsOn?: string[];
+  /** Weight used to stabilize execution order when no dependencies apply */
+  weight?: number;
 }
 
 /**
@@ -908,11 +912,110 @@ export function normalizeTemplatePlugins(
           version: entry.version,
           exportName: entry.exportName,
           options: entry.options,
+          dependsOn: entry.dependsOn,
+          weight: entry.weight,
         } satisfies NormalizedTemplatePluginConfig;
       }
       return null;
     })
     .filter((value): value is NormalizedTemplatePluginConfig => Boolean(value));
+}
+
+function resolvePluginWeight(weight?: number): number {
+  return Number.isFinite(weight) ? weight : 0;
+}
+
+function comparePluginOrder(
+  entries: Array<{ weight: number; index: number }>,
+  left: number,
+  right: number,
+): number {
+  const weightDiff = entries[left]!.weight - entries[right]!.weight;
+  if (weightDiff !== 0) return weightDiff;
+  return entries[left]!.index - entries[right]!.index;
+}
+
+/**
+ * Stable ordering for loaded plugins that honors explicit dependencies.
+ */
+export function sortLoadedPluginsForLifecycle(
+  plugins: LoadedTemplatePlugin[],
+): LoadedTemplatePlugin[] {
+  if (plugins.length <= 1) return [...plugins];
+
+  const entries = plugins.map((plugin, index) => ({
+    plugin,
+    index,
+    weight: resolvePluginWeight(plugin.reference.weight),
+  }));
+
+  const keyToIndex = new Map<string, number>();
+  for (const entry of entries) {
+    keyToIndex.set(entry.plugin.name, entry.index);
+    keyToIndex.set(entry.plugin.reference.module, entry.index);
+  }
+
+  const indegree = new Array(entries.length).fill(0);
+  const outgoing = new Map<number, Set<number>>();
+
+  for (const entry of entries) {
+    const dependencies = entry.plugin.reference.dependsOn ?? [];
+    for (const dependency of dependencies) {
+      const dependencyIndex = keyToIndex.get(dependency);
+      if (dependencyIndex === undefined || dependencyIndex === entry.index) {
+        continue;
+      }
+      const targets = outgoing.get(dependencyIndex) ?? new Set<number>();
+      if (!outgoing.has(dependencyIndex)) {
+        outgoing.set(dependencyIndex, targets);
+      }
+      if (!targets.has(entry.index)) {
+        targets.add(entry.index);
+        indegree[entry.index] += 1;
+      }
+    }
+  }
+
+  const available: number[] = [];
+  for (const entry of entries) {
+    if (indegree[entry.index] === 0) {
+      available.push(entry.index);
+    }
+  }
+
+  available.sort((left, right) => comparePluginOrder(entries, left, right));
+
+  const result: LoadedTemplatePlugin[] = [];
+  const resolved = new Set<number>();
+
+  while (available.length) {
+    const current = available.shift()!;
+    if (resolved.has(current)) continue;
+    resolved.add(current);
+    result.push(entries[current]!.plugin);
+
+    const targets = outgoing.get(current);
+    if (!targets) continue;
+    for (const target of targets) {
+      indegree[target] -= 1;
+      if (indegree[target] === 0) {
+        available.push(target);
+      }
+    }
+    if (available.length > 1) {
+      available.sort((left, right) => comparePluginOrder(entries, left, right));
+    }
+  }
+
+  if (result.length !== entries.length) {
+    const remaining = entries
+      .filter((entry) => !resolved.has(entry.index))
+      .sort((left, right) => comparePluginOrder(entries, left.index, right.index))
+      .map((entry) => entry.plugin);
+    result.push(...remaining);
+  }
+
+  return result;
 }
 
 /**

@@ -206,6 +206,18 @@ export type TemplatePluginConfig = {
    * Arbitrary configuration passed to the plugin factory (if it exposes one).
    */
   options?: unknown;
+
+  /**
+   * Ordered list of plugin names or module specifiers that must run before this plugin.
+   * Use this to declare explicit dependencies when plugin execution order matters.
+   */
+  dependsOn?: string[];
+
+  /**
+   * Weight to influence plugin ordering when no dependencies apply.
+   * Lower weights run earlier; higher weights run later.
+   */
+  weight?: number;
 };
 
 export interface TemplateMigration {

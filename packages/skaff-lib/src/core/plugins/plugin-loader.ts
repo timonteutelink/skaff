@@ -13,6 +13,7 @@ import {
   normalizeTemplatePlugins,
   PluginManifest,
   pluginManifestSchema,
+  sortLoadedPluginsForLifecycle,
 } from "./plugin-types";
 import { createTemplateView } from "./template-view";
 import {
@@ -396,32 +397,34 @@ export async function loadPluginsForTemplate(
       cliPlugin,
       webPlugin,
     });
+  }
 
-    // Invoke onLoad lifecycle hook after plugin is fully loaded
-    if (pluginModule.lifecycle?.onLoad) {
-      try {
-        await pluginModule.lifecycle.onLoad({
-          pluginName,
-          pluginVersion: manifest.version,
-          templateName: template.config.templateConfig.name,
-          projectRepositoryName: projectContext.projectRepositoryName,
+  const ordered = sortLoadedPluginsForLifecycle(loaded);
+
+  for (const plugin of ordered) {
+    if (!plugin.lifecycle?.onLoad) continue;
+
+    try {
+      await plugin.lifecycle.onLoad({
+        pluginName: plugin.name,
+        pluginVersion: plugin.version,
+        templateName: template.config.templateConfig.name,
+        projectRepositoryName: projectContext.projectRepositoryName,
+      });
+    } catch (error) {
+      if (plugin.lifecycle?.onError) {
+        plugin.lifecycle.onError({
+          pluginName: plugin.name,
+          pluginVersion: plugin.version,
+          error: error instanceof Error ? error : new Error(String(error)),
+          phase: "load",
         });
-      } catch (error) {
-        // Call error handler if available
-        if (pluginModule.lifecycle?.onError) {
-          pluginModule.lifecycle.onError({
-            pluginName,
-            pluginVersion: manifest.version,
-            error: error instanceof Error ? error : new Error(String(error)),
-            phase: "load",
-          });
-        }
-        return {
-          error: `Plugin ${pluginName} onLoad hook failed: ${error instanceof Error ? error.message : String(error)}`,
-        };
       }
+      return {
+        error: `Plugin ${plugin.name} onLoad hook failed: ${error instanceof Error ? error.message : String(error)}`,
+      };
     }
   }
 
-  return { data: loaded };
+  return { data: ordered };
 }
