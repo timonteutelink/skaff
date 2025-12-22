@@ -1,6 +1,7 @@
 import { Command, Flags } from '@oclif/core';
 
 import { DEFAULT_FORMAT, Format, printFormatted } from './utils/cli-utils.js';
+import { registerInstalledPluginModules } from './utils/plugin-manager.js';
 
 export default abstract class BaseCommand extends Command {
   /** Global flags available to every command */
@@ -24,5 +25,9 @@ export default abstract class BaseCommand extends Command {
     const { flags } = await this.parse();
     printFormatted(data, (flags.format ?? DEFAULT_FORMAT) as Format);
   }
-}
 
+  protected async init(): Promise<void> {
+    await super.init();
+    await registerInstalledPluginModules(this.config);
+  }
+}

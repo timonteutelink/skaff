@@ -124,6 +124,27 @@ async function resolveWebContribution(
   return entry;
 }
 
+function pickEntrypoint(
+  moduleExports: Record<string, unknown>,
+  exportName?: string,
+): unknown {
+  if (exportName && exportName in moduleExports) {
+    return moduleExports[exportName];
+  }
+  if ("default" in moduleExports) {
+    return moduleExports.default;
+  }
+  return moduleExports;
+}
+
+function coerceToPluginModule(entry: unknown): SkaffPluginModule | null {
+  if (!entry || typeof entry !== "object") return null;
+  if ("manifest" in (entry as Record<string, unknown>)) {
+    return entry as SkaffPluginModule;
+  }
+  return null;
+}
+
 /**
  * Check if a template's required plugins are all installed and version-compatible.
  * Templates with missing or incompatible plugins should be disabled in the UI.
@@ -230,8 +251,12 @@ export async function loadWebTemplateStages(
     }
 
     // Look up plugin in static registry
-    const module = getInstalledPlugin(pluginName);
-    const pluginModule = module ?? getInstalledPlugin(reference.module);
+    const moduleExports = getInstalledPlugin(pluginName);
+    const resolvedModule = moduleExports ?? getInstalledPlugin(reference.module);
+    if (!resolvedModule) continue;
+
+    const entry = pickEntrypoint(resolvedModule, reference.exportName);
+    const pluginModule = coerceToPluginModule(entry);
     if (!pluginModule) continue;
 
     // Resolve web contribution

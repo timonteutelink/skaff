@@ -10,12 +10,12 @@
  * Generated: 2025-12-16T03:37:02.995Z
  */
 
-import type { SkaffPluginModule, PluginTrustLevel } from "@timonteutelink/skaff-lib";
+import type { PluginTrustLevel } from "@timonteutelink/skaff-lib";
 
 
 
 export interface InstalledPluginEntry {
-  module: SkaffPluginModule;
+  module: Record<string, unknown>;
   packageName: string;
   version: string;
   trustLevel: PluginTrustLevel;
@@ -46,7 +46,7 @@ export const PLUGIN_MANIFEST: PluginManifestEntry[] = [
 /**
  * Get a plugin by its manifest name.
  */
-export function getInstalledPlugin(name: string): SkaffPluginModule | null {
+export function getInstalledPlugin(name: string): Record<string, unknown> | null {
   return INSTALLED_PLUGINS[name]?.module ?? null;
 }
 

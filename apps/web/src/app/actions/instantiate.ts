@@ -1,8 +1,11 @@
 "use server";
 import { findProject } from "@/lib/server-utils";
+import { ensureWebPluginsRegistered } from "@/lib/plugins/register-plugins";
 import * as tempLib from "@timonteutelink/skaff-lib";
 import { getConfig, NewTemplateDiffResult, ParsedFile, ProjectCreationResult, projectSearchPathKey, Result } from "@timonteutelink/skaff-lib";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
+
+ensureWebPluginsRegistered();
 
 export async function createNewProject(
   projectRepositoryName: string,

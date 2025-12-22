@@ -9,6 +9,7 @@ import {Config} from '@oclif/core'
 import {
   checkTemplatePluginCompatibility,
   extractPluginName,
+  registerPluginModules,
   type InstalledPluginInfo,
   type PluginTrustLevel,
   type SinglePluginCompatibilityResult,
@@ -159,6 +160,38 @@ export async function getInstalledCliPlugins(config: Config): Promise<SkaffCliPl
 export async function getInstalledSkaffPlugins(config: Config): Promise<SkaffCliPluginInfo[]> {
   const allPlugins = await getInstalledCliPlugins(config)
   return allPlugins.filter((p) => p.isSkaffPlugin)
+}
+
+/**
+ * Registers installed Skaff plugin modules so they can be activated by templates.
+ */
+export async function registerInstalledPluginModules(config: Config): Promise<void> {
+  const entries: { moduleExports: unknown; packageName: string }[] = []
+
+  for (const plugin of config.getPluginsList()) {
+    if (plugin.name.startsWith('@oclif/') || plugin.type === 'core') {
+      continue
+    }
+
+    try {
+      const moduleNamespace = await import(plugin.name)
+      const candidate = moduleNamespace.default ?? moduleNamespace
+      if (!candidate?.manifest?.capabilities) {
+        continue
+      }
+
+      entries.push({
+        moduleExports: moduleNamespace,
+        packageName: plugin.name,
+      })
+    } catch {
+      // Ignore plugins that fail to import; they are treated as not installed
+    }
+  }
+
+  if (entries.length > 0) {
+    registerPluginModules(entries)
+  }
 }
 
 /**

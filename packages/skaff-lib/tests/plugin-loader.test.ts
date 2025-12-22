@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 import { z } from "zod";
 
@@ -8,7 +9,11 @@ import type { ProjectSettings } from "@timonteutelink/template-types-lib";
 import { createReadonlyProjectContext } from "@timonteutelink/template-types-lib";
 import type { Template } from "../src/core/templates/Template";
 import type { GenericTemplateConfigModule } from "../src/lib/types";
-import { loadPluginsForTemplate } from "../src/core/plugins";
+import {
+  clearRegisteredPluginModules,
+  loadPluginsForTemplate,
+  registerPluginModules,
+} from "../src/core/plugins";
 import { PipelineBuilder } from "../src/core/generation/pipeline/pipeline-runner";
 
 // These tests require the full SES lockdown which is not available when running
@@ -99,11 +104,28 @@ describeIfSES("plugin loading", () => {
     return { baseDir, templateDir, template, projectSettings };
   }
 
+  async function registerPluginModule(
+    pluginPath: string,
+    packageName: string,
+  ) {
+    const moduleNamespace = await import(pathToFileURL(pluginPath).href);
+    registerPluginModules([
+      {
+        moduleExports: moduleNamespace,
+        packageName,
+      },
+    ]);
+  }
+
+  afterEach(() => {
+    clearRegisteredPluginModules();
+  });
+
   it("loads template plugins and builds deterministic pipelines", async () => {
     const { baseDir, templateDir, template, projectSettings } =
       await createTemplateWorkspace();
 
-    const pluginPath = path.join(baseDir, "plugin.mjs");
+    const pluginPath = path.join(baseDir, "plugin.cjs");
     await fs.writeFile(
       pluginPath,
       [
@@ -131,7 +153,12 @@ describeIfSES("plugin loading", () => {
       "utf8",
     );
 
-    template.config.plugins = [{ module: pluginPath, options: { flag: true } }];
+    const packageName = "test-plugin-package";
+    await registerPluginModule(pluginPath, packageName);
+
+    template.config.plugins = [
+      { module: packageName, options: { flag: true } },
+    ];
 
     const pluginsResult = await loadPluginsForTemplate(
       template,
@@ -162,7 +189,7 @@ describeIfSES("plugin loading", () => {
     const { baseDir, template, projectSettings } =
       await createTemplateWorkspace();
 
-    const pluginPath = path.join(baseDir, "path-guard-plugin.mjs");
+    const pluginPath = path.join(baseDir, "path-guard-plugin.cjs");
     await fs.writeFile(
       pluginPath,
       [
@@ -187,7 +214,10 @@ describeIfSES("plugin loading", () => {
       "utf8",
     );
 
-    template.config.plugins = [{ module: pluginPath }];
+    const packageName = "path-guard-plugin-package";
+    await registerPluginModule(pluginPath, packageName);
+
+    template.config.plugins = [{ module: packageName }];
 
     const pluginsResult = await loadPluginsForTemplate(
       template,
@@ -210,7 +240,7 @@ describeIfSES("plugin loading", () => {
     const { baseDir, template, projectSettings } =
       await createTemplateWorkspace();
 
-    const pluginPath = path.join(baseDir, "plugin.mjs");
+    const pluginPath = path.join(baseDir, "plugin.cjs");
     await fs.writeFile(
       pluginPath,
       [
@@ -244,7 +274,10 @@ describeIfSES("plugin loading", () => {
       "utf8",
     );
 
-    template.config.plugins = [{ module: pluginPath }];
+    const packageName = "test-plugin-package";
+    await registerPluginModule(pluginPath, packageName);
+
+    template.config.plugins = [{ module: packageName }];
 
     const pluginsResult = await loadPluginsForTemplate(
       template,
@@ -270,11 +303,11 @@ describeIfSES("plugin loading", () => {
     expect(notices).toEqual(["hello web"]);
   });
 
-  it("blocks plugins that attempt to escape the sandbox", async () => {
+  it("rejects plugins with invalid schema declarations", async () => {
     const { baseDir, template, projectSettings } =
       await createTemplateWorkspace();
 
-    const pluginPath = path.join(baseDir, "unsafe-plugin.mjs");
+    const pluginPath = path.join(baseDir, "unsafe-plugin.cjs");
     await fs.writeFile(
       pluginPath,
       [
@@ -293,7 +326,10 @@ describeIfSES("plugin loading", () => {
       "utf8",
     );
 
-    template.config.plugins = [{ module: pluginPath }];
+    const packageName = "unsafe-plugin-package";
+    await registerPluginModule(pluginPath, packageName);
+
+    template.config.plugins = [{ module: packageName }];
 
     const pluginsResult = await loadPluginsForTemplate(
       template,
@@ -302,7 +338,7 @@ describeIfSES("plugin loading", () => {
 
     expect("error" in pluginsResult).toBe(true);
     if ("error" in pluginsResult) {
-      expect(pluginsResult.error).toMatch(/Blocked import/);
+      expect(pluginsResult.error).toMatch(/globalConfig schema support/);
     }
   });
 });
