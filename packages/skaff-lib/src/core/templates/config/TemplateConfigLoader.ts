@@ -269,6 +269,67 @@ async function findTemplateConfigFiles(
 }
 
 const SANDBOX_TIMEOUT_MS = 1_000;
+const DEV_CACHE_STAT_CONCURRENCY = 20;
+
+async function collectFileStatEntries(
+  rootDir: string,
+  files: TemplateConfigFileInfo[],
+): Promise<string[]> {
+  const entries: string[] = [];
+  const seenFilesDirs = new Set<string>();
+
+  const queue: string[] = [];
+  const queued = new Set<string>();
+
+  const enqueue = (target: string): void => {
+    if (queued.has(target)) {
+      return;
+    }
+    queued.add(target);
+    queue.push(target);
+  };
+
+  for (const file of files) {
+    const configPath = path.resolve(rootDir, file.configPath);
+    enqueue(configPath);
+
+    const filesDir = path.join(path.dirname(configPath), "files");
+    if (!seenFilesDirs.has(filesDir)) {
+      seenFilesDirs.add(filesDir);
+      enqueue(filesDir);
+    }
+  }
+
+  const processBatch = async (batch: string[]): Promise<void> => {
+    await Promise.all(
+      batch.map(async (target) => {
+        const stat = await fs.stat(target).catch(() => null);
+        if (!stat) {
+          return;
+        }
+        const rel = path.relative(rootDir, target);
+        entries.push(`${rel}:${stat.mtimeMs}`);
+
+        if (stat.isDirectory()) {
+          const dirEntries = await fs
+            .readdir(target, { withFileTypes: true })
+            .catch(() => []);
+          for (const dirent of dirEntries) {
+            const full = path.join(target, dirent.name);
+            enqueue(full);
+          }
+        }
+      }),
+    );
+  };
+
+  while (queue.length > 0) {
+    const batch = queue.splice(0, DEV_CACHE_STAT_CONCURRENCY);
+    await processBatch(batch);
+  }
+
+  return entries.sort();
+}
 
 export class TemplateConfigLoader {
   constructor(
@@ -295,6 +356,7 @@ export class TemplateConfigLoader {
   public async loadAllTemplateConfigs(
     rootDir: string,
     commitHash: string,
+    options: { devTemplates?: boolean } = {},
   ): Promise<{
     configs: Record<string, TemplateConfigWithFileInfo>;
     remoteRefs: RemoteTemplateReference[];
@@ -308,9 +370,15 @@ export class TemplateConfigLoader {
       throw new Error(`No templateConfig.ts files found under ${rootDir}`);
     }
 
-    const cacheKey = this.cacheService.hash(
-      `${commitHash}:${path.resolve(rootDir)}`,
-    );
+    const rootPath = path.resolve(rootDir);
+    let cacheKeySeed = `${commitHash}:${rootPath}`;
+    if (options.devTemplates) {
+      const statEntries = await collectFileStatEntries(rootPath, files);
+      const devCacheBuster = this.cacheService.hash(statEntries.join("|"));
+      cacheKeySeed = `${cacheKeySeed}:${devCacheBuster}`;
+    }
+
+    const cacheKey = this.cacheService.hash(cacheKeySeed);
 
     const cached = await this.cacheService.retrieveFromCache(
       "template-config",

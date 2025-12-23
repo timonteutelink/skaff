@@ -49,6 +49,11 @@ interface CacheDirDescriptorInfo {
 const LONG_REVISION_SUFFIX = /-([0-9a-f]{40})$/i;
 const SHORT_HASH_SUFFIX = /-([0-9a-f]{8})$/i;
 
+function isDevTemplatesEnabled(): boolean {
+  const raw = process.env.SKAFF_DEV_TEMPLATES?.toLowerCase().trim();
+  return raw === "1" || raw === "true" || raw === "yes" || raw === "on";
+}
+
 function extractDescriptorSegment(dirName: string): string | null {
   const branchTokenIndex = dirName.lastIndexOf("-branch-");
   if (branchTokenIndex >= 0) {
@@ -137,6 +142,7 @@ export class RootTemplateRepository {
   private remoteRepos: RemoteRepoEntry[] = [];
   private readonly registry = new TemplateRegistry();
   public templates: Template[] = [];
+  private readonly devTemplatesEnabled: boolean;
 
   constructor(
     private readonly templateTreeBuilder: TemplateTreeBuilder,
@@ -144,6 +150,7 @@ export class RootTemplateRepository {
     templatePathsProvider: TemplatePathsProvider = defaultTemplatePathsProvider,
   ) {
     this.templatePathsProvider = templatePathsProvider;
+    this.devTemplatesEnabled = isDevTemplatesEnabled();
   }
 
   private async hydrateCachedRepos(): Promise<void> {
@@ -332,6 +339,7 @@ export class RootTemplateRepository {
     }
 
     const localTemplatePaths: string[] = [];
+    const localTemplateRoots = new Set<string>();
 
     for (const basePath of baseTemplatePaths) {
       const parsed = parseTemplatePathEntry(basePath);
@@ -374,6 +382,7 @@ export class RootTemplateRepository {
         }
       } else {
         localTemplatePaths.push(parsed.path);
+        localTemplateRoots.add(parsed.path);
       }
     }
 
@@ -382,6 +391,8 @@ export class RootTemplateRepository {
     );
     for (const templatePath of paths) {
       const repoInfo = this.remoteRepos.find((r) => r.path === templatePath);
+      const isLocalPath = localTemplateRoots.has(templatePath);
+      const devTemplates = this.devTemplatesEnabled && isLocalPath;
       const templatesRootDir = path.join(templatePath, "templates");
       let templateEntries: Dirent[] = [];
       try {
@@ -422,6 +433,7 @@ export class RootTemplateRepository {
             branchOverride: repoInfo?.branch,
             trackedRevision: repoInfo?.revision,
             skipBranchResolution: Boolean(repoInfo),
+            devTemplates,
           },
         );
         if ("error" in templateResult) {

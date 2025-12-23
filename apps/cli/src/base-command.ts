@@ -18,6 +18,11 @@ export default abstract class BaseCommand extends Command {
         'Path to a project directory to operate on (overrides auto-discovery)',
       helpValue: 'path',
     }),
+    'dev-templates': Flags.boolean({
+      description:
+        'Enable local template development (allows dirty working tree and cache busting).',
+      default: false,
+    }),
   };
 
   /** Convenience helper for children */
@@ -28,6 +33,10 @@ export default abstract class BaseCommand extends Command {
 
   protected async init(): Promise<void> {
     await super.init();
+    const { flags } = await this.parse();
+    if (flags['dev-templates']) {
+      process.env.SKAFF_DEV_TEMPLATES = '1';
+    }
     await registerInstalledPluginModules(this.config);
   }
 }
