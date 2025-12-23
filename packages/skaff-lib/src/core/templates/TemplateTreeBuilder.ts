@@ -229,9 +229,12 @@ export interface TemplateTreeBuilderOptions {
   commitHash?: string;
   trackedRevision?: string;
   skipBranchResolution?: boolean;
+  devTemplates?: boolean;
 }
 
 export class TemplateTreeBuilder {
+  private static devTemplatesWarningLogged = false;
+
   constructor(
     private readonly gitService: GitService,
     private readonly templateConfigLoader: TemplateConfigLoader,
@@ -249,6 +252,7 @@ export class TemplateTreeBuilder {
       options.skipBranchResolution,
       options.commitHash,
       options.trackedRevision,
+      options.devTemplates,
     );
     if ("error" in contextResult) {
       return contextResult;
@@ -257,6 +261,7 @@ export class TemplateTreeBuilder {
     const configsResult = await this.loadTemplateConfigs(
       contextResult.data.absoluteRootDir,
       contextResult.data.commitHash,
+      options.devTemplates,
     );
     if ("error" in configsResult) {
       return configsResult;
@@ -397,16 +402,22 @@ export class TemplateTreeBuilder {
     skipBranchResolution?: boolean,
     commitHashOverride?: string,
     trackedRevision?: string,
+    devTemplates?: boolean,
   ): Promise<Result<TemplateBuildContext>> {
     const absoluteBaseDir = path.dirname(absoluteRootDir);
-    const isRepoCleanResult =
-      await this.gitService.isGitRepoClean(absoluteBaseDir);
-    if ("error" in isRepoCleanResult) {
-      return { error: isRepoCleanResult.error };
-    }
-    if (!isRepoCleanResult.data) {
-      backendLogger.warn(`Ignoring template because the repo is not clean`);
-      return { error: "Template dir is not clean" };
+    if (!devTemplates) {
+      const isRepoCleanResult =
+        await this.gitService.isGitRepoClean(absoluteBaseDir);
+      if ("error" in isRepoCleanResult) {
+        return { error: isRepoCleanResult.error };
+      }
+      if (!isRepoCleanResult.data) {
+        backendLogger.warn(`Ignoring template because the repo is not clean`);
+        return { error: "Template dir is not clean" };
+      }
+    } else if (!TemplateTreeBuilder.devTemplatesWarningLogged) {
+      backendLogger.warn("Using dev templates; dirty working tree allowed.");
+      TemplateTreeBuilder.devTemplatesWarningLogged = true;
     }
 
     const commitHashResult = commitHashOverride
@@ -440,6 +451,7 @@ export class TemplateTreeBuilder {
   private async loadTemplateConfigs(
     absoluteRootDir: string,
     commitHash: string,
+    devTemplates?: boolean,
   ): Promise<
     Result<{
       configs: Record<string, TemplateConfigWithFileInfo>;
@@ -450,6 +462,7 @@ export class TemplateTreeBuilder {
       const configs = await this.templateConfigLoader.loadAllTemplateConfigs(
         absoluteRootDir,
         commitHash,
+        { devTemplates },
       );
       return { data: configs };
     } catch (error) {
