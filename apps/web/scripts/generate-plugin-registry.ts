@@ -239,7 +239,7 @@ async function discoverPlugins(): Promise<DiscoveredPlugin[]> {
  */
 function generateRegistryFile(plugins: DiscoveredPlugin[]): string {
   const imports = plugins
-    .map((p, i) => `import plugin${i} from "${p.importPath}";`)
+    .map((p, i) => `import * as plugin${i} from "${p.importPath}";`)
     .join("\n");
 
   const registryEntries = plugins
@@ -278,12 +278,12 @@ function generateRegistryFile(plugins: DiscoveredPlugin[]): string {
  * Generated: ${new Date().toISOString()}
  */
 
-import type { SkaffPluginModule, PluginTrustLevel } from "@timonteutelink/skaff-lib";
+import type { PluginTrustLevel } from "@timonteutelink/skaff-lib";
 
 ${imports}
 
 export interface InstalledPluginEntry {
-  module: SkaffPluginModule;
+  module: Record<string, unknown>;
   packageName: string;
   version: string;
   trustLevel: PluginTrustLevel;
@@ -314,7 +314,7 @@ ${manifestEntries}
 /**
  * Get a plugin by its manifest name.
  */
-export function getInstalledPlugin(name: string): SkaffPluginModule | null {
+export function getInstalledPlugin(name: string): Record<string, unknown> | null {
   return INSTALLED_PLUGINS[name]?.module ?? null;
 }
 

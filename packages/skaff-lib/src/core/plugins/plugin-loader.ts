@@ -1,5 +1,4 @@
 import { ReadonlyProjectContext } from "@timonteutelink/template-types-lib";
-import { builtinModules, createRequire } from "node:module";
 
 import type { Result } from "../../lib/types";
 import { getPluginSystemSettings } from "../../lib/config";
@@ -23,16 +22,7 @@ import {
 } from "../generation/template-generation-types";
 import { z } from "zod";
 import { resolveHardenedSandbox } from "../infra/hardened-sandbox";
-import { getPluginSandboxLibraries } from "../infra/sandbox-endowments";
-import { getSkaffContainer } from "../../di/container";
-import { EsbuildInitializerToken } from "../../di/tokens";
-
-const BLOCKED_EXTERNALS = Array.from(
-  new Set([
-    ...builtinModules,
-    ...builtinModules.map((entry) => `node:${entry}`),
-  ]),
-);
+import { extractPluginName } from "./plugin-compatibility";
 
 const projectContextSchema = z
   .object({
@@ -82,23 +72,25 @@ function isTemplateGenerationPlugin(
   );
 }
 
-// Create a module resolver that works in both ESM and CommonJS contexts
-const getModuleUrl = (): string => {
-  // In ESM, import.meta.url is available
-  // In CommonJS, we fall back to __filename converted to URL
-  if (typeof __filename !== "undefined") {
-    return `file://${__filename}`;
+export interface RegisteredPluginModule {
+  moduleExports: unknown;
+  packageName?: string;
+}
+
+const registeredPlugins = new Map<string, RegisteredPluginModule>();
+
+export function registerPluginModules(entries: RegisteredPluginModule[]): void {
+  for (const entry of entries) {
+    const packageName = entry.packageName;
+    if (packageName) {
+      registeredPlugins.set(packageName, entry);
+      registeredPlugins.set(extractPluginName(packageName), entry);
+    }
   }
-  // This branch is for ESM (when compiled to ESM or run with --experimental-vm-modules)
-  // @ts-expect-error - import.meta only available in ESM context
-  return import.meta.url;
-};
+}
 
-const pluginModuleResolver = createRequire(getModuleUrl());
-
-async function resolveEsbuild() {
-  const initializer = getSkaffContainer().resolve(EsbuildInitializerToken);
-  return initializer.init();
+export function clearRegisteredPluginModules(): void {
+  registeredPlugins.clear();
 }
 
 function coerceToPluginModule(entry: unknown): SkaffPluginModule | null {
@@ -109,64 +101,19 @@ function coerceToPluginModule(entry: unknown): SkaffPluginModule | null {
   return null;
 }
 
-async function resolvePluginPath(
+function resolveRegisteredPlugin(
   reference: NormalizedTemplatePluginConfig,
-  template: Template,
-): Promise<Result<string>> {
-  try {
-    const resolved = pluginModuleResolver.resolve(reference.module, {
-      paths: [template.absoluteDir, template.absoluteBaseDir, process.cwd()],
-    });
-    return { data: resolved };
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
-    return {
-      error: `Failed to resolve plugin ${reference.module} required by template ${template.config.templateConfig.name}: ${reason}`,
-    };
-  }
-}
-
-async function bundlePluginModule(
-  reference: NormalizedTemplatePluginConfig,
-  template: Template,
-): Promise<Result<{ code: string; filename: string }>> {
-  const resolvedPathResult = await resolvePluginPath(reference, template);
-  if ("error" in resolvedPathResult) {
-    return resolvedPathResult;
+): Result<RegisteredPluginModule> {
+  const key = extractPluginName(reference.module);
+  const entry =
+    registeredPlugins.get(reference.module) ?? registeredPlugins.get(key);
+  if (entry) {
+    return { data: entry };
   }
 
-  const resolvedPath = resolvedPathResult.data;
-  const allowedModuleNames = Object.keys(getPluginSandboxLibraries());
-
-  try {
-    const esbuild = await resolveEsbuild();
-    const { outputFiles } = await esbuild.build({
-      entryPoints: [resolvedPath],
-      bundle: true,
-      format: "cjs",
-      platform: "neutral",
-      target: "es2022",
-      write: false,
-      minify: true,
-      external: [...allowedModuleNames, ...BLOCKED_EXTERNALS],
-      // NOTE: No banner/footer - the sandbox's evaluateCommonJs provides the CommonJS wrapper
-    });
-    if ("stop" in esbuild && esbuild.stop) await esbuild.stop();
-
-    const code = outputFiles?.[0]?.text;
-    if (!code) {
-      return {
-        error: `Failed to bundle plugin ${reference.module} required by template ${template.config.templateConfig.name}`,
-      };
-    }
-
-    return { data: { code, filename: resolvedPath } };
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
-    return {
-      error: `Failed to bundle plugin ${reference.module} required by template ${template.config.templateConfig.name}: ${reason}`,
-    };
-  }
+  return {
+    error: `Plugin ${reference.module} is not installed in the current Skaff environment. Install it globally before running this template.`,
+  };
 }
 
 function pickEntrypoint(moduleExports: any, exportName?: string): unknown {
@@ -248,31 +195,6 @@ async function buildWebPlugin(
   return resolveEntrypoint<WebPluginContribution>(module.web);
 }
 
-async function importPluginModule(
-  reference: NormalizedTemplatePluginConfig,
-  template: Template,
-): Promise<Result<any>> {
-  const bundleResult = await bundlePluginModule(reference, template);
-  if ("error" in bundleResult) {
-    return bundleResult;
-  }
-
-  try {
-    const sandbox = resolveHardenedSandbox();
-    const moduleExports = sandbox.evaluateCommonJs<any>({
-      code: bundleResult.data.code,
-      allowedModules: getPluginSandboxLibraries(),
-      filename: bundleResult.data.filename,
-    });
-
-    return { data: moduleExports };
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
-    return {
-      error: `Failed to load plugin ${reference.module} required by template ${template.config.templateConfig.name}: ${reason}. Ensure the plugin is installed in the current Skaff environment.`,
-    };
-  }
-}
 
 function validateManifest(
   manifest: PluginManifest,
@@ -388,12 +310,15 @@ export async function loadPluginsForTemplate(
   const loaded: LoadedTemplatePlugin[] = [];
 
   for (const reference of normalized) {
-    const moduleResult = await importPluginModule(reference, template);
+    const moduleResult = resolveRegisteredPlugin(reference);
     if ("error" in moduleResult) {
       return { error: moduleResult.error };
     }
 
-    const entry = pickEntrypoint(moduleResult.data, reference.exportName);
+    const entry = pickEntrypoint(
+      moduleResult.data.moduleExports,
+      reference.exportName,
+    );
     const pluginModule = coerceToPluginModule(entry);
     if (!pluginModule) {
       return {

@@ -1,6 +1,7 @@
 "use server";
 
 import { findProject, listProjects } from "@/lib/server-utils";
+import { ensureWebPluginsRegistered } from "@/lib/plugins/register-plugins";
 import * as tempLib from "@timonteutelink/skaff-lib";
 import {
   ProjectDTO,
@@ -8,6 +9,8 @@ import {
   createTemplateView,
 } from "@timonteutelink/skaff-lib";
 import { createReadonlyProjectContext } from "@timonteutelink/template-types-lib";
+
+ensureWebPluginsRegistered();
 
 export async function retrieveProjectSearchPaths(): Promise<
   { id: string; path: string }[]

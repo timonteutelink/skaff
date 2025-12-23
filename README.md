@@ -112,8 +112,9 @@ Templates may also include tasks, linting and formatting setups so that your new
 
 - Each `templateConfig.ts` can declare an optional `plugins` array describing plugin module specifiers and options. Skaff only
   activates a plugin when that specific template is being generated.
-- A shared loader exported from `@timonteutelink/skaff-lib` (`loadPluginsForTemplate`) resolves these modules relative to the
-  template repository's `package.json`, making the same discovery rules available to both the CLI and the Web UI.
+- A shared loader exported from `@timonteutelink/skaff-lib` (`loadPluginsForTemplate`) activates only **pre-registered** plugins.
+  Environments must register plugins at startup (CLI via oclif, Web via build-time registry, or library consumers via
+  `registerPluginModules`) before templates can use them.
 - Plugin declarations can include explicit `dependsOn` and `weight` hints to stabilize hook execution order across runs when
   multiple plugins are enabled.
 - Plugins target the `TemplateGenerationPlugin` interface, which receives a `PipelineBuilder` seeded with the default stages so
