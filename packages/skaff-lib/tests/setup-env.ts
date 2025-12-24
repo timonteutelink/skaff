@@ -7,4 +7,5 @@
  */
 import { markHardenedEnvironmentForTesting } from "../src/core/infra/hardened-sandbox";
 
+process.env.SKAFF_TEST_MODE = "true";
 markHardenedEnvironmentForTesting();

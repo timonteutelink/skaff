@@ -19,10 +19,10 @@ const snakeCaseHelper = (str: string) => {
 };
 
 
-function registerAll() {
-  Handlebars.registerHelper("eq", eqHelper);
+function registerAll(handlebars: typeof Handlebars = Handlebars) {
+  handlebars.registerHelper("eq", eqHelper);
 
-  Handlebars.registerHelper("snakeCase", snakeCaseHelper);
+  handlebars.registerHelper("snakeCase", snakeCaseHelper);
 }
 
 

@@ -17,8 +17,8 @@ export const templateConfigSchema = z.object({
     .nonempty()
     .min(2)
     .describe("The name of the template. Must match the parent directory name.")
-    .regex(
-      /^[a-zA-Z0-9_]+$/,
+    .refine(
+      (value) => /^[a-zA-Z0-9_]+$/.test(value),
       "The name must only contain letters, numbers, or underscores.",
     ),
   author: z
@@ -33,7 +33,10 @@ export const templateConfigSchema = z.object({
     .string()
     .nonempty()
     .min(1)
-    .regex(/^\d+\.\d+\.\d+$/, "Must be in semver format")
+    .refine(
+      (value) => /^\d+\.\d+\.\d+$/.test(value),
+      "Must be in semver format",
+    )
     .describe("The version of the template specification being used."),
 
   multiInstance: z

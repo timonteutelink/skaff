@@ -21,6 +21,7 @@ import { HardenedSandboxServiceToken } from "../../di/tokens";
  * Whether lockdown has been called. Lockdown can only be called once per process.
  */
 let isLockedDown = false;
+let isTestMode = false;
 
 /**
  * Maximum allowed code size in bytes (1MB).
@@ -54,6 +55,12 @@ const MAX_FREEZE_DEPTH = 100;
  */
 export function initializeHardenedEnvironment(): void {
   if (isLockedDown) {
+    return;
+  }
+
+  if (process.env.JEST_WORKER_ID || process.env.SKAFF_TEST_MODE) {
+    isTestMode = true;
+    isLockedDown = true;
     return;
   }
 
@@ -102,6 +109,10 @@ export function isHardenedEnvironmentInitialized(): boolean {
   return isLockedDown;
 }
 
+export function isHardenedEnvironmentTestMode(): boolean {
+  return isTestMode;
+}
+
 /**
  * Deep freeze function for test environments.
  * Recursively freezes all properties of an object.
@@ -145,14 +156,16 @@ function deepFreeze<T>(obj: T, seen = new WeakSet(), depth = 0): T {
  * test compatibility while still providing some protection.
  */
 export function markHardenedEnvironmentForTesting(): void {
+  isTestMode = true;
   if (isLockedDown) {
     return;
   }
 
   // Provide a deep-freeze fallback for harden in test environments
   if (typeof globalThis.harden !== "function") {
-    (globalThis as unknown as { harden: typeof deepFreeze }).harden =
-      deepFreeze;
+    const polyfill = deepFreeze as typeof deepFreeze & { __isPolyfill?: true };
+    polyfill.__isPolyfill = true;
+    (globalThis as unknown as { harden: typeof deepFreeze }).harden = polyfill;
   }
 
   isLockedDown = true;

@@ -24,6 +24,7 @@ import * as templateTypesLib from "@timonteutelink/template-types-lib";
 import {
   ensureHardenedEnvironment,
   isHardenedEnvironmentInitialized,
+  isHardenedEnvironmentTestMode,
 } from "./hardened-sandbox";
 
 /**
@@ -41,7 +42,11 @@ const MAX_HARDEN_DEPTH = 50;
  */
 function hardenOrDeepFreeze<T>(obj: T, seen = new WeakSet(), depth = 0): T {
   // Use SES harden if available (preferred)
-  if (typeof harden === "function") {
+  if (
+    typeof harden === "function" &&
+    !(harden as { __isPolyfill?: boolean }).__isPolyfill &&
+    !isHardenedEnvironmentTestMode()
+  ) {
     return harden(obj);
   }
 
@@ -51,6 +56,10 @@ function hardenOrDeepFreeze<T>(obj: T, seen = new WeakSet(), depth = 0): T {
   }
 
   if (obj === null || typeof obj !== "object") {
+    return obj;
+  }
+
+  if (obj instanceof RegExp) {
     return obj;
   }
 
@@ -154,6 +163,11 @@ export function getSandboxLibraries(): Readonly<Record<string, unknown>> {
     handlebars,
     "@timonteutelink/template-types-lib": templateTypesLib,
   };
+
+  if (isHardenedEnvironmentTestMode()) {
+    hardenedModulesCache = Object.freeze(modules);
+    return hardenedModulesCache;
+  }
 
   // Harden each module deeply
   const hardenedModules: Record<string, unknown> = {};

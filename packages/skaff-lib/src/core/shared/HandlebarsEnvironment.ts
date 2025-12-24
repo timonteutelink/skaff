@@ -5,9 +5,11 @@ import { registerAll as registerDefaultHelpers } from "../../utils/handlebars-he
 export class HandlebarsEnvironment {
   private readonly instance: typeof Handlebars;
 
-  constructor(handlebarsInstance: typeof Handlebars = Handlebars) {
+  constructor(
+    handlebarsInstance: typeof Handlebars = Handlebars.create(),
+  ) {
     this.instance = handlebarsInstance;
-    registerDefaultHelpers();
+    registerDefaultHelpers(this.instance);
   }
 
   public registerHelpers(helpers: Record<string, HelperDelegate>): void {

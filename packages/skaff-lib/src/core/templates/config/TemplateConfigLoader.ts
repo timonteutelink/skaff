@@ -5,7 +5,7 @@ import ts from "typescript";
 
 import * as templateTypesLibNS from "@timonteutelink/template-types-lib";
 
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { GenericTemplateConfigModule } from "../../../lib";
 import { normalizeGitRepositorySpecifier } from "../../../lib/git-repo-spec";
 import { getSkaffContainer } from "../../../di/container";
@@ -102,7 +102,66 @@ function extractTemplateRefEntries(raw: unknown): TemplateRefEntry[] {
   );
 }
 
+function findWorkspaceRoot(startDir: string): string | null {
+  let currentDir = startDir;
+
+  while (currentDir !== path.parse(currentDir).root) {
+    const packageJsonPath = path.join(currentDir, "package.json");
+    if (existsSync(packageJsonPath)) {
+      try {
+        const contents = readFileSync(packageJsonPath, "utf8");
+        const parsed = JSON.parse(contents) as { workspaces?: unknown };
+        if (parsed.workspaces) {
+          return currentDir;
+        }
+      } catch {
+        // ignore parse errors and keep walking up
+      }
+    }
+
+    currentDir = path.dirname(currentDir);
+  }
+
+  return null;
+}
+
 async function readTsConfig(): Promise<any> {
+  const workspaceRoot = findWorkspaceRoot(process.cwd()) ?? process.cwd();
+
+  const workspaceTemplateTypes = path.join(
+    workspaceRoot,
+    "packages",
+    "template-types-lib",
+    "src",
+    "index.ts",
+  );
+  const workspaceSkaffLib = path.join(
+    workspaceRoot,
+    "packages",
+    "skaff-lib",
+    "src",
+    "index.ts",
+  );
+  const workspaceZodTypes = path.join(
+    workspaceRoot,
+    "packages",
+    "template-types-lib",
+    "node_modules",
+    "zod",
+    "index.d.ts",
+  );
+
+  const paths: Record<string, string[]> = {};
+  if (existsSync(workspaceTemplateTypes)) {
+    paths["@timonteutelink/template-types-lib"] = [workspaceTemplateTypes];
+  }
+  if (existsSync(workspaceSkaffLib)) {
+    paths["@timonteutelink/skaff-lib"] = [workspaceSkaffLib];
+  }
+  if (existsSync(workspaceZodTypes)) {
+    paths.zod = [workspaceZodTypes];
+  }
+
   return {
     compilerOptions: {
       target: "ES2022",
@@ -112,6 +171,8 @@ async function readTsConfig(): Promise<any> {
       moduleResolution: "NodeNext",
 
       types: ["node"],
+      baseUrl: workspaceRoot,
+      paths,
 
       strict: true,
       skipLibCheck: true, // speeds up builds; safe for CLIs
@@ -435,12 +496,6 @@ export class TemplateConfigLoader {
       external: Object.keys(getSandboxLibraries()),
       write: false,
       minify: true,
-      banner: {
-        js: `;(function(exports, require, module, __filename, __dirname) {`,
-      },
-      footer: {
-        js: `\n})`,
-      },
     });
     if ("stop" in esbuild && esbuild.stop) await esbuild.stop();
     const bundle = outputFiles[0]?.text;
@@ -458,6 +513,8 @@ export class TemplateConfigLoader {
 
     const configs = this.evaluateBundledCode(bundle);
 
+    const normalizedConfigs: Record<string, TemplateConfigWithFileInfo> = {};
+
     for (const key of Object.keys(configs)) {
       const mod = configs[key]!;
       const parsed = templateConfigSchema.safeParse(
@@ -468,9 +525,15 @@ export class TemplateConfigLoader {
           `Invalid template configuration in ${key}: ${parsed.error}`,
         );
       }
-      mod.templateConfig.templateConfig = parsed.data;
+      normalizedConfigs[key] = {
+        ...mod,
+        templateConfig: {
+          ...mod.templateConfig,
+          templateConfig: parsed.data,
+        },
+      };
     }
-    return { configs, remoteRefs: discovery.remoteRefs };
+    return { configs: normalizedConfigs, remoteRefs: discovery.remoteRefs };
   }
 }
 

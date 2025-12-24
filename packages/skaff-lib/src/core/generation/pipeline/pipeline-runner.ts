@@ -38,16 +38,24 @@ export class PipelineBuilder<TContext> {
     }
   }
 
+  private normalizeStage(
+    stage: PipelineStage<TContext>,
+    overrides?: Partial<Pick<PipelineStage<TContext>, "phase" | "priority">>,
+  ): PipelineStage<TContext> {
+    return {
+      ...stage,
+      run: stage.run.bind(stage),
+      priority: overrides?.priority ?? stage.priority ?? 0,
+      phase: overrides?.phase ?? stage.phase ?? "run",
+    };
+  }
+
   private registerStage(stage: PipelineStage<TContext>): this {
     if (this.stages.has(stage.key)) {
       throw new Error(`Pipeline already contains a stage with key ${stage.key}`);
     }
 
-    this.stages.set(stage.key, {
-      priority: 0,
-      phase: "run",
-      ...stage,
-    });
+    this.stages.set(stage.key, this.normalizeStage(stage));
     return this;
   }
 
@@ -63,11 +71,12 @@ export class PipelineBuilder<TContext> {
     if (!target) {
       throw new Error(`Stage ${targetStageKey} not found when inserting before`);
     }
-    return this.registerStage({
-      ...stage,
-      priority: (target.priority ?? 0) - 1,
-      phase: stage.phase ?? target.phase,
-    });
+    return this.registerStage(
+      this.normalizeStage(stage, {
+        priority: (target.priority ?? 0) - 1,
+        phase: stage.phase ?? target.phase,
+      }),
+    );
   }
 
   public insertAfter(
@@ -78,11 +87,12 @@ export class PipelineBuilder<TContext> {
     if (!target) {
       throw new Error(`Stage ${targetStageKey} not found when inserting after`);
     }
-    return this.registerStage({
-      ...stage,
-      priority: (target.priority ?? 0) + 1,
-      phase: stage.phase ?? target.phase,
-    });
+    return this.registerStage(
+      this.normalizeStage(stage, {
+        priority: (target.priority ?? 0) + 1,
+        phase: stage.phase ?? target.phase,
+      }),
+    );
   }
 
   public replace(
@@ -95,11 +105,7 @@ export class PipelineBuilder<TContext> {
     if (!this.stages.has(targetStageKey)) {
       throw new Error(`Cannot replace missing stage ${targetStageKey}`);
     }
-    this.stages.set(targetStageKey, {
-      priority: 0,
-      phase: "run",
-      ...stage,
-    });
+    this.stages.set(targetStageKey, this.normalizeStage(stage));
     return this;
   }
 

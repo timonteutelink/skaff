@@ -53,6 +53,7 @@ const coolifyHelper = (str: string) =>
     .join("");
 
 const templateFinalSettingsSchema = templateSettingsSchema;
+type TemplateSettings = z.output<typeof templateSettingsSchema>;
 
 const templateConfig: TemplateConfig = {
   name: "test_template",
@@ -62,12 +63,19 @@ const templateConfig: TemplateConfig = {
   isRootTemplate: true,
 };
 
-const templateConfigModule: TemplateConfigModule<{}, typeof templateSettingsSchema> = {
+const templateConfigModule: TemplateConfigModule<
+  {},
+  typeof templateSettingsSchema
+> = {
   templateConfig,
   targetPath: ".",
   templateSettingsSchema,
   templateFinalSettingsSchema,
-  mapFinalSettings: ({ templateSettings }) => ({
+  mapFinalSettings: ({
+    templateSettings,
+  }: {
+    templateSettings: TemplateSettings;
+  }): TemplateSettings => ({
     ...templateSettings,
   }),
   plugins: [
@@ -82,7 +90,7 @@ const templateConfigModule: TemplateConfigModule<{}, typeof templateSettingsSche
   autoInstantiatedSubtemplates: [
     {
       subTemplateName: "test_stuff",
-      mapSettings: (finalSettings) => ({
+      mapSettings: (finalSettings: TemplateSettings) => ({
         answer:
           finalSettings.test_string === "Whats 9 + 10?"
             ? String(finalSettings.test_number)
@@ -101,7 +109,13 @@ const templateConfigModule: TemplateConfigModule<{}, typeof templateSettingsSche
   sideEffects: [
     {
       filePath: "README.md",
-      transform: ({ templateSettings, existingContents }) => {
+      transform: ({
+        templateSettings,
+        existingContents,
+      }: {
+        templateSettings: TemplateSettings;
+        existingContents?: string;
+      }) => {
         const nice = templateSettings.test_boolean ? "nice" : "not nice";
         const baseContents = existingContents ?? "";
         return `${baseContents}\n# This is a ${nice} template`;
@@ -109,7 +123,7 @@ const templateConfigModule: TemplateConfigModule<{}, typeof templateSettingsSche
     },
   ],
 
-  assertions: (settings) => settings.test_boolean,
+  assertions: (settings: TemplateSettings) => settings.test_boolean,
 
   commands: [
     {

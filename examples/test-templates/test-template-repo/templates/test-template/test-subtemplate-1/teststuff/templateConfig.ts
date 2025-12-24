@@ -11,6 +11,7 @@ const templateSettingsSchema = z.object({
 const templateFinalSettingsSchema = z.object({
   markdown_answer: z.string(),
 });
+type TemplateSettings = z.output<typeof templateSettingsSchema>;
 
 const templateConfig: TemplateConfig = {
   name: "test_stuff",
@@ -28,7 +29,11 @@ const templateConfigModule: TemplateConfigModule<
   targetPath: "./otherlocation",
   templateSettingsSchema,
   templateFinalSettingsSchema,
-  mapFinalSettings: ({ templateSettings }) => ({
+  mapFinalSettings: ({
+    templateSettings,
+  }: {
+    templateSettings: TemplateSettings;
+  }) => ({
     markdown_answer: `The answer to 'Whats 9 + 10?' is **${templateSettings.answer}**`,
   }),
 };

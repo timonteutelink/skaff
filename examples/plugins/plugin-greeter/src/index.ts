@@ -44,8 +44,8 @@ function createGreeterTemplatePlugin(
 ): TemplateGenerationPlugin {
   const options = input.options as GreeterPluginOptions | undefined;
   const templateDescription =
-    typeof input.template.config.templateConfig.description === "string"
-      ? input.template.config.templateConfig.description
+    typeof input.template.config.description === "string"
+      ? input.template.config.description
       : undefined;
 
   return {

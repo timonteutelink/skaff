@@ -9,12 +9,18 @@ import {
 } from "@timonteutelink/template-types-lib";
 
 import { resolveGitService } from "../../src/core/infra/git-service";
+import {
+  peekSkaffContainer,
+  resetSkaffContainer,
+  setSkaffContainer,
+} from "../../src/di/container";
+import { createTestContainer } from "../../src/di/testing";
 import { RootTemplateRepository } from "../../src/repositories/root-template-repository";
-import { TemplateTreeBuilder } from "../../src/core/templates/TemplateTreeBuilder";
 import { Template } from "../../src/core/templates/Template";
 import { Project } from "../../src/models/project";
 import { GitStatus } from "../../src/lib/types";
 import { getSkaffContainer } from "../../src/di/container";
+import { TemplateTreeBuilderToken } from "../../src/di/tokens";
 
 /**
  * Utility helpers for tests that need real template trees and project settings on disk.
@@ -251,7 +257,9 @@ export async function createTestTemplate(
   await writeTemplateFiles(tempRoot, options);
 
   const templateDir = path.join(tempRoot, options.name);
-  const templateTreeBuilder = getSkaffContainer().resolve(TemplateTreeBuilder);
+  const templateTreeBuilder = getSkaffContainer().resolve(
+    TemplateTreeBuilderToken,
+  );
   const buildResult = await templateTreeBuilder.build(templateDir);
   if ("error" in buildResult) {
     restoreGitMocks();
@@ -403,26 +411,39 @@ export async function createLocalTestTemplateRepository(
     "../../../../templates/test-templates",
   );
 
-  const templateTreeBuilder = getSkaffContainer().resolve(TemplateTreeBuilder);
-  const repository = new RootTemplateRepository(
-    templateTreeBuilder,
-    resolveGitService(),
-    async () => [templateRootDir],
-  );
+  const previousContainer = peekSkaffContainer();
+  const testContainer = createTestContainer();
+  setSkaffContainer(testContainer);
 
-  const loadResult = await repository.reloadTemplates();
-  if ("error" in loadResult) {
-    restoreGitMocks();
-    restoreCachePath();
-    await removeDirectory(tempRoot);
-    throw new Error(
-      `Failed to load local template repository: ${loadResult.error}`,
+  let repository: RootTemplateRepository;
+  let template: Template | undefined;
+
+  try {
+    const templateTreeBuilder = testContainer.resolve(TemplateTreeBuilderToken);
+    repository = new RootTemplateRepository(
+      templateTreeBuilder,
+      resolveGitService(),
+      async () => [templateRootDir],
     );
+
+    const loadResult = await repository.reloadTemplates();
+    if ("error" in loadResult) {
+      throw new Error(
+        `Failed to load local template repository: ${loadResult.error}`,
+      );
+    }
+
+    template = repository.templates.find(
+      (candidate) => candidate.config.templateConfig.name === templateName,
+    );
+  } finally {
+    if (previousContainer) {
+      setSkaffContainer(previousContainer);
+    } else {
+      resetSkaffContainer();
+    }
   }
 
-  const template = repository.templates.find(
-    (candidate) => candidate.config.templateConfig.name === templateName,
-  );
   if (!template) {
     restoreGitMocks();
     restoreCachePath();

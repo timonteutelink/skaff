@@ -79,6 +79,8 @@ describeIfSES("plugin loading", () => {
       absoluteBaseDir: baseDir,
       absoluteDir: templateDir,
       absoluteFilesDir: filesDir,
+      isLocal: true,
+      isDetachedSubtreeRoot: false,
       subTemplates: {},
       findRootTemplate() {
         return this as unknown as Template;
