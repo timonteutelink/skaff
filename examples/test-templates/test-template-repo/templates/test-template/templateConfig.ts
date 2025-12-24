@@ -70,6 +70,14 @@ const templateConfigModule: TemplateConfigModule<{}, typeof templateSettingsSche
   mapFinalSettings: ({ templateSettings }) => ({
     ...templateSettings,
   }),
+  plugins: [
+    {
+      module: "@timonteutelink/skaff-plugin-greeter",
+      options: {
+        greeting: "Hello from the test-template greeter!",
+      },
+    },
+  ],
 
   autoInstantiatedSubtemplates: [
     {
