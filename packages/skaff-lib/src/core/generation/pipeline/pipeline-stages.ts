@@ -77,13 +77,23 @@ export class ContextSetupStage
     context: TemplateInstantiationPipelineContext,
   ): Promise<{ data: TemplateInstantiationPipelineContext } | { error: string }>
   {
-    if (!await context.template.isValid()) {
-      backendLogger.error(
-        `Template repo is not clean or template commit hash is not valid.`,
-      );
-      return {
-        error: `Template repo is not clean or template commit hash is not valid.`,
-      };
+    const devTemplates = process.env.SKAFF_DEV_TEMPLATES?.toLowerCase().trim();
+    if (
+      !(
+        devTemplates === "1" ||
+        devTemplates === "true" ||
+        devTemplates === "yes" ||
+        devTemplates === "on"
+      )
+    ) {
+      if (!await context.template.isValid()) {
+        backendLogger.error(
+          `Template repo is not clean or template commit hash is not valid.`,
+        );
+        return {
+          error: `Template repo is not clean or template commit hash is not valid.`,
+        };
+      }
     }
 
     const result = this.projectSettingsSynchronizer.getFinalTemplateSettings(

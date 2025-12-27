@@ -300,6 +300,11 @@ export class Template {
   }
 
   public async isValid(): Promise<boolean> {
+    const devTemplates = process.env.SKAFF_DEV_TEMPLATES?.toLowerCase().trim();
+    if (devTemplates === "1" || devTemplates === "true" || devTemplates === "yes" || devTemplates === "on") {
+      return true;
+    }
+
     const gitService = getGitService();
     const devTemplatesEnabled = process.env.SKAFF_DEV_TEMPLATES
       ?.toLowerCase()

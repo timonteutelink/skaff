@@ -1,10 +1,6 @@
-import {
-  getTemplate,
-  loadPluginsForTemplate,
-  createPluginStageEntry,
-  validateRequiredPluginSettings,
-} from '@timonteutelink/skaff-lib'
-import {ProjectSettings, UserTemplateSettings, createReadonlyProjectContext} from '@timonteutelink/template-types-lib'
+import * as skaffLib from '@timonteutelink/skaff-lib'
+import * as templateTypes from '@timonteutelink/template-types-lib'
+import type {ProjectSettings, UserTemplateSettings} from '@timonteutelink/template-types-lib'
 import fs from 'node:fs'
 import * as prompts from '@inquirer/prompts'
 
@@ -83,7 +79,7 @@ async function promptUserTemplateSettings(
     templateInstanceId?: string
   },
 ): Promise<UserTemplateSettings> {
-  const rootTpl = await getTemplate(rootTemplateName)
+  const rootTpl = await skaffLib.getTemplate(rootTemplateName)
   if ('error' in rootTpl) throw new Error(rootTpl.error)
   if (!rootTpl.data) throw new Error(`No template named "${rootTemplateName}"`)
 
@@ -107,9 +103,9 @@ async function promptUserTemplateSettings(
       ],
     } satisfies ProjectSettings)
 
-  const pluginsResult = await loadPluginsForTemplate(
+  const pluginsResult = await skaffLib.loadPluginsForTemplate(
     rootTpl.data.template,
-    createReadonlyProjectContext(projectSettings),
+    templateTypes.createReadonlyProjectContext(projectSettings),
   )
 
   if ('error' in pluginsResult) {
@@ -119,7 +115,7 @@ async function promptUserTemplateSettings(
   // Use createPluginStageEntry for automatic state key namespacing
   const pluginStages: StageEntry[] = pluginsResult.data.flatMap((plugin) =>
     (plugin.cliPlugin?.templateStages ?? []).map((stage: CliTemplateStage) =>
-      createPluginStageEntry(plugin.name || plugin.reference.module, stage),
+      skaffLib.createPluginStageEntry(plugin.name || plugin.reference.module, stage),
     ),
   )
 
@@ -183,7 +179,7 @@ async function promptUserTemplateSettings(
   )
 
   const finalSettings = (finalizedSettings ?? withAfterSettings) as UserTemplateSettings
-  const requiredSettingsResult = validateRequiredPluginSettings(pluginsResult.data, finalSettings)
+  const requiredSettingsResult = skaffLib.validateRequiredPluginSettings(pluginsResult.data, finalSettings)
 
   if ('error' in requiredSettingsResult) {
     throw new Error(requiredSettingsResult.error)
@@ -205,7 +201,7 @@ export async function readUserTemplateSettings(
   if (!arg) return promptUserTemplateSettings(rootTemplateName, templateName, defaults, options)
   const parsedSettings = fs.existsSync(arg) ? JSON.parse(fs.readFileSync(arg, 'utf8')) : JSON.parse(arg)
 
-  const rootTpl = await getTemplate(rootTemplateName)
+  const rootTpl = await skaffLib.getTemplate(rootTemplateName)
   if ('error' in rootTpl) throw new Error(rootTpl.error)
   if (!rootTpl.data) throw new Error(`No template named "${rootTemplateName}"`)
 
@@ -224,16 +220,16 @@ export async function readUserTemplateSettings(
       ],
     } satisfies ProjectSettings)
 
-  const pluginsResult = await loadPluginsForTemplate(
+  const pluginsResult = await skaffLib.loadPluginsForTemplate(
     rootTpl.data.template,
-    createReadonlyProjectContext(projectSettings),
+    templateTypes.createReadonlyProjectContext(projectSettings),
   )
 
   if ('error' in pluginsResult) {
     throw new Error(pluginsResult.error)
   }
 
-  const requiredSettingsResult = validateRequiredPluginSettings(
+  const requiredSettingsResult = skaffLib.validateRequiredPluginSettings(
     pluginsResult.data,
     parsedSettings as UserTemplateSettings,
   )

@@ -2,7 +2,6 @@ import { randomUUID } from "node:crypto";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { builtinModules, createRequire } from "node:module";
-import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
 import * as templateTypesLibNS from "@timonteutelink/template-types-lib";
@@ -104,7 +103,7 @@ function extractTemplateRefEntries(raw: unknown): TemplateRefEntry[] {
   );
 }
 
-const requireFromHere = createRequire(import.meta.url);
+const requireFromHere = createRequire(__filename);
 
 function resolveSkaffLibRoot(): string {
   try {
@@ -113,7 +112,7 @@ function resolveSkaffLibRoot(): string {
     );
     return path.dirname(pkgPath);
   } catch {
-    const currentDir = path.dirname(fileURLToPath(import.meta.url));
+    const currentDir = path.dirname(__filename);
     return path.resolve(currentDir, "../../../..");
   }
 }
@@ -185,7 +184,7 @@ function resolvePackageRoot(
   throw new Error(
     `Cannot resolve module "${moduleName}/package.json" from paths ${JSON.stringify(
       resolutionRoots,
-    )} from ${fileURLToPath(import.meta.url)}\n${errors.join("\n")}`,
+    )} from ${__filename}\n${errors.join("\n")}`,
   );
 }
 
