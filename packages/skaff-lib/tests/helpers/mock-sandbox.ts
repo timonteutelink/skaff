@@ -108,23 +108,41 @@ export class MockHardenedSandboxService {
     const moduleExports: Record<string, unknown> = {};
     const module = { exports: moduleExports };
 
-    // Create a simple function wrapper and execute
+    const wrappedCode = `(function(exports, require, module, __filename, __dirname) {
+      "use strict";
+      ${code}
+      return module.exports;
+    })`;
+
     try {
-      const wrapper = new Function(
-        "exports",
-        "require",
-        "module",
-        "__filename",
-        "__dirname",
-        code,
-      );
-      wrapper(
+      const moduleFactory = new Function(`return ${wrappedCode}`)();
+      moduleFactory(
         moduleExports,
         mockRequire,
         module,
         options.filename || "mock.js",
         "",
       );
+
+      const shouldExecuteInnerWrapper =
+        module.exports &&
+        typeof module.exports === "object" &&
+        Object.keys(module.exports).length === 0 &&
+        code.includes("function(exports, require, module, __filename, __dirname)");
+
+      if (shouldExecuteInnerWrapper) {
+        const directFactory = new Function(`return ${code}`)();
+        if (typeof directFactory === "function") {
+          directFactory(
+            moduleExports,
+            mockRequire,
+            module,
+            options.filename || "mock.js",
+            "",
+          );
+        }
+      }
+
       return module.exports as TExports;
     } catch (error) {
       throw new Error(

@@ -10,11 +10,11 @@ import {
 
 import { resolveGitService } from "../../src/core/infra/git-service";
 import { RootTemplateRepository } from "../../src/repositories/root-template-repository";
-import { TemplateTreeBuilder } from "../../src/core/templates/TemplateTreeBuilder";
 import { Template } from "../../src/core/templates/Template";
 import { Project } from "../../src/models/project";
 import { GitStatus } from "../../src/lib/types";
 import { getSkaffContainer } from "../../src/di/container";
+import { TemplateTreeBuilderToken } from "../../src/di/tokens";
 
 /**
  * Utility helpers for tests that need real template trees and project settings on disk.
@@ -251,7 +251,9 @@ export async function createTestTemplate(
   await writeTemplateFiles(tempRoot, options);
 
   const templateDir = path.join(tempRoot, options.name);
-  const templateTreeBuilder = getSkaffContainer().resolve(TemplateTreeBuilder);
+  const templateTreeBuilder = getSkaffContainer().resolve(
+    TemplateTreeBuilderToken,
+  );
   const buildResult = await templateTreeBuilder.build(templateDir);
   if ("error" in buildResult) {
     restoreGitMocks();
@@ -403,7 +405,9 @@ export async function createLocalTestTemplateRepository(
     "../../../../templates/test-templates",
   );
 
-  const templateTreeBuilder = getSkaffContainer().resolve(TemplateTreeBuilder);
+  const templateTreeBuilder = getSkaffContainer().resolve(
+    TemplateTreeBuilderToken,
+  );
   const repository = new RootTemplateRepository(
     templateTreeBuilder,
     resolveGitService(),

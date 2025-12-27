@@ -1,11 +1,13 @@
 import { randomUUID } from "node:crypto";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import { builtinModules, createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
 import * as templateTypesLibNS from "@timonteutelink/template-types-lib";
 
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { GenericTemplateConfigModule } from "../../../lib";
 import { normalizeGitRepositorySpecifier } from "../../../lib/git-repo-spec";
 import { getSkaffContainer } from "../../../di/container";
@@ -102,6 +104,118 @@ function extractTemplateRefEntries(raw: unknown): TemplateRefEntry[] {
   );
 }
 
+const requireFromHere = createRequire(import.meta.url);
+
+function resolveSkaffLibRoot(): string {
+  try {
+    const pkgPath = requireFromHere.resolve(
+      "@timonteutelink/skaff-lib/package.json",
+    );
+    return path.dirname(pkgPath);
+  } catch {
+    const currentDir = path.dirname(fileURLToPath(import.meta.url));
+    return path.resolve(currentDir, "../../../..");
+  }
+}
+
+function resolvePackageRoot(
+  moduleName: string,
+  fromDir: string,
+): string {
+  if (moduleName.startsWith("@")) {
+    const [, packageName] = moduleName.split("/");
+    if (packageName) {
+      const workspaceCandidate = path.resolve(fromDir, "..", packageName);
+      const pkgJsonPath = path.join(workspaceCandidate, "package.json");
+      if (existsSync(pkgJsonPath)) {
+        try {
+          const contents = JSON.parse(
+            readFileSync(pkgJsonPath, "utf8"),
+          ) as { name?: string };
+          if (contents.name === moduleName) {
+            return workspaceCandidate;
+          }
+        } catch {
+          // Fall through to node resolution
+        }
+      }
+    }
+  }
+
+  const resolutionRoots = [
+    fromDir,
+    process.cwd(),
+    path.dirname(fromDir),
+    path.resolve(fromDir, "..", ".."),
+  ];
+
+  const errors: string[] = [];
+  for (const root of resolutionRoots) {
+    try {
+      const pkgPath = requireFromHere.resolve(
+        `${moduleName}/package.json`,
+        {
+          paths: [root],
+        },
+      );
+      return path.dirname(pkgPath);
+    } catch (error) {
+      errors.push(String(error));
+    }
+  }
+
+  for (const root of resolutionRoots) {
+    try {
+      const resolvedEntry = requireFromHere.resolve(moduleName, {
+        paths: [root],
+      });
+      let currentDir = path.dirname(resolvedEntry);
+      while (currentDir !== path.parse(currentDir).root) {
+        const candidate = path.join(currentDir, "package.json");
+        if (existsSync(candidate)) {
+          return currentDir;
+        }
+        currentDir = path.dirname(currentDir);
+      }
+    } catch (error) {
+      errors.push(String(error));
+    }
+  }
+
+  throw new Error(
+    `Cannot resolve module "${moduleName}/package.json" from paths ${JSON.stringify(
+      resolutionRoots,
+    )} from ${fileURLToPath(import.meta.url)}\n${errors.join("\n")}`,
+  );
+}
+
+function buildAllowedModuleNames(): string[] {
+  const allowed = Object.keys(getSandboxLibraries());
+  if (!allowed.includes("undici-types")) {
+    allowed.push("undici-types");
+  }
+  return allowed;
+}
+
+function resolveModulePathMapping(
+  moduleName: string,
+  skaffLibRoot: string,
+): string {
+  const packageRoot = resolvePackageRoot(moduleName, skaffLibRoot);
+  const distTypes = path.join(packageRoot, "dist", "index.d.ts");
+  const srcEntry = path.join(packageRoot, "src", "index.ts");
+
+  if (existsSync(distTypes)) {
+    return path.relative(skaffLibRoot, packageRoot);
+  }
+
+  if (existsSync(srcEntry)) {
+    return path.relative(skaffLibRoot, srcEntry);
+  }
+
+  return path.relative(skaffLibRoot, packageRoot);
+}
+
 async function readTsConfig(): Promise<any> {
   return {
     compilerOptions: {
@@ -144,21 +258,75 @@ function findTypesDirectory(startDir: string): string | null {
   return existsSync(fallbackPath) ? fallbackPath : null;
 }
 
+function isAllowedModule(
+  moduleName: string,
+  allowedModules: string[],
+): boolean {
+  if (allowedModules.includes(moduleName)) {
+    return true;
+  }
+  return allowedModules.some((allowed) => moduleName.startsWith(`${allowed}/`));
+}
+
+function createModuleResolutionHost(
+  compilerHost: ts.CompilerHost,
+  allowedModules: string[],
+  compilerOptions: ts.CompilerOptions,
+): ts.CompilerHost {
+  const nodeBuiltins = new Set(builtinModules);
+  return {
+    ...compilerHost,
+    resolveModuleNames: (moduleNames, containingFile) =>
+      moduleNames.map((moduleName) => {
+        const isRelative =
+          moduleName.startsWith(".") || path.isAbsolute(moduleName);
+        const isNodeBuiltin =
+          moduleName === "node" ||
+          moduleName.startsWith("node:") ||
+          nodeBuiltins.has(moduleName);
+
+        if (!isRelative && !isNodeBuiltin && !isAllowedModule(moduleName, allowedModules)) {
+          throw new Error(
+            `Template configs may only import ${allowedModules
+              .map((allowed) => `"${allowed}"`)
+              .join(", ")}. Disallowed import: "${moduleName}".`,
+          );
+        }
+
+        const resolved = ts.resolveModuleName(
+          moduleName,
+          containingFile,
+          compilerOptions,
+          compilerHost,
+        );
+        return resolved.resolvedModule;
+      }),
+  };
+}
+
 async function typeCheckFile(filePath: string): Promise<void> {
-  const templateDir = path.dirname(filePath);
+  const skaffLibRoot = resolveSkaffLibRoot();
+  const allowedModules = buildAllowedModuleNames();
 
   const typeRoots = [
-    findTypesDirectory(templateDir) ||
+    findTypesDirectory(skaffLibRoot) ||
       path.join(process.cwd(), "node_modules", "@types"),
   ];
+
+  const paths: Record<string, string[]> = {};
+  for (const moduleName of allowedModules) {
+    paths[moduleName] = [resolveModulePathMapping(moduleName, skaffLibRoot)];
+  }
 
   const tsConfig = await readTsConfig();
   const { options, errors } = ts.convertCompilerOptionsFromJson(
     {
       ...tsConfig.compilerOptions,
+      baseUrl: skaffLibRoot,
+      paths,
       typeRoots,
     },
-    templateDir,
+    skaffLibRoot,
   );
 
   if (errors.length) {
@@ -172,7 +340,9 @@ async function typeCheckFile(filePath: string): Promise<void> {
     );
   }
 
-  const program = ts.createProgram([filePath], options);
+  const baseHost = ts.createCompilerHost(options);
+  const host = createModuleResolutionHost(baseHost, allowedModules, options);
+  const program = ts.createProgram([filePath], options, host);
   const diags = ts.getPreEmitDiagnostics(program);
   if (diags.length) {
     const host: ts.FormatDiagnosticsHost = {
@@ -343,6 +513,7 @@ export class TemplateConfigLoader {
   ): Record<string, TemplateConfigWithFileInfo> {
     const exports = this.sandboxService.evaluateCommonJs<{
       configs: Record<string, TemplateConfigWithFileInfo>;
+      default?: { configs?: Record<string, TemplateConfigWithFileInfo> };
     }>({
       code,
       allowedModules: getSandboxLibraries(),
@@ -350,7 +521,12 @@ export class TemplateConfigLoader {
       timeoutMs: SANDBOX_TIMEOUT_MS,
     });
 
-    return exports.configs;
+    const configs = exports.configs ?? exports.default?.configs;
+    if (!configs) {
+      throw new Error("Template config bundle did not export configs");
+    }
+
+    return configs;
   }
 
   public async loadAllTemplateConfigs(
@@ -435,12 +611,6 @@ export class TemplateConfigLoader {
       external: Object.keys(getSandboxLibraries()),
       write: false,
       minify: true,
-      banner: {
-        js: `;(function(exports, require, module, __filename, __dirname) {`,
-      },
-      footer: {
-        js: `\n})`,
-      },
     });
     if ("stop" in esbuild && esbuild.stop) await esbuild.stop();
     const bundle = outputFiles[0]?.text;
