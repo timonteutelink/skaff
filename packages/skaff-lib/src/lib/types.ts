@@ -77,6 +77,10 @@ export interface ParsedFile {
   path: string;
   status: "added" | "modified" | "deleted";
   hunks: DiffHunk[];
+  metadata?: string[];
+  oldPath?: string;
+  newPath?: string;
+  isBinary?: boolean;
 }
 
 export interface DiffHunk {
