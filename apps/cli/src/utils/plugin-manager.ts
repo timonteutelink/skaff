@@ -7,17 +7,12 @@
 
 import {Config} from '@oclif/core'
 import {createRequire} from 'node:module'
-import {
-  checkTemplatePluginCompatibility,
-  extractPluginName,
-  registerPluginModules,
-  type InstalledPluginInfo,
-  type PluginTrustLevel,
-  type SinglePluginCompatibilityResult,
-  type TemplatePluginCompatibilityResult,
-  determinePluginTrust,
-  getTrustBadge,
-  isOfficialPlugin,
+import * as skaffLib from '@timonteutelink/skaff-lib'
+import type {
+  InstalledPluginInfo,
+  PluginTrustLevel,
+  SinglePluginCompatibilityResult,
+  TemplatePluginCompatibilityResult,
 } from '@timonteutelink/skaff-lib'
 import type {TemplatePluginConfig} from '@timonteutelink/template-types-lib'
 
@@ -62,7 +57,7 @@ export const OFFICIAL_PLUGIN_SCOPES = ['@skaff', '@timonteutelink'] as const
  */
 export function validatePluginPackage(packageSpec: string): PluginValidationResult {
   // Extract package name from spec (remove version if present)
-  const packageName = extractPluginName(packageSpec)
+  const packageName = skaffLib.extractPluginName(packageSpec)
 
   // Check for valid npm package name format
   const npmNameRegex = /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/
@@ -75,7 +70,7 @@ export function validatePluginPackage(packageSpec: string): PluginValidationResu
   }
 
   // Check if it's from an official scope
-  const isOfficial = isOfficialPlugin(packageName)
+  const isOfficial = skaffLib.isOfficialPlugin(packageName)
 
   // Check if it follows plugin naming convention
   const isPluginNamed =
@@ -105,7 +100,7 @@ export function validatePluginPackage(packageSpec: string): PluginValidationResu
  * can be enabled for more thorough verification.
  */
 export function getCliPluginTrustLevel(packageName: string): PluginTrustLevel {
-  const trust = determinePluginTrust(packageName, {})
+  const trust = skaffLib.determinePluginTrust(packageName, {})
   return trust.level
 }
 
@@ -195,7 +190,7 @@ export async function registerInstalledPluginModules(config: Config): Promise<vo
   }
 
   if (entries.length > 0) {
-    registerPluginModules(entries)
+    skaffLib.registerPluginModules(entries)
   }
 }
 
@@ -230,7 +225,7 @@ export async function checkTemplatePluginsCompatibility(
   templatePlugins: TemplatePluginConfig[] | undefined | null,
 ): Promise<TemplatePluginCompatibilityResult> {
   const installedMap = await buildInstalledPluginsMap(config)
-  return checkTemplatePluginCompatibility(templatePlugins, installedMap)
+  return skaffLib.checkTemplatePluginCompatibility(templatePlugins, installedMap)
 }
 
 /**
@@ -250,7 +245,7 @@ export function formatPluginCompatibilityForCli(result: TemplatePluginCompatibil
     lines.push('\nMissing plugins:')
     for (const p of result.missing) {
       const version = p.requiredVersion ? `@${p.requiredVersion}` : ''
-      lines.push(`  - ${extractPluginName(p.module)}${version}`)
+      lines.push(`  - ${skaffLib.extractPluginName(p.module)}${version}`)
     }
     lines.push('')
     lines.push('Install missing plugins with:')
@@ -262,12 +257,14 @@ export function formatPluginCompatibilityForCli(result: TemplatePluginCompatibil
   if (result.versionMismatches.length > 0) {
     lines.push('\nVersion mismatches:')
     for (const p of result.versionMismatches) {
-      lines.push(`  - ${extractPluginName(p.module)}: installed v${p.installedVersion}, requires ${p.requiredVersion}`)
+      lines.push(
+        `  - ${skaffLib.extractPluginName(p.module)}: installed v${p.installedVersion}, requires ${p.requiredVersion}`,
+      )
     }
     lines.push('')
     lines.push('Update plugins with:')
     lines.push(
-      `  skaff plugins update ${result.versionMismatches.map((p: SinglePluginCompatibilityResult) => extractPluginName(p.module)).join(' ')}`,
+      `  skaff plugins update ${result.versionMismatches.map((p: SinglePluginCompatibilityResult) => skaffLib.extractPluginName(p.module)).join(' ')}`,
     )
   }
 
@@ -291,7 +288,7 @@ export function getRelatedPluginPackages(packageName: string): {
   web?: string
   types?: string
 } {
-  const name = extractPluginName(packageName)
+  const name = skaffLib.extractPluginName(packageName)
 
   // Determine the base name by removing -cli, -web, -types suffixes
   let baseName = name
@@ -315,7 +312,7 @@ export function getRelatedPluginPackages(packageName: string): {
  * Checks if a plugin is a CLI variant and returns the base lib package if so.
  */
 export function getRequiredLibPlugin(packageName: string): string | null {
-  const name = extractPluginName(packageName)
+  const name = skaffLib.extractPluginName(packageName)
 
   if (name.endsWith('-cli') || name.endsWith('-web')) {
     // This is a CLI or web plugin - it requires the base lib plugin

@@ -6,18 +6,30 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { getCurrentProject } from '../../src/utils/cli-utils.js';
+const loadGetCurrentProject = async () =>
+  (await import('../../src/utils/cli-utils.js')).getCurrentProject;
 
 describe('getCurrentProject', () => {
   let originalCwd: string;
+  let originalEnv: NodeJS.ProcessEnv;
   const createdRoots: string[] = [];
 
   beforeEach(() => {
     originalCwd = process.cwd();
+    originalEnv = { ...process.env };
+    process.env.SKAFF_TEST_NO_LOCKDOWN = '1';
   });
 
   afterEach(async () => {
     process.chdir(originalCwd);
+    for (const key of Object.keys(process.env)) {
+      if (!(key in originalEnv)) {
+        delete process.env[key];
+      }
+    }
+    for (const [key, value] of Object.entries(originalEnv)) {
+      process.env[key] = value;
+    }
     const roots = createdRoots.splice(0);
     if (roots.length > 0) {
       await Promise.all(
@@ -39,6 +51,7 @@ describe('getCurrentProject', () => {
     const fixture = await createProjectFixture();
     process.chdir(fixture.nested);
 
+    const getCurrentProject = await loadGetCurrentProject();
     let loaderPath: string | undefined;
     const result = await getCurrentProject(undefined, async (projectPath) => {
       loaderPath = projectPath;
@@ -52,6 +65,7 @@ describe('getCurrentProject', () => {
   it('respects an explicit project path override', async () => {
     const fixture = await createProjectFixture();
 
+    const getCurrentProject = await loadGetCurrentProject();
     let loaderPath: string | undefined;
     const result = await getCurrentProject(fixture.root, async (projectPath) => {
       loaderPath = projectPath;

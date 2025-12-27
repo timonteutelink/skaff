@@ -1,5 +1,5 @@
 import {Args, Flags} from '@oclif/core'
-import {generateNewProject, getTemplate, loadTemplateFromRepo} from '@timonteutelink/skaff-lib'
+import * as skaffLib from '@timonteutelink/skaff-lib'
 
 import Base from '../../base-command.js'
 import {viewParsedDiffWithGit} from '../../utils/diff-utils.js'
@@ -33,7 +33,7 @@ export default class InstantiationProjectNew extends Base {
     if (flags.repo) {
       const branch = (flags.branch as string | undefined)?.trim() || undefined
       const revision = (flags.revision as string | undefined)?.trim() || undefined
-      const res = await loadTemplateFromRepo(flags.repo, branch, {revision})
+      const res = await skaffLib.loadTemplateFromRepo(flags.repo, branch, {revision})
       if ('error' in res) this.error(res.error, {exit: 1})
       if (res.data.alreadyExisted) {
         this.log(
@@ -44,7 +44,7 @@ export default class InstantiationProjectNew extends Base {
 
     // Check plugin compatibility before proceeding
     if (!flags['skip-plugin-check']) {
-      const templateResult = await getTemplate(args.templateName)
+      const templateResult = await skaffLib.getTemplate(args.templateName)
       if ('error' in templateResult) {
         this.error(templateResult.error, {exit: 1})
       }
@@ -71,7 +71,7 @@ export default class InstantiationProjectNew extends Base {
 
     const settings = await readUserTemplateSettings(args.templateName, args.templateName, flags.settings)
 
-    const res = await generateNewProject(args.projectRepositoryName, args.templateName, process.cwd(), settings, {
+    const res = await skaffLib.generateNewProject(args.projectRepositoryName, args.templateName, process.cwd(), settings, {
       git: true,
     })
     if ('error' in res) this.error(res.error, {exit: 1})

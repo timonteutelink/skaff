@@ -1,6 +1,14 @@
 // Initialize the hardened environment as early as possible
-import { initializeHardenedEnvironment } from "./core/infra/hardened-sandbox";
-initializeHardenedEnvironment();
+import {
+  initializeHardenedEnvironment,
+  markHardenedEnvironmentForTesting,
+} from "./core/infra/hardened-sandbox";
+
+if (process.env.SKAFF_TEST_NO_LOCKDOWN === "1") {
+  markHardenedEnvironmentForTesting();
+} else {
+  initializeHardenedEnvironment();
+}
 
 import type { CacheKey } from "./core/infra/cache-service";
 

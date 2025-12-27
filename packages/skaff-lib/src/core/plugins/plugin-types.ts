@@ -922,7 +922,10 @@ export function normalizeTemplatePlugins(
 }
 
 function resolvePluginWeight(weight?: number): number {
-  return Number.isFinite(weight) ? weight : 0;
+  if (typeof weight !== "number" || !Number.isFinite(weight)) {
+    return 0;
+  }
+  return weight;
 }
 
 function comparePluginOrder(

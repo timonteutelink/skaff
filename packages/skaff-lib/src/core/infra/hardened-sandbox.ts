@@ -141,18 +141,19 @@ function deepFreeze<T>(obj: T, seen = new WeakSet(), depth = 0): T {
  *
  * In production, always use initializeHardenedEnvironment() instead.
  *
- * This provides a polyfill for `harden` that uses deep freezing for better
- * test compatibility while still providing some protection.
+ * This provides a polyfill for `harden` that is a no-op to keep test
+ * environments compatible with libraries that mutate built-ins (e.g. RegExp).
  */
 export function markHardenedEnvironmentForTesting(): void {
   if (isLockedDown) {
     return;
   }
 
-  // Provide a deep-freeze fallback for harden in test environments
+  // Provide a no-op harden fallback in test environments.
   if (typeof globalThis.harden !== "function") {
-    (globalThis as unknown as { harden: typeof deepFreeze }).harden =
-      deepFreeze;
+    (globalThis as unknown as { harden: <T>(value: T) => T }).harden = (
+      value,
+    ) => value;
   }
 
   isLockedDown = true;

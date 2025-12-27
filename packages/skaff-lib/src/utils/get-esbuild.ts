@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import * as fs from "node:fs/promises";
+import { createRequire } from "node:module";
 import * as path from "node:path";
 
 import { getSkaffContainer } from "../di/container";
@@ -7,6 +8,7 @@ import { EsbuildInitializerToken } from "../di/tokens";
 
 export class EsbuildInitializer {
   private cachedModule: typeof import("esbuild") | null = null;
+  private readonly require = createRequire(__filename);
 
   public async init(): Promise<typeof import("esbuild")> {
     if ((globalThis as any).esbuild) {
@@ -41,7 +43,7 @@ export class EsbuildInitializer {
 
     let mod: unknown;
     try {
-      mod = require("esbuild");
+      mod = this.require("esbuild");
     } catch {
       mod = await import("esbuild");
     }
