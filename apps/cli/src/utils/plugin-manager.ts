@@ -6,6 +6,7 @@
  */
 
 import {Config} from '@oclif/core'
+import {createRequire} from 'node:module'
 import {
   checkTemplatePluginCompatibility,
   extractPluginName,
@@ -166,7 +167,8 @@ export async function getInstalledSkaffPlugins(config: Config): Promise<SkaffCli
  * Registers installed Skaff plugin modules so they can be activated by templates.
  */
 export async function registerInstalledPluginModules(config: Config): Promise<void> {
-  const entries: { moduleExports: unknown; packageName: string }[] = []
+  const entries: { moduleExports: unknown; modulePath: string; packageName: string }[] = []
+  const require = createRequire(import.meta.url)
 
   for (const plugin of config.getPluginsList()) {
     if (plugin.name.startsWith('@oclif/') || plugin.type === 'core') {
@@ -180,8 +182,11 @@ export async function registerInstalledPluginModules(config: Config): Promise<vo
         continue
       }
 
+      const modulePath = require.resolve(plugin.name)
+
       entries.push({
         moduleExports: moduleNamespace,
+        modulePath,
         packageName: plugin.name,
       })
     } catch {

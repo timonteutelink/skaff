@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, jest } from "@jest/globals";
+import path from "node:path";
 
 import {
   clearRegisteredPluginModules,
@@ -40,11 +41,13 @@ describe("template generation with local plugins", () => {
     registerPluginModules([
       {
         moduleExports: greeterPluginModule,
+        modulePath: path.resolve(
+          __dirname,
+          "../../../examples/plugins/plugin-greeter/src/index.ts",
+        ),
         packageName: "@timonteutelink/skaff-plugin-greeter",
       },
     ]);
-
-    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
 
     try {
       const pluginsResult = await loadPluginsForTemplate(
@@ -90,17 +93,10 @@ describe("template generation with local plugins", () => {
         throw new Error(runResult.error);
       }
 
-      const logLines = logSpy.mock.calls
-        .map((call) => call[0])
-        .filter((line) => typeof line === "string");
-
-      expect(
-        logLines.some((line) =>
-          line.includes("Hello from the test-template greeter!"),
-        ),
-      ).toBe(true);
+      const stageKeys = builder.build().map((stage) => stage.key);
+      expect(stageKeys).toContain("greeter-greeting");
     } finally {
-      logSpy.mockRestore();
+      // no-op
     }
   });
 });

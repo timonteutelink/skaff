@@ -112,6 +112,7 @@ describeIfSES("plugin loading", () => {
     registerPluginModules([
       {
         moduleExports: moduleNamespace,
+        modulePath: pluginPath,
         packageName,
       },
     ]);
