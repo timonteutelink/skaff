@@ -1,16 +1,11 @@
-import type { CacheKey } from "@timonteutelink/skaff-lib";
-
-import {
-  DiffHunk,
-  ParsedFile,
-  resolveCacheService,
-} from "@timonteutelink/skaff-lib";
+import type { CacheKey, DiffHunk, ParsedFile } from "@timonteutelink/skaff-lib";
+import * as skaffLib from "@timonteutelink/skaff-lib";
 import { exec } from "node:child_process";
 import nodeCrypto from "node:crypto";
 import { promisify } from "node:util";
 
 const asyncExec = promisify(exec);
-const cacheService = resolveCacheService();
+const cacheService = skaffLib.resolveCacheService();
 
 async function execWithInheritedStdio(command: string): Promise<void> {
   return new Promise((resolve, reject) => {

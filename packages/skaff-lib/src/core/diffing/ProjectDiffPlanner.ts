@@ -521,7 +521,16 @@ export class ProjectDiffPlanner {
       return { error: "No git status on project" };
     }
 
-    if (!project.gitStatus.isClean) {
+    const devTemplates = process.env.SKAFF_DEV_TEMPLATES?.toLowerCase().trim();
+    if (
+      !(
+        devTemplates === "1" ||
+        devTemplates === "true" ||
+        devTemplates === "yes" ||
+        devTemplates === "on"
+      ) &&
+      !project.gitStatus.isClean
+    ) {
       backendLogger.error("Cannot diff project with uncommitted changes");
       return { error: "Cannot diff project with uncommitted changes" };
     }

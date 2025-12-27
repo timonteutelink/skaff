@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "declaration": true,
     "module": "Node16",
     "outDir": "dist",
@@ -12,6 +13,7 @@
   },
   "include": ["./src/**/*"],
   "ts-node": {
-    "esm": true
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
   }
 }

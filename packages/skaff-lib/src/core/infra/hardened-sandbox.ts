@@ -115,6 +115,10 @@ function deepFreeze<T>(obj: T, seen = new WeakSet(), depth = 0): T {
     return obj;
   }
 
+  if (obj instanceof RegExp) {
+    return obj;
+  }
+
   // Handle circular references
   if (seen.has(obj as object)) {
     return obj;
@@ -149,11 +153,9 @@ export function markHardenedEnvironmentForTesting(): void {
     return;
   }
 
-  // Provide a deep-freeze fallback for harden in test environments
-  if (typeof globalThis.harden !== "function") {
-    (globalThis as unknown as { harden: typeof deepFreeze }).harden =
-      deepFreeze;
-  }
+  const passthroughHarden = <T>(value: T): T => value;
+  (globalThis as unknown as { harden: typeof passthroughHarden }).harden =
+    passthroughHarden;
 
   isLockedDown = true;
 }

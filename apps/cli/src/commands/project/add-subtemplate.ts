@@ -1,5 +1,5 @@
 import { Args, Flags } from '@oclif/core';
-import { applyDiff, prepareInstantiationDiff } from '@timonteutelink/skaff-lib';
+import * as skaffLib from '@timonteutelink/skaff-lib';
 
 import Base from '../../base-command.js';
 import { getCurrentProject } from '../../utils/cli-utils.js';
@@ -41,7 +41,7 @@ export default class ProjectAddSubtemplate extends Base {
       },
     );
 
-    const res = await prepareInstantiationDiff(
+    const res = await skaffLib.prepareInstantiationDiff(
       args.rootTemplateName,
       args.templateName,
       args.parentInstanceId,
@@ -51,7 +51,7 @@ export default class ProjectAddSubtemplate extends Base {
     if ('error' in res) this.error(res.error, { exit: 1 });
 
     if (flags.apply) {
-      const applied = await applyDiff(proj.data, res.data.diffHash);
+      const applied = await skaffLib.applyDiff(proj.data, res.data.diffHash);
       if ('error' in applied) this.error(applied.error, { exit: 1 });
       this.output({ applied: true, files: applied.data });
     } else {
@@ -59,4 +59,3 @@ export default class ProjectAddSubtemplate extends Base {
     }
   }
 }
-

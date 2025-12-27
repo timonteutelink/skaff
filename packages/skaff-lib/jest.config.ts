@@ -25,10 +25,10 @@ const config: Config = {
     "^ses$": "<rootDir>/tests/mocks/ses.ts",
     "^react$": "<rootDir>/tests/mocks/react.ts",
     "^@timonteutelink/template-types-lib$":
-      "<rootDir>/../template-types-lib/src/index.ts",
+      "<rootDir>/../template-types-lib/dist/index.js",
     "^@timonteutelink/skaff-plugin-greeter-types$":
       "<rootDir>/../../examples/plugins/plugin-greeter-types/src/index.ts",
-    "^zod$": "<rootDir>/node_modules/zod",
+    "^zod$": "<rootDir>/../../node_modules/zod",
   },
 
   collectCoverage: true,
