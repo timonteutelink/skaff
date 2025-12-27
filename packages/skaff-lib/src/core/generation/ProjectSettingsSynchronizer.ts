@@ -18,14 +18,29 @@ import {
 import { getLatestTemplateMigrationUuid } from "../templates/TemplateMigration";
 import { GeneratorOptions } from "./template-generation-types";
 
-function allowPluginTemplateSettings(
+function parseTemplateSettingsWithPlugins(
   templateSettingsSchema: z.ZodObject<any>,
-): z.ZodObject<any> {
-  const pluginShape = z.object({
-    plugins: z.object({}).strict().optional(),
-  });
+  userSettings: UserTemplateSettings,
+): Result<UserTemplateSettings> {
+  const rawSettings =
+    typeof userSettings === "object" && userSettings
+      ? (userSettings as Record<string, unknown>)
+      : {};
+  const { plugins, ...templateSettings } = rawSettings;
+  const parsed = templateSettingsSchema.safeParse(templateSettings);
 
-  return templateSettingsSchema.merge(pluginShape);
+  if (!parsed.success) {
+    return {
+      error: `Failed to parse user settings: ${parsed.error}`,
+    };
+  }
+
+  const parsedWithPlugins =
+    plugins === undefined
+      ? parsed.data
+      : { ...parsed.data, plugins };
+
+  return { data: parsedWithPlugins };
 }
 
 export class ProjectSettingsSynchronizer {
@@ -110,16 +125,13 @@ export class ProjectSettingsSynchronizer {
       };
     }
 
-    const parsedUserSettings = allowPluginTemplateSettings(
+    const parsedUserSettings = parseTemplateSettingsWithPlugins(
       this.rootTemplate.config.templateSettingsSchema,
-    ).safeParse(userSettings);
-    if (!parsedUserSettings.success) {
-      backendLogger.error(
-        `Failed to parse user settings: ${parsedUserSettings.error}`,
-      );
-      return {
-        error: `Failed to parse user settings: ${parsedUserSettings.error}`,
-      };
+      userSettings,
+    );
+    if ("error" in parsedUserSettings) {
+      backendLogger.error(parsedUserSettings.error);
+      return { error: parsedUserSettings.error };
     }
 
     const newProjectId = newUuid || crypto.randomUUID();
@@ -157,16 +169,13 @@ export class ProjectSettingsSynchronizer {
       };
     }
 
-    const parsedUserSettings = allowPluginTemplateSettings(
+    const parsedUserSettings = parseTemplateSettingsWithPlugins(
       template.config.templateSettingsSchema,
-    ).safeParse(userSettings);
-    if (!parsedUserSettings.success) {
-      backendLogger.error(
-        `Failed to parse user settings: ${parsedUserSettings.error}`,
-      );
-      return {
-        error: `Failed to parse user settings: ${parsedUserSettings.error}`,
-      };
+      userSettings,
+    );
+    if ("error" in parsedUserSettings) {
+      backendLogger.error(parsedUserSettings.error);
+      return { error: parsedUserSettings.error };
     }
 
     if (!template.config.templateConfig.multiInstance) {
