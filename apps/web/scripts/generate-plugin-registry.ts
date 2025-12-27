@@ -71,6 +71,7 @@ interface DiscoveredPlugin {
   packageName: string;
   version: string;
   importPath: string;
+  modulePath: string;
   manifestName?: string;
   trustLevel: PluginTrustLevel;
 }
@@ -222,10 +223,13 @@ async function discoverPlugins(): Promise<DiscoveredPlugin[]> {
     const trustLevel = determineTrustLevel(packageName);
     console.log(`    Trust: ${trustLevel}`);
 
+    const modulePath = require.resolve(packageName, { paths: [WEB_ROOT] });
+
     discovered.push({
       packageName,
       version: pkgJson.version,
       importPath: packageName,
+      modulePath,
       manifestName: validation.manifest.name,
       trustLevel,
     });
@@ -248,6 +252,7 @@ function generateRegistryFile(plugins: DiscoveredPlugin[]): string {
         `  "${p.manifestName ?? p.packageName}": {
     module: plugin${i},
     packageName: "${p.packageName}",
+    modulePath: "${p.modulePath}",
     version: "${p.version}",
     trustLevel: "${p.trustLevel}",
   }`,
@@ -285,6 +290,7 @@ ${imports}
 export interface InstalledPluginEntry {
   module: Record<string, unknown>;
   packageName: string;
+  modulePath: string;
   version: string;
   trustLevel: PluginTrustLevel;
 }

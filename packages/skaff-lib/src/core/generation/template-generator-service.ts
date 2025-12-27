@@ -45,6 +45,8 @@ import {
   type LoadedTemplatePlugin,
   createTemplateView,
 } from "../plugins";
+import { createPluginLifecycleManager } from "../plugins/plugin-lifecycle";
+import type { PluginGenerationResult } from "../plugins/plugin-types";
 import { HelperDelegate } from "handlebars";
 
 /**
@@ -436,6 +438,10 @@ export class TemplateGenerationSession {
       return fail(pluginLoadResult);
     }
 
+    const lifecycleManager = createPluginLifecycleManager(
+      pluginLoadResult.data,
+    );
+
     pipelineContext = {
       template,
       parentInstanceId,
@@ -466,6 +472,15 @@ export class TemplateGenerationSession {
     }
 
     try {
+      await lifecycleManager.invokeActivate(
+        template.config.templateConfig.name,
+        projectSettings.projectRepositoryName,
+      );
+      await lifecycleManager.invokeBeforeGenerate(
+        template.config.templateConfig.name,
+        projectSettings.projectRepositoryName,
+      );
+
       const pluginsResult = await this.loadGenerationPlugins(template);
 
       if ("error" in pluginsResult) {
@@ -496,6 +511,15 @@ export class TemplateGenerationSession {
       rollbackManager.clear();
       this.pipelineContext.clearCurrentState();
 
+      const lifecycleResult: PluginGenerationResult = {
+        success: true,
+      };
+      await lifecycleManager.invokeAfterGenerate(
+        lifecycleResult,
+        template.config.templateConfig.name,
+        projectSettings.projectRepositoryName,
+      );
+
       return {
         data: {
           targetPath: pipelineResult.data.targetPath,
@@ -503,11 +527,22 @@ export class TemplateGenerationSession {
         },
       };
     } catch (error) {
+      const lifecycleResult: PluginGenerationResult = {
+        success: false,
+        error: error instanceof Error ? error : new Error(String(error)),
+      };
+      await lifecycleManager.invokeAfterGenerate(
+        lifecycleResult,
+        template.config.templateConfig.name,
+        projectSettings.projectRepositoryName,
+      );
       logError({
         shortMessage: `Failed to instantiate template`,
         error,
       });
       return fail({ error: `Failed to instantiate template: ${error}` });
+    } finally {
+      await lifecycleManager.invokeDeactivate();
     }
   }
 
@@ -555,6 +590,10 @@ export class TemplateGenerationSession {
     if ("error" in pluginLoadResult) {
       return { error: pluginLoadResult.error };
     }
+
+    const lifecycleManager = createPluginLifecycleManager(
+      pluginLoadResult.data,
+    );
 
     const setContextResult = await this.setTemplateGenerationValues(
       userSettings,
@@ -615,6 +654,15 @@ export class TemplateGenerationSession {
       this.failGeneration(rollbackManager, cleanupOnFailure, result);
 
     try {
+      await lifecycleManager.invokeActivate(
+        template.config.templateConfig.name,
+        projectSettings.projectRepositoryName,
+      );
+      await lifecycleManager.invokeBeforeGenerate(
+        template.config.templateConfig.name,
+        projectSettings.projectRepositoryName,
+      );
+
       const pluginsResult = await this.loadGenerationPlugins(template);
 
       if ("error" in pluginsResult) {
@@ -635,14 +683,34 @@ export class TemplateGenerationSession {
 
       rollbackManager.clear();
       this.pipelineContext.clearCurrentState();
+
+      const lifecycleResult: PluginGenerationResult = {
+        success: true,
+      };
+      await lifecycleManager.invokeAfterGenerate(
+        lifecycleResult,
+        template.config.templateConfig.name,
+        projectSettings.projectRepositoryName,
+      );
     } catch (error) {
       await this.cleanupInstantiationFailure(rollbackManager);
       await cleanupOnFailure();
+      const lifecycleResult: PluginGenerationResult = {
+        success: false,
+        error: error instanceof Error ? error : new Error(String(error)),
+      };
+      await lifecycleManager.invokeAfterGenerate(
+        lifecycleResult,
+        template.config.templateConfig.name,
+        projectSettings.projectRepositoryName,
+      );
       logError({
         shortMessage: `Failed to instantiate new project`,
         error,
       });
       return { error: `Failed to instantiate new project: ${error}` };
+    } finally {
+      await lifecycleManager.invokeDeactivate();
     }
 
     return { data: this.options.absoluteDestinationPath };

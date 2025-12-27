@@ -8,6 +8,7 @@ export function ensureWebPluginsRegistered(): void {
   if (registered) return;
   const entries = Object.values(INSTALLED_PLUGINS).map((entry) => ({
     moduleExports: entry.module,
+    modulePath: entry.modulePath,
     packageName: entry.packageName,
   }));
 

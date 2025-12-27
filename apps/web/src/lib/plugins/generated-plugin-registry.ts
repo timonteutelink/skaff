@@ -17,6 +17,7 @@ import type { PluginTrustLevel } from "@timonteutelink/skaff-lib";
 export interface InstalledPluginEntry {
   module: Record<string, unknown>;
   packageName: string;
+  modulePath: string;
   version: string;
   trustLevel: PluginTrustLevel;
 }

@@ -23,6 +23,10 @@ import {
 import { z } from "zod";
 import { resolveHardenedSandbox } from "../infra/hardened-sandbox";
 import { extractPluginName } from "./plugin-compatibility";
+import { getPluginSandboxLibraries } from "../infra/sandbox-endowments";
+import { getSkaffContainer } from "../../di/container";
+import { EsbuildInitializerToken } from "../../di/tokens";
+import path from "node:path";
 
 const projectContextSchema = z
   .object({
@@ -73,7 +77,9 @@ function isTemplateGenerationPlugin(
 }
 
 export interface RegisteredPluginModule {
-  moduleExports: unknown;
+  moduleExports?: unknown;
+  modulePath?: string;
+  sandboxedExports?: unknown;
   packageName?: string;
 }
 
@@ -114,6 +120,76 @@ function resolveRegisteredPlugin(
   return {
     error: `Plugin ${reference.module} is not installed in the current Skaff environment. Install it globally before running this template.`,
   };
+}
+
+async function bundlePluginModule(modulePath: string): Promise<Result<string>> {
+  try {
+    const esbuild = await getSkaffContainer()
+      .resolve(EsbuildInitializerToken)
+      .init();
+    const { outputFiles, errors } = await esbuild.build({
+      entryPoints: [modulePath],
+      bundle: true,
+      format: "cjs",
+      platform: "neutral",
+      target: "es2022",
+      external: Object.keys(getPluginSandboxLibraries()),
+      write: false,
+      absWorkingDir: path.dirname(modulePath),
+    });
+
+    if (errors?.length) {
+      return {
+        error: `Failed to bundle plugin module ${modulePath}: ${errors.map((e) => e.text).join("; ")}`,
+      };
+    }
+
+    const bundle = outputFiles?.[0]?.text;
+    if (!bundle) {
+      return { error: `Failed to bundle plugin module ${modulePath}` };
+    }
+
+    return { data: bundle };
+  } catch (error) {
+    return {
+      error: `Failed to bundle plugin module ${modulePath}: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
+}
+
+async function resolveSandboxedPluginExports(
+  entry: RegisteredPluginModule,
+  reference: NormalizedTemplatePluginConfig,
+): Promise<Result<unknown>> {
+  if (entry.sandboxedExports) {
+    return { data: entry.sandboxedExports };
+  }
+
+  if (!entry.modulePath) {
+    return {
+      error: `Plugin ${reference.module} must be registered with a modulePath for sandboxed evaluation.`,
+    };
+  }
+
+  const bundleResult = await bundlePluginModule(entry.modulePath);
+  if ("error" in bundleResult) {
+    return bundleResult;
+  }
+
+  try {
+    const sandbox = resolveHardenedSandbox();
+    const exports = sandbox.evaluateCommonJs({
+      code: bundleResult.data,
+      allowedModules: getPluginSandboxLibraries(),
+      filename: path.basename(entry.modulePath),
+    });
+    entry.sandboxedExports = exports;
+    return { data: exports };
+  } catch (error) {
+    return {
+      error: `Failed to evaluate plugin ${reference.module} in sandbox: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
 }
 
 function pickEntrypoint(moduleExports: any, exportName?: string): unknown {
@@ -315,10 +391,15 @@ export async function loadPluginsForTemplate(
       return { error: moduleResult.error };
     }
 
-    const entry = pickEntrypoint(
-      moduleResult.data.moduleExports,
-      reference.exportName,
+    const exportsResult = await resolveSandboxedPluginExports(
+      moduleResult.data,
+      reference,
     );
+    if ("error" in exportsResult) {
+      return exportsResult;
+    }
+
+    const entry = pickEntrypoint(exportsResult.data, reference.exportName);
     const pluginModule = coerceToPluginModule(entry);
     if (!pluginModule) {
       return {
