@@ -3,9 +3,9 @@ import type {
   CliTemplateStage,
   PluginCliCommand,
 } from "@timonteutelink/skaff-lib";
-import { GREETER_PLUGIN_NAME } from "@timonteutelink/skaff-plugin-greeter-types";
+import { GREETER_PLUGIN_NAME } from "../../plugin-greeter-types/src/index";
 
-type GreeterStageState = { disabled?: boolean };
+type GreeterStageState = { disabled?: boolean; message?: string };
 
 const greeterCliCommand: PluginCliCommand = {
   name: "greet",
@@ -39,6 +39,25 @@ const greeterCliBeforeStage: CliTemplateStage<GreeterStageState> = {
   },
 };
 
+const greeterCliInitStage: CliTemplateStage<GreeterStageState> = {
+  id: "greeter-cli-init",
+  placement: "init",
+  async run({ prompts, setStageState }) {
+    const message = await prompts.input({
+      message: "Enter a greeting message for the greeter plugin",
+      default: "Hello from greeter!",
+    });
+    setStageState({ message });
+    return {
+      plugins: {
+        [GREETER_PLUGIN_NAME]: {
+          message,
+        },
+      },
+    };
+  },
+};
+
 const greeterCliAfterStage: CliTemplateStage<GreeterStageState> = {
   id: "greeter-cli-after",
   placement: "after-settings",
@@ -49,9 +68,25 @@ const greeterCliAfterStage: CliTemplateStage<GreeterStageState> = {
   },
 };
 
+const greeterCliFinalizeStage: CliTemplateStage<GreeterStageState> = {
+  id: "greeter-cli-finalize",
+  placement: "finalize",
+  async run({ currentSettings }) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `👋 finalize: ${JSON.stringify(currentSettings?.plugins ?? {})}`,
+    );
+  },
+};
+
 const greeterCliContribution: CliPluginContribution = {
   commands: [greeterCliCommand],
-  templateStages: [greeterCliBeforeStage, greeterCliAfterStage],
+  templateStages: [
+    greeterCliInitStage,
+    greeterCliBeforeStage,
+    greeterCliAfterStage,
+    greeterCliFinalizeStage,
+  ],
 };
 
 const greeterCliPlugin = {

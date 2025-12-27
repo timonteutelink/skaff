@@ -235,6 +235,12 @@ export const SANDBOX_REACT_STUB = Object.freeze({
   useInsertionEffect: Object.freeze(() => {}),
 });
 
+const SANDBOX_REACT_JSX_RUNTIME_STUB = Object.freeze({
+  Fragment: "sandbox-fragment",
+  jsx: Object.freeze(() => null),
+  jsxs: Object.freeze(() => null),
+});
+
 /**
  * Gets the plugin-specific sandbox libraries.
  *
@@ -258,6 +264,7 @@ export function getPluginSandboxLibraries(): Readonly<Record<string, unknown>> {
   return Object.freeze({
     ...baseLibs,
     react: SANDBOX_REACT_STUB,
+    "react/jsx-runtime": SANDBOX_REACT_JSX_RUNTIME_STUB,
   });
 }
 

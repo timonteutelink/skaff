@@ -14,7 +14,7 @@ const config: Config = {
         jsc: {
           parser: {
             syntax: "typescript",
-            tsx: false,
+            tsx: true,
           },
         },
       },
@@ -23,8 +23,11 @@ const config: Config = {
   setupFiles: ["<rootDir>/tests/setup-env.ts"],
   moduleNameMapper: {
     "^ses$": "<rootDir>/tests/mocks/ses.ts",
+    "^react$": "<rootDir>/tests/mocks/react.ts",
     "^@timonteutelink/template-types-lib$":
       "<rootDir>/../template-types-lib/src/index.ts",
+    "^@timonteutelink/skaff-plugin-greeter-types$":
+      "<rootDir>/../../examples/plugins/plugin-greeter-types/src/index.ts",
     "^zod$": "<rootDir>/node_modules/zod",
   },
 

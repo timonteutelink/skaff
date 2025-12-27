@@ -130,9 +130,13 @@ const greeterPlugin = {
       input: true,
       output: true,
     },
+    requiredSettingsKeys: ["message"],
   },
   lifecycle: greeterLifecycle,
-  inputSchema: pluginInputSchema,
+  inputSchema: pluginInputSchema.extend({
+    message: z.string().optional(),
+    audience: z.string().optional(),
+  }),
   outputSchema: pluginOutputSchema.extend({
     message: z.string().optional(),
     audience: z.string().optional(),

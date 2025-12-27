@@ -211,6 +211,11 @@ export function checkPluginCompatibility(
 
 export type WebPluginStageEntry = PluginStageEntry<WebTemplateStage>;
 
+export interface WebPluginRequirement {
+  pluginName: string;
+  requiredSettingsKeys: string[];
+}
+
 /**
  * Load web template stages for a template from the static plugin registry.
  *
@@ -273,6 +278,41 @@ export async function loadWebTemplateStages(
   }
 
   return stages;
+}
+
+export async function loadWebTemplatePluginRequirements(
+  template: TemplateDTO,
+): Promise<WebPluginRequirement[]> {
+  const normalized = normalizeTemplatePlugins(template.plugins);
+  if (!normalized.length) return [];
+
+  const compatibility = checkPluginCompatibility(template);
+  const requirements: WebPluginRequirement[] = [];
+
+  for (const reference of normalized) {
+    const pluginName = extractPluginName(reference.module);
+    const isCompatible = compatibility.available.some(
+      (p) => p.name === pluginName || p.packageName === reference.module,
+    );
+    if (!isCompatible) {
+      continue;
+    }
+
+    const moduleExports = getInstalledPlugin(pluginName);
+    const resolvedModule = moduleExports ?? getInstalledPlugin(reference.module);
+    if (!resolvedModule) continue;
+
+    const entry = pickEntrypoint(resolvedModule, reference.exportName);
+    const pluginModule = coerceToPluginModule(entry);
+    if (!pluginModule?.manifest?.requiredSettingsKeys?.length) continue;
+
+    requirements.push({
+      pluginName: pluginModule.manifest.name ?? pluginName,
+      requiredSettingsKeys: pluginModule.manifest.requiredSettingsKeys,
+    });
+  }
+
+  return requirements;
 }
 
 /**

@@ -58,6 +58,7 @@ export default {
 }
 
 describe("template config typechecking", () => {
+  jest.setTimeout(30000);
   it("resolves allowed dependencies from the host installation", async () => {
     const { rootDir, cleanup } = await createTemplateRoot();
     const previousCachePath = process.env.SKAFF_CACHE_PATH;

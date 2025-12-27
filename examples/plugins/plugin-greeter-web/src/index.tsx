@@ -3,9 +3,47 @@ import type {
   WebTemplateStage,
 } from "@timonteutelink/skaff-lib";
 import React, { useState } from "react";
-import { GREETER_PLUGIN_NAME } from "@timonteutelink/skaff-plugin-greeter-types";
+import { GREETER_PLUGIN_NAME } from "../../plugin-greeter-types/src/index";
 
-type GreeterStageState = { disabled?: boolean };
+type GreeterStageState = { disabled?: boolean; message?: string };
+
+const greeterInitWebStage: WebTemplateStage<GreeterStageState> = {
+  id: "greeter-init",
+  placement: "init",
+  render: ({ onContinue, stageState, setStageState }) => {
+    const [message, setMessage] = useState(
+      typeof stageState?.message === "string"
+        ? stageState.message
+        : "Hello from greeter!",
+    );
+
+    return (
+      <div className="space-y-4 p-6 border rounded-md bg-white">
+        <h2 className="text-xl font-semibold">Greeter init</h2>
+        <p className="text-muted-foreground">
+          Provide the greeting message used by the greeter plugin.
+        </p>
+        <input
+          type="text"
+          className="w-full border rounded-md px-3 py-2"
+          value={message}
+          onChange={(event) => {
+            const next = event.target.value;
+            setMessage(next);
+            setStageState({ message: next });
+          }}
+        />
+        <button
+          type="button"
+          className="px-4 py-2 rounded-md bg-blue-600 text-white"
+          onClick={onContinue}
+        >
+          Continue
+        </button>
+      </div>
+    );
+  },
+};
 
 const greeterBeforeWebStage: WebTemplateStage<GreeterStageState> = {
   id: "greeter-before-settings",
@@ -62,6 +100,26 @@ const greeterAfterWebStage: WebTemplateStage<GreeterStageState> = {
   ),
 };
 
+const greeterFinalizeWebStage: WebTemplateStage<GreeterStageState> = {
+  id: "greeter-finalize",
+  placement: "finalize",
+  render: ({ onContinue, currentSettings }) => (
+    <div className="space-y-4 p-6 border rounded-md bg-white">
+      <h2 className="text-xl font-semibold">Greeter finalize</h2>
+      <p className="text-muted-foreground">
+        Final settings: {JSON.stringify(currentSettings?.plugins ?? {})}
+      </p>
+      <button
+        type="button"
+        className="px-4 py-2 rounded-md bg-blue-600 text-white"
+        onClick={onContinue}
+      >
+        Continue to diff
+      </button>
+    </div>
+  ),
+};
+
 const greeterWebContribution: WebPluginContribution = {
   getNotices: ({ templateCount }) => {
     return [
@@ -70,7 +128,12 @@ const greeterWebContribution: WebPluginContribution = {
         : "Greeter plugin is ready to welcome you in the UI.",
     ];
   },
-  templateStages: [greeterBeforeWebStage, greeterAfterWebStage],
+  templateStages: [
+    greeterInitWebStage,
+    greeterBeforeWebStage,
+    greeterAfterWebStage,
+    greeterFinalizeWebStage,
+  ],
 };
 
 const greeterWebPlugin = {

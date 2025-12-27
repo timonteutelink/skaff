@@ -40,7 +40,9 @@ import {
 import { ConfirmationDialog } from "@/components/general/confirmation-dialog";
 import {
   loadWebTemplateStages,
+  loadWebTemplatePluginRequirements,
   type WebPluginStageEntry,
+  type WebPluginRequirement,
 } from "@/lib/plugins/web-stage-loader";
 
 // TODO: when updating to a new template version we should reiterate all settings of all templates for possible changes. Or we fully automate go directly to diff but require the template to setup sensible defaults for possible new options.
@@ -87,13 +89,20 @@ const TemplateInstantiationPage: React.FC = () => {
   const [storedFormData, setStoredFormData] =
     useState<UserTemplateSettings | null>(null);
   const [pluginStages, setPluginStages] = useState<WebPluginStageEntry[]>([]);
+  const [pluginRequirements, setPluginRequirements] = useState<
+    WebPluginRequirement[]
+  >([]);
   const [stageState, setStageState] = useState<Record<string, unknown>>({});
   const [beforeStageIndex, setBeforeStageIndex] = useState(0);
   const [afterStageIndex, setAfterStageIndex] = useState(0);
-  const [flowPhase, setFlowPhase] = useState<"before" | "form" | "after">(
-    "before",
-  );
+  const [initStageIndex, setInitStageIndex] = useState(0);
+  const [finalizeStageIndex, setFinalizeStageIndex] = useState(0);
+  const [flowPhase, setFlowPhase] = useState<
+    "init" | "before" | "form" | "after" | "finalize"
+  >("before");
   const [pendingSettings, setPendingSettings] =
+    useState<UserTemplateSettings | null>(null);
+  const [pendingFinalizeSettings, setPendingFinalizeSettings] =
     useState<UserTemplateSettings | null>(null);
 
   useEffect(() => {
@@ -255,18 +264,25 @@ const TemplateInstantiationPage: React.FC = () => {
     let canceled = false;
     if (!subTemplate || "error" in subTemplate || !subTemplate.data) {
       setPluginStages([]);
+      setPluginRequirements([]);
       setStageState({});
       setFlowPhase("form");
       return;
     }
 
-    loadWebTemplateStages(subTemplate.data).then((stages) => {
+    Promise.all([
+      loadWebTemplateStages(subTemplate.data),
+      loadWebTemplatePluginRequirements(subTemplate.data),
+    ]).then(([stages, requirements]) => {
       if (canceled) return;
       setPluginStages(stages);
+      setPluginRequirements(requirements);
       setStageState({});
       setBeforeStageIndex(0);
       setAfterStageIndex(0);
-      setFlowPhase("before");
+      setInitStageIndex(0);
+      setFinalizeStageIndex(0);
+      setFlowPhase("init");
     });
 
     return () => {
@@ -287,11 +303,19 @@ const TemplateInstantiationPage: React.FC = () => {
       ),
     [pluginStages],
   );
+  const initStages = useMemo(
+    () => pluginStages.filter((entry) => entry.stage.placement === "init"),
+    [pluginStages],
+  );
   const afterStages = useMemo(
     () =>
       pluginStages.filter(
         (entry) => entry.stage.placement === "after-settings",
       ),
+    [pluginStages],
+  );
+  const finalizeStages = useMemo(
+    () => pluginStages.filter((entry) => entry.stage.placement === "finalize"),
     [pluginStages],
   );
 
@@ -332,9 +356,142 @@ const TemplateInstantiationPage: React.FC = () => {
     [beforeStages, buildStageContext],
   );
 
+  const ensureInitStage = useCallback(
+    async (startIndex = 0) => {
+      let cursor = startIndex;
+      while (cursor < initStages.length) {
+        const entry = initStages[cursor]!;
+        const context = buildStageContext(entry, null);
+        const skip = await entry.stage.shouldSkip?.(context);
+
+        if (!skip) {
+          setInitStageIndex(cursor);
+          setFlowPhase("init");
+          return;
+        }
+        cursor += 1;
+      }
+      await ensureBeforeStage(0);
+    },
+    [initStages, buildStageContext, ensureBeforeStage],
+  );
+
   useEffect(() => {
-    void ensureBeforeStage(0);
-  }, [ensureBeforeStage]);
+    void ensureInitStage(0);
+  }, [ensureInitStage]);
+
+  const buildPluginSettings = useCallback(() => {
+    const pluginSettings: Record<string, Record<string, unknown>> = {};
+
+    for (const entry of pluginStages) {
+      const state = stageState[getStageKey(entry)];
+      if (!state) continue;
+      if (typeof state !== "object") {
+        pluginSettings[entry.pluginName] = { value: state };
+        continue;
+      }
+
+      pluginSettings[entry.pluginName] = {
+        ...(pluginSettings[entry.pluginName] ?? {}),
+        ...(state as Record<string, unknown>),
+      };
+    }
+
+    return pluginSettings;
+  }, [pluginStages, stageState, getStageKey]);
+
+  const findMissingRequiredPluginSettings = useCallback(
+    (settings: UserTemplateSettings) => {
+      if (!pluginRequirements.length) return [];
+
+      const pluginSettings =
+        typeof settings.plugins === "object" && settings.plugins
+          ? (settings.plugins as Record<string, unknown>)
+          : {};
+
+      const getNestedValue = (value: unknown, path: string): unknown => {
+        const parts = path.split(".");
+        let current: unknown = value;
+        for (const part of parts) {
+          if (!current || typeof current !== "object") return undefined;
+          if (!(part in (current as Record<string, unknown>))) return undefined;
+          current = (current as Record<string, unknown>)[part];
+        }
+        return current;
+      };
+
+      return pluginRequirements
+        .map((requirement) => {
+          const entry = pluginSettings[requirement.pluginName];
+          const missingKeys = requirement.requiredSettingsKeys.filter(
+            (key) =>
+              getNestedValue(entry as Record<string, unknown>, key) ===
+              undefined,
+          );
+          return {
+            pluginName: requirement.pluginName,
+            missingKeys,
+          };
+        })
+        .filter((item) => item.missingKeys.length > 0);
+    },
+    [pluginRequirements],
+  );
+
+  const buildSettingsWithPlugins = useCallback(
+    (settings: UserTemplateSettings) => {
+      const pluginSettings = buildPluginSettings();
+      if (!Object.keys(pluginSettings).length) {
+        return settings;
+      }
+
+      const mergedPlugins = {
+        ...(settings.plugins as Record<string, unknown> | undefined),
+        ...pluginSettings,
+      };
+
+      return {
+        ...settings,
+        plugins: mergedPlugins,
+      } as UserTemplateSettings;
+    },
+    [buildPluginSettings],
+  );
+
+  const ensureFinalizeStage = useCallback(
+    async (startIndex: number, settings: UserTemplateSettings) => {
+      let cursor = startIndex;
+      while (cursor < finalizeStages.length) {
+        const entry = finalizeStages[cursor]!;
+        const context = buildStageContext(entry, settings);
+        const skip = await entry.stage.shouldSkip?.(context);
+
+        if (!skip) {
+          setFinalizeStageIndex(cursor);
+          setFlowPhase("finalize");
+          return;
+        }
+        cursor += 1;
+      }
+
+      setPendingFinalizeSettings(null);
+      setFlowPhase("form");
+    },
+    [finalizeStages, buildStageContext],
+  );
+
+  const startFinalizeStages = useCallback(
+    async (settings: UserTemplateSettings) => {
+      if (!finalizeStages.length) {
+        setFlowPhase("form");
+        return;
+      }
+
+      setPendingFinalizeSettings(settings);
+      await ensureFinalizeStage(0, settings);
+    },
+    [finalizeStages, ensureFinalizeStage],
+  );
 
   const processSettingsSubmission = useCallback(
     async (data: UserTemplateSettings) => {
@@ -350,13 +507,24 @@ const TemplateInstantiationPage: React.FC = () => {
         return;
       }
 
-      setStoredFormData(data);
+      const mergedSettings = buildSettingsWithPlugins(data);
+      const missingRequired = findMissingRequiredPluginSettings(mergedSettings);
+      if (missingRequired.length > 0) {
+        toastNullError({
+          shortMessage: `Missing required plugin settings: ${missingRequired
+            .map((item) => `${item.pluginName}: ${item.missingKeys.join(", ")}`)
+            .join("; ")}`,
+        });
+        return;
+      }
+
+      setStoredFormData(mergedSettings);
       if (selectedDirectoryIdParam) {
         const newProjectResult = await createNewProject(
           projectRepositoryNameParam,
           templateNameParam,
           selectedDirectoryIdParam,
-          data,
+          mergedSettings,
         );
 
         const newProject = toastNullError({
@@ -413,7 +581,7 @@ const TemplateInstantiationPage: React.FC = () => {
             subTemplateValue.config.templateConfig.name,
             parentTemplateInstanceIdParam!,
             projectRepositoryNameParam,
-            data,
+            mergedSettings,
           );
 
         const result = toastNullError({
@@ -454,7 +622,7 @@ const TemplateInstantiationPage: React.FC = () => {
 
         const templateModificationResult =
           await prepareTemplateModificationDiff(
-            data,
+            mergedSettings,
             projectRepositoryNameParam,
             existingTemplateInstanceIdParam,
           );
@@ -475,8 +643,12 @@ const TemplateInstantiationPage: React.FC = () => {
         });
         return;
       }
+
+      await startFinalizeStages(mergedSettings);
     },
     [
+      buildSettingsWithPlugins,
+      findMissingRequiredPluginSettings,
       projectRepositoryNameParam,
       rootTemplate,
       subTemplate,
@@ -485,6 +657,7 @@ const TemplateInstantiationPage: React.FC = () => {
       templateNameParam,
       project,
       existingTemplateInstanceIdParam,
+      startFinalizeStages,
     ],
   );
 
@@ -532,10 +705,22 @@ const TemplateInstantiationPage: React.FC = () => {
     void ensureBeforeStage(beforeStageIndex + 1);
   }, [beforeStageIndex, ensureBeforeStage]);
 
+  const handleInitContinue = useCallback(() => {
+    void ensureInitStage(initStageIndex + 1);
+  }, [initStageIndex, ensureInitStage]);
+
   const handleAfterContinue = useCallback(() => {
     if (!pendingSettings) return;
     void ensureAfterStage(afterStageIndex + 1, pendingSettings);
   }, [afterStageIndex, ensureAfterStage, pendingSettings]);
+
+  const handleFinalizeContinue = useCallback(() => {
+    if (!pendingFinalizeSettings) return;
+    void ensureFinalizeStage(
+      finalizeStageIndex + 1,
+      pendingFinalizeSettings,
+    );
+  }, [finalizeStageIndex, ensureFinalizeStage, pendingFinalizeSettings]);
 
   const handleConfirmAppliedDiff = useCallback(
     async (commitMessage: string) => {
@@ -784,6 +969,24 @@ const TemplateInstantiationPage: React.FC = () => {
     );
   }
 
+  if (flowPhase === "init" && initStages[initStageIndex]) {
+    const entry = initStages[initStageIndex]!;
+    const key = getStageKey(entry);
+
+    return (
+      <div className="container py-4 mx-auto">
+        {entry.stage.render({
+          templateName: templateNameParam ?? "",
+          projectRepositoryName: projectRepositoryNameParam ?? undefined,
+          currentSettings: storedFormData,
+          stageState: stageState[key],
+          setStageState: (value) => updateStageState(key, value),
+          onContinue: handleInitContinue,
+        })}
+      </div>
+    );
+  }
+
   if (flowPhase === "before" && beforeStages[beforeStageIndex]) {
     const entry = beforeStages[beforeStageIndex]!;
     const key = getStageKey(entry);
@@ -819,6 +1022,28 @@ const TemplateInstantiationPage: React.FC = () => {
           stageState: stageState[key],
           setStageState: (value) => updateStageState(key, value),
           onContinue: handleAfterContinue,
+        })}
+      </div>
+    );
+  }
+
+  if (
+    flowPhase === "finalize" &&
+    finalizeStages[finalizeStageIndex] &&
+    pendingFinalizeSettings
+  ) {
+    const entry = finalizeStages[finalizeStageIndex]!;
+    const key = getStageKey(entry);
+
+    return (
+      <div className="container py-4 mx-auto">
+        {entry.stage.render({
+          templateName: templateNameParam ?? "",
+          projectRepositoryName: projectRepositoryNameParam ?? undefined,
+          currentSettings: pendingFinalizeSettings,
+          stageState: stageState[key],
+          setStageState: (value) => updateStageState(key, value),
+          onContinue: handleFinalizeContinue,
         })}
       </div>
     );
