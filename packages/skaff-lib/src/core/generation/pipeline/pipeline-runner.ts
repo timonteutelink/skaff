@@ -43,11 +43,11 @@ export class PipelineBuilder<TContext> {
       throw new Error(`Pipeline already contains a stage with key ${stage.key}`);
     }
 
-    this.stages.set(stage.key, {
-      priority: 0,
-      phase: "run",
-      ...stage,
+    const withDefaults = Object.assign(stage, {
+      priority: stage.priority ?? 0,
+      phase: stage.phase ?? "run",
     });
+    this.stages.set(stage.key, withDefaults);
     return this;
   }
 
@@ -95,11 +95,11 @@ export class PipelineBuilder<TContext> {
     if (!this.stages.has(targetStageKey)) {
       throw new Error(`Cannot replace missing stage ${targetStageKey}`);
     }
-    this.stages.set(targetStageKey, {
-      priority: 0,
-      phase: "run",
-      ...stage,
+    const withDefaults = Object.assign(stage, {
+      priority: stage.priority ?? 0,
+      phase: stage.phase ?? "run",
     });
+    this.stages.set(targetStageKey, withDefaults);
     return this;
   }
 

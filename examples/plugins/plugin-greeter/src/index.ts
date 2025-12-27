@@ -1,19 +1,17 @@
 import type {
-  TemplateGenerationPlugin,
-  TemplatePluginFactoryInput,
+  ComputeOutputInput,
+  PipelineStage,
+  PluginGenerationResult,
   PluginLifecycle,
   PluginLifecycleContext,
-  PluginGenerationResult,
-  ComputeOutputInput,
-} from "@timonteutelink/skaff-lib";
-import {
-  PipelineStage,
+  TemplateGenerationPlugin,
   TemplateInstantiationPipelineContext,
+  TemplatePluginFactoryInput,
 } from "@timonteutelink/skaff-lib";
 import {
   GREETER_PLUGIN_NAME,
   type GreeterPluginOptions,
-} from "@timonteutelink/skaff-plugin-greeter-types";
+} from "../../plugin-greeter-types/src/index";
 import {
   pluginInputSchema,
   pluginOutputSchema,
@@ -46,8 +44,10 @@ function createGreeterTemplatePlugin(
 ): TemplateGenerationPlugin {
   const options = input.options as GreeterPluginOptions | undefined;
   const templateDescription =
-    typeof input.template.config.templateConfig.description === "string"
-      ? input.template.config.templateConfig.description
+    typeof input.template.description === "string"
+      ? input.template.description
+      : typeof input.template.config.description === "string"
+        ? input.template.config.description
       : undefined;
 
   return {

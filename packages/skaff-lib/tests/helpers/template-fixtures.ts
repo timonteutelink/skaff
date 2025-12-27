@@ -8,11 +8,13 @@ import {
   ProjectSettings,
 } from "@timonteutelink/template-types-lib";
 
-import { TemplateTreeBuilder } from "../../src/core/templates/TemplateTreeBuilder";
+import { resolveGitService } from "../../src/core/infra/git-service";
+import { RootTemplateRepository } from "../../src/repositories/root-template-repository";
 import { Template } from "../../src/core/templates/Template";
 import { Project } from "../../src/models/project";
 import { GitStatus } from "../../src/lib/types";
 import { getSkaffContainer } from "../../src/di/container";
+import { TemplateTreeBuilderToken } from "../../src/di/tokens";
 
 /**
  * Utility helpers for tests that need real template trees and project settings on disk.
@@ -160,16 +162,16 @@ async function writeTemplateFiles(
 }
 
 async function mockGitService(): Promise<() => void> {
-  const gitService = await import("../../src/core/infra/git-service");
+  const { GitService } = await import("../../src/core/infra/git-service");
 
   const repoCleanSpy = jest
-    .spyOn(gitService, "isGitRepoClean")
+    .spyOn(GitService.prototype, "isGitRepoClean")
     .mockResolvedValue({ data: true });
   const commitSpy = jest
-    .spyOn(gitService, "getCommitHash")
+    .spyOn(GitService.prototype, "getCommitHash")
     .mockResolvedValue({ data: "test-commit" });
   const branchSpy = jest
-    .spyOn(gitService, "getCurrentBranch")
+    .spyOn(GitService.prototype, "getCurrentBranch")
     .mockResolvedValue({ data: "main" });
 
   return () => {
@@ -249,7 +251,9 @@ export async function createTestTemplate(
   await writeTemplateFiles(tempRoot, options);
 
   const templateDir = path.join(tempRoot, options.name);
-  const templateTreeBuilder = getSkaffContainer().resolve(TemplateTreeBuilder);
+  const templateTreeBuilder = getSkaffContainer().resolve(
+    TemplateTreeBuilderToken,
+  );
   const buildResult = await templateTreeBuilder.build(templateDir);
   if ("error" in buildResult) {
     restoreGitMocks();
@@ -380,6 +384,72 @@ export async function createTemplateAndProject(
   };
 }
 
+export interface LocalTemplateRepositoryFixture {
+  repository: RootTemplateRepository;
+  template: Template;
+  templateRootDir: string;
+  cleanup: () => Promise<void>;
+}
+
+export async function createLocalTestTemplateRepository(
+  templateName = "test_template",
+): Promise<LocalTemplateRepositoryFixture> {
+  const tempRoot = await fs.mkdtemp(
+    path.join(os.tmpdir(), "skaff-template-repo-"),
+  );
+  const restoreCachePath = applyCacheIsolation(tempRoot);
+  const restoreGitMocks = await mockGitService();
+
+  const templateRootDir = path.resolve(
+    __dirname,
+    "../../../../templates/test-templates",
+  );
+
+  const templateTreeBuilder = getSkaffContainer().resolve(
+    TemplateTreeBuilderToken,
+  );
+  const repository = new RootTemplateRepository(
+    templateTreeBuilder,
+    resolveGitService(),
+    async () => [templateRootDir],
+  );
+
+  const loadResult = await repository.reloadTemplates();
+  if ("error" in loadResult) {
+    restoreGitMocks();
+    restoreCachePath();
+    await removeDirectory(tempRoot);
+    throw new Error(
+      `Failed to load local template repository: ${loadResult.error}`,
+    );
+  }
+
+  const template = repository.templates.find(
+    (candidate) => candidate.config.templateConfig.name === templateName,
+  );
+  if (!template) {
+    restoreGitMocks();
+    restoreCachePath();
+    await removeDirectory(tempRoot);
+    throw new Error(
+      `Template ${templateName} not found in local repository at ${templateRootDir}`,
+    );
+  }
+
+  const cleanup = registerCleanup(async () => {
+    restoreGitMocks();
+    restoreCachePath();
+    await removeDirectory(tempRoot);
+  });
+
+  return {
+    repository,
+    template,
+    templateRootDir,
+    cleanup,
+  };
+}
+
 export type TestTemplateFinalizer = (
   ctx: {
     template: Template;
@@ -417,4 +487,3 @@ export async function mapFinalSettings(
 
   return result.data;
 }
-
