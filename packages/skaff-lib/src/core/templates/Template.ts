@@ -34,6 +34,11 @@ function getProjectCreationManager() {
   return resolveProjectCreationManager();
 }
 
+function isDevTemplatesEnabled(): boolean {
+  const raw = process.env.SKAFF_DEV_TEMPLATES?.toLowerCase().trim();
+  return raw === "1" || raw === "true" || raw === "yes" || raw === "on";
+}
+
 export interface TemplateInit {
   config: GenericTemplateConfigModule;
   absoluteBaseDir: string;
@@ -300,6 +305,10 @@ export class Template {
   }
 
   public async isValid(): Promise<boolean> {
+    if (isDevTemplatesEnabled()) {
+      return true;
+    }
+
     const gitService = getGitService();
     const isRepoClean = await gitService.isGitRepoClean(this.absoluteBaseDir);
     if ("error" in isRepoClean) {

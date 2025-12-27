@@ -1,5 +1,5 @@
 import { Flags } from '@oclif/core';
-import { diffProjectFromTemplate } from '@timonteutelink/skaff-lib';
+import * as skaffLib from '@timonteutelink/skaff-lib';
 
 import Base from '../../../base-command.js';
 import { getCurrentProject } from '../../../utils/cli-utils.js';
@@ -29,7 +29,7 @@ static flags = {
       this.error('No project is currently selected.', { exit: 1 });
     }
 
-    const res = await diffProjectFromTemplate(proj.data);
+    const res = await skaffLib.diffProjectFromTemplate(proj.data);
     if ('error' in res) this.error(res.error, { exit: 1 });
 
     if (flags.json) {
@@ -43,4 +43,3 @@ static flags = {
     }
   }
 }
-

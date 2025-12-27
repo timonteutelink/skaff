@@ -1,4 +1,5 @@
-import { getProjectFromPath, Project, Result } from "@timonteutelink/skaff-lib";
+import * as skaffLib from "@timonteutelink/skaff-lib";
+import type { Project, Result } from "@timonteutelink/skaff-lib";
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
@@ -65,7 +66,7 @@ export async function findProjectDirPath(startDir?: string): Promise<null | stri
 
 export async function getCurrentProject(
   projectPath?: string,
-  loader: typeof getProjectFromPath = getProjectFromPath,
+  loader: typeof skaffLib.getProjectFromPath = skaffLib.getProjectFromPath,
 ): Promise<Result<null | Project>> {
   const projectDir = await findProjectDirPath(projectPath);
   if (!projectDir) {

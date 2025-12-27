@@ -28,7 +28,7 @@ const config: Config = {
       "<rootDir>/../template-types-lib/src/index.ts",
     "^@timonteutelink/skaff-plugin-greeter-types$":
       "<rootDir>/../../examples/plugins/plugin-greeter-types/src/index.ts",
-    "^zod$": "<rootDir>/node_modules/zod",
+    "^zod$": "<rootDir>/../../node_modules/zod",
   },
 
   collectCoverage: true,
