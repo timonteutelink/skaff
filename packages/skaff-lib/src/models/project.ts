@@ -68,7 +68,7 @@ function buildPluginInputSchema(
   plugins?: LoadedTemplatePlugin[],
 ): z.ZodTypeAny {
   if (!plugins?.length) {
-    return z.object({}).strict().optional();
+    return z.record(z.string(), z.unknown());
   }
 
   const shape: Record<string, z.ZodTypeAny> = {};

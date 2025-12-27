@@ -301,9 +301,25 @@ export class Template {
 
   public async isValid(): Promise<boolean> {
     const gitService = getGitService();
-    const isRepoClean = await gitService.isGitRepoClean(this.absoluteBaseDir);
-    if ("error" in isRepoClean) {
-      return false;
+    const devTemplatesEnabled = process.env.SKAFF_DEV_TEMPLATES
+      ?.toLowerCase()
+      .trim();
+    const skipCleanCheck =
+      devTemplatesEnabled === "1" ||
+      devTemplatesEnabled === "true" ||
+      devTemplatesEnabled === "yes" ||
+      devTemplatesEnabled === "on";
+
+    if (!skipCleanCheck) {
+      const isRepoClean = await gitService.isGitRepoClean(
+        this.absoluteBaseDir,
+      );
+      if ("error" in isRepoClean) {
+        return false;
+      }
+      if (!isRepoClean.data) {
+        return false;
+      }
     }
 
     const commitResult = await gitService.getCommitHash(this.absoluteBaseDir);
@@ -313,7 +329,7 @@ export class Template {
 
     const foundCommitHash = this.findCommitHash();
 
-    return isRepoClean.data && commitResult.data === foundCommitHash;
+    return commitResult.data === foundCommitHash;
   }
 
 }
