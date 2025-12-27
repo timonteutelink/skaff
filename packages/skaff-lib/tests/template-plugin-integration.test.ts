@@ -17,8 +17,10 @@ import { PipelineBuilder, PipelineRunner } from "../src/core/generation/pipeline
 import type { TemplateInstantiationPipelineContext } from "../src/core/generation/pipeline/pipeline-stages";
 import { createLocalTestTemplateRepository } from "./helpers/template-fixtures";
 import greeterPluginModule from "../../../examples/plugins/plugin-greeter/src/index";
+import greeterCliPluginModule from "../../../examples/plugins/plugin-greeter-cli/src/index";
+import greeterWebPluginModule from "../../../examples/plugins/plugin-greeter-web/src/index";
 
-jest.setTimeout(15000);
+jest.setTimeout(30000);
 
 describe("template generation with local plugins", () => {
   afterEach(() => {
@@ -46,6 +48,22 @@ describe("template generation with local plugins", () => {
           "../../../examples/plugins/plugin-greeter/src/index.ts",
         ),
         packageName: "@timonteutelink/skaff-plugin-greeter",
+      },
+      {
+        moduleExports: greeterCliPluginModule,
+        modulePath: path.resolve(
+          __dirname,
+          "../../../examples/plugins/plugin-greeter-cli/src/index.ts",
+        ),
+        packageName: "@timonteutelink/skaff-plugin-greeter-cli",
+      },
+      {
+        moduleExports: greeterWebPluginModule,
+        modulePath: path.resolve(
+          __dirname,
+          "../../../examples/plugins/plugin-greeter-web/src/index.tsx",
+        ),
+        packageName: "@timonteutelink/skaff-plugin-greeter-web",
       },
     ]);
 

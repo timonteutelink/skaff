@@ -14,6 +14,7 @@ import { resolveHardenedSandbox } from "../core/infra/hardened-sandbox";
 import { Template } from "./template";
 import { backendLogger } from "../lib";
 import z from "zod";
+import { validateRequiredPluginSettings } from "../core/plugins/plugin-settings";
 
 // Every project repository name inside a root project should be unique.
 // The root project can be uniquely identified by its repository name and author (and version).
@@ -142,6 +143,15 @@ export class Project {
       return {
         error: `Failed to parse user settings: ${parsedUserSettings?.error}`,
       };
+    }
+
+    const requiredPluginSettingsResult = validateRequiredPluginSettings(
+      options?.plugins,
+      parsedUserSettings.data,
+    );
+
+    if ("error" in requiredPluginSettingsResult) {
+      return requiredPluginSettingsResult;
     }
 
     let parentFinalSettings: FinalTemplateSettings | undefined;

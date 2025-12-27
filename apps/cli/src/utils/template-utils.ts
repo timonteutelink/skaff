@@ -1,4 +1,9 @@
-import {getTemplate, loadPluginsForTemplate, createPluginStageEntry} from '@timonteutelink/skaff-lib'
+import {
+  getTemplate,
+  loadPluginsForTemplate,
+  createPluginStageEntry,
+  validateRequiredPluginSettings,
+} from '@timonteutelink/skaff-lib'
 import {ProjectSettings, UserTemplateSettings, createReadonlyProjectContext} from '@timonteutelink/template-types-lib'
 import fs from 'node:fs'
 import * as prompts from '@inquirer/prompts'
@@ -7,6 +12,31 @@ import {promptForSchema} from './zod-schema-prompt.js'
 import type {CliTemplateStage, PluginStageEntry} from '@timonteutelink/skaff-lib'
 
 type StageEntry = PluginStageEntry<CliTemplateStage>
+
+function mergeUserSettings(
+  primary: UserTemplateSettings,
+  secondary?: UserTemplateSettings | null,
+): UserTemplateSettings {
+  if (!secondary) {
+    return primary
+  }
+
+  const primaryPlugins = (primary as UserTemplateSettings).plugins
+  const secondaryPlugins = (secondary as UserTemplateSettings).plugins
+  const mergedPlugins =
+    primaryPlugins || secondaryPlugins
+      ? {
+          ...(secondaryPlugins as Record<string, unknown> | undefined),
+          ...(primaryPlugins as Record<string, unknown> | undefined),
+        }
+      : undefined
+
+  return {
+    ...secondary,
+    ...primary,
+    ...(mergedPlugins ? {plugins: mergedPlugins} : {}),
+  }
+}
 
 async function runStageSequence(
   stages: StageEntry[],
@@ -37,7 +67,7 @@ async function runStageSequence(
     const result = await entry.stage.run({...baseContext, prompts})
 
     if (result && typeof result === 'object') {
-      workingSettings = result as UserTemplateSettings
+      workingSettings = mergeUserSettings(result as UserTemplateSettings, workingSettings)
     }
   }
 
@@ -95,8 +125,8 @@ async function promptUserTemplateSettings(
 
   const stageState: Record<string, unknown> = {}
 
-  await runStageSequence(
-    pluginStages.filter((entry) => entry.stage.placement === 'before-settings'),
+  const initSettings = await runStageSequence(
+    pluginStages.filter((entry) => entry.stage.placement === 'init'),
     {
       templateName,
       rootTemplateName,
@@ -105,10 +135,30 @@ async function promptUserTemplateSettings(
     null,
   )
 
+  const beforeSettings = await runStageSequence(
+    pluginStages.filter((entry) => entry.stage.placement === 'before-settings'),
+    {
+      templateName,
+      rootTemplateName,
+    },
+    stageState,
+    initSettings ?? null,
+  )
+
+  const promptDefaults =
+    initSettings || beforeSettings || defaults
+      ? mergeUserSettings(
+          (defaults ?? {}) as UserTemplateSettings,
+          mergeUserSettings((beforeSettings ?? {}) as UserTemplateSettings, initSettings ?? null),
+        )
+      : undefined
+
   const result = await promptForSchema(subTpl.config.templateSettingsSchema, {
-    defaults,
+    defaults: promptDefaults,
   })
   if (Object.keys(result).length === 0) throw new Error('No settings provided.')
+
+  const mergedResult = mergeUserSettings(result as UserTemplateSettings, beforeSettings ?? initSettings)
 
   const afterSettings = await runStageSequence(
     pluginStages.filter((entry) => entry.stage.placement === 'after-settings'),
@@ -117,10 +167,29 @@ async function promptUserTemplateSettings(
       rootTemplateName,
     },
     stageState,
-    result as UserTemplateSettings,
+    mergedResult,
   )
 
-  return (afterSettings ?? result) as UserTemplateSettings
+  const withAfterSettings = (afterSettings ?? mergedResult) as UserTemplateSettings
+
+  const finalizedSettings = await runStageSequence(
+    pluginStages.filter((entry) => entry.stage.placement === 'finalize'),
+    {
+      templateName,
+      rootTemplateName,
+    },
+    stageState,
+    withAfterSettings,
+  )
+
+  const finalSettings = (finalizedSettings ?? withAfterSettings) as UserTemplateSettings
+  const requiredSettingsResult = validateRequiredPluginSettings(pluginsResult.data, finalSettings)
+
+  if ('error' in requiredSettingsResult) {
+    throw new Error(requiredSettingsResult.error)
+  }
+
+  return finalSettings
 }
 
 export async function readUserTemplateSettings(
@@ -134,6 +203,44 @@ export async function readUserTemplateSettings(
   },
 ): Promise<UserTemplateSettings> {
   if (!arg) return promptUserTemplateSettings(rootTemplateName, templateName, defaults, options)
-  if (fs.existsSync(arg)) return JSON.parse(fs.readFileSync(arg, 'utf8'))
-  return JSON.parse(arg)
+  const parsedSettings = fs.existsSync(arg) ? JSON.parse(fs.readFileSync(arg, 'utf8')) : JSON.parse(arg)
+
+  const rootTpl = await getTemplate(rootTemplateName)
+  if ('error' in rootTpl) throw new Error(rootTpl.error)
+  if (!rootTpl.data) throw new Error(`No template named "${rootTemplateName}"`)
+
+  const projectSettings: ProjectSettings =
+    options?.projectSettings ??
+    ({
+      projectRepositoryName: rootTemplateName,
+      projectAuthor: '',
+      rootTemplateName,
+      instantiatedTemplates: [
+        {
+          id: options?.templateInstanceId ?? '__interactive__',
+          templateName,
+          templateSettings: parsedSettings ?? {},
+        },
+      ],
+    } satisfies ProjectSettings)
+
+  const pluginsResult = await loadPluginsForTemplate(
+    rootTpl.data.template,
+    createReadonlyProjectContext(projectSettings),
+  )
+
+  if ('error' in pluginsResult) {
+    throw new Error(pluginsResult.error)
+  }
+
+  const requiredSettingsResult = validateRequiredPluginSettings(
+    pluginsResult.data,
+    parsedSettings as UserTemplateSettings,
+  )
+
+  if ('error' in requiredSettingsResult) {
+    throw new Error(requiredSettingsResult.error)
+  }
+
+  return parsedSettings
 }

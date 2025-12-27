@@ -77,6 +77,12 @@ const templateConfigModule: TemplateConfigModule<{}, typeof templateSettingsSche
         greeting: "Hello from the test-template greeter!",
       },
     },
+    {
+      module: "@timonteutelink/skaff-plugin-greeter-cli",
+    },
+    {
+      module: "@timonteutelink/skaff-plugin-greeter-web",
+    },
   ],
 
   autoInstantiatedSubtemplates: [
