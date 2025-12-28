@@ -94,6 +94,16 @@ const templateConfigModule: TemplateConfigModule<{}, typeof templateSettingsSche
             ? String(finalSettings.test_number)
             : "42",
       }),
+      children: [
+        {
+          subTemplateName: "test_nested",
+          mapSettings: (finalSettings) => ({
+            note:
+              (finalSettings as { markdown_answer?: string }).markdown_answer ??
+              "Nested note",
+          }),
+        },
+      ],
     },
   ],
 
