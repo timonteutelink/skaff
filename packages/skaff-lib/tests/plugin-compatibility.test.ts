@@ -1,34 +1,43 @@
 import {
-  extractPluginName,
   checkVersionSatisfies,
   checkSinglePluginCompatibility,
   checkTemplatePluginCompatibility,
   formatCompatibilitySummary,
   type InstalledPluginInfo,
 } from "../src/core/plugins/plugin-compatibility";
+import { parsePackageSpec } from "../src/core/plugins/package-spec";
 
 describe("plugin-compatibility", () => {
-  describe("extractPluginName", () => {
+  describe("parsePackageSpec", () => {
     it("should handle simple package names", () => {
-      expect(extractPluginName("my-plugin")).toBe("my-plugin");
+      expect(parsePackageSpec("my-plugin")).toEqual({ name: "my-plugin" });
     });
 
     it("should handle scoped packages", () => {
-      expect(extractPluginName("@skaff/plugin-foo")).toBe("@skaff/plugin-foo");
+      expect(parsePackageSpec("@skaff/plugin-foo")).toEqual({
+        name: "@skaff/plugin-foo",
+      });
     });
 
     it("should remove version suffix from simple packages", () => {
-      expect(extractPluginName("my-plugin@1.0.0")).toBe("my-plugin");
+      expect(parsePackageSpec("my-plugin@1.0.0")).toEqual({
+        name: "my-plugin",
+        version: "1.0.0",
+      });
     });
 
     it("should remove version suffix from scoped packages", () => {
-      expect(extractPluginName("@skaff/plugin-foo@1.2.3")).toBe(
-        "@skaff/plugin-foo",
-      );
+      expect(parsePackageSpec("@skaff/plugin-foo@1.2.3")).toEqual({
+        name: "@skaff/plugin-foo",
+        version: "1.2.3",
+      });
     });
 
     it("should handle complex version suffixes", () => {
-      expect(extractPluginName("@org/my-plugin@^2.0.0")).toBe("@org/my-plugin");
+      expect(parsePackageSpec("@org/my-plugin@^2.0.0")).toEqual({
+        name: "@org/my-plugin",
+        version: "^2.0.0",
+      });
     });
   });
 

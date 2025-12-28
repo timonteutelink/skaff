@@ -19,6 +19,7 @@ import {
   isOfficialPlugin,
   OFFICIAL_PLUGIN_SCOPES,
 } from "./plugin-types";
+import { parsePackageSpec } from "./package-spec";
 
 /**
  * npm registry package metadata response (partial).
@@ -82,42 +83,6 @@ export interface ProvenanceResult {
   commitSha?: string;
   /** Error message if provenance check failed */
   error?: string;
-}
-
-/**
- * Extracts package name without version from a package specifier.
- */
-function extractPackageName(packageSpec: string): string {
-  // Handle scoped packages like @scope/name@version
-  if (packageSpec.startsWith("@")) {
-    const parts = packageSpec.split("/");
-    if (parts.length >= 2) {
-      const scope = parts[0];
-      const nameWithVersion = parts.slice(1).join("/");
-      const atIndex = nameWithVersion.lastIndexOf("@");
-      if (atIndex > 0) {
-        return `${scope}/${nameWithVersion.slice(0, atIndex)}`;
-      }
-      return packageSpec;
-    }
-  } else {
-    const atIndex = packageSpec.lastIndexOf("@");
-    if (atIndex > 0) {
-      return packageSpec.slice(0, atIndex);
-    }
-  }
-  return packageSpec;
-}
-
-/**
- * Extracts version from a package specifier, if present.
- */
-function extractVersion(packageSpec: string): string | undefined {
-  const name = extractPackageName(packageSpec);
-  if (name.length < packageSpec.length) {
-    return packageSpec.slice(name.length + 1);
-  }
-  return undefined;
 }
 
 /**
@@ -202,8 +167,9 @@ export async function checkNpmProvenance(
   registry = "https://registry.npmjs.org",
 ): Promise<ProvenanceResult> {
   try {
-    const packageName = extractPackageName(packageSpec);
-    let version = extractVersion(packageSpec);
+    const { name: packageName, version: requestedVersion } =
+      parsePackageSpec(packageSpec);
+    let version = requestedVersion;
 
     // If no version specified, get latest
     if (!version) {
@@ -283,7 +249,7 @@ export async function getPluginTrustInfo(
     skipProvenanceCheck?: boolean;
   } = {},
 ): Promise<PluginTrustInfo> {
-  const packageName = extractPackageName(packageSpec);
+  const { name: packageName } = parsePackageSpec(packageSpec);
   const registry = options.registry ?? "https://registry.npmjs.org";
 
   // For official plugins, we trust them regardless of provenance
@@ -398,6 +364,7 @@ export function getTrustBadge(level: PluginTrustLevel): string {
 export {
   type PluginTrustInfo,
   type PluginTrustLevel,
+  determinePluginTrustBasic,
   determinePluginTrust,
   isOfficialPlugin,
   isPrivateRegistry,

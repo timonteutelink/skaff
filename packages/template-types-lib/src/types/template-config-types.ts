@@ -77,16 +77,6 @@ export type SideEffectTransform<
   TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
 > = (input: SideEffectInput<TFinalSettings>) => string | null;
 
-/**
- * @deprecated Use SideEffectTransform instead. This type will be removed in a future version.
- */
-export type SideEffectFunction<
-  TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
-> = (
-  templateSettings: TFinalSettings,
-  oldFileContents?: string,
-) => Promise<string | null>;
-
 export type SideEffect<
   TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
 > = {

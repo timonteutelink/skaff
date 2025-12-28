@@ -57,7 +57,7 @@ export const OFFICIAL_PLUGIN_SCOPES = ['@skaff', '@timonteutelink'] as const
  */
 export function validatePluginPackage(packageSpec: string): PluginValidationResult {
   // Extract package name from spec (remove version if present)
-  const packageName = skaffLib.extractPluginName(packageSpec)
+  const {name: packageName} = skaffLib.parsePackageSpec(packageSpec)
 
   // Check for valid npm package name format
   const npmNameRegex = /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/

@@ -77,38 +77,3 @@ export type PluginInputSettings = z.infer<typeof pluginInputSchema>;
  * Extends this type with your plugin's specific computed outputs.
  */
 export type PluginOutputSettings = z.infer<typeof pluginOutputSchema>;
-
-// =============================================================================
-// DEPRECATED: Legacy aliases for backwards compatibility
-// These will be removed in a future major version.
-// =============================================================================
-
-/**
- * @deprecated Use `pluginGlobalConfigSchema` instead
- */
-export const pluginSystemSettingsSchema = pluginGlobalConfigSchema;
-
-/**
- * @deprecated Use `pluginInputSchema` instead
- */
-export const pluginAdditionalTemplateSettingsSchema = pluginInputSchema;
-
-/**
- * @deprecated Use `pluginOutputSchema` instead
- */
-export const pluginFinalSettingsSchema = pluginOutputSchema;
-
-/**
- * @deprecated Use `PluginGlobalConfig` instead
- */
-export type PluginSystemSettings = PluginGlobalConfig;
-
-/**
- * @deprecated Use `PluginInputSettings` instead
- */
-export type PluginAdditionalTemplateSettings = PluginInputSettings;
-
-/**
- * @deprecated Use `PluginOutputSettings` instead
- */
-export type PluginFinalSettings = PluginOutputSettings;
