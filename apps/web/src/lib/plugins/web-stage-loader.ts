@@ -11,12 +11,11 @@
 
 import type {
   SkaffPluginModule,
-  WebPluginContribution,
-  WebTemplateStage,
   PluginStageEntry,
   TemplatePluginConfig,
   PluginTrustLevel,
 } from "@timonteutelink/skaff-lib";
+import type { WebPluginContribution, WebTemplateStage } from "./plugin-types";
 
 import {
   normalizeTemplatePlugins,

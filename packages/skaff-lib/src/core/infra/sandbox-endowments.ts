@@ -181,91 +181,55 @@ export function getSandboxLibrary<T = unknown>(name: AllowedModuleName): T {
   return libs[name] as T;
 }
 
+const pluginSandboxLibraries = new Map<string, unknown>();
+let pluginSandboxLibrariesCache: Readonly<Record<string, unknown>> | null = null;
+
 /**
- * React stub for plugin sandboxing.
+ * Register extra libraries for plugin sandbox execution.
  *
- * Plugins that need React for web UI components receive this stub during
- * sandboxed evaluation. The stub provides minimal type-compatible exports
- * that allow the code to load without errors, but actual rendering happens
- * in the trusted web environment.
+ * Use this to inject environment-specific stubs (such as UI libraries)
+ * without coupling core sandbox code to those dependencies.
  *
- * SECURITY: All returned values are frozen/immutable to prevent:
- * - State leakage via mutable refs
- * - Prototype pollution via React internals
- * - Sandbox escapes via hook manipulation
+ * @param libraries - A map of module name to hardened exports
  */
-export const SANDBOX_REACT_STUB = Object.freeze({
-  // Return null (frozen primitive) instead of creating elements
-  createElement: Object.freeze(() => null),
+export function registerPluginSandboxLibraries(
+  libraries: Record<string, unknown>,
+): void {
+  if (!libraries || typeof libraries !== "object") {
+    return;
+  }
 
-  // Use a frozen symbol
-  Fragment: Object.freeze(Symbol.for("react.fragment")),
+  for (const [name, moduleExports] of Object.entries(libraries)) {
+    pluginSandboxLibraries.set(name, moduleExports);
+  }
 
-  // Return frozen tuple with no-op setter
-  useState: Object.freeze(() => Object.freeze([null, Object.freeze(() => {})])),
-
-  // No-op effect
-  useEffect: Object.freeze(() => {}),
-
-  // Return the callback as-is (it's already from sandboxed code)
-  useCallback: Object.freeze((fn: unknown) => fn),
-
-  // Execute and return result (no memoization in stub)
-  useMemo: Object.freeze((fn: () => unknown) =>
-    typeof fn === "function" ? fn() : null,
-  ),
-
-  // Return frozen ref object
-  useRef: Object.freeze(() => Object.freeze({ current: null })),
-
-  // Additional commonly used hooks as no-ops
-  useContext: Object.freeze(() => null),
-  useReducer: Object.freeze(() =>
-    Object.freeze([null, Object.freeze(() => {})]),
-  ),
-  useLayoutEffect: Object.freeze(() => {}),
-  useImperativeHandle: Object.freeze(() => {}),
-  useDebugValue: Object.freeze(() => {}),
-  useDeferredValue: Object.freeze((value: unknown) => value),
-  useTransition: Object.freeze(() =>
-    Object.freeze([false, Object.freeze(() => {})]),
-  ),
-  useId: Object.freeze(() => "sandbox-id"),
-  useSyncExternalStore: Object.freeze(() => null),
-  useInsertionEffect: Object.freeze(() => {}),
-});
-
-const SANDBOX_REACT_JSX_RUNTIME_STUB = Object.freeze({
-  Fragment: "sandbox-fragment",
-  jsx: Object.freeze(() => null),
-  jsxs: Object.freeze(() => null),
-});
+  pluginSandboxLibrariesCache = null;
+}
 
 /**
  * Gets the plugin-specific sandbox libraries.
  *
- * Plugins have access to the same libraries as templates, plus a React stub
- * for web plugin development.
- *
- * SECURITY: The React stub is completely inert and cannot:
- * - Access the DOM
- * - Make network requests
- * - Access browser APIs
- * - Escape the sandbox
+ * Plugins have access to the same libraries as templates, plus any
+ * environment-registered extensions.
  *
  * @returns A frozen record of module name to hardened exports
  */
 export function getPluginSandboxLibraries(): Readonly<Record<string, unknown>> {
   ensureHardenedEnvironment();
 
-  const baseLibs = getSandboxLibraries();
+  if (pluginSandboxLibrariesCache) {
+    return pluginSandboxLibrariesCache;
+  }
 
-  // Create a new frozen object with React stub
-  return Object.freeze({
-    ...baseLibs,
-    react: SANDBOX_REACT_STUB,
-    "react/jsx-runtime": SANDBOX_REACT_JSX_RUNTIME_STUB,
-  });
+  const baseLibs = getSandboxLibraries();
+  const extendedLibs: Record<string, unknown> = { ...baseLibs };
+
+  for (const [name, moduleExports] of pluginSandboxLibraries.entries()) {
+    extendedLibs[name] = hardenOrDeepFreeze(moduleExports);
+  }
+
+  pluginSandboxLibrariesCache = Object.freeze(extendedLibs);
+  return pluginSandboxLibrariesCache;
 }
 
 /**

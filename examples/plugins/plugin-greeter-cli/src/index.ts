@@ -6,6 +6,7 @@ import type {
 import { GREETER_PLUGIN_NAME } from "../../plugin-greeter-types/src/index";
 
 type GreeterStageState = { disabled?: boolean; message?: string };
+type InquirerPrompts = typeof import("@inquirer/prompts");
 
 const greeterCliCommand: PluginCliCommand = {
   name: "greet",
@@ -25,7 +26,10 @@ const greeterCliCommand: PluginCliCommand = {
   },
 };
 
-const greeterCliBeforeStage: CliTemplateStage<GreeterStageState> = {
+const greeterCliBeforeStage: CliTemplateStage<
+  GreeterStageState,
+  InquirerPrompts
+> = {
   id: "greeter-cli-before",
   placement: "before-settings",
   async run({ prompts, setStageState }) {
@@ -39,7 +43,10 @@ const greeterCliBeforeStage: CliTemplateStage<GreeterStageState> = {
   },
 };
 
-const greeterCliInitStage: CliTemplateStage<GreeterStageState> = {
+const greeterCliInitStage: CliTemplateStage<
+  GreeterStageState,
+  InquirerPrompts
+> = {
   id: "greeter-cli-init",
   placement: "init",
   async run({ prompts, setStageState }) {
@@ -79,7 +86,7 @@ const greeterCliFinalizeStage: CliTemplateStage<GreeterStageState> = {
   },
 };
 
-const greeterCliContribution: CliPluginContribution = {
+const greeterCliContribution: CliPluginContribution<InquirerPrompts> = {
   commands: [greeterCliCommand],
   templateStages: [
     greeterCliInitStage,

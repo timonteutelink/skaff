@@ -187,7 +187,7 @@ Skaff executes user‑provided template code (such as `templateConfig.ts` and pl
 | **No process/environment**  | `process`, `child_process` and environment variables are blocked.                                                                                                              |
 | **Frozen intrinsics**       | All built‑in prototypes (`Object`, `Array`, `Function`, etc.) are frozen after `lockdown()`, preventing prototype pollution.                                                   |
 | **Deterministic execution** | `Date.now()` and `Math.random()` are disabled by default for reproducible builds.                                                                                              |
-| **Whitelisted imports**     | Only explicitly allowed modules can be `require()`d: `yaml`, `zod`, `handlebars`, and `@timonteutelink/template-types-lib`. Plugins additionally receive a minimal React stub. |
+| **Whitelisted imports**     | Only explicitly allowed modules can be `require()`d: `yaml`, `zod`, `handlebars`, and `@timonteutelink/template-types-lib`. Plugins may receive extra environment-registered stubs (for example, the Web UI registers a minimal React stub via `registerPluginSandboxLibraries`). |
 
 ### Where sandboxing is applied
 
