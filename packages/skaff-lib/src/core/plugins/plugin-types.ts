@@ -12,7 +12,6 @@ import type {
   TemplatePluginEntrypoint,
 } from "../generation/template-generation-types";
 import { z } from "zod";
-import type React from "react";
 
 /**
  * Re-export ReadonlyProjectContext for plugin authors.
@@ -552,14 +551,16 @@ export function findPluginCommand(
   );
 }
 
-export interface CliPluginContribution {
+export interface CliPluginContribution<TPrompts = CliPromptModule> {
   commands?: PluginCliCommand[];
-  templateStages?: CliTemplateStage[];
+  templateStages?: CliTemplateStage<any, TPrompts>[];
 }
 
-export type CliPluginEntrypoint =
-  | CliPluginContribution
-  | (() => CliPluginContribution | Promise<CliPluginContribution>);
+export type CliPluginEntrypoint<TPrompts = CliPromptModule> =
+  | CliPluginContribution<TPrompts>
+  | (() =>
+      | CliPluginContribution<TPrompts>
+      | Promise<CliPluginContribution<TPrompts>>);
 
 /**
  * Context provided to web plugin getNotices function.
@@ -660,7 +661,7 @@ export interface WebTemplateStageRenderProps<
  * Stage state is automatically namespaced using the plugin name,
  * preventing collisions between plugins.
  */
-export interface WebTemplateStage<TState = unknown> {
+export interface WebTemplateStage<TState = unknown, TRender = unknown> {
   /** Unique identifier for this stage within the plugin */
   id: string;
   /** When this stage should run in the template instantiation flow */
@@ -675,7 +676,7 @@ export interface WebTemplateStage<TState = unknown> {
     context: WebTemplateStageContext<TState>,
   ) => boolean | Promise<boolean>;
   /** Render the stage UI */
-  render: (props: WebTemplateStageRenderProps<TState>) => React.ReactNode;
+  render: (props: WebTemplateStageRenderProps<TState>) => TRender;
 }
 
 export interface CliTemplateStageContext<
@@ -696,7 +697,12 @@ export interface CliTemplateStageContext<
  * Stage state is automatically namespaced using the plugin name,
  * preventing collisions between plugins.
  */
-export interface CliTemplateStage<TState = unknown> {
+export type CliPromptModule = object;
+
+export interface CliTemplateStage<
+  TState = unknown,
+  TPrompts = CliPromptModule,
+> {
   /** Unique identifier for this stage within the plugin */
   id: string;
   /** When this stage should run in the template instantiation flow */
@@ -713,7 +719,7 @@ export interface CliTemplateStage<TState = unknown> {
   /** Execute the stage logic */
   run: (
     context: CliTemplateStageContext<TState> & {
-      prompts: typeof import("@inquirer/prompts");
+      prompts: TPrompts;
     },
   ) => Promise<UserTemplateSettings | void | undefined>;
 }

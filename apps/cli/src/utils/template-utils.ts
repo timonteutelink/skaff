@@ -5,7 +5,8 @@ import fs from 'node:fs'
 import * as prompts from '@inquirer/prompts'
 
 import {promptForSchema} from './zod-schema-prompt.js'
-import type {CliTemplateStage, PluginStageEntry} from '@timonteutelink/skaff-lib'
+import type {PluginStageEntry} from '@timonteutelink/skaff-lib'
+import type {CliTemplateStage} from './plugin-types.js'
 
 type StageEntry = PluginStageEntry<CliTemplateStage>
 

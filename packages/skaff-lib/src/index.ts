@@ -61,6 +61,7 @@ export {
 export {
   getSandboxLibraries,
   getPluginSandboxLibraries,
+  registerPluginSandboxLibraries,
 } from "./core/infra/sandbox-endowments";
 export {
   createDefaultContainer,
