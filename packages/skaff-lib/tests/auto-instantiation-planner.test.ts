@@ -518,4 +518,73 @@ describe("AutoInstantiationCoordinator", () => {
 
     jest.resetModules();
   });
+
+  it("returns errors when mapSettings throws", async () => {
+    jest.resetModules();
+    jest.doMock("../src/models/template", () => ({
+      Template: class {},
+    }));
+
+    const { AutoInstantiationCoordinator } = require("../src/core/generation/pipeline/AutoInstantiationCoordinator") as typeof import("../src/core/generation/pipeline/AutoInstantiationCoordinator");
+
+    const parentTemplate: any = {
+      config: { templateConfig: { name: "parent" }, autoInstantiatedSubtemplates: undefined },
+      findSubTemplate: jest.fn(),
+    };
+
+    const childTemplate: any = {
+      config: { templateConfig: { name: "child" }, autoInstantiatedSubtemplates: undefined },
+      parentTemplate,
+      findSubTemplate: jest.fn(),
+    };
+
+    parentTemplate.findSubTemplate.mockReturnValue(childTemplate);
+
+    const context = new StubPipelineContext({
+      template: parentTemplate,
+      finalSettings: { parent: true },
+      parentInstanceId: "root-id",
+    });
+
+    const projectSettingsSynchronizer = {
+      getFinalTemplateSettings: jest.fn(),
+      addNewTemplate: jest.fn(),
+    };
+
+    const loadPluginsForTemplate = jest
+      .fn()
+      .mockResolvedValue({ data: [] as any[] });
+
+    const instantiateTemplate = jest.fn();
+
+    const planner = new AutoInstantiationCoordinator(
+      { dontAutoInstantiate: false } as any,
+      context as any,
+      projectSettingsSynchronizer as any,
+      loadPluginsForTemplate,
+      instantiateTemplate,
+    );
+
+    const subtemplates = [
+      {
+        subTemplateName: "child",
+        mapSettings: () => {
+          throw new Error("map failure");
+        },
+      },
+    ];
+
+    const result = await planner.autoInstantiateSubTemplates(
+      { parent: true },
+      "parent-id",
+      subtemplates as any,
+    );
+
+    expect(result).toEqual({
+      error: expect.stringContaining("Error in anyOrCallbackToAny"),
+    });
+    expect(instantiateTemplate).not.toHaveBeenCalled();
+
+    jest.resetModules();
+  });
 });
