@@ -63,7 +63,7 @@ jest.mock("../src/lib/logger", () => ({
   },
 }));
 
-describe("instantiate actions", () => {
+describe("actions wiring", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     for (const key of Object.keys(mockPlanner) as Array<
