@@ -1,10 +1,8 @@
 import { afterEach, describe, expect, it, jest } from "@jest/globals";
-import path from "node:path";
 
 import {
   clearRegisteredPluginModules,
   loadPluginsForTemplate,
-  registerPluginModules,
 } from "../src/core/plugins";
 import {
   createDefaultContainer,
@@ -16,9 +14,7 @@ import { createTemplateView } from "../src/core/plugins/template-view";
 import { PipelineBuilder, PipelineRunner } from "../src/core/generation/pipeline/pipeline-runner";
 import type { TemplateInstantiationPipelineContext } from "../src/core/generation/pipeline/pipeline-stages";
 import { createLocalTestTemplateRepository } from "./helpers/template-fixtures";
-import greeterPluginModule from "../../../examples/plugins/plugin-greeter/src/index";
-import greeterCliPluginModule from "../../../examples/plugins/plugin-greeter-cli/src/index";
-import greeterWebPluginModule from "../../../examples/plugins/plugin-greeter-web/src/index";
+import { registerGreeterPlugins } from "./helpers/integration-fixtures";
 
 jest.setTimeout(30000);
 
@@ -40,32 +36,7 @@ describe("template generation with local plugins", () => {
       },
     ];
 
-    registerPluginModules([
-      {
-        moduleExports: greeterPluginModule,
-        modulePath: path.resolve(
-          __dirname,
-          "../../../examples/plugins/plugin-greeter/src/index.ts",
-        ),
-        packageName: "@timonteutelink/skaff-plugin-greeter",
-      },
-      {
-        moduleExports: greeterCliPluginModule,
-        modulePath: path.resolve(
-          __dirname,
-          "../../../examples/plugins/plugin-greeter-cli/src/index.ts",
-        ),
-        packageName: "@timonteutelink/skaff-plugin-greeter-cli",
-      },
-      {
-        moduleExports: greeterWebPluginModule,
-        modulePath: path.resolve(
-          __dirname,
-          "../../../examples/plugins/plugin-greeter-web/src/index.tsx",
-        ),
-        packageName: "@timonteutelink/skaff-plugin-greeter-web",
-      },
-    ]);
+    registerGreeterPlugins();
 
     try {
       const pluginsResult = await loadPluginsForTemplate(

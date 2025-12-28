@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 import * as crypto from "node:crypto";
 
@@ -17,136 +16,29 @@ import {
   setSkaffContainer,
 } from "../src/di/container";
 import { Project } from "../src/models/project";
-import greeterPluginModule from "../../../examples/plugins/plugin-greeter/src/index";
-import greeterCliPluginModule from "../../../examples/plugins/plugin-greeter-cli/src/index";
-import greeterWebPluginModule from "../../../examples/plugins/plugin-greeter-web/src/index";
+import {
+  baseUserSettings,
+  registerGreeterPlugins,
+  setupIntegrationTestEnvironment,
+} from "./helpers/integration-fixtures";
 
 jest.setTimeout(30000);
 
-const templateRoot = path.resolve(
-  __dirname,
-  "../../../templates/test-templates",
-);
-
-const baseUserSettings = {
-  test_boolean: true,
-  test_string: "Whats 9 + 10?",
-  test_number: 21,
-  test_object: {
-    test_array: [
-      { test_string_in_array: "banananananana" },
-      { test_string_in_array: "banana" },
-    ],
-    more_stuff: "option2",
-  },
-  plugins: {
-    greeter: {
-      message: "Hello from the test suite!",
-    },
-  },
-};
-
-let tempRoot = "";
 let projectParentDir = "";
 let uuidSpy: jest.SpiedFunction<typeof crypto.randomUUID> | undefined;
-let previousEnv: Record<string, string | undefined> = {};
-
-function toSafeName(name: string): string {
-  return name.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
-}
-
-async function createDeterministicTempDir(name: string): Promise<string> {
-  const dir = path.join(os.tmpdir(), "skaff-lib-integration", toSafeName(name));
-  await fs.rm(dir, { recursive: true, force: true });
-  await fs.mkdir(dir, { recursive: true });
-  return dir;
-}
-
-async function setupTestEnvironment(testName: string): Promise<void> {
-  tempRoot = await createDeterministicTempDir(testName);
-  projectParentDir = path.join(tempRoot, "projects");
-  const configDir = path.join(tempRoot, "config");
-  const cacheDir = path.join(tempRoot, "cache");
-
-  await fs.mkdir(projectParentDir, { recursive: true });
-  await fs.mkdir(configDir, { recursive: true });
-  await fs.mkdir(cacheDir, { recursive: true });
-
-  previousEnv = {
-    SKAFF_CONFIG_PATH: process.env.SKAFF_CONFIG_PATH,
-    TEMPLATE_DIR_PATHS: process.env.TEMPLATE_DIR_PATHS,
-    SKAFF_CACHE_PATH: process.env.SKAFF_CACHE_PATH,
-    SKAFF_DEV_TEMPLATES: process.env.SKAFF_DEV_TEMPLATES,
-  };
-
-  process.env.SKAFF_CONFIG_PATH = configDir;
-  process.env.TEMPLATE_DIR_PATHS = templateRoot;
-  process.env.SKAFF_CACHE_PATH = cacheDir;
-  process.env.SKAFF_DEV_TEMPLATES = "1";
-}
-
-function restoreEnvironment(): void {
-  process.env.SKAFF_CONFIG_PATH = previousEnv.SKAFF_CONFIG_PATH;
-  process.env.TEMPLATE_DIR_PATHS = previousEnv.TEMPLATE_DIR_PATHS;
-  process.env.SKAFF_CACHE_PATH = previousEnv.SKAFF_CACHE_PATH;
-  process.env.SKAFF_DEV_TEMPLATES = previousEnv.SKAFF_DEV_TEMPLATES;
-}
-
-function registerLocalPlugins(): void {
-  const greeterCliModule = {
-    ...greeterCliPluginModule,
-    manifest: {
-      ...greeterCliPluginModule.manifest,
-      name: "greeter-cli",
-    },
-  };
-  const greeterWebModule = {
-    ...greeterWebPluginModule,
-    manifest: {
-      ...greeterWebPluginModule.manifest,
-      name: "greeter-web",
-    },
-  };
-
-  registerPluginModules([
-    {
-      moduleExports: greeterPluginModule,
-      sandboxedExports: greeterPluginModule,
-      modulePath: path.resolve(
-        __dirname,
-        "../../../examples/plugins/plugin-greeter/src/index.ts",
-      ),
-      packageName: "@timonteutelink/skaff-plugin-greeter",
-    },
-    {
-      moduleExports: greeterCliModule,
-      sandboxedExports: greeterCliModule,
-      modulePath: path.resolve(
-        __dirname,
-        "../../../examples/plugins/plugin-greeter-cli/src/index.ts",
-      ),
-      packageName: "@timonteutelink/skaff-plugin-greeter-cli",
-    },
-    {
-      moduleExports: greeterWebModule,
-      sandboxedExports: greeterWebModule,
-      modulePath: path.resolve(
-        __dirname,
-        "../../../examples/plugins/plugin-greeter-web/src/index.tsx",
-      ),
-      packageName: "@timonteutelink/skaff-plugin-greeter-web",
-    },
-  ]);
-}
+let integrationEnvironment:
+  | Awaited<ReturnType<typeof setupIntegrationTestEnvironment>>
+  | undefined;
 
 beforeEach(async () => {
   const testName = expect.getState().currentTestName ?? "integration-test";
-  await setupTestEnvironment(testName);
+  integrationEnvironment = await setupIntegrationTestEnvironment(testName);
+  projectParentDir = integrationEnvironment.projectParentDir;
 
   const container = createDefaultContainer();
   setSkaffContainer(container);
 
-  registerLocalPlugins();
+  registerGreeterPlugins({ includeSandboxedExports: true });
 
   const deterministicUuids = [
     "00000000-0000-4000-8000-000000000001",
@@ -164,8 +56,10 @@ afterEach(async () => {
   uuidSpy?.mockRestore();
   clearRegisteredPluginModules();
   resetSkaffContainer();
-  restoreEnvironment();
-  await fs.rm(tempRoot, { recursive: true, force: true });
+  if (integrationEnvironment) {
+    await integrationEnvironment.cleanup();
+    integrationEnvironment = undefined;
+  }
 });
 
 describe("instantiate actions integration", () => {
