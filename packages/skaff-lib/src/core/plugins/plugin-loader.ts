@@ -131,7 +131,7 @@ async function bundlePluginModule(modulePath: string): Promise<Result<string>> {
       entryPoints: [modulePath],
       bundle: true,
       format: "cjs",
-      platform: "neutral",
+      platform: "node",
       target: "es2022",
       external: Object.keys(getPluginSandboxLibraries()),
       write: false,

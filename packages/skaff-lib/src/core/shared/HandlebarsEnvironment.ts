@@ -6,8 +6,12 @@ export class HandlebarsEnvironment {
   private readonly instance: typeof Handlebars;
 
   constructor(handlebarsInstance: typeof Handlebars = Handlebars) {
-    this.instance = handlebarsInstance;
-    registerDefaultHelpers();
+    let instance = handlebarsInstance;
+    if (!Object.isExtensible(instance) && typeof instance.create === "function") {
+      instance = instance.create();
+    }
+    this.instance = instance;
+    registerDefaultHelpers(this.instance);
   }
 
   public registerHelpers(helpers: Record<string, HelperDelegate>): void {

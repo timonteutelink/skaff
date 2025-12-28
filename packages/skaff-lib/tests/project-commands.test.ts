@@ -2,20 +2,22 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { describe, expect, it, jest } from "@jest/globals";
+import { beforeAll, describe, expect, it, jest } from "@jest/globals";
 import { z } from "zod";
 
 import { createMockHardenedSandboxModule } from "./helpers/mock-sandbox";
 import type { GenericTemplateConfigModule } from "../src/lib/types";
-import { Template } from "../src/core/templates/Template";
-import { Project } from "../src/models/project";
+
+let Template: typeof import("../src/core/templates/Template").Template;
+let Project: typeof import("../src/models/project").Project;
 
 jest.mock("../src/core/infra/hardened-sandbox", () => ({
   ...createMockHardenedSandboxModule(),
 }));
 
 jest.mock("../src/core/infra/shell-service", () => ({
-  resolveShellService: jest.fn(),
+  ShellService: class ShellService {},
+  resolveShellService: jest.fn(() => ({ execute: jest.fn() })),
 }));
 
 jest.mock("../src/lib/logger", () => ({
@@ -27,6 +29,11 @@ jest.mock("../src/lib/logger", () => ({
     trace: jest.fn(),
   },
 }));
+
+beforeAll(async () => {
+  ({ Template } = await import("../src/core/templates/Template"));
+  ({ Project } = await import("../src/models/project"));
+});
 
 describe("Template commands", () => {
   it("exposes template commands in DTOs", async () => {

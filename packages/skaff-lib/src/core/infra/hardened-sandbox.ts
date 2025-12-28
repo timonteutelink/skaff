@@ -153,9 +153,8 @@ export function markHardenedEnvironmentForTesting(): void {
     return;
   }
 
-  const passthroughHarden = <T>(value: T): T => value;
-  (globalThis as unknown as { harden: typeof passthroughHarden }).harden =
-    passthroughHarden;
+  const testHarden = <T>(value: T): T => deepFreeze(value);
+  (globalThis as unknown as { harden: typeof testHarden }).harden = testHarden;
 
   isLockedDown = true;
 }
