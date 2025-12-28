@@ -90,6 +90,17 @@ export function isOfficialPlugin(packageName: string): boolean {
 }
 
 /**
+ * Determines a trust level using only build-time safe checks.
+ *
+ * This avoids network or registry lookups, making it safe for web build steps.
+ */
+export function determinePluginTrustBasic(
+  packageName: string,
+): PluginTrustLevel {
+  return isOfficialPlugin(packageName) ? "official" : "community";
+}
+
+/**
  * Determines if a package is from a private registry.
  */
 export function isPrivateRegistry(registryUrl?: string): boolean {

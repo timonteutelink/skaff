@@ -11,6 +11,7 @@ import {
   normalizeTemplatePlugins,
   type NormalizedTemplatePluginConfig,
 } from "./plugin-types";
+import { parsePackageSpec } from "./package-spec";
 
 /**
  * Information about an installed plugin.
@@ -75,30 +76,7 @@ export interface TemplatePluginCompatibilityResult {
  * @returns The cleaned plugin name (e.g., "@skaff/plugin-foo")
  */
 export function extractPluginName(moduleSpecifier: string): string {
-  // Handle version suffix (e.g., @scope/plugin@1.0.0)
-  // For scoped packages, we need to be careful not to remove the scope
-  if (moduleSpecifier.startsWith("@")) {
-    // Scoped package: @scope/name or @scope/name@version
-    const parts = moduleSpecifier.split("/");
-    if (parts.length >= 2) {
-      const scope = parts[0];
-      const nameWithVersion = parts.slice(1).join("/");
-      // Check if there's a version suffix after the package name
-      const atIndex = nameWithVersion.lastIndexOf("@");
-      if (atIndex > 0) {
-        // There's a version suffix
-        return `${scope}/${nameWithVersion.slice(0, atIndex)}`;
-      }
-      return moduleSpecifier;
-    }
-  } else {
-    // Non-scoped package: name or name@version
-    const atIndex = moduleSpecifier.lastIndexOf("@");
-    if (atIndex > 0) {
-      return moduleSpecifier.slice(0, atIndex);
-    }
-  }
-  return moduleSpecifier;
+  return parsePackageSpec(moduleSpecifier).name;
 }
 
 /**

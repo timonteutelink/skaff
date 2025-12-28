@@ -9,6 +9,7 @@ import {
 
 import {
   determinePluginTrust,
+  determinePluginTrustBasic,
   isOfficialPlugin,
   isPrivateRegistry,
   OFFICIAL_PLUGIN_SCOPES,
@@ -212,6 +213,24 @@ describe("plugin-trust", () => {
 
         expect(result.level).toBe("community");
       });
+    });
+  });
+
+  describe("determinePluginTrustBasic", () => {
+    it("should return official for official scopes", () => {
+      expect(determinePluginTrustBasic("@skaff/plugin-greeter")).toBe(
+        "official",
+      );
+      expect(determinePluginTrustBasic("@timonteutelink/plugin-foo")).toBe(
+        "official",
+      );
+    });
+
+    it("should return community for non-official scopes", () => {
+      expect(determinePluginTrustBasic("@community/plugin-foo")).toBe(
+        "community",
+      );
+      expect(determinePluginTrustBasic("some-plugin")).toBe("community");
     });
   });
 
