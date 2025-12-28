@@ -30,6 +30,19 @@ let integrationEnvironment:
   | Awaited<ReturnType<typeof setupIntegrationTestEnvironment>>
   | undefined;
 
+const buildSettings = (
+  overrides: Partial<typeof baseUserSettings> & {
+    test_object?: Partial<typeof baseUserSettings.test_object>;
+  } = {},
+) => ({
+  ...baseUserSettings,
+  ...overrides,
+  test_object: {
+    ...baseUserSettings.test_object,
+    ...(overrides.test_object ?? {}),
+  },
+});
+
 beforeEach(async () => {
   const testName = expect.getState().currentTestName ?? "integration-test";
   integrationEnvironment = await setupIntegrationTestEnvironment(testName);
@@ -139,7 +152,7 @@ describe("instantiate actions integration", () => {
 
     const updatedSettings = {
       ...baseUserSettings,
-      test_boolean: false,
+      test_boolean: true,
       test_string: "Updated string",
     };
 
@@ -172,7 +185,7 @@ describe("instantiate actions integration", () => {
       "utf8",
     );
     expect(updatedReadme.trim()).toBe(
-      "Updated string\n\n# This is a not nice template",
+      "Updated string\n\n# This is a nice template",
     );
 
     const updatedNice = await fs.readFile(
@@ -193,10 +206,210 @@ describe("instantiate actions integration", () => {
       (template) => template.templateName === "test_template",
     );
     expect(updatedRoot?.templateSettings).toMatchObject({
-      test_boolean: false,
+      test_boolean: true,
       test_string: "Updated string",
       plugins: { greeter: { message: "Hello from the test suite!" } },
     });
+  });
+
+  it("renders helper output and executes template commands", async () => {
+    const result = await generateNewProject(
+      "helper-project",
+      "test_template",
+      projectParentDir,
+      baseUserSettings,
+      { git: true },
+    );
+
+    expect("error" in result).toBe(false);
+
+    const projectDir = path.join(projectParentDir, "helper-project");
+    const coolifiedContents = await fs.readFile(
+      path.join(projectDir, "testlocation", "coolified.txt"),
+      "utf8",
+    );
+    expect(coolifiedContents.trim()).toBe("WhAtS 9 + 10?");
+
+    const projectResult = await Project.create(projectDir);
+    if ("error" in projectResult) {
+      throw new Error(projectResult.error);
+    }
+
+    const project = projectResult.data;
+    const rootInstanceId =
+      project.instantiatedProjectSettings.instantiatedTemplates[0]?.id;
+    if (!rootInstanceId) {
+      throw new Error("Root template instance was not persisted.");
+    }
+
+    const commandResult = await project.executeTemplateCommand(
+      rootInstanceId,
+      "Test Command",
+    );
+
+    expect(commandResult).toEqual({ data: "This is a test command" });
+  });
+
+  it("auto-instantiates nested subtemplates", async () => {
+    const result = await generateNewProject(
+      "nested-project",
+      "test_template",
+      projectParentDir,
+      baseUserSettings,
+      { git: true },
+    );
+
+    expect("error" in result).toBe(false);
+
+    const projectDir = path.join(projectParentDir, "nested-project");
+    const nestedContents = await fs.readFile(
+      path.join(projectDir, "otherlocation", "nested", "nested.txt"),
+      "utf8",
+    );
+    expect(nestedContents.trim()).toBe(
+      "Nested subtemplate: The answer to &#x27;Whats 9 + 10?&#x27; is **21**",
+    );
+
+    const settings = JSON.parse(
+      await fs.readFile(path.join(projectDir, "templateSettings.json"), "utf8"),
+    ) as {
+      instantiatedTemplates: Array<{
+        templateName: string;
+        automaticallyInstantiatedByParent?: boolean;
+      }>;
+    };
+
+    const autoChild = settings.instantiatedTemplates.find(
+      (template) => template.templateName === "test_stuff",
+    );
+    expect(autoChild?.automaticallyInstantiatedByParent).toBe(true);
+
+    const nestedChild = settings.instantiatedTemplates.find(
+      (template) => template.templateName === "test_nested",
+    );
+    expect(nestedChild?.automaticallyInstantiatedByParent).toBe(true);
+  });
+
+  it("instantiates a subtemplate in an existing project", async () => {
+    const result = await generateNewProject(
+      "manual-subtemplate-project",
+      "test_template",
+      projectParentDir,
+      baseUserSettings,
+      { git: true },
+    );
+
+    expect("error" in result).toBe(false);
+
+    const projectDir = path.join(projectParentDir, "manual-subtemplate-project");
+    const projectResult = await Project.create(projectDir);
+    if ("error" in projectResult) {
+      throw new Error(projectResult.error);
+    }
+
+    const project = projectResult.data;
+    const rootInstanceId =
+      project.instantiatedProjectSettings.instantiatedTemplates[0]?.id;
+    if (!rootInstanceId) {
+      throw new Error("Root template instance was not persisted.");
+    }
+
+    const manualTemplate = project.rootTemplate.findSubTemplate("test_manual");
+    if (!manualTemplate) {
+      throw new Error("Manual subtemplate not found.");
+    }
+
+    const instantiateResult = await manualTemplate.templateInExistingProject(
+      { message: "Manual run" },
+      project,
+      rootInstanceId,
+    );
+
+    expect(instantiateResult).toEqual({
+      data: path.join(projectDir, "manual"),
+    });
+
+    const manualContents = await fs.readFile(
+      path.join(projectDir, "manual", "manual.txt"),
+      "utf8",
+    );
+    expect(manualContents.trim()).toBe("Manual subtemplate says: Manual run");
+
+    const settings = JSON.parse(
+      await fs.readFile(path.join(projectDir, "templateSettings.json"), "utf8"),
+    ) as {
+      instantiatedTemplates: Array<{
+        templateName: string;
+        templateSettings: Record<string, unknown>;
+      }>;
+    };
+
+    const manualInstance = settings.instantiatedTemplates.find(
+      (template) => template.templateName === "test_manual",
+    );
+    expect(manualInstance?.templateSettings).toMatchObject({
+      message: "Manual run",
+    });
+  });
+
+  it("fails end-to-end when template assertions do not pass", async () => {
+    const invalidSettings = buildSettings({ test_boolean: false });
+
+    const result = await generateNewProject(
+      "assertion-project",
+      "test_template",
+      projectParentDir,
+      invalidSettings,
+      { git: true },
+    );
+
+    expect("error" in result).toBe(true);
+    if ("error" in result) {
+      expect(result.error).toContain("failed assertions");
+    }
+  });
+
+  it.each([
+    {
+      name: "test_number min",
+      overrides: { test_number: 9 },
+      message: ">=10",
+    },
+    {
+      name: "test_number max",
+      overrides: { test_number: 101 },
+      message: "<=100",
+    },
+    {
+      name: "test_object.test_array min length",
+      overrides: {
+        test_object: { test_array: [{ test_string_in_array: "banananananana" }] },
+      },
+      message: ">=2 items",
+    },
+    {
+      name: "test_object.more_stuff enum",
+      overrides: {
+        test_object: { more_stuff: "option4" },
+      },
+      message: "Invalid option",
+    },
+  ])("validates schema constraints: $name", async ({ overrides, message }) => {
+    const invalidSettings = buildSettings(overrides);
+
+    const result = await generateNewProject(
+      "schema-project",
+      "test_template",
+      projectParentDir,
+      invalidSettings,
+      { git: true },
+    );
+
+    expect("error" in result).toBe(true);
+    if ("error" in result) {
+      expect(result.error).toContain("Failed to parse user settings");
+      expect(result.error).toContain(message);
+    }
   });
 
   it("fails when required plugin settings are missing", async () => {

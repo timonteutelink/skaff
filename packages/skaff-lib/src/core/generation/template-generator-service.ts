@@ -7,7 +7,7 @@ import {
 import fs from "fs-extra";
 import { backendLogger } from "../../lib/logger";
 import { Result } from "../../lib/types";
-import { logError } from "../../lib/utils";
+import { anyOrCallbackToAny, logError } from "../../lib/utils";
 import { getSkaffContainer } from "../../di/container";
 import { TemplateGeneratorServiceToken } from "../../di/tokens";
 import type { GitService } from "../infra/git-service";
@@ -613,6 +613,21 @@ export class TemplateGenerationSession {
 
     if ("error" in finalSettingsResult) {
       return { error: "Failed to parse user settings." };
+    }
+
+    const assertions = anyOrCallbackToAny(
+      template.config.assertions,
+      finalSettingsResult.data,
+    );
+
+    if ("error" in assertions) {
+      return { error: assertions.error };
+    }
+
+    if (assertions.data !== undefined && !assertions.data) {
+      return {
+        error: `Template ${template.config.templateConfig.name} failed assertions.`,
+      };
     }
 
     const pipelineContext: ProjectCreationPipelineContext = {
