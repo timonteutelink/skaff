@@ -1,5 +1,4 @@
 import z from "zod";
-import { HelperDelegate } from "handlebars";
 import {
   StringOrCallback,
   UserTemplateSettings,
@@ -7,6 +6,8 @@ import {
   FinalTemplateSettings,
 } from "./utils";
 import { ReadonlyProjectContext } from "./sandbox-safe-types";
+
+export type HelperDelegate = (...args: any[]) => any;
 
 /**
  * Interface representing all mandatory options for a template.

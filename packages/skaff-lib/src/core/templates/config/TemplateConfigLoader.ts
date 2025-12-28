@@ -528,6 +528,33 @@ export class TemplateConfigLoader {
     return configs;
   }
 
+  private normalizeTemplateConfigs(
+    configs: Record<string, TemplateConfigWithFileInfo>,
+  ): Record<string, TemplateConfigWithFileInfo> {
+    const normalized: Record<string, TemplateConfigWithFileInfo> = {};
+
+    for (const [key, mod] of Object.entries(configs)) {
+      const parsed = templateConfigSchema.safeParse(
+        mod.templateConfig.templateConfig,
+      );
+      if (!parsed.success) {
+        throw new Error(
+          `Invalid template configuration in ${key}: ${parsed.error}`,
+        );
+      }
+
+      normalized[key] = {
+        ...mod,
+        templateConfig: {
+          ...mod.templateConfig,
+          templateConfig: parsed.data,
+        },
+      };
+    }
+
+    return normalized;
+  }
+
   public async loadAllTemplateConfigs(
     rootDir: string,
     commitHash: string,
@@ -563,7 +590,10 @@ export class TemplateConfigLoader {
     if ("data" in cached && cached.data) {
       const code = await fs.readFile(cached.data.path, "utf8");
       const configs = this.evaluateBundledCode(code);
-      return { configs, remoteRefs: discovery.remoteRefs };
+      return {
+        configs: this.normalizeTemplateConfigs(configs),
+        remoteRefs: discovery.remoteRefs,
+      };
     }
 
     const imports: string[] = [];
@@ -626,20 +656,10 @@ export class TemplateConfigLoader {
     }
 
     const configs = this.evaluateBundledCode(bundle);
-
-    for (const key of Object.keys(configs)) {
-      const mod = configs[key]!;
-      const parsed = templateConfigSchema.safeParse(
-        mod.templateConfig.templateConfig,
-      );
-      if (!parsed.success) {
-        throw new Error(
-          `Invalid template configuration in ${key}: ${parsed.error}`,
-        );
-      }
-      mod.templateConfig.templateConfig = parsed.data;
-    }
-    return { configs, remoteRefs: discovery.remoteRefs };
+    return {
+      configs: this.normalizeTemplateConfigs(configs),
+      remoteRefs: discovery.remoteRefs,
+    };
   }
 }
 

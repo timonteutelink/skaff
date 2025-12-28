@@ -86,6 +86,9 @@ describeIfSES("plugin loading", () => {
       findSubTemplate() {
         return this as unknown as Template;
       },
+      isDetachedSubtreeRoot: false,
+      isLocal: true,
+      commitHash: "test-hash",
     } as unknown as Template;
 
     const projectSettings: ProjectSettings = {
@@ -339,7 +342,7 @@ describeIfSES("plugin loading", () => {
 
     expect("error" in pluginsResult).toBe(true);
     if ("error" in pluginsResult) {
-      expect(pluginsResult.error).toMatch(/globalConfig schema support/);
+      expect(pluginsResult.error).toMatch(/Blocked import in sandbox/);
     }
   });
 });

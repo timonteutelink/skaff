@@ -18,7 +18,6 @@ import "ses";
 
 import * as yaml from "yaml";
 import * as zod from "zod";
-import * as handlebars from "handlebars";
 import * as templateTypesLib from "@timonteutelink/template-types-lib";
 
 import {
@@ -88,7 +87,6 @@ function hardenOrDeepFreeze<T>(obj: T, seen = new WeakSet(), depth = 0): T {
  * ALLOWED LIBRARIES:
  * - yaml: YAML parsing/serialization (pure, no I/O)
  * - zod: Schema validation (pure, no I/O)
- * - handlebars: Template rendering (pure, no I/O when used correctly)
  * - template-types-lib: Skaff type definitions (pure, no I/O)
  */
 export interface SandboxLibraries {
@@ -96,8 +94,6 @@ export interface SandboxLibraries {
   yaml: typeof yaml;
   /** Zod schema validation */
   zod: typeof zod;
-  /** Handlebars templating (for helpers) */
-  handlebars: typeof handlebars;
   /** Skaff template types and utilities */
   "@timonteutelink/template-types-lib": typeof templateTypesLib;
 }
@@ -115,7 +111,6 @@ export interface SandboxLibraries {
 export const ALLOWED_MODULE_NAMES = [
   "yaml",
   "zod",
-  "handlebars",
   "@timonteutelink/template-types-lib",
 ] as const;
 
@@ -151,7 +146,6 @@ export function getSandboxLibraries(): Readonly<Record<string, unknown>> {
   const modules: Record<string, unknown> = {
     yaml,
     zod,
-    handlebars,
     "@timonteutelink/template-types-lib": templateTypesLib,
   };
 

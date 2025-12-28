@@ -22,7 +22,6 @@ const config: Config = {
   },
   setupFiles: ["<rootDir>/tests/setup-env.ts"],
   moduleNameMapper: {
-    "^ses$": "<rootDir>/tests/mocks/ses.ts",
     "^@timonteutelink/template-types-lib$":
       "<rootDir>/../template-types-lib/dist/index.js",
     "^@timonteutelink/skaff-plugin-greeter-types$":
