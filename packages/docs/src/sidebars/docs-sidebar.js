@@ -16,7 +16,14 @@ module.exports = {
       type: 'category',
       label: 'CLI',
       link: { type: 'doc', id: 'cli/index' },
-      items: ['cli/setup', 'cli/projects', 'cli/automation', 'cli/plugins'],
+      items: [
+        'cli/setup',
+        'cli/templates',
+        'cli/projects',
+        'cli/git-tools',
+        'cli/automation',
+        'cli/plugins',
+      ],
     },
     {
       type: 'doc',
@@ -40,6 +47,7 @@ module.exports = {
       link: { type: 'doc', id: 'reference/index' },
       items: [
         'reference/configuration',
+        'reference/project-settings',
         'reference/template-config',
         'reference/plugins',
         'reference/security',
