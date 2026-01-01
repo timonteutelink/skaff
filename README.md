@@ -243,7 +243,9 @@ Open http://localhost:3000 to access the interface. When running locally the app
 
 ## Contributing
 
-We appreciate contributions of all kinds. Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for the full guide. In summary:
+We appreciate contributions of all kinds. Please see the
+[contributing guide](https://timonteutelink.github.io/skaff/docs/contributing)
+for the full guide. In summary:
 
 - Set up the monorepo with `bun install` and build the core libs
 - Use `bun test` to run unit tests, and run `bun format` / `bun lint` before committing

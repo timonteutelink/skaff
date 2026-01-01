@@ -6,32 +6,34 @@ sidebar_label: Overview
 slug: /
 ---
 
-Welcome to the Skaff documentation. These guides sit alongside the open-source [README](https://github.com/timonteutelink/skaff#readme) and focus on how to scaffold, update, and maintain projects with Skaff's CLI, web app, and template tooling.
+This documentation covers the CLI, web app, and template authoring workflows for
+Skaff. It complements the
+[README](https://github.com/timonteutelink/skaff#readme), which tracks releases
+and repo-wide context.
 
-## Learn the fundamentals
+## Start here
 
-- [Introduction](./docs/introduction) — understand what Skaff ships and why.
-- [Core concepts](./docs/getting-started/core-concepts) — terminology around templates, subtemplates, and project state.
+- [Overview](./introduction) — what Skaff does and how it stays reproducible.
+- [Basics](./basics/index) — install Skaff and generate your first project.
+- [Core concepts](./basics/core-concepts) — templates, instances, and diffs.
 
-## Try Skaff quickly
+## Workflows
 
-- [CLI quickstart](./docs/getting-started/cli-quickstart) — install the CLI and generate your first project.
-- [Web quickstart](./docs/getting-started/web-quickstart) — run the Next.js dashboard locally or via Docker.
+- [CLI workflows](./cli/index) — configuration, template sources, and project
+  lifecycle.
+- [Web app guide](./web/index) — running the UI and using it safely.
+- [Template authoring](./authoring/index) — structure templates and maintain
+  them over time.
 
-## Deep-dive workflows
+## Reference
 
-- [CLI workflows](./docs/cli) — configure template sources, manage projects, and automate runs.
-- [Web app guide](./docs/web) — manage Skaff projects through the browser interface.
-- [Template authoring](./docs/authoring) — structure repositories, define schemas, and ship updates safely.
-
-## Reference & additional resources
-
-- [Configuration reference](./docs/reference/configuration)
-- [TemplateConfig API](./docs/reference/template-config)
+- [Configuration](./reference/configuration)
+- [Project settings](./reference/project-settings)
+- [TemplateConfig API](./reference/template-config)
+- [Plugins](./reference/plugins)
+- [Security & sandboxing](./reference/security)
 - [CLI command reference](/cli/)
 - [skaff-lib API reference](/skaff-lib/)
 - [template-types-lib API reference](/template-types-lib/)
-- [Examples and recipes](./docs/examples)
-- [Contributing guide](./docs/contributing)
-
-Need context on repository setup or release cadence? Check the [README](https://github.com/timonteutelink/skaff#readme) alongside these docs.
+- [Examples](./examples)
+- [Contributing](./contributing)

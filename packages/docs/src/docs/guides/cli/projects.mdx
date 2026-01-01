@@ -4,7 +4,8 @@ authors: []
 sidebar_position: 3
 ---
 
-Projects track which templates ran, the revision used, and the settings that were supplied. The commands below cover the full lifecycle.
+Projects track which templates ran, the revision used, and the settings that
+were supplied. The commands below cover the full lifecycle.
 
 ## Create a project
 
@@ -14,34 +15,67 @@ skaff project new my-service fastapi \
   --settings ./settings.json   # optional inline JSON or path
 ```
 
-If `--settings` is omitted, Skaff prompts for values derived from the template’s Zod schema. When the command finishes it opens a diff for review. Accept the patch to write files to disk.
+If `--settings` is omitted, Skaff prompts for values derived from the template’s
+Zod schema. When the command finishes it opens a diff for review. Accept the
+patch to write files to disk.
 
 Useful helpers:
 
 - `skaff project from-settings <path>` replays a stored `templateSettings.json`.
-- `skaff project ls --format table` lists all Skaff projects in configured search paths.
+- `skaff project ls --format table` lists projects discovered under
+  `PROJECT_SEARCH_PATHS`.
 - `skaff project show` prints the active template tree for the current project.
+- `skaff project clone <new-name> <existing-path>` generates a new repository
+  from an existing Skaff project.
 
 ## Add or edit subtemplates
 
-Subtemplates let you add optional modules or repeatable slices later in the project lifecycle.
+Subtemplates let you add optional modules or repeatable slices later in the
+project lifecycle.
 
 ```bash
 skaff project add-subtemplate <parentId> <templateName> <subtemplateName> \
   --settings ./feature.json
 ```
 
-Retrieve instance IDs from `templateSettings.json`. To modify an instance, run `skaff project modify <instanceId>` or prepare a diff with `skaff project diff prepare-modification <instanceId>`.
+Retrieve instance IDs from `templateSettings.json`. To modify an instance, run
+`skaff project modify <instanceId>` or prepare a diff with
+`skaff project diff prepare-modification <instanceId>`.
 
-## Prepare updates
+## Prepare updates and diffs
 
-Keep projects aligned with upstream template changes by rendering a diff against a newer revision:
+Keep projects aligned with upstream template changes by rendering diffs against a
+newer revision:
 
 ```bash
-skaff project update main            # branch, tag, or commit SHA
+skaff project update main --apply
 # or for manual control
-diffHash=$(skaff project diff prepare-update main --format json | jq -r '.diffHash')
-skaff project diff apply "$diffHash"
+skaff project diff prepare-update main --format json
+skaff project diff apply <diff-hash>
 ```
 
-Resolve conflicts with your normal Git workflow. Skaff only touches files that belong to the template instance being updated.
+Other diff helpers include:
+
+- `skaff project diff prepare-instantiation` for subtemplate additions.
+- `skaff project diff diff-from-template` to compare a project with its original
+  template revision.
+- `skaff git diff-template` to show a summarized diff table.
+
+## Run template commands
+
+Templates can surface useful commands (tests, dev servers, etc.). Execute them
+with:
+
+```bash
+skaff project run --instance root --command "Run tests"
+```
+
+Use the command title defined in the template’s `commands` list.
+
+## Remove a project
+
+```bash
+skaff project delete /path/to/project
+```
+
+This deletes the project repository on disk. Use with care.

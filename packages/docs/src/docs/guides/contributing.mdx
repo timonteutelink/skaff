@@ -1,19 +1,27 @@
 ---
 title: Contributing
 authors: []
-sidebar_position: 7
+sidebar_position: 9
 ---
 
-Thanks for helping improve Skaff! The monorepo hosts the CLI, web app, shared libraries, and documentation. Start by reading the [project README](https://github.com/timonteutelink/skaff#readme) for installation commands and release context.
+Thanks for helping improve Skaff! The monorepo hosts the CLI, web app, shared
+libraries, and documentation. Start with the
+[project README](https://github.com/timonteutelink/skaff#readme) for release
+context and high-level setup.
 
 ## Local setup
 
 1. Clone the repository and install dependencies: `bun install`.
-2. Build shared packages so apps have fresh artefacts: `bun run turbo run build`.
-3. Run formatters and tests before committing: `bun run format` and `bun test` (or package-level scripts).
-4. Work on a feature branch and open a pull request against `main` once checks pass.
+2. Build shared packages so apps have fresh artefacts:
+   `bun run turbo run build`.
+3. Run formatters and tests before committing:
+   - `bun run format`
+   - `cd packages/skaff-lib && bun run test`
+4. Work on a feature branch and open a pull request against `main` once checks
+   pass.
 
-Run the CLI against local sources with `node apps/cli/bin/dev.js <command>` and launch the web UI with `bun --filter apps/web dev` when you need live reload.
+Run the CLI against local sources with `node apps/cli/bin/dev.js <command>` and
+launch the web UI with `bun --filter apps/web dev` when you need live reload.
 
 ## Documentation changes
 
@@ -25,14 +33,17 @@ bun install
 bun run dev
 ```
 
-Keep pages concise, prefer task-oriented headings, and run `bunx prettier --check "packages/docs/src/**/*.mdx"` before committing.
+Keep pages concise, prefer task-oriented headings, and run
+`bunx prettier --check "packages/docs/src/**/*.mdx"` before committing.
 
 ## Release overview
 
 Maintainers coordinate releases when features land:
 
 1. Merge changes into `main` with passing CI.
-2. Bump versions across packages and tag the release (e.g. `v0.x.y`).
-3. GitHub Actions publishes npm packages, CLI binaries, the Docker image, and the updated docs site.
+2. Bump versions across packages and tag the release (for example, `v0.x.y`).
+3. GitHub Actions publishes npm packages, CLI binaries, the Docker image, and
+   the updated docs site.
 
-Discuss patch releases or larger roadmap topics in GitHub Discussions or Discord.
+Discuss patch releases or larger roadmap topics in GitHub Discussions or
+Discord.
