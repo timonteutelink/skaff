@@ -23,7 +23,8 @@
     "build": "rm -rf dist && tsc -p tsconfig.json",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
-    "test": "cd ../template-types-lib && bun run build && cd ../skaff-lib && bun run build && jest",
+    "test": "bun run test:ci",
+    "test:ci": "cd ../template-types-lib && bun run build && cd ../skaff-lib && bun run build && jest",
     "test:watch": "jest --watch"
   },
   "devDependencies": {

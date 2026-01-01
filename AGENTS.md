@@ -13,6 +13,8 @@
 - Documentation under `packages/docs` is outdated; touch it only if you intend to modernize it and ensure it stays consistent with the `README.md`.
 - Before submitting any change, run the full test suite: `cd packages/skaff-lib && bun run test`. Do not skip tests.
 - If your work affects behavior that lacks coverage, add or extend tests accordingly.
+- Skaff-lib and template-types-lib are referenced via their built JavaScript outputs. Always build both before running tests. Use `bun run test:skaff-lib` from the repo root (or `bun run test:ci` inside `packages/skaff-lib`) to run the builds + tests together.
+- If dependency state gets inconsistent, optionally run `make cr` before `bun install`, builds, and tests.
 
 ## General expectations
 - Ensure any documentation edits remain consistent across the repo.

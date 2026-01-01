@@ -247,6 +247,7 @@ We appreciate contributions of all kinds. Please see [CONTRIBUTING.md](./CONTRIB
 
 - Set up the monorepo with `bun install` and build the core libs
 - Use `bun test` to run unit tests, and run `bun format` / `bun lint` before committing
+- Skaff-lib tests require built JavaScript outputs for `template-types-lib` and `skaff-lib`. Use `bun run test:skaff-lib` from the repo root (or `bun run test:ci` in `packages/skaff-lib`) to build both before running Jest.
 - Work on a feature branch and open a Pull Request against `main`. PRs run continuous integration and should be kept focused
 - Releases are handled by maintainers via semantic versioning and GitHub Actions; you usually don’t need to publish packages yourself
 
