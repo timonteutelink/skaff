@@ -4,6 +4,7 @@ import path from "node:path";
 import * as crypto from "node:crypto";
 
 import { generateNewProject } from "../src/actions/instantiate/generate-new-project";
+import { prepareInstantiationDiff } from "../src/actions/instantiate/prepare-instantiation-diff";
 import { prepareModificationDiff } from "../src/actions/instantiate/prepare-modification-diff";
 import { resolveProjectDiffPlanner } from "../src/core/diffing/ProjectDiffPlanner";
 import {
@@ -350,6 +351,110 @@ describe("instantiate actions integration", () => {
     expect(manualInstance?.templateSettings).toMatchObject({
       message: "Manual run",
     });
+  });
+
+  it("adds a subtemplate with nested auto-instantiation via diff", async () => {
+    const result = await generateNewProject(
+      "add-subtemplate-project",
+      "test_template",
+      projectParentDir,
+      baseUserSettings,
+      { git: true },
+    );
+
+    expect("error" in result).toBe(false);
+
+    const projectDir = path.join(projectParentDir, "add-subtemplate-project");
+    const projectResult = await Project.create(projectDir);
+    if ("error" in projectResult) {
+      throw new Error(projectResult.error);
+    }
+
+    const project = projectResult.data;
+    const rootInstanceId =
+      project.instantiatedProjectSettings.instantiatedTemplates[0]?.id;
+    if (!rootInstanceId) {
+      throw new Error("Root template instance was not persisted.");
+    }
+
+    const diffResult = await prepareInstantiationDiff(
+      project.rootTemplate.config.templateConfig.name,
+      "test_add",
+      rootInstanceId,
+      project,
+      { note: "Added from diff" },
+    );
+
+    if ("error" in diffResult) {
+      throw new Error(diffResult.error);
+    }
+
+    expect(diffResult.data.parsedDiff.map((file) => file.path)).toEqual(
+      expect.arrayContaining([
+        "added/added.txt",
+        "added/nested/nested.txt",
+        "added/nested/grandchild/grandchild.txt",
+        "templateSettings.json",
+      ]),
+    );
+
+    const planner = resolveProjectDiffPlanner();
+    const applyResult = await planner.applyDiffToProject(
+      project,
+      diffResult.data.diffHash,
+    );
+
+    if ("error" in applyResult) {
+      throw new Error(applyResult.error);
+    }
+
+    const addedContents = await fs.readFile(
+      path.join(projectDir, "added", "added.txt"),
+      "utf8",
+    );
+    expect(addedContents.trim()).toBe("Added note: Added from diff");
+
+    const nestedContents = await fs.readFile(
+      path.join(projectDir, "added", "nested", "nested.txt"),
+      "utf8",
+    );
+    expect(nestedContents.trim()).toBe("Nested note: Nested: Added from diff");
+
+    const grandchildContents = await fs.readFile(
+      path.join(projectDir, "added", "nested", "grandchild", "grandchild.txt"),
+      "utf8",
+    );
+    expect(grandchildContents.trim()).toBe(
+      "Grandchild note: Grandchild: Nested: Added from diff",
+    );
+
+    const settings = JSON.parse(
+      await fs.readFile(path.join(projectDir, "templateSettings.json"), "utf8"),
+    ) as {
+      instantiatedTemplates: Array<{
+        templateName: string;
+        automaticallyInstantiatedByParent?: boolean;
+        templateSettings: Record<string, unknown>;
+      }>;
+    };
+
+    const addedInstance = settings.instantiatedTemplates.find(
+      (template) => template.templateName === "test_add",
+    );
+    expect(addedInstance?.templateSettings).toMatchObject({
+      note: "Added from diff",
+    });
+    expect(addedInstance?.automaticallyInstantiatedByParent).toBeUndefined();
+
+    const nestedInstance = settings.instantiatedTemplates.find(
+      (template) => template.templateName === "test_add_nested",
+    );
+    expect(nestedInstance?.automaticallyInstantiatedByParent).toBe(true);
+
+    const grandchildInstance = settings.instantiatedTemplates.find(
+      (template) => template.templateName === "test_add_grandchild",
+    );
+    expect(grandchildInstance?.automaticallyInstantiatedByParent).toBe(true);
   });
 
   it("fails end-to-end when template assertions do not pass", async () => {

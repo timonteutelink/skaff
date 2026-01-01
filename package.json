@@ -5,7 +5,8 @@
     "buildNixWeb": "nix-web && bun i && git add -A && nix build .#skaff-web",
     "buildNixCli": "nix-cli && bun i && git add -A && nix build .#skaff-cli",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "postinstall": "./scripts/bun2nix.sh || exit 0"
+    "postinstall": "./scripts/bun2nix.sh || exit 0",
+    "test:skaff-lib": "cd packages/skaff-lib && bun run test:ci"
   },
   "devDependencies": {
     "prettier": "^3.6.2",

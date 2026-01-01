@@ -78,6 +78,12 @@ export interface IntegrationTestEnvironment {
 
 export async function setupIntegrationTestEnvironment(
   testName: string,
+  options?: {
+    templateDirPaths?:
+      | string[]
+      | ((tempRoot: string) => Promise<string[]> | string[]);
+    devTemplates?: boolean;
+  },
 ): Promise<IntegrationTestEnvironment> {
   const tempRoot = await createDeterministicTempDir(testName);
   const projectParentDir = path.join(tempRoot, "projects");
@@ -95,10 +101,20 @@ export async function setupIntegrationTestEnvironment(
     SKAFF_DEV_TEMPLATES: process.env.SKAFF_DEV_TEMPLATES,
   };
 
+  const resolvedTemplateDirPaths = options?.templateDirPaths
+    ? await Promise.resolve(options.templateDirPaths).then((paths) =>
+        typeof paths === "function" ? paths(tempRoot) : paths,
+      )
+    : [testTemplatesRoot];
+
+  const shouldUseDevTemplates = options?.devTemplates ?? true;
+
   process.env.SKAFF_CONFIG_PATH = configDir;
-  process.env.TEMPLATE_DIR_PATHS = testTemplatesRoot;
+  process.env.TEMPLATE_DIR_PATHS = resolvedTemplateDirPaths.join(
+    path.delimiter,
+  );
   process.env.SKAFF_CACHE_PATH = cacheDir;
-  process.env.SKAFF_DEV_TEMPLATES = "1";
+  process.env.SKAFF_DEV_TEMPLATES = shouldUseDevTemplates ? "1" : "0";
 
   return {
     tempRoot,
