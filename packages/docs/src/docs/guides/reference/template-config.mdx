@@ -4,23 +4,40 @@ authors: []
 sidebar_position: 3
 ---
 
-`TemplateConfigModule` describes how Skaff should render your template. The table below lists the properties used most often. Consult the generated TypeDoc at `/skaff/template-types-lib` for complete signatures.
+`TemplateConfigModule` describes how Skaff should render your template. The
+items below highlight the most commonly used fields. Consult the generated
+TypeDoc at `/template-types-lib` for complete signatures.
 
-| Property                       | Purpose                                                                                                                                 |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `templateConfig`               | Metadata for the template (`name`, `author`, `description`, `multiInstance`, etc.).                                                     |
-| `templateSettingsSchema`       | Zod schema that defines prompts and validation rules. The inferred type drives TypeScript tooling.                                      |
-| `templateFinalSettingsSchema`  | Schema that validates stored settings when Skaff reloads a template or applies migrations.                                              |
-| `mapFinalSettings`             | Modify settings after validation and before rendering. Receives `{ templateSettings, parentSettings, fullProjectSettings }`. |
-| `targetPath`                   | Absolute or relative path where rendered files are written. Accepts a string or callback.                                               |
-| `autoInstantiatedSubtemplates` | Declare subtemplates to run automatically. Can return a static list or compute it dynamically.                                          |
-| `sideEffects`                  | Apply programmatic edits to existing files. Each entry supplies a `filePath` and an `apply` function.                                   |
-| `redirects`                    | Redirect rendered files to alternative destinations. Useful for multi-instance templates.                                               |
-| `allowedOverwrites`            | Whitelist files that may be overwritten when a conflict occurs.                                                                         |
-| `commands`                     | Surface helpful follow-up commands in the CLI and web UI (for example, `npm test`).                                                     |
-| `migrations`                   | Upgrade stored settings when schemas change between template revisions.                                                                 |
-| `templatesThatDisableThis`     | Prevent incompatible combinations by disabling a template when another instance is present.                                             |
-| `handlebarHelpers`             | Register additional Handlebars helpers before rendering templates.                                                                      |
-| `assertions`                   | Fail generation early if a predicate returns `false` (for example, when prerequisites are missing).                                     |
+## Core fields
+
+| Property                     | Purpose                                                                                                        |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `templateConfig`             | Metadata for the template (`name`, `author`, `description`, `specVersion`, `multiInstance`, `isRootTemplate`). |
+| `templateSettingsSchema`     | Zod schema that defines prompts and validation rules.                                                          |
+| `templateFinalSettingsSchema`| Schema that validates stored settings when Skaff reloads a template or applies migrations.                    |
+| `mapFinalSettings`           | Modify settings after validation. Receives `{ projectContext, templateSettings, parentSettings }`.            |
+| `targetPath`                 | Relative path where rendered files are written. Accepts a string or callback.                                  |
+
+## Generation hooks
+
+| Property                       | Purpose                                                                                                                    |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `autoInstantiatedSubtemplates` | Declare subtemplates to run automatically. Can return a static list or compute it from final settings.                    |
+| `sideEffects`                  | Apply programmatic edits to existing files. Each entry supplies a `filePath` and `transform` function.                     |
+| `redirects`                    | Redirect rendered files to alternative destinations. Useful for multi-instance templates.                                 |
+| `allowedOverwrites`            | Whitelist files that may be overwritten when a conflict occurs.                                                           |
+| `commands`                     | Surface helpful follow-up commands in the CLI and web UI (for example, `npm test`).                                        |
+| `handlebarHelpers`             | Register additional Handlebars helpers before rendering templates.                                                        |
+| `assertions`                   | Fail generation early if a predicate returns `false` (for example, when prerequisites are missing).                       |
+
+## Compatibility and maintenance
+
+| Property                    | Purpose                                                                                          |
+| --------------------------- | ------------------------------------------------------------------------------------------------ |
+| `migrations`                | Upgrade stored settings when schemas change between template revisions.                          |
+| `templatesThatDisableThis`  | Prevent incompatible combinations by disabling a template when another instance is present.     |
+| `parentFinalSettingsSchema` | Validate parent settings when a template is referenced from another repository.                  |
+| `possibleParentTemplates`   | Declare compatible parent templates for detached subtree usage.                                  |
+| `plugins`                   | Declare plugins that should participate when this template is generated.                          |
 
 Reference the README for repository-level conventions and release steps.

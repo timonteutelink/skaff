@@ -4,12 +4,18 @@ authors: []
 sidebar_position: 1
 ---
 
-The CLI is the fastest way to script Skaff workflows. Global flags include `--format (json|ndjson|tsv|table)` for machine-readable output and `--help` on every command.
+The CLI is the fastest way to script Skaff workflows. Global flags include
+`--format (json|ndjson|tsv|table)` for machine-readable output, `--project` to
+pin a project directory, and `--dev-templates` to relax template repository
+checks when iterating locally.
 
 Use the guides below to manage configuration, projects, and automation:
 
-- [Configure Skaff](./cli/setup) — keep template sources and settings in sync.
-- [Work with projects](./cli/projects) — generate projects, manage subtemplates, and prepare update diffs.
-- [Automate the CLI](./cli/automation) — embed Skaff in CI/CD or other scripted environments.
+- [Configure Skaff](./setup) — keep template sources and settings in sync.
+- [Work with projects](./projects) — generate projects, manage subtemplates, and
+  prepare update diffs.
+- [Automate the CLI](./automation) — embed Skaff in CI/CD or other scripted
+  environments.
+- [Manage plugins](./plugins) — install, list, and run plugin-provided commands.
 
-Need exhaustive flags? Jump to the [CLI reference](./reference/cli).
+Need exhaustive flags? Jump to the [CLI reference](../reference/cli).

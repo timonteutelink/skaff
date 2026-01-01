@@ -1,0 +1,54 @@
+---
+title: Manage plugins
+authors: []
+sidebar_position: 5
+---
+
+Skaff plugins extend template generation with new pipeline stages, add CLI
+commands, or contribute web UI stages. On the CLI, plugins are installed via
+oclif's plugin system and must already be on disk before templates can use
+them.
+
+## Install and remove plugins
+
+```bash
+# install one or more plugins
+skaff plugins install @skaff/plugin-greeter
+skaff plugins install @skaff/plugin-docker@1.2.0
+
+# list installed plugins
+skaff plugins list
+
+# remove a plugin
+skaff plugins uninstall @skaff/plugin-greeter
+```
+
+Skaff warns about third-party plugins that are not from an official scope. Use
+`--force` to bypass warnings when you trust the source.
+
+## Validate template requirements
+
+Templates can declare required plugins. Check whether the current project
+satisfies those requirements:
+
+```bash
+skaff plugins check
+```
+
+This command inspects the current project (or `--project <path>`). Missing or
+incompatible plugins are reported with guidance on required versions.
+
+## Run plugin commands
+
+Some plugins expose additional CLI commands. List or run them with:
+
+```bash
+skaff plugin run --list
+skaff plugin run --command plugin:example --args "--flag" --args "value"
+```
+
+## Where plugin input is stored
+
+Plugin input values are stored in `templateSettings.json` under each instance’s
+`templateSettings.plugins` object. This keeps plugin input deterministic while
+plugin output is recomputed at generation time.

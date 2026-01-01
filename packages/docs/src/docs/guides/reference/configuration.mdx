@@ -4,13 +4,29 @@ authors: []
 sidebar_position: 2
 ---
 
-Skaff stores user configuration in JSON at `~/.config/skaff/settings.json`. Environment variables with matching names override the file at runtime. Use `skaff config` commands rather than editing the file manually.
+Skaff stores user configuration in JSON at `~/.config/skaff/settings.json`.
+Environment variables with matching names override the file at runtime. Use
+`skaff config` commands rather than editing the file manually.
+
+## Settings file keys
 
 | Key                    | Type       | Description                                                                                                              |
 | ---------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `TEMPLATE_DIR_PATHS`   | `string[]` | Directories or Git repositories that contain templates. Skaff scans directories for `templates/` and clones remote repositories such as `github:org/templates#branch`. |
-| `PROJECT_SEARCH_PATHS` | `string[]` | Locations Skaff inspects when running `skaff project ls`. Helpful when projects live in multiple workspaces.             |
+| `PROJECT_SEARCH_PATHS` | `string[]` | Locations Skaff inspects when listing projects in the CLI or web UI.                                                     |
 | `NPM_PATH`             | `string`   | Command used to execute template-defined scripts. Defaults to `npm`; set to `bunx`, `pnpm`, or another runner as needed. |
+| `plugins`              | `object`   | Optional plugin system settings keyed by plugin name.                                                                    |
+
+## Environment variables
+
+| Variable               | Description                                                                                         |
+| ---------------------- | --------------------------------------------------------------------------------------------------- |
+| `SKAFF_CONFIG_PATH`    | Directory that holds `settings.json` (Skaff appends the filename automatically).                    |
+| `SKAFF_CACHE_PATH`     | Overrides the template cache directory (defaults to an OS temp directory).                          |
+| `SKAFF_DEV_TEMPLATES`  | Enables template development mode (`1`, `true`, `yes`, or `on`).                                    |
+| `TEMPLATE_DIR_PATHS`   | Overrides template search paths. Values are split by `:`/`;` or commas, depending on the platform.  |
+| `PROJECT_SEARCH_PATHS` | Overrides project search paths.                                                                     |
+| `NPM_PATH`             | Overrides the command used for template commands.                                                   |
 
 Environment variable formats:
 
@@ -21,8 +37,19 @@ export TEMPLATE_DIR_PATHS="~/templates:/srv/templates"
 # mix local directories and remote GitHub repositories (branch optional)
 export TEMPLATE_DIR_PATHS="~/templates,github:timonteutelink/example-templates#main"
 
-# custom config location
-export SKAFF_CONFIG_PATH="$PWD/.skaff/settings.json"
+# custom config location (directory)
+export SKAFF_CONFIG_PATH="$PWD/.skaff"
 ```
+
+## Repository formats
+
+Template sources accept local paths, Git URLs, and shorthand GitHub references:
+
+- `github:org/repo` or `gh:org/repo`
+- `github:org/repo@branch` or `github:org/repo#branch`
+- `https://github.com/org/repo.git#branch`
+- `git@github.com:org/repo.git#branch`
+
+If the suffix looks like a commit hash, Skaff treats it as a pinned revision.
 
 List the active configuration at any time with `skaff config get --format table`.

@@ -4,16 +4,22 @@ authors: []
 sidebar_position: 3
 ---
 
-Once the basics are in place, extend templates with the hooks below. Every API is fully typed through `@timonteutelink/template-types-lib`.
+Once the basics are in place, extend templates with the hooks below. Every API
+is fully typed through `@timonteutelink/template-types-lib`.
 
-| API                                             | Use it for                                                                                                                                    |
-| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mapFinalSettings`                              | Derive values after validation. Ideal for generating slugs, composing booleans, or backfilling defaults.                                      |
-| `redirects`                                     | Move rendered files to dynamic destinations (for example, namespaced feature folders).                                                        |
-| `allowedOverwrites`                             | Explicitly permit overwriting existing files. Use sparingly—prefer targeted side effects when possible.                                       |
-| `sideEffects`                                   | Programmatically edit files that already exist. Supply `{ filePath, apply }` entries that return updated contents. Keep functions idempotent. |
-| `autoInstantiatedSubtemplates`                  | Add child templates automatically based on parent settings. Supports async callbacks for lookup logic.                                        |
-| `commands`                                      | Surface helpful commands (test, lint, launch) in the CLI and web UI after generation.                                                         |
-| `migrations`                                    | Upgrade stored settings when schemas change. Each migration has a UUID and can depend on a predecessor.                                       |
+| API                            | Use it for                                                                                                                                        |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mapFinalSettings`             | Derive values after validation. Receives `{ projectContext, templateSettings, parentSettings }`.                                                  |
+| `redirects`                    | Move rendered files to dynamic destinations (for example, namespaced feature folders).                                                            |
+| `allowedOverwrites`            | Explicitly permit overwriting existing files. Use sparingly—prefer targeted side effects when possible.                                           |
+| `sideEffects`                  | Programmatically edit files that already exist. Supply `{ filePath, transform }` entries that return updated contents. Keep functions idempotent. |
+| `autoInstantiatedSubtemplates` | Add child templates automatically based on parent settings.                                                                                        |
+| `commands`                     | Surface helpful commands (test, lint, launch) in the CLI and web UI after generation.                                                             |
+| `migrations`                   | Upgrade stored settings when schemas change. Each migration has a UUID and can depend on a predecessor.                                           |
+| `templatesThatDisableThis`     | Prevent incompatible template combinations based on existing instances and settings.                                                              |
+| `assertions`                   | Fail generation early if required preconditions are not met.                                                                                      |
+| `handlebarHelpers`             | Register extra Handlebars helpers for templated files.                                                                                            |
+| `possibleParentTemplates`      | Declare which parent templates may host this template as a detached subtree, especially across repositories.                                      |
 
-Check the [TemplateConfig reference](../reference/template-config) for full signatures and additional helpers.
+Check the [TemplateConfig reference](../reference/template-config) for full
+signatures and additional helpers.

@@ -1,0 +1,53 @@
+---
+title: CLI quickstart
+authors: []
+sidebar_position: 2
+---
+
+Follow these steps to render your first project with the Skaff CLI.
+
+## 1. Install the CLI
+
+Run Skaff directly with `bunx`/`npx` or install it globally if you prefer a
+persistent binary:
+
+```bash
+bunx @timonteutelink/skaff --version
+# or
+npm install -g @timonteutelink/skaff
+```
+
+Verify the installation with `skaff --help`.
+
+## 2. Register template sources
+
+Skaff reads configuration from `~/.config/skaff/settings.json` (override the
+base directory with `SKAFF_CONFIG_PATH`). Add one or more directories or Git
+repositories that contain templates:
+
+```bash
+skaff config add ~/templates TEMPLATE_DIR_PATHS
+skaff config add github:timonteutelink/example-templates TEMPLATE_DIR_PATHS
+skaff config get TEMPLATE_DIR_PATHS --format table
+```
+
+You can also load a repo on demand with `skaff template load`.
+
+## 3. Generate a project
+
+Create a new project by naming the destination folder and selecting a template.
+Skaff prompts for template-specific settings based on the template’s Zod schema:
+
+```bash
+skaff project new my-service fastapi --repo github:timonteutelink/example-templates
+```
+
+Inspect the diff viewer, then accept the patch to write files to disk.
+
+## 4. Continue exploring
+
+- List all available templates with `skaff template list --format table`.
+- Replay saved answers from `templateSettings.json` using
+  `skaff project from-settings <path>`.
+- Visit the [CLI workflows](../cli/index) for deeper automation, update, and
+  subtemplate guides.

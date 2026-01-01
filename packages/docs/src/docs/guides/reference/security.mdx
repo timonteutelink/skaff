@@ -1,0 +1,44 @@
+---
+title: Security & sandboxing
+authors: []
+sidebar_position: 5
+---
+
+Skaff executes user-provided template code (such as `templateConfig.ts` and
+plugins) inside a hardened sandbox powered by SES (Secure ECMAScript). This
+ensures untrusted code cannot escape its boundaries.
+
+## Sandbox guarantees
+
+| Property                 | Description |
+| ------------------------ | ----------- |
+| **No filesystem access** | Sandboxed code cannot read, write, or list files. |
+| **No network access**    | `fetch`, `XMLHttpRequest`, and Node.js `http` are blocked. |
+| **No process access**    | `process`, `child_process`, and environment variables are unavailable. |
+| **Frozen intrinsics**    | Built-in prototypes are frozen after `lockdown()` to prevent prototype pollution. |
+| **Deterministic runtime**| `Date.now()` and `Math.random()` are disabled by default for reproducible builds. |
+| **Whitelisted imports**  | Only explicitly allowed modules can be imported: `yaml`, `zod`, `handlebars`, and `@timonteutelink/template-types-lib`. |
+
+## Where sandboxing applies
+
+All untrusted code paths go through `HardenedSandboxService`:
+
+1. **Template configuration** – `templateConfig.ts` files are bundled and
+   evaluated via `evaluateCommonJs()`.
+2. **Plugin code** – Plugins declared by templates are loaded and executed in
+   the same sandbox.
+3. **`mapFinalSettings`** – Custom settings transformers run via
+   `invokeFunction()`.
+4. **Side-effect transforms** – Functions in `sideEffects` execute sandboxed.
+5. **Handlebars helpers** – Helpers defined in templates run via
+   `invokeFunctionWithArgs()`.
+
+## Limitations
+
+- **No timeout enforcement.** SES accepts a `timeoutMs` option but does not
+  enforce it. Infinite loops in template code will block execution.
+- **Memory limits.** There is currently no memory cap; a template could allocate
+  unbounded memory.
+
+For implementation details, see
+`packages/skaff-lib/src/core/infra/hardened-sandbox.ts`.
