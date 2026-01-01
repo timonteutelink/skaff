@@ -75,7 +75,7 @@ bunx @timonteutelink/skaff project new banana \
   fastapi
 ```
 
-This will clone or fetch the `fastapi` template, prompt you for required values and options, then produce a ready‑to‑run FastAPI application. For an overview of available commands and options, run:
+This will clone the `fastapi` template, prompt you for required values and options, then produce a ready‑to‑run FastAPI application. For an overview of available commands and options, run:
 
 ```bash
 skaff --help
@@ -94,7 +94,7 @@ skaff --help
 - **Multi‑platform distribution.** Use it instantly via `npx` or `bunx`, install globally with npm or bun, download a prebuilt binary, or run it as a reproducible Nix flake.
 - **Visual Web UI.** A Next.js powered interface allows you to browse templates, fill in form fields, preview the resulting file tree or diff, and apply patches without touching the terminal
 - **Flexible configuration.** Configure where your templates live and where to create projects through a simple JSON config or environment variables like `TEMPLATE_DIR_PATHS`, `PROJECT_SEARCH_PATHS`. Point Skaff at local directories or GitHub repositories and it will clone the latest templates for you. Skaff recognises GitHub repositories declared as shorthand (`github:`/`gh:`), full HTTPS or SSH URLs, and even `file://` URIs. Append `@branch` (for shorthands) or `#branch` (for URLs) to pin a specific branch when loading templates. For local iteration, enable dev mode with `skaff --dev-templates` or `SKAFF_DEV_TEMPLATES=1` to allow dirty working trees and cache-busting for template configs.
-- **Language agnostic.** Templates can target any stack like FastAPI, React, Go and Rust as long as they ship a schema. Additional template repositories can be referenced with `--repo` or configured once in `settings.json`.
+- **Language agnostic.** Templates can target any stack like FastAPI, React, Go and Rust as long as a project can be contained in a git repository. Additional template repositories can be referenced with `--repo` or configured once in `settings.json`.
 
 ## How it works
 
