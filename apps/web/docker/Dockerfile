@@ -44,6 +44,8 @@ ARG SKAFF_PLUGINS=""
 ARG NPM_TOKEN=""
 ARG NPM_REGISTRY=""
 
+RUN apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*
+
 # Configure npm/bun for private registries if token provided
 RUN if [ -n "$NPM_TOKEN" ] && [ -n "$NPM_REGISTRY" ]; then \
       echo "//$(echo $NPM_REGISTRY | sed 's|https://||'):_authToken=$NPM_TOKEN" >> ~/.bunfig.toml; \
@@ -76,6 +78,17 @@ RUN if [ -n "$SKAFF_PLUGINS" ]; then \
       for plugin in $SKAFF_PLUGINS; do \
         echo "  Installing: $plugin"; \
         bun add "$plugin" --no-save || exit 1; \
+        if [ "${plugin#@}" != "$plugin" ]; then \
+          name="@$(printf "%s" "$plugin" | cut -d@ -f2)"; \
+          if [ "$name" = "@" ]; then name="$plugin"; fi; \
+        else \
+          name="${plugin%@*}"; \
+        fi; \
+        bundle_web=$(jq -r '.skaff.bundle.web // empty' "node_modules/$name/package.json"); \
+        if [ -n "$bundle_web" ]; then \
+          echo "  Installing bundled web plugin: $bundle_web"; \
+          bun add "$bundle_web" --no-save || exit 1; \
+        fi; \
       done; \
       echo "Plugin installation complete"; \
     else \

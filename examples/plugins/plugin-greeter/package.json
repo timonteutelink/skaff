@@ -20,6 +20,12 @@
     "@timonteutelink/skaff-plugin-greeter-types": "workspace:*",
     "@timonteutelink/template-types-lib": "workspace:*"
   },
+  "skaff": {
+    "bundle": {
+      "cli": "@timonteutelink/skaff-plugin-greeter-cli",
+      "web": "@timonteutelink/skaff-plugin-greeter-web"
+    }
+  },
   "devDependencies": {
     "typescript": "5.9.3"
   }

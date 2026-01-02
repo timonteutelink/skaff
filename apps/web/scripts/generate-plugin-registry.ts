@@ -29,6 +29,7 @@ import process from "node:process";
 import {
   determinePluginTrustBasic,
   type PluginTrustLevel,
+  parsePackageSpec,
 } from "@timonteutelink/skaff-lib";
 
 const require = createRequire(import.meta.url);
@@ -56,6 +57,10 @@ interface PluginPackageJson {
   exports?: Record<string, string> | string;
   skaff?: {
     plugin?: boolean;
+    bundle?: {
+      cli?: string;
+      web?: string;
+    };
   };
 }
 
@@ -127,7 +132,8 @@ function getPluginsFromEnv(): string[] {
   return envPlugins
     .split(/\s+/)
     .map((p: string) => p.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .map((spec: string) => parsePackageSpec(spec).name);
 }
 
 /**
@@ -145,15 +151,24 @@ function getPluginsFromPackageJson(): string[] {
       ...pkg.devDependencies,
     };
 
-    return Object.keys(deps).filter(
-      (name) =>
-        name.includes("skaff-plugin") ||
-        name.startsWith("@skaff/plugin-") ||
-        name.includes("plugin-greeter"), // Include example plugins
-    );
+    return Object.keys(deps);
   } catch {
     return [];
   }
+}
+
+function expandWebBundles(packageNames: string[]): string[] {
+  const expanded = new Set<string>(packageNames);
+
+  for (const packageName of packageNames) {
+    const pkgJson = getPackageJson(packageName);
+    const bundledWeb = pkgJson?.skaff?.bundle?.web;
+    if (bundledWeb) {
+      expanded.add(parsePackageSpec(bundledWeb).name);
+    }
+  }
+
+  return [...expanded];
 }
 
 /**
@@ -164,7 +179,9 @@ async function discoverPlugins(): Promise<DiscoveredPlugin[]> {
   const pkgPlugins = getPluginsFromPackageJson();
 
   // Combine and deduplicate
-  const allPackages = [...new Set([...envPlugins, ...pkgPlugins])];
+  const allPackages = expandWebBundles([
+    ...new Set([...envPlugins, ...pkgPlugins]),
+  ]);
 
   console.log(`Scanning ${allPackages.length} potential plugin packages...`);
 
