@@ -1,19 +1,21 @@
 import type {
   WebPluginContribution,
+  WebPluginNoticeContext,
   WebTemplateStage,
 } from "@timonteutelink/skaff-lib";
 import React, { useState } from "react";
-import { GREETER_PLUGIN_NAME } from "../../plugin-greeter-types/src/index";
+import { GREETER_PLUGIN_NAME } from "@timonteutelink/skaff-plugin-greeter-types";
 
 type GreeterStageState = { disabled?: boolean; message?: string };
 
-const greeterInitWebStage: WebTemplateStage<GreeterStageState> = {
+const greeterInitWebStage: WebTemplateStage = {
   id: "greeter-init",
   placement: "init",
   render: ({ onContinue, stageState, setStageState }) => {
+    const typedState = stageState as GreeterStageState | undefined;
     const [message, setMessage] = useState(
-      typeof stageState?.message === "string"
-        ? stageState.message
+      typeof typedState?.message === "string"
+        ? typedState.message
         : "Hello from greeter!",
     );
 
@@ -45,11 +47,12 @@ const greeterInitWebStage: WebTemplateStage<GreeterStageState> = {
   },
 };
 
-const greeterBeforeWebStage: WebTemplateStage<GreeterStageState> = {
+const greeterBeforeWebStage: WebTemplateStage = {
   id: "greeter-before-settings",
   placement: "before-settings",
   render: ({ onContinue, stageState, setStageState }) => {
-    const [disabled, setDisabled] = useState(Boolean(stageState?.disabled));
+    const typedState = stageState as GreeterStageState | undefined;
+    const [disabled, setDisabled] = useState(Boolean(typedState?.disabled));
 
     return (
       <div className="space-y-4 p-6 border rounded-md bg-white">
@@ -79,10 +82,11 @@ const greeterBeforeWebStage: WebTemplateStage<GreeterStageState> = {
   },
 };
 
-const greeterAfterWebStage: WebTemplateStage<GreeterStageState> = {
+const greeterAfterWebStage: WebTemplateStage = {
   id: "greeter-after-settings",
   placement: "after-settings",
-  shouldSkip: ({ stageState }) => Boolean(stageState?.disabled),
+  shouldSkip: ({ stageState }) =>
+    Boolean((stageState as GreeterStageState | undefined)?.disabled),
   render: ({ currentSettings, onContinue }) => (
     <div className="space-y-4 p-6 border rounded-md bg-white">
       <h2 className="text-xl font-semibold">Greeter after settings</h2>
@@ -100,7 +104,7 @@ const greeterAfterWebStage: WebTemplateStage<GreeterStageState> = {
   ),
 };
 
-const greeterFinalizeWebStage: WebTemplateStage<GreeterStageState> = {
+const greeterFinalizeWebStage: WebTemplateStage = {
   id: "greeter-finalize",
   placement: "finalize",
   render: ({ onContinue, currentSettings }) => (
@@ -121,7 +125,7 @@ const greeterFinalizeWebStage: WebTemplateStage<GreeterStageState> = {
 };
 
 const greeterWebContribution: WebPluginContribution = {
-  getNotices: ({ templateCount }) => {
+  getNotices: ({ templateCount }: WebPluginNoticeContext) => {
     return [
       templateCount > 0
         ? `Greeter plugin ready for ${templateCount} template instance(s).`

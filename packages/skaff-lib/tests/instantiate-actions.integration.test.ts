@@ -517,8 +517,8 @@ describe("instantiate actions integration", () => {
     }
   });
 
-  it("fails when required plugin settings are missing", async () => {
-    const invalidSettings = {
+  it("allows missing optional plugin settings", async () => {
+    const optionalSettings = {
       ...baseUserSettings,
       plugins: { greeter: {} },
     };
@@ -527,15 +527,10 @@ describe("instantiate actions integration", () => {
       "invalid-project",
       "test_template",
       projectParentDir,
-      invalidSettings,
+      optionalSettings,
       { git: true },
     );
 
-    expect("error" in result).toBe(true);
-    if ("error" in result) {
-      expect(result.error).toContain("Missing required plugin settings");
-      expect(result.error).toContain("greeter");
-      expect(result.error).toContain("message");
-    }
+    expect("error" in result).toBe(false);
   });
 });

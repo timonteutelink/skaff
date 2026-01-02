@@ -80,9 +80,6 @@ const templateConfigModule: TemplateConfigModule<{}, typeof templateSettingsSche
     {
       module: "@timonteutelink/skaff-plugin-greeter-cli",
     },
-    {
-      module: "@timonteutelink/skaff-plugin-greeter-web",
-    },
   ],
 
   autoInstantiatedSubtemplates: [

@@ -1,6 +1,6 @@
 import {Args, Flags} from '@oclif/core'
+import {commands as oclifPluginCommands} from '@oclif/plugin-plugins'
 import {extractPluginName, determinePluginTrust, getTrustBadge, isOfficialPlugin} from '@timonteutelink/skaff-lib'
-
 import Base from '../../base-command.js'
 import {getRequiredLibPlugin, validatePluginPackage} from '../../utils/plugin-manager.js'
 
@@ -121,10 +121,10 @@ export default class PluginsInstall extends Base {
 
     // Install plugins using oclif's plugin system
     for (const plugin of pluginsToInstall) {
-      this.log(`\nInstalling ${plugin}...`)
       try {
-        // Use oclif's built-in plugins:install command
-        await this.config.runCommand('plugins:install', [plugin])
+        this.log(`\nInstalling ${plugin} via oclif...`)
+        const PluginsInstall = oclifPluginCommands['plugins:install']
+        await PluginsInstall.run([plugin], this.config)
         this.log(`Successfully installed ${extractPluginName(plugin)}`)
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)

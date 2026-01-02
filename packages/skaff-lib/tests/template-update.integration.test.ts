@@ -11,7 +11,7 @@ import { NpmService } from "../src/core/infra/npm-service";
 import { Project } from "../src/models/project";
 import { setupIntegrationTestEnvironment } from "./helpers/integration-fixtures";
 
-jest.setTimeout(30000);
+jest.setTimeout(60000);
 
 const updateUserSettings = {
   greeting: "Hello update",

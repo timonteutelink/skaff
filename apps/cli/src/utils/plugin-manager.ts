@@ -7,6 +7,9 @@
 
 import {Config} from '@oclif/core'
 import {createRequire} from 'node:module'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import {pathToFileURL} from 'node:url'
 import * as skaffLib from '@timonteutelink/skaff-lib'
 import type {
   InstalledPluginInfo,
@@ -46,6 +49,17 @@ export interface PluginValidationResult {
   isOfficial?: boolean
 }
 
+async function getDataDirDependencyNames(config: Config): Promise<string[]> {
+  try {
+    const packagePath = path.join(config.dataDir, 'package.json')
+    const raw = await fs.readFile(packagePath, 'utf8')
+    const data = JSON.parse(raw) as {dependencies?: Record<string, string>}
+    return Object.keys(data.dependencies ?? {})
+  } catch {
+    return []
+  }
+}
+
 /**
  * Official Skaff plugin scopes that are trusted.
  */
@@ -58,6 +72,19 @@ export const OFFICIAL_PLUGIN_SCOPES = ['@skaff', '@timonteutelink'] as const
 export function validatePluginPackage(packageSpec: string): PluginValidationResult {
   // Extract package name from spec (remove version if present)
   const {name: packageName} = skaffLib.parsePackageSpec(packageSpec)
+
+  const isFileOrUrl =
+    packageSpec.startsWith('file:') ||
+    packageSpec.startsWith('http://') ||
+    packageSpec.startsWith('https://') ||
+    packageSpec.startsWith('git+')
+  if (isFileOrUrl) {
+    return {
+      valid: true,
+      packageName,
+      isOfficial: false,
+    }
+  }
 
   // Check for valid npm package name format
   const npmNameRegex = /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/
@@ -109,6 +136,7 @@ export function getCliPluginTrustLevel(packageName: string): PluginTrustLevel {
  */
 export async function getInstalledCliPlugins(config: Config): Promise<SkaffCliPluginInfo[]> {
   const plugins: SkaffCliPluginInfo[] = []
+  const seenPackages = new Set<string>()
 
   for (const plugin of config.getPluginsList()) {
     // Skip core oclif plugins
@@ -121,8 +149,9 @@ export async function getInstalledCliPlugins(config: Config): Promise<SkaffCliPl
     let capabilities: ('template' | 'cli' | 'web')[] | undefined
 
     try {
-      // Try to require the plugin and check for Skaff manifest
-      const pluginModule = await import(plugin.name)
+      const requireFromPlugin = createRequire(path.join(plugin.root, 'package.json'))
+      const modulePath = requireFromPlugin.resolve(plugin.name)
+      const pluginModule = await import(pathToFileURL(modulePath).href)
       const defaultExport = pluginModule.default ?? pluginModule
 
       if (defaultExport?.manifest?.capabilities) {
@@ -145,6 +174,44 @@ export async function getInstalledCliPlugins(config: Config): Promise<SkaffCliPl
       type: plugin.type as 'user' | 'core' | 'link' | 'dev',
       trustLevel,
     })
+    seenPackages.add(plugin.name)
+  }
+
+  const dependencyNames = await getDataDirDependencyNames(config)
+  if (dependencyNames.length > 0) {
+    const requireFromDataDir = createRequire(path.join(config.dataDir, 'package.json'))
+
+    for (const dependencyName of dependencyNames) {
+      if (seenPackages.has(dependencyName)) {
+        continue
+      }
+
+      try {
+        const modulePath = requireFromDataDir.resolve(dependencyName)
+        const packageJsonPath = path.join(path.dirname(modulePath), '..', 'package.json')
+        const packageRaw = await fs.readFile(packageJsonPath, 'utf8')
+        const packageInfo = JSON.parse(packageRaw) as {name?: string; version?: string}
+        const pluginModule = await import(pathToFileURL(modulePath).href)
+        const defaultExport = pluginModule.default ?? pluginModule
+
+        const isSkaffPlugin = Boolean(defaultExport?.manifest?.capabilities)
+        const capabilities = isSkaffPlugin ? defaultExport.manifest.capabilities : undefined
+        const packageName = packageInfo.name ?? dependencyName
+
+        plugins.push({
+          name: packageName,
+          version: packageInfo.version ?? 'unknown',
+          packageName,
+          isSkaffPlugin,
+          capabilities,
+          type: 'user',
+          trustLevel: getCliPluginTrustLevel(packageName),
+        })
+        seenPackages.add(packageName)
+      } catch {
+        // Ignore non-plugin dependencies
+      }
+    }
   }
 
   return plugins
@@ -163,7 +230,7 @@ export async function getInstalledSkaffPlugins(config: Config): Promise<SkaffCli
  */
 export async function registerInstalledPluginModules(config: Config): Promise<void> {
   const entries: { moduleExports: unknown; modulePath: string; packageName: string }[] = []
-  const require = createRequire(import.meta.url)
+  const seenPackages = new Set<string>()
 
   for (const plugin of config.getPluginsList()) {
     if (plugin.name.startsWith('@oclif/') || plugin.type === 'core') {
@@ -171,21 +238,51 @@ export async function registerInstalledPluginModules(config: Config): Promise<vo
     }
 
     try {
-      const moduleNamespace = await import(plugin.name)
+      const requireFromPlugin = createRequire(path.join(plugin.root, 'package.json'))
+      const modulePath = requireFromPlugin.resolve(plugin.name)
+      const moduleNamespace = await import(pathToFileURL(modulePath).href)
       const candidate = moduleNamespace.default ?? moduleNamespace
       if (!candidate?.manifest?.capabilities) {
         continue
       }
-
-      const modulePath = require.resolve(plugin.name)
 
       entries.push({
         moduleExports: moduleNamespace,
         modulePath,
         packageName: plugin.name,
       })
+      seenPackages.add(plugin.name)
     } catch {
       // Ignore plugins that fail to import; they are treated as not installed
+    }
+  }
+
+  const dependencyNames = await getDataDirDependencyNames(config)
+  if (dependencyNames.length > 0) {
+    const requireFromDataDir = createRequire(path.join(config.dataDir, 'package.json'))
+
+    for (const dependencyName of dependencyNames) {
+      if (seenPackages.has(dependencyName)) {
+        continue
+      }
+
+      try {
+        const modulePath = requireFromDataDir.resolve(dependencyName)
+        const moduleNamespace = await import(pathToFileURL(modulePath).href)
+        const candidate = moduleNamespace.default ?? moduleNamespace
+        if (!candidate?.manifest?.capabilities) {
+          continue
+        }
+
+        entries.push({
+          moduleExports: moduleNamespace,
+          modulePath,
+          packageName: dependencyName,
+        })
+        seenPackages.add(dependencyName)
+      } catch {
+        // Ignore non-plugin dependencies
+      }
     }
   }
 

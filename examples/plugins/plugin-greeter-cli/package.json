@@ -7,6 +7,9 @@
   "exports": {
     ".": "./dist/index.js"
   },
+  "oclif": {
+    "name": "@timonteutelink/skaff-plugin-greeter-cli"
+  },
   "files": [
     "dist"
   ],
@@ -14,14 +17,10 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@timonteutelink/skaff-plugin-greeter": "0.0.1",
-    "@timonteutelink/skaff-plugin-greeter-types": "0.0.1"
-  },
-  "peerDependencies": {
-    "@timonteutelink/skaff-lib": ">=0.0.56"
+    "@timonteutelink/skaff-plugin-greeter": "workspace:*",
+    "@timonteutelink/skaff-plugin-greeter-types": "workspace:*"
   },
   "devDependencies": {
-    "@timonteutelink/skaff-lib": "0.0.56",
     "@inquirer/prompts": "^5.3.8",
     "typescript": "5.9.3"
   }
