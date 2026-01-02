@@ -1,8 +1,14 @@
 import {Args, Flags} from '@oclif/core'
 import {commands as oclifPluginCommands} from '@oclif/plugin-plugins'
-import {extractPluginName, determinePluginTrust, getTrustBadge, isOfficialPlugin} from '@timonteutelink/skaff-lib'
+import {
+  extractPluginName,
+  determinePluginTrust,
+  getTrustBadge,
+  isOfficialPlugin,
+  parsePackageSpec,
+} from '@timonteutelink/skaff-lib'
 import Base from '../../base-command.js'
-import {getRequiredLibPlugin, validatePluginPackage} from '../../utils/plugin-manager.js'
+import {getInstalledPluginBundleMetadata, validatePluginPackage} from '../../utils/plugin-manager.js'
 
 export default class PluginsInstall extends Base {
   static description = 'Install a Skaff plugin from npm registry'
@@ -46,6 +52,16 @@ export default class PluginsInstall extends Base {
 
     const pluginsToInstall: string[] = []
     const warnings: string[] = []
+    const queuedPackages = new Set<string>()
+
+    const queuePlugin = (pluginSpec: string) => {
+      const packageName = parsePackageSpec(pluginSpec).name
+      if (queuedPackages.has(packageName)) {
+        return
+      }
+      queuedPackages.add(packageName)
+      pluginsToInstall.push(pluginSpec)
+    }
 
     // Validate all plugins first
     for (const pluginSpec of argv as string[]) {
@@ -59,16 +75,7 @@ export default class PluginsInstall extends Base {
         warnings.push(validation.reason)
       }
 
-      pluginsToInstall.push(pluginSpec)
-
-      // Check if we need to install the base lib plugin
-      if (flags['with-deps']) {
-        const requiredLib = getRequiredLibPlugin(validation.packageName)
-        if (requiredLib && !pluginsToInstall.includes(requiredLib)) {
-          this.log(`Plugin ${extractPluginName(pluginSpec)} requires base plugin: ${requiredLib}`)
-          pluginsToInstall.unshift(requiredLib) // Install base first
-        }
-      }
+      queuePlugin(pluginSpec)
     }
 
     // Show warnings
@@ -120,12 +127,33 @@ export default class PluginsInstall extends Base {
     }
 
     // Install plugins using oclif's plugin system
-    for (const plugin of pluginsToInstall) {
+    const installedPackages = new Set<string>()
+
+    for (let index = 0; index < pluginsToInstall.length; index += 1) {
+      const plugin = pluginsToInstall[index]
+      const parsed = parsePackageSpec(plugin)
+      if (installedPackages.has(parsed.name)) {
+        continue
+      }
+
       try {
         this.log(`\nInstalling ${plugin} via oclif...`)
         const PluginsInstall = oclifPluginCommands['plugins:install']
         await PluginsInstall.run([plugin], this.config)
         this.log(`Successfully installed ${extractPluginName(plugin)}`)
+        installedPackages.add(parsed.name)
+
+        if (flags['with-deps']) {
+          const bundleMetadata = await getInstalledPluginBundleMetadata(this.config, parsed.name)
+          if (bundleMetadata?.cli) {
+            const bundleName = parsePackageSpec(bundleMetadata.cli).name
+            if (!queuedPackages.has(bundleName) && !installedPackages.has(bundleName)) {
+              this.log(`Installing bundled CLI plugin: ${bundleMetadata.cli}`)
+              pluginsToInstall.push(bundleMetadata.cli)
+              queuedPackages.add(bundleName)
+            }
+          }
+        }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         this.error(`Failed to install ${plugin}: ${message}`, {exit: 1})

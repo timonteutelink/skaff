@@ -49,6 +49,31 @@ export interface PluginValidationResult {
   isOfficial?: boolean
 }
 
+export interface PluginBundleMetadata {
+  cli?: string
+  web?: string
+}
+
+export function parsePluginBundleMetadata(packageJson: unknown): PluginBundleMetadata | null {
+  if (!packageJson || typeof packageJson !== 'object') {
+    return null
+  }
+
+  const bundle = (packageJson as {skaff?: {bundle?: unknown}}).skaff?.bundle
+  if (!bundle || typeof bundle !== 'object') {
+    return null
+  }
+
+  const cli = typeof (bundle as {cli?: unknown}).cli === 'string' ? (bundle as {cli: string}).cli : undefined
+  const web = typeof (bundle as {web?: unknown}).web === 'string' ? (bundle as {web: string}).web : undefined
+
+  if (!cli && !web) {
+    return null
+  }
+
+  return {cli, web}
+}
+
 async function getDataDirDependencyNames(config: Config): Promise<string[]> {
   try {
     const packagePath = path.join(config.dataDir, 'package.json')
@@ -57,6 +82,21 @@ async function getDataDirDependencyNames(config: Config): Promise<string[]> {
     return Object.keys(data.dependencies ?? {})
   } catch {
     return []
+  }
+}
+
+export async function getInstalledPluginBundleMetadata(
+  config: Config,
+  packageName: string,
+): Promise<PluginBundleMetadata | null> {
+  try {
+    const requireFromDataDir = createRequire(path.join(config.dataDir, 'package.json'))
+    const pkgPath = requireFromDataDir.resolve(`${packageName}/package.json`)
+    const raw = await fs.readFile(pkgPath, 'utf8')
+    const packageJson = JSON.parse(raw) as unknown
+    return parsePluginBundleMetadata(packageJson)
+  } catch {
+    return null
   }
 }
 
@@ -371,51 +411,5 @@ export function formatPluginCompatibilityForCli(result: TemplatePluginCompatibil
 /**
  * Determines related plugins that should be installed together.
  *
- * Plugin naming convention:
- * - @scope/plugin-name (lib/core)
- * - @scope/plugin-name-cli (cli contribution)
- * - @scope/plugin-name-web (web contribution)
- * - @scope/plugin-name-types (type definitions)
- *
- * When installing a -cli or -web plugin, we should also ensure the base lib plugin is installed.
+ * Bundle relationships are declared through skaff.bundle metadata in package.json.
  */
-export function getRelatedPluginPackages(packageName: string): {
-  base: string
-  cli?: string
-  web?: string
-  types?: string
-} {
-  const name = skaffLib.extractPluginName(packageName)
-
-  // Determine the base name by removing -cli, -web, -types suffixes
-  let baseName = name
-  if (name.endsWith('-cli')) {
-    baseName = name.slice(0, -4)
-  } else if (name.endsWith('-web')) {
-    baseName = name.slice(0, -4)
-  } else if (name.endsWith('-types')) {
-    baseName = name.slice(0, -6)
-  }
-
-  return {
-    base: baseName,
-    cli: `${baseName}-cli`,
-    web: `${baseName}-web`,
-    types: `${baseName}-types`,
-  }
-}
-
-/**
- * Checks if a plugin is a CLI variant and returns the base lib package if so.
- */
-export function getRequiredLibPlugin(packageName: string): string | null {
-  const name = skaffLib.extractPluginName(packageName)
-
-  if (name.endsWith('-cli') || name.endsWith('-web')) {
-    // This is a CLI or web plugin - it requires the base lib plugin
-    const baseName = name.endsWith('-cli') ? name.slice(0, -4) : name.slice(0, -4)
-    return baseName
-  }
-
-  return null
-}

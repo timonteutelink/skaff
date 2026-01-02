@@ -143,6 +143,11 @@ Plugins are installed differently depending on the environment:
 | **Web (Nix)**    | `plugins` parameter               | Nix-based deployments   |
 | **Library**      | npm dependency in `package.json`  | Programmatic usage      |
 
+Plugins can declare bundle metadata in their `package.json` under `skaff.bundle` to
+connect a base plugin to CLI or Web variants. The CLI automatically installs the
+`bundle.cli` package when you install the base plugin, and Web builds expand base
+plugin entries in `SKAFF_PLUGINS` to include the `bundle.web` package.
+
 **CLI Example:**
 
 ```bash
