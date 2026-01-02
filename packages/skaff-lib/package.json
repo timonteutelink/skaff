@@ -24,7 +24,7 @@
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
     "test": "bun run test:ci",
-    "test:ci": "cd ../template-types-lib && bun run build && cd ../skaff-lib && bun run build && jest",
+    "test:ci": "cd ../template-types-lib && bun run build && cd ../../examples/plugins/plugin-greeter-types && bun run build && cd ../../../packages/skaff-lib && bun run build && jest",
     "test:watch": "jest --watch"
   },
   "devDependencies": {

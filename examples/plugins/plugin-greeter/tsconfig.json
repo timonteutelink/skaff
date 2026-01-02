@@ -1,12 +1,13 @@
 {
   "extends": "../typescript-config/base.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "outDir": "dist",
     "rootDir": "src",
     "composite": false,
     "declaration": true,
     "emitDeclarationOnly": false,
-    "noEmit": false
+    "noEmit": false,
   },
   "include": ["src/**/*"]
 }

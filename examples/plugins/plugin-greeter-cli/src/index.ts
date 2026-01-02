@@ -3,7 +3,7 @@ import type {
   CliTemplateStage,
   PluginCliCommand,
 } from "@timonteutelink/skaff-lib";
-import { GREETER_PLUGIN_NAME } from "../../plugin-greeter-types/src/index";
+import { GREETER_PLUGIN_NAME } from "@timonteutelink/skaff-plugin-greeter-types";
 
 type GreeterStageState = { disabled?: boolean; message?: string };
 type InquirerPrompts = typeof import("@inquirer/prompts");
@@ -12,12 +12,12 @@ const greeterCliCommand: PluginCliCommand = {
   name: "greet",
   alias: "g",
   description: "Print a friendly greeting and show plugin information",
-  async run({ argv, projectPath, projectName, templateCount }) {
+  async run({ argv, projectPath, projectRepositoryName, templateCount }) {
     const targetInstanceId = argv[0];
 
     // eslint-disable-next-line no-console
     console.log(
-      `👋 Hello from greeter for project "${projectName}" at ${
+      `👋 Hello from greeter for project "${projectRepositoryName}" at ${
         projectPath ?? "unknown path"
       }. ${templateCount} template(s) instantiated.${
         targetInstanceId ? ` Target instance: ${targetInstanceId}` : ""

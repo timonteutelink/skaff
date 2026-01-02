@@ -4,14 +4,15 @@ import type {
   PluginGenerationResult,
   PluginLifecycle,
   PluginLifecycleContext,
+  SkaffPluginModule,
   TemplateGenerationPlugin,
   TemplateInstantiationPipelineContext,
-  TemplatePluginFactoryInput,
+  TemplatePluginEntrypoint,
 } from "@timonteutelink/skaff-lib";
 import {
   GREETER_PLUGIN_NAME,
   type GreeterPluginOptions,
-} from "../../plugin-greeter-types/src/index";
+} from "@timonteutelink/skaff-plugin-greeter-types";
 import {
   pluginInputSchema,
   pluginOutputSchema,
@@ -39,9 +40,7 @@ function createGreetingStage(
   } satisfies PipelineStage<any>;
 }
 
-function createGreeterTemplatePlugin(
-  input: TemplatePluginFactoryInput,
-): TemplateGenerationPlugin {
+const createGreeterTemplatePlugin: TemplatePluginEntrypoint = (input) => {
   const options = input.options as GreeterPluginOptions | undefined;
   const templateDescription =
     typeof input.template.description === "string"
@@ -58,7 +57,7 @@ function createGreeterTemplatePlugin(
       );
     },
   } satisfies TemplateGenerationPlugin;
-}
+};
 
 /**
  * Lifecycle hooks for the greeter plugin.
@@ -82,7 +81,7 @@ const greeterLifecycle: PluginLifecycle = {
   onBeforeGenerate(context: PluginLifecycleContext) {
     // eslint-disable-next-line no-console
     console.log(
-      `[${context.pluginName}] Preparing to generate: ${context.projectName ?? "unknown project"}`,
+      `[${context.pluginName}] Preparing to generate: ${context.projectRepositoryName ?? "unknown project"}`,
     );
   },
 
@@ -116,7 +115,7 @@ const greeterLifecycle: PluginLifecycle = {
   },
 };
 
-const greeterPlugin = {
+const greeterPlugin: SkaffPluginModule = {
   manifest: {
     name: GREETER_PLUGIN_NAME,
     version: "0.0.0",
@@ -130,7 +129,6 @@ const greeterPlugin = {
       input: true,
       output: true,
     },
-    requiredSettingsKeys: ["message"],
   },
   lifecycle: greeterLifecycle,
   inputSchema: pluginInputSchema.extend({

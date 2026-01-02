@@ -21,6 +21,10 @@
   "workspaces": [
     "apps/cli",
     "apps/web",
+    "examples/plugins/plugin-greeter",
+    "examples/plugins/plugin-greeter-cli",
+    "examples/plugins/plugin-greeter-types",
+    "examples/plugins/plugin-greeter-web",
     "packages/eslint-config",
     "packages/skaff-lib",
     "packages/tailwind-config",
