@@ -46,7 +46,7 @@ export interface MissingPluginInfo {
   /** The required version constraint (if specified) */
   requiredVersion?: string;
   /** Reason why the plugin cannot be used */
-  reason: "not_installed" | "version_mismatch";
+  reason: "not_installed" | "version_mismatch" | "invalid_global_config";
   /** Installed version if available but incompatible */
   installedVersion?: string;
   /** Human-readable message explaining the issue */
@@ -153,13 +153,17 @@ function coerceToPluginModule(entry: unknown): SkaffPluginModule | null {
  */
 export function checkPluginCompatibility(
   template: TemplateDTO,
+  pluginSettings?: Record<string, unknown>,
 ): PluginCompatibilityResult {
   const plugins = template.plugins;
 
   // Use the skaff-lib compatibility checker with semver support
   const installedPluginsMap = buildInstalledPluginsMap();
   const result: TemplatePluginCompatibilityResult =
-    checkTemplatePluginCompatibility(plugins, installedPluginsMap);
+    checkTemplatePluginCompatibility(plugins, installedPluginsMap, {
+      validateGlobalConfig: (pluginConfig) =>
+        validateGlobalPluginSettings(pluginConfig, pluginSettings),
+    });
 
   // Convert to the web-specific format
   const missing: MissingPluginInfo[] = [
@@ -174,6 +178,13 @@ export function checkPluginCompatibility(
       requiredVersion: p.requiredVersion,
       installedVersion: p.installedVersion,
       reason: "version_mismatch" as const,
+      message: p.message,
+    })),
+    ...result.invalidGlobalConfig.map((p: SinglePluginCompatibilityResult) => ({
+      module: p.module,
+      requiredVersion: p.requiredVersion,
+      installedVersion: p.installedVersion,
+      reason: "invalid_global_config" as const,
       message: p.message,
     })),
   ];
@@ -209,6 +220,39 @@ export function checkPluginCompatibility(
   };
 }
 
+function validateGlobalPluginSettings(
+  pluginConfig: TemplatePluginConfig,
+  pluginSettings?: Record<string, unknown>,
+): { data: undefined } | { error: string } {
+  const pluginName = extractPluginName(pluginConfig.module);
+  const moduleExports = getInstalledPlugin(pluginName);
+  const resolvedModule = moduleExports ?? getInstalledPlugin(pluginConfig.module);
+
+  if (!resolvedModule) {
+    return {
+      error: `Plugin "${pluginName}" is installed but could not be loaded for settings validation`,
+    };
+  }
+
+  const entry = pickEntrypoint(resolvedModule, pluginConfig.exportName);
+  const pluginModule = coerceToPluginModule(entry);
+  if (!pluginModule?.globalConfigSchema) {
+    return { data: undefined };
+  }
+
+  const manifestName = pluginModule.manifest?.name ?? pluginName;
+  const rawSettings = pluginSettings?.[manifestName];
+  const parsed = pluginModule.globalConfigSchema.safeParse(rawSettings ?? {});
+
+  if (!parsed.success) {
+    return {
+      error: `Invalid global config for plugin ${manifestName}: ${parsed.error}`,
+    };
+  }
+
+  return { data: undefined };
+}
+
 export type WebPluginStageEntry = PluginStageEntry<WebTemplateStage>;
 
 export interface WebPluginRequirement {
@@ -231,6 +275,7 @@ export interface WebPluginRequirement {
 export async function loadWebTemplateStages(
   template: TemplateDTO,
   projectContext: ReadonlyProjectContext,
+  pluginSettings?: Record<string, unknown>,
 ): Promise<WebPluginStageEntry[]> {
   const plugins = template.plugins;
 
@@ -239,7 +284,7 @@ export async function loadWebTemplateStages(
   if (!normalized.length) return [];
 
   // First, check compatibility to filter out incompatible plugins
-  const compatibility = checkPluginCompatibility(template);
+  const compatibility = checkPluginCompatibility(template, pluginSettings);
 
   const stages: WebPluginStageEntry[] = [];
 
@@ -288,11 +333,12 @@ export async function loadWebTemplateStages(
 
 export async function loadWebTemplatePluginRequirements(
   template: TemplateDTO,
+  pluginSettings?: Record<string, unknown>,
 ): Promise<WebPluginRequirement[]> {
   const normalized = normalizeTemplatePlugins(template.plugins);
   if (!normalized.length) return [];
 
-  const compatibility = checkPluginCompatibility(template);
+  const compatibility = checkPluginCompatibility(template, pluginSettings);
   const requirements: WebPluginRequirement[] = [];
 
   for (const reference of normalized) {

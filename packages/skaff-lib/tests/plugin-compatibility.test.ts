@@ -202,6 +202,7 @@ describe("plugin-compatibility", () => {
 
       expect(result.allCompatible).toBe(true);
       expect(result.plugins).toHaveLength(0);
+      expect(result.invalidGlobalConfig).toHaveLength(0);
     });
 
     it("should return allCompatible true when all plugins are compatible", () => {
@@ -222,6 +223,7 @@ describe("plugin-compatibility", () => {
       expect(result.compatible).toHaveLength(2);
       expect(result.missing).toHaveLength(0);
       expect(result.versionMismatches).toHaveLength(0);
+      expect(result.invalidGlobalConfig).toHaveLength(0);
     });
 
     it("should identify missing plugins", () => {
@@ -237,6 +239,7 @@ describe("plugin-compatibility", () => {
       expect(result.allCompatible).toBe(false);
       expect(result.missing).toHaveLength(1);
       expect(result.missing[0].module).toBe("@skaff/plugin-b");
+      expect(result.invalidGlobalConfig).toHaveLength(0);
     });
 
     it("should identify version mismatches", () => {
@@ -257,6 +260,7 @@ describe("plugin-compatibility", () => {
       expect(result.compatible).toHaveLength(1);
       expect(result.versionMismatches).toHaveLength(1);
       expect(result.versionMismatches[0].module).toBe("@skaff/plugin-b");
+      expect(result.invalidGlobalConfig).toHaveLength(0);
     });
   });
 
@@ -267,6 +271,7 @@ describe("plugin-compatibility", () => {
         plugins: [],
         missing: [],
         versionMismatches: [],
+        invalidGlobalConfig: [],
         compatible: [],
       });
 
@@ -282,6 +287,7 @@ describe("plugin-compatibility", () => {
         ],
         missing: [],
         versionMismatches: [],
+        invalidGlobalConfig: [],
         compatible: [
           { module: "a", compatible: true },
           { module: "b", compatible: true },
@@ -309,6 +315,7 @@ describe("plugin-compatibility", () => {
           },
         ],
         versionMismatches: [],
+        invalidGlobalConfig: [],
         compatible: [],
       });
 
@@ -338,12 +345,41 @@ describe("plugin-compatibility", () => {
             requiredVersion: "^2.0.0",
           },
         ],
+        invalidGlobalConfig: [],
         compatible: [],
       });
 
       expect(summary).toContain("Version mismatches (1):");
       expect(summary).toContain("installed v1.0.0");
       expect(summary).toContain("requires ^2.0.0");
+    });
+
+    it("should format invalid global settings", () => {
+      const summary = formatCompatibilitySummary({
+        allCompatible: false,
+        plugins: [
+          {
+            module: "@skaff/plugin-foo",
+            compatible: false,
+            reason: "invalid_global_config",
+            message: "Invalid global config for plugin @skaff/plugin-foo",
+          },
+        ],
+        missing: [],
+        versionMismatches: [],
+        invalidGlobalConfig: [
+          {
+            module: "@skaff/plugin-foo",
+            compatible: false,
+            reason: "invalid_global_config",
+            message: "Invalid global config for plugin @skaff/plugin-foo",
+          },
+        ],
+        compatible: [],
+      });
+
+      expect(summary).toContain("Invalid global plugin settings (1):");
+      expect(summary).toContain("Invalid global config for plugin");
     });
   });
 });

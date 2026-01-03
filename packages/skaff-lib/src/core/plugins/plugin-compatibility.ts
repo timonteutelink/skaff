@@ -12,6 +12,7 @@ import {
   type NormalizedTemplatePluginConfig,
 } from "./plugin-types";
 import { parsePackageSpec } from "./package-spec";
+import type { Result } from "../../lib/types";
 
 /**
  * Information about an installed plugin.
@@ -32,7 +33,8 @@ export type PluginIncompatibilityReason =
   | "not_installed"
   | "version_mismatch"
   | "invalid_version_constraint"
-  | "invalid_installed_version";
+  | "invalid_installed_version"
+  | "invalid_global_config";
 
 /**
  * Result of checking a single plugin's compatibility.
@@ -64,9 +66,16 @@ export interface TemplatePluginCompatibilityResult {
   missing: SinglePluginCompatibilityResult[];
   /** List of plugins with version mismatches */
   versionMismatches: SinglePluginCompatibilityResult[];
+  /** List of plugins with invalid global configuration */
+  invalidGlobalConfig: SinglePluginCompatibilityResult[];
   /** List of compatible plugins */
   compatible: SinglePluginCompatibilityResult[];
 }
+
+export type GlobalConfigValidator = (
+  pluginConfig: NormalizedTemplatePluginConfig,
+  installedPlugin: InstalledPluginInfo | undefined,
+) => Result<void>;
 
 /**
  * Extracts the plugin name from a module specifier.
@@ -126,26 +135,10 @@ export function checkSinglePluginCompatibility(
 ): SinglePluginCompatibilityResult {
   const pluginName = extractPluginName(pluginConfig.module);
 
-  // Try to find the plugin by name or package name
-  let installedPlugin = installedPlugins.get(pluginName);
-
-  // Also try the full module specifier as a fallback
-  if (!installedPlugin) {
-    installedPlugin = installedPlugins.get(pluginConfig.module);
-  }
-
-  // Also try matching by packageName
-  if (!installedPlugin) {
-    for (const [, info] of installedPlugins) {
-      if (
-        info.packageName === pluginConfig.module ||
-        info.packageName === pluginName
-      ) {
-        installedPlugin = info;
-        break;
-      }
-    }
-  }
+  const installedPlugin = findInstalledPluginInfo(
+    pluginConfig,
+    installedPlugins,
+  );
 
   if (!installedPlugin) {
     return {
@@ -218,6 +211,7 @@ export function checkSinglePluginCompatibility(
 export function checkTemplatePluginCompatibility(
   templatePlugins: TemplatePluginConfig[] | undefined | null,
   installedPlugins: Map<string, InstalledPluginInfo>,
+  options?: { validateGlobalConfig?: GlobalConfigValidator },
 ): TemplatePluginCompatibilityResult {
   const normalized = normalizeTemplatePlugins(templatePlugins);
 
@@ -227,6 +221,7 @@ export function checkTemplatePluginCompatibility(
       plugins: [],
       missing: [],
       versionMismatches: [],
+      invalidGlobalConfig: [],
       compatible: [],
     };
   }
@@ -234,6 +229,7 @@ export function checkTemplatePluginCompatibility(
   const results: SinglePluginCompatibilityResult[] = [];
   const missing: SinglePluginCompatibilityResult[] = [];
   const versionMismatches: SinglePluginCompatibilityResult[] = [];
+  const invalidGlobalConfig: SinglePluginCompatibilityResult[] = [];
   const compatible: SinglePluginCompatibilityResult[] = [];
 
   for (const pluginConfig of normalized) {
@@ -241,22 +237,47 @@ export function checkTemplatePluginCompatibility(
       pluginConfig,
       installedPlugins,
     );
-    results.push(result);
+    const installedPlugin = findInstalledPluginInfo(
+      pluginConfig,
+      installedPlugins,
+    );
+    const globalConfigResult =
+      result.compatible && options?.validateGlobalConfig
+        ? options.validateGlobalConfig(pluginConfig, installedPlugin)
+        : { data: undefined };
 
-    if (result.compatible) {
-      compatible.push(result);
-    } else if (result.reason === "not_installed") {
-      missing.push(result);
+    const finalResult =
+      result.compatible && "error" in globalConfigResult
+        ? {
+            ...result,
+            compatible: false,
+            reason: "invalid_global_config" as const,
+            message: globalConfigResult.error,
+          }
+        : result;
+
+    results.push(finalResult);
+
+    if (finalResult.compatible) {
+      compatible.push(finalResult);
+    } else if (finalResult.reason === "not_installed") {
+      missing.push(finalResult);
+    } else if (finalResult.reason === "invalid_global_config") {
+      invalidGlobalConfig.push(finalResult);
     } else {
-      versionMismatches.push(result);
+      versionMismatches.push(finalResult);
     }
   }
 
   return {
-    allCompatible: missing.length === 0 && versionMismatches.length === 0,
+    allCompatible:
+      missing.length === 0 &&
+      versionMismatches.length === 0 &&
+      invalidGlobalConfig.length === 0,
     plugins: results,
     missing,
     versionMismatches,
+    invalidGlobalConfig,
     compatible,
   };
 }
@@ -296,5 +317,43 @@ export function formatCompatibilitySummary(
     }
   }
 
+  if (result.invalidGlobalConfig.length > 0) {
+    lines.push(
+      `Invalid global plugin settings (${result.invalidGlobalConfig.length}):`,
+    );
+    for (const p of result.invalidGlobalConfig) {
+      lines.push(
+        `  - ${extractPluginName(p.module)}: ${p.message ?? "invalid global settings"}`,
+      );
+    }
+  }
+
   return lines.join("\n");
+}
+
+function findInstalledPluginInfo(
+  pluginConfig: NormalizedTemplatePluginConfig,
+  installedPlugins: Map<string, InstalledPluginInfo>,
+): InstalledPluginInfo | undefined {
+  const pluginName = extractPluginName(pluginConfig.module);
+
+  let installedPlugin = installedPlugins.get(pluginName);
+
+  if (!installedPlugin) {
+    installedPlugin = installedPlugins.get(pluginConfig.module);
+  }
+
+  if (!installedPlugin) {
+    for (const [, info] of installedPlugins) {
+      if (
+        info.packageName === pluginConfig.module ||
+        info.packageName === pluginName
+      ) {
+        installedPlugin = info;
+        break;
+      }
+    }
+  }
+
+  return installedPlugin;
 }

@@ -362,7 +362,84 @@ export async function checkTemplatePluginsCompatibility(
   templatePlugins: TemplatePluginConfig[] | undefined | null,
 ): Promise<TemplatePluginCompatibilityResult> {
   const installedMap = await buildInstalledPluginsMap(config)
-  return skaffLib.checkTemplatePluginCompatibility(templatePlugins, installedMap)
+  const baseResult = skaffLib.checkTemplatePluginCompatibility(templatePlugins, installedMap)
+  const normalized = skaffLib.normalizeTemplatePlugins(templatePlugins)
+
+  if (!normalized.length) {
+    return baseResult
+  }
+
+  const pluginSettings = await skaffLib.getAllPluginSystemSettings()
+  const updatedPlugins = await Promise.all(
+    baseResult.plugins.map(async (pluginResult) => {
+      if (!pluginResult.compatible) {
+        return pluginResult
+      }
+
+      const pluginConfig = normalized.find((entry) => entry.module === pluginResult.module)
+      if (!pluginConfig) {
+        return pluginResult
+      }
+
+      const moduleResult = await skaffLib.resolveRegisteredPluginModule(pluginConfig)
+      if ('error' in moduleResult) {
+        return {
+          ...pluginResult,
+          compatible: false,
+          reason: 'invalid_global_config' as const,
+          message: `Unable to load plugin for global settings validation: ${moduleResult.error}`,
+        }
+      }
+
+      const pluginModule = moduleResult.data
+      if (!pluginModule.globalConfigSchema) {
+        return pluginResult
+      }
+
+      const pluginName = pluginModule.manifest?.name ?? skaffLib.extractPluginName(pluginConfig.module)
+      const rawSettings = pluginSettings[pluginName]
+      const parsed = pluginModule.globalConfigSchema.safeParse(rawSettings ?? {})
+
+      if (!parsed.success) {
+        return {
+          ...pluginResult,
+          compatible: false,
+          reason: 'invalid_global_config' as const,
+          message: `Invalid global config for plugin ${pluginName}: ${parsed.error}`,
+        }
+      }
+
+      return pluginResult
+    }),
+  )
+
+  const missing: SinglePluginCompatibilityResult[] = []
+  const versionMismatches: SinglePluginCompatibilityResult[] = []
+  const invalidGlobalConfig: SinglePluginCompatibilityResult[] = []
+  const compatible: SinglePluginCompatibilityResult[] = []
+
+  for (const result of updatedPlugins) {
+    if (result.compatible) {
+      compatible.push(result)
+    } else if (result.reason === 'not_installed') {
+      missing.push(result)
+    } else if (result.reason === 'invalid_global_config') {
+      invalidGlobalConfig.push(result)
+    } else {
+      versionMismatches.push(result)
+    }
+  }
+
+  return {
+    ...baseResult,
+    plugins: updatedPlugins,
+    missing,
+    versionMismatches,
+    invalidGlobalConfig,
+    compatible,
+    allCompatible:
+      missing.length === 0 && versionMismatches.length === 0 && invalidGlobalConfig.length === 0,
+  }
 }
 
 /**
@@ -402,6 +479,18 @@ export function formatPluginCompatibilityForCli(result: TemplatePluginCompatibil
     lines.push('Update plugins with:')
     lines.push(
       `  skaff plugins update ${result.versionMismatches.map((p: SinglePluginCompatibilityResult) => skaffLib.extractPluginName(p.module)).join(' ')}`,
+    )
+  }
+
+  if (result.invalidGlobalConfig.length > 0) {
+    lines.push('\nInvalid global plugin settings:')
+    for (const p of result.invalidGlobalConfig) {
+      lines.push(`  - ${skaffLib.extractPluginName(p.module)}: ${p.message ?? 'invalid global settings'}`)
+    }
+    lines.push('')
+    lines.push('Update plugin settings with:')
+    lines.push(
+      `  skaff plugin-settings set ${result.invalidGlobalConfig.map((p: SinglePluginCompatibilityResult) => skaffLib.extractPluginName(p.module)).join(' ')}`,
     )
   }
 

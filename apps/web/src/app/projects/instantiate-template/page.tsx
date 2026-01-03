@@ -16,6 +16,7 @@ import {
   retrieveTemplate,
   retrieveTemplateRevisionForProject,
 } from "@/app/actions/template";
+import { retrieveAllPluginSettings } from "@/app/actions/plugin-settings";
 import CommitButton from "@/components/general/git/commit-dialog";
 import { DiffVisualizerPage } from "@/components/general/git/diff-visualizer-page";
 import { TemplateSettingsForm } from "@/components/general/template-settings/template-settings-form";
@@ -41,9 +42,12 @@ import { ConfirmationDialog } from "@/components/general/confirmation-dialog";
 import {
   loadWebTemplateStages,
   loadWebTemplatePluginRequirements,
+  checkPluginCompatibility,
   type WebPluginStageEntry,
   type WebPluginRequirement,
+  type PluginCompatibilityResult,
 } from "@/lib/plugins/web-stage-loader";
+import { PluginCompatibilityDetails } from "@/components/general/plugins/plugin-compatibility";
 import {
   buildSchemaAndDefaults,
   normalizeNativeSchemaNode,
@@ -98,6 +102,11 @@ const TemplateInstantiationPage: React.FC = () => {
   const [pluginRequirements, setPluginRequirements] = useState<
     WebPluginRequirement[]
   >([]);
+  const [pluginCompatibility, setPluginCompatibility] =
+    useState<PluginCompatibilityResult | null>(null);
+  const [pluginSettings, setPluginSettings] = useState<
+    Record<string, unknown> | null
+  >(null);
   const [stageState, setStageState] = useState<Record<string, unknown>>({});
   const [beforeStageIndex, setBeforeStageIndex] = useState(0);
   const [afterStageIndex, setAfterStageIndex] = useState(0);
@@ -259,6 +268,16 @@ const TemplateInstantiationPage: React.FC = () => {
     templateInstanceIdParam,
   ]);
 
+  useEffect(() => {
+    retrieveAllPluginSettings().then((settingsResult) => {
+      const settings = toastNullError({
+        result: settingsResult,
+        shortMessage: "Error retrieving plugin settings",
+      });
+      setPluginSettings(settings ?? {});
+    });
+  }, []);
+
   const subTemplate = useMemo(() => {
     if (!rootTemplate || !templateNameParam) {
       return null;
@@ -269,6 +288,29 @@ const TemplateInstantiationPage: React.FC = () => {
   useEffect(() => {
     let canceled = false;
     if (!subTemplate || "error" in subTemplate || !subTemplate.data) {
+      setPluginStages([]);
+      setPluginRequirements([]);
+      setPluginCompatibility(null);
+      setStageState({});
+      setFlowPhase("form");
+      return;
+    }
+
+    if (pluginSettings === null) {
+      setPluginCompatibility(null);
+      setPluginStages([]);
+      setPluginRequirements([]);
+      setStageState({});
+      setFlowPhase("form");
+      return;
+    }
+
+    const compatibility = checkPluginCompatibility(
+      subTemplate.data,
+      pluginSettings,
+    );
+    setPluginCompatibility(compatibility);
+    if (!compatibility.compatible) {
       setPluginStages([]);
       setPluginRequirements([]);
       setStageState({});
@@ -284,8 +326,8 @@ const TemplateInstantiationPage: React.FC = () => {
     };
 
     Promise.all([
-      loadWebTemplateStages(subTemplate.data, projectContext),
-      loadWebTemplatePluginRequirements(subTemplate.data),
+      loadWebTemplateStages(subTemplate.data, projectContext, pluginSettings),
+      loadWebTemplatePluginRequirements(subTemplate.data, pluginSettings),
     ]).then(([stages, requirements]) => {
       if (canceled) return;
       setPluginStages(stages);
@@ -307,6 +349,7 @@ const TemplateInstantiationPage: React.FC = () => {
     project?.settings.projectAuthor,
     rootTemplate?.config.templateConfig.name,
     templateNameParam,
+    pluginSettings,
   ]);
 
   // Now use entry.stateKey directly since it's pre-computed with proper namespacing
@@ -1264,7 +1307,7 @@ const TemplateInstantiationPage: React.FC = () => {
   }
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full space-y-4">
       {selectedDirectoryIdParam ? (
         <div className="w-full h-16 bg-gray-50 border-b border-b-gray-300 flex items-center justify-end px-4">
           <FileUploadDialog
@@ -1272,6 +1315,19 @@ const TemplateInstantiationPage: React.FC = () => {
             onCancel={async () => ({ data: undefined })}
             buttonText={"Create from project settings"}
           />
+        </div>
+      ) : null}
+      {pluginCompatibility && !pluginCompatibility.compatible ? (
+        <div className="px-4">
+          <PluginCompatibilityDetails
+            result={pluginCompatibility}
+            title="Required plugins missing"
+          />
+        </div>
+      ) : null}
+      {pluginCompatibility === null && pluginSettings === null ? (
+        <div className="px-4 text-sm text-muted-foreground">
+          Checking plugin compatibility and global settings...
         </div>
       ) : null}
       <TemplateSettingsForm
@@ -1287,6 +1343,15 @@ const TemplateInstantiationPage: React.FC = () => {
             `/projects/${projectRepositoryNameParam && !selectedDirectoryIdParam ? `project/?projectRepositoryName=${projectRepositoryNameParam}` : ""}`,
           );
         }}
+        submitDisabled={
+          pluginSettings === null ||
+          Boolean(pluginCompatibility && !pluginCompatibility.compatible)
+        }
+        submitDisabledReason={
+          pluginSettings === null
+            ? "Checking plugin compatibility..."
+            : "Install the required plugins to continue."
+        }
       />
     </div>
   );
