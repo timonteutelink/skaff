@@ -1,20 +1,20 @@
 "use server";
 
+import "server-only";
+
 import { findProject, listProjects } from "@/lib/server-utils";
 import { ensureWebPluginsRegistered } from "@/lib/plugins/register-plugins";
-import * as tempLib from "@timonteutelink/skaff-lib";
-import {
-  ProjectDTO,
-  Result,
-  createTemplateView,
-} from "@timonteutelink/skaff-lib";
+import type { ProjectDTO, Result } from "@timonteutelink/skaff-lib";
 import { createReadonlyProjectContext } from "@timonteutelink/template-types-lib";
 
 ensureWebPluginsRegistered();
 
+const loadSkaffLib = () => import("@timonteutelink/skaff-lib");
+
 export async function retrieveProjectSearchPaths(): Promise<
   { id: string; path: string }[]
 > {
+  const tempLib = await loadSkaffLib();
   const config = await tempLib.getConfig();
   return config.PROJECT_SEARCH_PATHS.map((dir) => ({
     id: tempLib.projectSearchPathKey(dir)!,
@@ -76,6 +76,7 @@ export async function retrieveProjectPluginNotices(
     return { error: `Project ${projectRepositoryName} not found.` };
   }
 
+  const tempLib = await loadSkaffLib();
   const pluginsResult = await tempLib.loadPluginsForTemplate(
     project.data.rootTemplate,
     createReadonlyProjectContext(project.data.instantiatedProjectSettings),
@@ -95,7 +96,8 @@ export async function retrieveProjectPluginNotices(
         projectRepositoryName: settings.projectRepositoryName,
         projectAuthor: settings.projectAuthor,
         rootTemplateName: project.data.rootTemplate.config.templateConfig.name,
-        rootTemplate: createTemplateView(project.data.rootTemplate),
+        templateCount: settings.instantiatedTemplates.length,
+        rootTemplate: tempLib.createTemplateView(project.data.rootTemplate),
       });
       if (pluginNotices?.length) {
         notices.push(...pluginNotices);

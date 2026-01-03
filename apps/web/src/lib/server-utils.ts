@@ -1,16 +1,15 @@
-import {
-  backendLogger,
-  Project,
-  Result,
-  getConfig,
-  resolveProjectRepository,
-} from "@timonteutelink/skaff-lib";
+import "server-only";
+
+import type { Project, Result } from "@timonteutelink/skaff-lib";
+
+const loadSkaffLib = () => import("@timonteutelink/skaff-lib");
 
 export async function findProject(
   projectRepositoryName: string,
 ): Promise<Result<Project>> {
-  const projectRepository = resolveProjectRepository();
-  const config = await getConfig();
+  const tempLib = await loadSkaffLib();
+  const projectRepository = tempLib.resolveProjectRepository();
+  const config = await tempLib.getConfig();
 
   let project: Project | null = null;
   for (const searchPath of config.PROJECT_SEARCH_PATHS) {
@@ -29,7 +28,7 @@ export async function findProject(
   }
 
   if (!project) {
-    backendLogger.error(`Project ${projectRepositoryName} not found`);
+    tempLib.backendLogger.error(`Project ${projectRepositoryName} not found`);
     return { error: `Project ${projectRepositoryName} not found` };
   }
 
@@ -37,8 +36,9 @@ export async function findProject(
 }
 
 export async function listProjects(): Promise<Result<Project[]>> {
-  const projectRepository = resolveProjectRepository();
-  const config = await getConfig();
+  const tempLib = await loadSkaffLib();
+  const projectRepository = tempLib.resolveProjectRepository();
+  const config = await tempLib.getConfig();
 
   const projectSearchPaths = config.PROJECT_SEARCH_PATHS;
 

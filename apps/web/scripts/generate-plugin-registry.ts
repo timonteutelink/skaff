@@ -26,11 +26,57 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { createRequire } from "node:module";
 import process from "node:process";
-import {
-  determinePluginTrustBasic,
-  type PluginTrustLevel,
-  parsePackageSpec,
-} from "@timonteutelink/skaff-lib";
+type PluginTrustLevel =
+  | "official"
+  | "verified"
+  | "community"
+  | "private"
+  | "unknown";
+
+const OFFICIAL_PLUGIN_SCOPES = ["@skaff", "@timonteutelink"] as const;
+
+interface ParsedPackageSpec {
+  name: string;
+  version?: string;
+}
+
+function isOfficialPlugin(packageName: string): boolean {
+  return OFFICIAL_PLUGIN_SCOPES.some((scope) =>
+    packageName.startsWith(`${scope}/`),
+  );
+}
+
+function determinePluginTrustBasic(packageName: string): PluginTrustLevel {
+  return isOfficialPlugin(packageName) ? "official" : "community";
+}
+
+function parsePackageSpec(packageSpec: string): ParsedPackageSpec {
+  if (packageSpec.startsWith("@")) {
+    const parts = packageSpec.split("/");
+    if (parts.length >= 2) {
+      const scope = parts[0];
+      const nameWithVersion = parts.slice(1).join("/");
+      const atIndex = nameWithVersion.lastIndexOf("@");
+      if (atIndex > 0) {
+        return {
+          name: `${scope}/${nameWithVersion.slice(0, atIndex)}`,
+          version: nameWithVersion.slice(atIndex + 1),
+        };
+      }
+      return { name: packageSpec };
+    }
+  } else {
+    const atIndex = packageSpec.lastIndexOf("@");
+    if (atIndex > 0) {
+      return {
+        name: packageSpec.slice(0, atIndex),
+        version: packageSpec.slice(atIndex + 1),
+      };
+    }
+  }
+
+  return { name: packageSpec };
+}
 
 const require = createRequire(import.meta.url);
 

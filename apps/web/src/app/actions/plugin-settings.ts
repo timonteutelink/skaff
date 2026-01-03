@@ -1,7 +1,10 @@
 "use server";
 
-import * as tempLib from "@timonteutelink/skaff-lib";
+import "server-only";
+
 import type { Result } from "@timonteutelink/skaff-lib";
+
+const loadSkaffLib = () => import("@timonteutelink/skaff-lib");
 
 /**
  * Plugin settings entry with metadata.
@@ -18,6 +21,7 @@ export async function retrieveAllPluginSettings(): Promise<
   Result<Record<string, unknown>>
 > {
   try {
+    const tempLib = await loadSkaffLib();
     const settings = await tempLib.getAllPluginSystemSettings();
     return { data: settings };
   } catch (error) {
@@ -34,6 +38,7 @@ export async function retrievePluginSettings(
   pluginName: string,
 ): Promise<Result<unknown>> {
   try {
+    const tempLib = await loadSkaffLib();
     const settings = await tempLib.getPluginSystemSettings(pluginName);
     return { data: settings };
   } catch (error) {
@@ -51,6 +56,7 @@ export async function savePluginSettings(
   settings: unknown,
 ): Promise<Result<void>> {
   try {
+    const tempLib = await loadSkaffLib();
     await tempLib.setPluginSystemSettings(pluginName, settings);
     return { data: undefined };
   } catch (error) {
@@ -67,6 +73,7 @@ export async function removePluginSettings(
   pluginName: string,
 ): Promise<Result<void>> {
   try {
+    const tempLib = await loadSkaffLib();
     await tempLib.removePluginSystemSettings(pluginName);
     return { data: undefined };
   } catch (error) {

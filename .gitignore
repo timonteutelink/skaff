@@ -30,6 +30,10 @@ out/
 build
 dist
 
+# Generated plugin registry artifacts
+apps/web/src/lib/plugins/generated-plugin-registry.ts
+apps/web/public/plugin-manifest.json
+
 
 # Debug
 npm-debug.log*
