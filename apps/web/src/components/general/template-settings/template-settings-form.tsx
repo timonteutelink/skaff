@@ -40,6 +40,8 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
   action,
   cancel,
   cancelButton,
+  submitDisabled,
+  submitDisabledReason,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [zodSchema, setZodSchema] = useState<z.ZodType<any>>(z.object({}));
@@ -320,9 +322,19 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
                   Cancel
                 </Button>
               ) : null}
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save settings"}
-              </Button>
+              <div className="flex flex-col items-end gap-2">
+                <Button
+                  type="submit"
+                  disabled={isSubmitting || submitDisabled}
+                >
+                  {isSubmitting ? "Saving..." : "Save settings"}
+                </Button>
+                {submitDisabledReason && submitDisabled ? (
+                  <p className="text-xs text-destructive text-right">
+                    {submitDisabledReason}
+                  </p>
+                ) : null}
+              </div>
             </div>
           </form>
         </Form>
@@ -330,4 +342,3 @@ export const TemplateSettingsForm: React.FC<TemplateSettingsFormProps> = ({
     </div>
   );
 };
-

@@ -28,6 +28,9 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { toastNullError } from "@/lib/utils";
+import { PluginCompatibilityDetails } from "@/components/general/plugins/plugin-compatibility";
+import { checkPluginCompatibility } from "@/lib/plugins/web-stage-loader";
+import { retrieveAllPluginSettings } from "@/app/actions/plugin-settings";
 import { CopyIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -69,9 +72,13 @@ const buildTemplateNode = (template: TemplateDTO): TemplateTreeNode => {
    ============================================================================= */
 interface DetailsPanelProps {
   node: TemplateTreeNode;
+  pluginSettings: Record<string, unknown> | null;
 }
 
-const DetailsPanel: React.FC<DetailsPanelProps> = ({ node }) => {
+const DetailsPanel: React.FC<DetailsPanelProps> = ({
+  node,
+  pluginSettings,
+}) => {
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const handleCopy = useCallback((text: string, field: string) => {
@@ -83,6 +90,11 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ node }) => {
   if (!node.data) {
     return <div className="p-6">No data available for node {node.name}</div>;
   }
+
+  const compatibility =
+    pluginSettings === null
+      ? null
+      : checkPluginCompatibility(node.data, pluginSettings);
 
   return (
     <div className="p-6 space-y-6">
@@ -231,6 +243,14 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ node }) => {
         ) : null}
       </dl>
 
+      {compatibility ? (
+        <PluginCompatibilityDetails result={compatibility} />
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          Loading plugin compatibility...
+        </p>
+      )}
+
       {/* Collapsible Settings Schema */}
       {node.data && (
         <Collapsible>
@@ -274,6 +294,9 @@ export default function TemplatePage() {
     null,
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pluginSettings, setPluginSettings] = useState<
+    Record<string, unknown> | null
+  >(null);
 
   useEffect(() => {
     if (!templateName) {
@@ -302,6 +325,16 @@ export default function TemplatePage() {
       },
     );
   }, [templateName, router]);
+
+  useEffect(() => {
+    retrieveAllPluginSettings().then((settingsResult) => {
+      const settings = toastNullError({
+        result: settingsResult,
+        shortMessage: "Error retrieving plugin settings",
+      });
+      setPluginSettings(settings ?? {});
+    });
+  }, []);
 
   const treeNodes = useMemo(
     () => (selectedTemplate ? [buildTemplateNode(selectedTemplate)] : []),
@@ -430,7 +463,7 @@ export default function TemplatePage() {
       {/* Right side: Details panel */}
       <div className="w-2/3 overflow-auto p-6">
         {selectedNode ? (
-          <DetailsPanel node={selectedNode} />
+          <DetailsPanel node={selectedNode} pluginSettings={pluginSettings} />
         ) : (
           <div className="p-6">
             <h2 className="text-2xl font-bold">

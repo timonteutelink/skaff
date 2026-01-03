@@ -8,30 +8,57 @@ import {
 import { ConfirmationDialog } from "@/components/general/confirmation-dialog";
 import { GitRepoSelectionDialog } from "@/components/general/git-repo-selection-dialog";
 import TablePage, { FieldInfo } from "@/components/general/table-page";
+import { PluginCompatibilitySummary } from "@/components/general/plugins/plugin-compatibility";
+import { Badge } from "@/components/ui/badge";
+import { retrieveAllPluginSettings } from "@/app/actions/plugin-settings";
 import { toastNullError } from "@/lib/utils";
+import { checkPluginCompatibility } from "@/lib/plugins/web-stage-loader";
 import { TemplateSummary } from "@timonteutelink/skaff-lib/browser";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-const columnMapping: FieldInfo<TemplateSummary>[] = [
-  {
-    name: "Name",
-    data: (item) => item.template.config.templateConfig.name,
-  },
-  {
-    name: "Directory",
-    data: (item) => item.template.dir,
-  },
-  {
-    name: "Revisions",
-    data: (item) => item.revisions.length,
-  },
-];
-
 export default function TemplatesListPage() {
   const router = useRouter();
   const [templates, setTemplates] = useState<TemplateSummary[]>([]);
+  const [pluginSettings, setPluginSettings] = useState<
+    Record<string, unknown> | null
+  >(null);
+  const columnMapping: FieldInfo<TemplateSummary>[] = useMemo(
+    () => [
+      {
+        name: "Name",
+        data: (item) => item.template.config.templateConfig.name,
+      },
+      {
+        name: "Directory",
+        data: (item) => item.template.dir,
+      },
+      {
+        name: "Plugins",
+        data: (item) => {
+          if (!pluginSettings) {
+            return <Badge variant="outline">Checking...</Badge>;
+          }
+          const compatibility = checkPluginCompatibility(
+            item.template,
+            pluginSettings,
+          );
+          return (
+            <PluginCompatibilitySummary
+              result={compatibility}
+              showDetails={!compatibility.compatible}
+            />
+          );
+        },
+      },
+      {
+        name: "Revisions",
+        data: (item) => item.revisions.length,
+      },
+    ],
+    [pluginSettings],
+  );
   const handleLoadTemplateRepo = useCallback(
     async (repoUrl: string, branch?: string, revision?: string) => {
       const loadResult = await loadTemplateRepo(repoUrl, branch, revision);
@@ -73,6 +100,16 @@ export default function TemplatesListPage() {
         return;
       }
       setTemplates(templates);
+    });
+  }, []);
+
+  useEffect(() => {
+    retrieveAllPluginSettings().then((settingsResult) => {
+      const settings = toastNullError({
+        result: settingsResult,
+        shortMessage: "Error retrieving plugin settings",
+      });
+      setPluginSettings(settings ?? {});
     });
   }, []);
 

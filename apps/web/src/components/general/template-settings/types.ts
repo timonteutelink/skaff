@@ -11,6 +11,8 @@ export interface TemplateSettingsFormProps {
   action: (userSettings: any) => Promise<void>;
   cancel?: () => void;
   cancelButton?: ReactNode;
+  submitDisabled?: boolean;
+  submitDisabledReason?: string;
 }
 
 export interface SchemaResult {

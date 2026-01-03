@@ -108,6 +108,33 @@ function coerceToPluginModule(entry: unknown): SkaffPluginModule | null {
   return null;
 }
 
+export async function resolveRegisteredPluginModule(
+  reference: NormalizedTemplatePluginConfig,
+): Promise<Result<SkaffPluginModule>> {
+  const moduleResult = resolveRegisteredPlugin(reference);
+  if ("error" in moduleResult) {
+    return moduleResult;
+  }
+
+  const exportsResult = await resolveSandboxedPluginExports(
+    moduleResult.data,
+    reference,
+  );
+  if ("error" in exportsResult) {
+    return exportsResult;
+  }
+
+  const entry = pickEntrypoint(exportsResult.data, reference.exportName);
+  const pluginModule = coerceToPluginModule(entry);
+  if (!pluginModule) {
+    return {
+      error: `Plugin ${reference.module} did not export a usable entry point with a manifest`,
+    };
+  }
+
+  return { data: pluginModule };
+}
+
 function resolveRegisteredPlugin(
   reference: NormalizedTemplatePluginConfig,
 ): Result<RegisteredPluginModule> {
