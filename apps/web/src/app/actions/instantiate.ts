@@ -1,11 +1,19 @@
 "use server";
+
+import "server-only";
 import { findProject } from "@/lib/server-utils";
 import { ensureWebPluginsRegistered } from "@/lib/plugins/register-plugins";
-import * as tempLib from "@timonteutelink/skaff-lib";
-import { getConfig, NewTemplateDiffResult, ParsedFile, ProjectCreationResult, projectSearchPathKey, Result } from "@timonteutelink/skaff-lib";
+import type {
+  NewTemplateDiffResult,
+  ParsedFile,
+  ProjectCreationResult,
+  Result,
+} from "@timonteutelink/skaff-lib";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 
 ensureWebPluginsRegistered();
+
+const loadSkaffLib = () => import("@timonteutelink/skaff-lib");
 
 export async function createNewProject(
   projectRepositoryName: string,
@@ -13,10 +21,11 @@ export async function createNewProject(
   projectDirPathId: string,
   userTemplateSettings: UserTemplateSettings,
 ): Promise<Result<ProjectCreationResult>> {
-  const config = await getConfig();
+  const tempLib = await loadSkaffLib();
+  const config = await tempLib.getConfig();
 
   const projectDirPath = config.PROJECT_SEARCH_PATHS.find(
-    (dir) => projectSearchPathKey(dir) === projectDirPathId,
+    (dir) => tempLib.projectSearchPathKey(dir) === projectDirPathId,
   );
 
   if (!projectDirPath) {
@@ -43,6 +52,7 @@ export async function prepareTemplateModificationDiff(
     return { error: `Project ${destinationProjectRepositoryName} not found.` };
   }
 
+  const tempLib = await loadSkaffLib();
   return await tempLib.prepareModificationDiff(userTemplateSettings, destinationProject.data, templateInstanceId);
 }
 
@@ -63,6 +73,7 @@ export async function prepareTemplateInstantiationDiff(
     return { error: `Project ${destinationProjectRepositoryName} not found.` };
   }
 
+  const tempLib = await loadSkaffLib();
   return await tempLib.prepareInstantiationDiff(
     rootTemplateName,
     templateName,
@@ -85,6 +96,7 @@ export async function resolveConflictsAndDiff(
     return { error: `Project ${projectRepositoryName} not found.` };
   }
 
+  const tempLib = await loadSkaffLib();
   return await tempLib.addAllAndDiff(project.data);
 }
 
@@ -101,6 +113,7 @@ export async function restoreAllChangesToCleanProject(
     return { error: `Project ${projectRepositoryName} not found.` };
   }
 
+  const tempLib = await loadSkaffLib();
   return await tempLib.restoreAllChanges(project.data);
 }
 
@@ -118,6 +131,7 @@ export async function applyTemplateDiffToProject(
     return { error: `Project ${projectRepositoryName} not found.` };
   }
 
+  const tempLib = await loadSkaffLib();
   return await tempLib.applyDiff(project.data, diffHash);
 }
 
@@ -134,6 +148,7 @@ export async function cancelProjectCreation(
     return { error: `Project ${projectRepositoryName} not found.` };
   }
 
+  const tempLib = await loadSkaffLib();
   return await tempLib.deleteProject(project.data);
 }
 
@@ -142,7 +157,8 @@ export async function generateNewProjectFromExisting(
   newProjectDestinationDirPathId: string,
   newProjectRepositoryName: string,
 ): Promise<Result<ProjectCreationResult>> {
-  const config = await getConfig();
+  const tempLib = await loadSkaffLib();
+  const config = await tempLib.getConfig();
   const currentProject = await findProject(currentProjectRepositoryName);
 
   if ('error' in currentProject) {
@@ -154,7 +170,7 @@ export async function generateNewProjectFromExisting(
   }
 
   const newProjectDestinationDirPath = config.PROJECT_SEARCH_PATHS.find(
-    (dir) => projectSearchPathKey(dir) === newProjectDestinationDirPathId,
+    (dir) => tempLib.projectSearchPathKey(dir) === newProjectDestinationDirPathId,
   )
 
   if (!newProjectDestinationDirPath) {
@@ -194,6 +210,7 @@ export async function retrieveDiffUpdateProjectNewTemplateRevision(
     return { error: `Template instance ${templateInstanceId} not found.` };
   }
 
+  const tempLib = await loadSkaffLib();
   return await tempLib.prepareUpdateDiff(
     project.data,
     newTemplateRevisionCommitHash,
@@ -206,9 +223,10 @@ export async function generateProjectFromProjectSettings(
   projectDirPathId: string,
   newProjectRepositoryDirName: string,
 ): Promise<Result<ProjectCreationResult>> {
-  const config = await getConfig();
+  const tempLib = await loadSkaffLib();
+  const config = await tempLib.getConfig();
   const projectDirPath = config.PROJECT_SEARCH_PATHS.find(
-    (dir) => projectSearchPathKey(dir) === projectDirPathId,
+    (dir) => tempLib.projectSearchPathKey(dir) === projectDirPathId,
   );
 
   if (!projectDirPath) {

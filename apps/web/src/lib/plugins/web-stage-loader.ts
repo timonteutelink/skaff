@@ -14,7 +14,11 @@ import type {
   PluginStageEntry,
   TemplatePluginConfig,
   PluginTrustLevel,
-} from "@timonteutelink/skaff-lib";
+  InstalledPluginInfo,
+  TemplatePluginCompatibilityResult,
+  SinglePluginCompatibilityResult,
+  TemplateDTO,
+} from "@timonteutelink/skaff-lib/browser";
 import type { WebPluginContribution, WebTemplateStage } from "./plugin-types";
 
 import {
@@ -22,12 +26,7 @@ import {
   createPluginStageEntry,
   checkTemplatePluginCompatibility,
   extractPluginName,
-  type InstalledPluginInfo,
-  type TemplatePluginCompatibilityResult,
-  type SinglePluginCompatibilityResult,
-} from "@timonteutelink/skaff-lib";
-
-import type { TemplateDTO } from "@timonteutelink/skaff-lib/browser";
+} from "@timonteutelink/skaff-lib/browser";
 
 import {
   getInstalledPlugin,
@@ -117,10 +116,8 @@ async function resolveWebContribution(
 ): Promise<WebPluginContribution | undefined> {
   const entry = module.web;
   if (!entry) return undefined;
-  if (typeof entry === "function") {
-    return await entry();
-  }
-  return entry;
+  const resolved = typeof entry === "function" ? await entry() : entry;
+  return resolved as WebPluginContribution;
 }
 
 function pickEntrypoint(

@@ -1,8 +1,11 @@
 "use server";
 
+import "server-only";
+
 import { findProject } from "@/lib/server-utils";
-import * as tempLib from "@timonteutelink/skaff-lib";
-import { ParsedFile, Result } from "@timonteutelink/skaff-lib";
+import type { ParsedFile, Result } from "@timonteutelink/skaff-lib";
+
+const loadSkaffLib = () => import("@timonteutelink/skaff-lib");
 
 export async function commitChanges(
   projectRepositoryName: string,
@@ -18,6 +21,7 @@ export async function commitChanges(
     return { error: `Project ${projectRepositoryName} not found.` };
   }
 
+  const tempLib = await loadSkaffLib();
   return await tempLib.addAllAndCommit(project.data, commitMessage);
 }
 
@@ -35,6 +39,7 @@ export async function switchProjectBranch(
     return { error: `Project ${projectRepositoryName} not found.` };
   }
 
+  const tempLib = await loadSkaffLib();
   return await tempLib.switchProjectBranch(project.data, branch);
 }
 
@@ -51,6 +56,7 @@ export async function diffProjectFromItsTemplate(
     return { error: `Project ${projectRepositoryName} not found.` };
   }
 
+  const tempLib = await loadSkaffLib();
   const result = await tempLib.diffProjectFromTemplate(project.data);
   if ('error' in result) {
     return { error: result.error };

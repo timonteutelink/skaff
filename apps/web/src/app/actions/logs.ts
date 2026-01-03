@@ -1,20 +1,18 @@
 "use server";
 
+import "server-only";
+
 import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
-import {
-  CacheService,
+import type {
   LevelName,
   LogFilter,
   LogJSON,
   Result,
-  logError,
-  resolveCacheService,
-  serverLogger,
 } from "@timonteutelink/skaff-lib";
 
-const cacheService = resolveCacheService();
+const loadSkaffLib = () => import("@timonteutelink/skaff-lib");
 
 export async function logFromClient(data: {
   level: LevelName;
@@ -28,7 +26,8 @@ export async function logFromClient(data: {
     return { error: `Invalid log level: ${String(level)}` };
   }
 
-  serverLogger.child({ src: "frontend" }).log({
+  const tempLib = await loadSkaffLib();
+  tempLib.serverLogger.child({ src: "frontend" }).log({
     level,
     message: (msg ?? "client log").toString(),
     meta,
@@ -38,6 +37,7 @@ export async function logFromClient(data: {
 }
 
 export async function fetchLogs(filter: LogFilter): Promise<Result<LogJSON[] | string>> {
+  const tempLib = await loadSkaffLib();
   const {
     levels,
     src,
@@ -53,7 +53,7 @@ export async function fetchLogs(filter: LogFilter): Promise<Result<LogJSON[] | s
   const toMs = to ? Date.parse(to) : null;
 
   const logPath = path.join(
-    CacheService.getCacheDirPath(),
+    tempLib.CacheService.getCacheDirPath(),
     "logs",
     `skaff.${file}.log`,
   );
@@ -104,10 +104,15 @@ export async function fetchLogs(filter: LogFilter): Promise<Result<LogJSON[] | s
 }
 
 export async function getAvailableLogDates(): Promise<Result<string[]>> {
+  const tempLib = await loadSkaffLib();
+  const cacheService = tempLib.resolveCacheService();
   const logDir = await cacheService.getCacheDir();
 
   if ("error" in logDir) {
-    logError({ shortMessage: "Failed to get cache directory", error: logDir.error });
+    tempLib.logError({
+      shortMessage: "Failed to get cache directory",
+      error: logDir.error,
+    });
     return { error: "Failed to get cache directory" };
   }
 
@@ -122,7 +127,7 @@ export async function getAvailableLogDates(): Promise<Result<string[]>> {
 
     return { data: dates };
   } catch (error) {
-    logError({ shortMessage: "Failed to read log directory", error });
+    tempLib.logError({ shortMessage: "Failed to read log directory", error });
     return { error: "Failed to read log directory" };
   }
 }
@@ -134,4 +139,3 @@ function prettyLine(m: LogJSON): string {
   const stack = (m as any).stack ? `\n${(m as any).stack}` : "";
   return `${ts} ${m.level.toUpperCase()} [${m.src}] ${m.msg}${meta}${stack}`;
 }
-
