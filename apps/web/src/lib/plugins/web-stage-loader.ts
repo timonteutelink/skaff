@@ -255,11 +255,6 @@ function validateGlobalPluginSettings(
 
 export type WebPluginStageEntry = PluginStageEntry<WebTemplateStage>;
 
-export interface WebPluginRequirement {
-  pluginName: string;
-  requiredSettingsKeys: string[];
-}
-
 /**
  * Load web template stages for a template from the static plugin registry.
  *

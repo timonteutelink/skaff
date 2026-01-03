@@ -139,7 +139,6 @@ describeIfSES("plugin loading", () => {
         "    version: '0.0.0',",
         "    capabilities: ['template'],",
         "    supportedHooks: { template: ['configureTemplateInstantiationPipeline'], cli: [], web: [] },",
-        "    schemas: { input: false, output: false },",
         "  },",
         "  template: ({ options }) => ({",
         "    captured: options,",
@@ -203,7 +202,6 @@ describeIfSES("plugin loading", () => {
         "    version: '0.0.0',",
         "    capabilities: ['template'],",
         "    supportedHooks: { template: [], cli: [], web: [] },",
-        "    schemas: { input: false, output: false },",
         "  },",
         "  template: ({ template, projectContext }) => ({",
         "    captured: {",
@@ -254,7 +252,6 @@ describeIfSES("plugin loading", () => {
         "    version: '0.0.0',",
         "    capabilities: ['template', 'cli', 'web'],",
         "    supportedHooks: { template: ['configureTemplateInstantiationPipeline'], cli: [], web: [] },",
-        "    schemas: { input: false, output: false },",
         "  },",
         "  template: {",
         "    configureTemplateInstantiationPipeline(builder) {",
@@ -307,7 +304,7 @@ describeIfSES("plugin loading", () => {
     expect(notices).toEqual(["hello web"]);
   });
 
-  it("rejects plugins with invalid schema declarations", async () => {
+  it("rejects plugins with blocked imports in sandboxed exports", async () => {
     const { baseDir, template, projectSettings } =
       await createTemplateWorkspace();
 
@@ -321,7 +318,6 @@ describeIfSES("plugin loading", () => {
         "    version: '0.0.1',",
         "    capabilities: ['template'],",
         "    supportedHooks: { template: [], cli: [], web: [] },",
-        "    schemas: { input: false, output: false },",
         "  },",
         "  template: {},",
         "  globalConfigSchema: require('fs'),",

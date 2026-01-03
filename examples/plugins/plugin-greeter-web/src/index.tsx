@@ -113,7 +113,7 @@ const greeterFinalizeWebStage: WebTemplateStage = {
     <div className="space-y-4 p-6 border rounded-md bg-white">
       <h2 className="text-xl font-semibold">Greeter finalize</h2>
       <p className="text-muted-foreground">
-        Final settings: {JSON.stringify(currentSettings?.plugins ?? {})}
+        Final settings: {JSON.stringify(currentSettings ?? {})}
       </p>
       <button
         type="button"

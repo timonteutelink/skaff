@@ -57,9 +57,9 @@ load (defaults to `default`), optional dependency/weight hints to stabilize exec
 options. The Skaff library exposes a shared loader that the CLI and Web UI reuse to import these modules at runtime, ensuring
 plugins only activate for templates that explicitly list them.
 
-Plugins can also persist namespaced data inside `templateSettings.json` under
-`instantiatedTemplates[].plugins[pluginName]`, letting runtime hooks store and retrieve state without colliding with template
-settings.
+Plugin settings live in the template’s own `templateSettingsSchema`. Plugins can
+read and suggest settings through their CLI/Web stages, while templates remain
+the single source of truth for stored settings.
 
 ## Template Layout Example
 

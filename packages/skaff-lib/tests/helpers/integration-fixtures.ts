@@ -23,11 +23,6 @@ export const baseUserSettings = {
     ],
     more_stuff: "option2",
   },
-  plugins: {
-    greeter: {
-      message: "Hello from the test suite!",
-    },
-  },
 };
 
 function toSafeName(name: string): string {

@@ -3,7 +3,6 @@ import {
   ProjectSettings,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
-import { LoadedTemplatePlugin } from "../core/plugins";
 import path from "node:path";
 import { GitStatus, ProjectDTO, Result } from "../lib/types";
 import { logError, stringOrCallbackToString } from "../lib/utils";
@@ -13,8 +12,6 @@ import { resolveShellService } from "../core/infra/shell-service";
 import { resolveHardenedSandbox } from "../core/infra/hardened-sandbox";
 import { Template } from "./template";
 import { backendLogger } from "../lib";
-import z from "zod";
-import { validateRequiredPluginSettings } from "../core/plugins/plugin-settings";
 
 // Every project repository name inside a root project should be unique.
 // The root project can be uniquely identified by its repository name and author (and version).
@@ -64,22 +61,6 @@ function validateParentFinalSettings(
   return { data: parsed.data };
 }
 
-function buildPluginInputSchema(
-  plugins?: LoadedTemplatePlugin[],
-): z.ZodTypeAny {
-  if (!plugins?.length) {
-    return z.record(z.string(), z.unknown());
-  }
-
-  const shape: Record<string, z.ZodTypeAny> = {};
-
-  for (const plugin of plugins) {
-    shape[plugin.name] = plugin.inputSchema ?? z.object({}).strict();
-  }
-
-  return z.object(shape).partial().strict();
-}
-
 export class Project {
   public absoluteRootDir: string;
 
@@ -123,18 +104,10 @@ export class Project {
     projectSettings: ProjectSettings,
     userProvidedSettings: UserTemplateSettings,
     parentInstanceId?: string,
-    options?: { templateInstanceId?: string; plugins?: LoadedTemplatePlugin[] },
+    options?: { templateInstanceId?: string },
   ): Result<FinalTemplateSettings> {
-    const templateSettingsSchema = template.config.templateSettingsSchema.merge(
-      z
-        .object({
-          plugins: buildPluginInputSchema(options?.plugins),
-        })
-        .partial(),
-    );
-
     const parsedUserSettings =
-      templateSettingsSchema.safeParse(userProvidedSettings);
+      template.config.templateSettingsSchema.safeParse(userProvidedSettings);
 
     if (!parsedUserSettings?.success) {
       backendLogger.error(
@@ -143,15 +116,6 @@ export class Project {
       return {
         error: `Failed to parse user settings: ${parsedUserSettings?.error}`,
       };
-    }
-
-    const requiredPluginSettingsResult = validateRequiredPluginSettings(
-      options?.plugins,
-      parsedUserSettings.data,
-    );
-
-    if ("error" in requiredPluginSettingsResult) {
-      return requiredPluginSettingsResult;
     }
 
     let parentFinalSettings: FinalTemplateSettings | undefined;
@@ -217,83 +181,11 @@ export class Project {
       };
     }
 
-    // Strip .plugins from templateFinalSettings to ensure plugins only see
-    // pure template settings, not plugin input/output. This ensures bijectional
-    // generation by preventing plugins from depending on other plugins' data.
-    const { plugins: _pluginsStripped, ...templateSettingsWithoutPlugins } =
-      parsedFinalSettings.data;
-
-    const pluginOutputSettings: Record<
-      string,
-      { version: string; settings: unknown }
-    > = {};
-
-    if (options?.plugins?.length) {
-      for (const plugin of options.plugins) {
-        const pluginsData = parsedUserSettings.data.plugins as
-          | Record<string, unknown>
-          | undefined;
-        const rawPluginInput = pluginsData?.[plugin.name];
-
-        const inputSchema = plugin.inputSchema ?? z.object({}).strict();
-        const parsedInput = inputSchema.safeParse(rawPluginInput ?? {});
-
-        if (!parsedInput.success) {
-          return {
-            error: `Invalid input settings for plugin ${plugin.name}: ${parsedInput.error}`,
-          };
-        }
-
-        let outputValue: unknown = parsedInput.data;
-
-        if (plugin.computeOutput) {
-          try {
-            // SECURITY: Execute plugin function in hardened sandbox
-            // Pass template settings WITHOUT .plugins to prevent cross-plugin dependencies
-            const sandbox = resolveHardenedSandbox();
-            outputValue = sandbox.invokeFunction(plugin.computeOutput, {
-              templateFinalSettings: templateSettingsWithoutPlugins,
-              inputSettings: parsedInput.data as Record<string, unknown>,
-              globalConfig: plugin.globalConfig,
-            });
-          } catch (error) {
-            return {
-              error: `Failed to compute output for plugin ${plugin.name}: ${error}`,
-            };
-          }
-        }
-
-        const outputSchema = plugin.outputSchema ?? z.object({}).strict();
-        const parsedOutput = outputSchema.safeParse(outputValue);
-        if (!parsedOutput.success) {
-          return {
-            error: `Invalid output settings for plugin ${plugin.name}: ${parsedOutput.error}`,
-          };
-        }
-
-        pluginOutputSettings[plugin.name] = {
-          version: plugin.version,
-          settings: parsedOutput.data,
-        };
-      }
-    }
-
-    // Plugin output is computed at runtime, not stored.
-    // Only input is stored in templateSettings.plugins to ensure bijectional generation.
-    const finalSettingsWithPlugins: FinalTemplateSettings = {
-      ...templateSettingsWithoutPlugins,
-      plugins: pluginOutputSettings,
-    };
-
-    return { data: finalSettingsWithPlugins };
+    return { data: parsedFinalSettings.data };
   }
 
   /**
    * Retrieves the final template settings for an instantiated template.
-   *
-   * NOTE: This returns template settings WITHOUT plugin output. Plugin output
-   * is computed at generation time from stored input to ensure bijectional generation.
-   * The returned settings will have an empty `plugins` object.
    *
    * @param template - The template definition
    * @param instanceId - The ID of the instantiated template
@@ -402,14 +294,7 @@ export class Project {
       };
     }
 
-    // Plugin output is NOT computed here - it's computed at generation time only.
-    // This ensures bijectional generation: same input always produces same output.
-    return {
-      data: {
-        ...parsedFinalSettings.data,
-        plugins: {},
-      },
-    };
+    return { data: parsedFinalSettings.data };
   }
 
   static async create(absDir: string): Promise<Result<Project>> {

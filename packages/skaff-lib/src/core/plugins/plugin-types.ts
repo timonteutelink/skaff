@@ -2,7 +2,6 @@ import type {
   TemplateConfig,
   TemplatePluginConfig,
   ReadonlyProjectContext,
-  FinalTemplateSettings,
   PluginGlobalConfig,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
@@ -385,24 +384,6 @@ export const pluginManifestSchema = z.object({
       web: z.array(z.string()).default([]),
     })
     .default({ template: [], cli: [], web: [] }),
-  /**
-   * Declares which schemas the plugin exports.
-   *
-   * - `input`: Plugin accepts user-provided input settings (inputSchema)
-   * - `output`: Plugin computes output settings (outputSchema)
-   * - `globalConfig`: Plugin has global configuration (globalConfigSchema)
-   */
-  schemas: z
-    .object({
-      /** Plugin exports globalConfigSchema for system-wide configuration */
-      globalConfig: z.boolean().optional(),
-      /** Plugin exports inputSchema for user-provided settings */
-      input: z.boolean().optional(),
-      /** Plugin exports outputSchema for computed output */
-      output: z.boolean().optional(),
-    })
-    .optional(),
-  requiredSettingsKeys: z.array(z.string()).optional(),
 });
 
 export type PluginManifest = z.infer<typeof pluginManifestSchema>;
@@ -751,53 +732,11 @@ export interface CliTemplateStage<
 }
 
 /**
- * Input for the computeOutput function.
- *
- * All properties are readonly to ensure deterministic, pure computation.
- *
- * BIJECTIONAL GENERATION: The templateFinalSettings does NOT include a
- * `.plugins` field. This prevents plugins from reading other plugins'
- * input or output, ensuring each plugin's computation is independent
- * and deterministic.
- *
- * IMPORTANT: The computeOutput function must be pure and deterministic.
- * Given the same input, it must always produce the same output.
- * Do not use Date.now(), Math.random(), or any non-deterministic operations.
- */
-export interface ComputeOutputInput {
-  /**
-   * The template's computed final settings (frozen copy).
-   * Does NOT include `.plugins` - only pure template settings.
-   */
-  readonly templateFinalSettings: Readonly<FinalTemplateSettings>;
-
-  /** User-provided plugin input settings (frozen copy) */
-  readonly inputSettings: Readonly<Record<string, unknown>>;
-
-  /** Global plugin configuration (frozen copy) */
-  readonly globalConfig: Readonly<PluginGlobalConfig> | undefined;
-}
-
-/**
  * The main plugin module interface.
  *
  * This is what a plugin package must export as its default or named export.
- * It defines the plugin's manifest, schemas, and entrypoints.
- *
- * ## Schema Naming Convention
- *
- * Plugins use a clear input/output naming convention:
- *
- * - **globalConfigSchema**: System-wide configuration (e.g., API keys, endpoints)
- * - **inputSchema**: User-provided settings for a specific template instance
- * - **outputSchema**: Computed settings produced by the plugin (must be deterministic)
- *
- * The data flow is:
- * ```
- * globalConfig + inputSettings + templateFinalSettings
- *     → computeOutput()
- *     → outputSettings
- * ```
+ * It defines the plugin's manifest, optional global configuration schema,
+ * and entrypoints.
  *
  * @example
  * ```typescript
@@ -806,19 +745,7 @@ export interface ComputeOutputInput {
  *     name: "my-plugin",
  *     version: "1.0.0",
  *     capabilities: ["template"],
- *     schemas: { input: true, output: true },
  *   },
- *   inputSchema: z.object({
- *     greeting: z.string().optional(),
- *   }),
- *   outputSchema: z.object({
- *     computedGreeting: z.string(),
- *   }),
- *   // NOTE: computeOutput receives templateFinalSettings (the template's computed settings)
- *   // NOT project settings. Access template-defined fields like 'name' from your template schema.
- *   computeOutput: ({ inputSettings, templateFinalSettings }) => ({
- *     computedGreeting: inputSettings.greeting ?? `Hello, ${templateFinalSettings.name}!`,
- *   }),
  *   template: (input) => ({ ... }),
  * };
  * ```
@@ -839,48 +766,8 @@ export interface SkaffPluginModule {
    * Global configuration is system-wide settings that apply across all projects.
    * Typically stored in a config file or environment variables.
    *
-   * Must be declared in manifest.schemas.globalConfig if exported.
    */
   globalConfigSchema?: z.ZodType<PluginGlobalConfig>;
-
-  /**
-   * Schema for user-provided input settings.
-   *
-   * Input settings are specified by users when instantiating a template.
-   * These are the "knobs" users can tweak for plugin behavior.
-   *
-   * Must be declared in manifest.schemas.input if exported.
-   */
-  inputSchema?: z.ZodTypeAny;
-
-  /**
-   * Schema for computed output settings.
-   *
-   * Output settings are computed by the plugin from input settings and
-   * template context. They are stored in the project settings for
-   * reproducibility.
-   *
-   * Must be declared in manifest.schemas.output if exported.
-   *
-   * IMPORTANT: Output computation must be deterministic. The same
-   * inputs must always produce the same outputs.
-   */
-  outputSchema?: z.ZodTypeAny;
-
-  /**
-   * Computes output settings from input settings and template context.
-   *
-   * This function MUST be pure and deterministic:
-   * - Same inputs must always produce same outputs
-   * - No side effects (no I/O, no mutations)
-   * - No use of Date.now(), Math.random(), or other non-deterministic operations
-   *
-   * This function runs in a sandboxed environment.
-   *
-   * @param input - The input context with template settings, user input, and global config
-   * @returns The computed output settings
-   */
-  computeOutput?: (input: ComputeOutputInput) => Record<string, unknown>;
 
   /** Template generation plugin entrypoint */
   template?: TemplatePluginEntrypoint;
@@ -895,7 +782,7 @@ export interface SkaffPluginModule {
 /**
  * A fully loaded and validated plugin ready for use.
  *
- * Contains the resolved plugin module, schemas, and entrypoints.
+ * Contains the resolved plugin module and entrypoints.
  */
 export interface LoadedTemplatePlugin {
   /** Original plugin reference configuration */
@@ -910,20 +797,8 @@ export interface LoadedTemplatePlugin {
   /** Plugin version from manifest */
   version: string;
 
-  /** Keys that must be present in user settings */
-  requiredSettingsKeys?: string[];
-
   /** Resolved global configuration for this plugin */
   globalConfig?: PluginGlobalConfig;
-
-  /** Schema for validating user-provided input settings */
-  inputSchema?: z.ZodTypeAny;
-
-  /** Schema for validating computed output settings */
-  outputSchema?: z.ZodTypeAny;
-
-  /** Function to compute output from input (must be deterministic) */
-  computeOutput?: SkaffPluginModule["computeOutput"];
 
   /** Plugin lifecycle hooks */
   lifecycle?: PluginLifecycle;

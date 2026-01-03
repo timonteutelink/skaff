@@ -55,13 +55,6 @@ const greeterCliInitStage: CliTemplateStage<
       default: "Hello from greeter!",
     });
     setStageState({ message });
-    return {
-      plugins: {
-        [GREETER_PLUGIN_NAME]: {
-          message,
-        },
-      },
-    };
   },
 };
 
@@ -80,9 +73,7 @@ const greeterCliFinalizeStage: CliTemplateStage<GreeterStageState> = {
   placement: "finalize",
   async run({ currentSettings }) {
     // eslint-disable-next-line no-console
-    console.log(
-      `👋 finalize: ${JSON.stringify(currentSettings?.plugins ?? {})}`,
-    );
+    console.log(`👋 finalize: ${JSON.stringify(currentSettings ?? {})}`);
   },
 };
 

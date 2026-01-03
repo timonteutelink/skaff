@@ -98,15 +98,10 @@ describe("AutoInstantiationCoordinator", () => {
       addNewTemplate,
     };
 
-    const loadPluginsForTemplate = jest
-      .fn()
-      .mockResolvedValue({ data: [] as any[] });
-
     const planner = new AutoInstantiationCoordinator(
       { dontAutoInstantiate: false } as any,
       context as any,
       projectSettingsSynchronizer as any,
-      loadPluginsForTemplate,
       instantiateTemplate,
     );
 
@@ -192,15 +187,10 @@ describe("AutoInstantiationCoordinator", () => {
       addNewTemplate,
     };
 
-    const loadPluginsForTemplate = jest
-      .fn()
-      .mockResolvedValue({ data: [] as any[] });
-
     const planner = new AutoInstantiationCoordinator(
       { dontAutoInstantiate: false } as any,
       context as any,
       projectSettingsSynchronizer as any,
-      loadPluginsForTemplate,
       instantiateTemplate,
     );
 
@@ -297,15 +287,10 @@ describe("AutoInstantiationCoordinator", () => {
       addNewTemplate,
     };
 
-    const loadPluginsForTemplate = jest
-      .fn()
-      .mockResolvedValue({ data: [] as any[] });
-
     const planner = new AutoInstantiationCoordinator(
       { dontAutoInstantiate: false } as any,
       context as any,
       projectSettingsSynchronizer as any,
-      loadPluginsForTemplate,
       instantiateTemplate,
     );
 
@@ -485,15 +470,10 @@ describe("AutoInstantiationCoordinator", () => {
       addNewTemplate,
     };
 
-    const loadPluginsForTemplate = jest
-      .fn()
-      .mockResolvedValue({ data: [] as any[] });
-
     const planner = new AutoInstantiationCoordinator(
       { dontAutoInstantiate: false } as any,
       context as any,
       projectSettingsSynchronizer as any,
-      loadPluginsForTemplate,
       instantiateTemplate,
     );
 
@@ -551,17 +531,12 @@ describe("AutoInstantiationCoordinator", () => {
       addNewTemplate: jest.fn(),
     };
 
-    const loadPluginsForTemplate = jest
-      .fn()
-      .mockResolvedValue({ data: [] as any[] });
-
     const instantiateTemplate = jest.fn();
 
     const planner = new AutoInstantiationCoordinator(
       { dontAutoInstantiate: false } as any,
       context as any,
       projectSettingsSynchronizer as any,
-      loadPluginsForTemplate,
       instantiateTemplate,
     );
 

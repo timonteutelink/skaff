@@ -3,7 +3,6 @@ import {
   ProjectSettings,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
-import { LoadedTemplatePlugin } from "../plugins";
 import z from "zod";
 import crypto from "node:crypto";
 import { backendLogger } from "../../lib/logger";
@@ -18,16 +17,11 @@ import {
 import { getLatestTemplateMigrationUuid } from "../templates/TemplateMigration";
 import { GeneratorOptions } from "./template-generation-types";
 
-function parseTemplateSettingsWithPlugins(
+function parseTemplateSettings(
   templateSettingsSchema: z.ZodObject<any>,
   userSettings: UserTemplateSettings,
 ): Result<UserTemplateSettings> {
-  const rawSettings =
-    typeof userSettings === "object" && userSettings
-      ? (userSettings as Record<string, unknown>)
-      : {};
-  const { plugins, ...templateSettings } = rawSettings;
-  const parsed = templateSettingsSchema.safeParse(templateSettings);
+  const parsed = templateSettingsSchema.safeParse(userSettings);
 
   if (!parsed.success) {
     return {
@@ -35,12 +29,7 @@ function parseTemplateSettingsWithPlugins(
     };
   }
 
-  const parsedWithPlugins =
-    plugins === undefined
-      ? parsed.data
-      : { ...parsed.data, plugins };
-
-  return { data: parsedWithPlugins };
+  return { data: parsed.data };
 }
 
 export class ProjectSettingsSynchronizer {
@@ -125,7 +114,7 @@ export class ProjectSettingsSynchronizer {
       };
     }
 
-    const parsedUserSettings = parseTemplateSettingsWithPlugins(
+    const parsedUserSettings = parseTemplateSettings(
       this.rootTemplate.config.templateSettingsSchema,
       userSettings,
     );
@@ -169,7 +158,7 @@ export class ProjectSettingsSynchronizer {
       };
     }
 
-    const parsedUserSettings = parseTemplateSettingsWithPlugins(
+    const parsedUserSettings = parseTemplateSettings(
       template.config.templateSettingsSchema,
       userSettings,
     );
@@ -229,7 +218,7 @@ export class ProjectSettingsSynchronizer {
     template: Template,
     userSettings: UserTemplateSettings,
     parentInstanceId?: string,
-    options?: { templateInstanceId?: string; plugins?: LoadedTemplatePlugin[] },
+    options?: { templateInstanceId?: string },
   ): Result<FinalTemplateSettings> {
     return Project.getFinalTemplateSettings(
       template,

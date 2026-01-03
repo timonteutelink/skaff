@@ -18,20 +18,9 @@ function mergeUserSettings(
     return primary
   }
 
-  const primaryPlugins = (primary as UserTemplateSettings).plugins
-  const secondaryPlugins = (secondary as UserTemplateSettings).plugins
-  const mergedPlugins =
-    primaryPlugins || secondaryPlugins
-      ? {
-          ...(secondaryPlugins as Record<string, unknown> | undefined),
-          ...(primaryPlugins as Record<string, unknown> | undefined),
-        }
-      : undefined
-
   return {
     ...secondary,
     ...primary,
-    ...(mergedPlugins ? {plugins: mergedPlugins} : {}),
   }
 }
 
@@ -184,12 +173,6 @@ async function promptUserTemplateSettings(
   )
 
   const finalSettings = (finalizedSettings ?? withAfterSettings) as UserTemplateSettings
-  const requiredSettingsResult = skaffLib.validateRequiredPluginSettings(pluginsResult.data, finalSettings)
-
-  if ('error' in requiredSettingsResult) {
-    throw new Error(requiredSettingsResult.error)
-  }
-
   return finalSettings
 }
 
@@ -232,15 +215,6 @@ export async function readUserTemplateSettings(
 
   if ('error' in pluginsResult) {
     throw new Error(pluginsResult.error)
-  }
-
-  const requiredSettingsResult = skaffLib.validateRequiredPluginSettings(
-    pluginsResult.data,
-    parsedSettings as UserTemplateSettings,
-  )
-
-  if ('error' in requiredSettingsResult) {
-    throw new Error(requiredSettingsResult.error)
   }
 
   return parsedSettings

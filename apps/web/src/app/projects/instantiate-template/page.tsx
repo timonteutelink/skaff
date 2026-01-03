@@ -331,7 +331,6 @@ const TemplateInstantiationPage: React.FC = () => {
     ]).then(([stages, requirements]) => {
       if (canceled) return;
       setPluginStages(stages);
-      setPluginRequirements(requirements);
       setStageState({});
       setBeforeStageIndex(0);
       setAfterStageIndex(0);
@@ -497,82 +496,12 @@ const TemplateInstantiationPage: React.FC = () => {
     void ensureInitStage(0);
   }, [ensureInitStage]);
 
-  const buildPluginSettings = useCallback(() => {
-    const pluginSettings: Record<string, Record<string, unknown>> = {};
-
-    for (const entry of pluginStages) {
-      const state = stageState[getStageKey(entry)];
-      if (!state) continue;
-      if (typeof state !== "object") {
-        pluginSettings[entry.pluginName] = { value: state };
-        continue;
-      }
-
-      pluginSettings[entry.pluginName] = {
-        ...(pluginSettings[entry.pluginName] ?? {}),
-        ...(state as Record<string, unknown>),
-      };
-    }
-
-    return pluginSettings;
-  }, [pluginStages, stageState, getStageKey]);
-
-  const findMissingRequiredPluginSettings = useCallback(
-    (settings: UserTemplateSettings) => {
-      if (!pluginRequirements.length) return [];
-
-      const pluginSettings =
-        typeof settings.plugins === "object" && settings.plugins
-          ? (settings.plugins as Record<string, unknown>)
-          : {};
-
-      const getNestedValue = (value: unknown, path: string): unknown => {
-        const parts = path.split(".");
-        let current: unknown = value;
-        for (const part of parts) {
-          if (!current || typeof current !== "object") return undefined;
-          if (!(part in (current as Record<string, unknown>))) return undefined;
-          current = (current as Record<string, unknown>)[part];
-        }
-        return current;
-      };
-
-      return pluginRequirements
-        .map((requirement) => {
-          const entry = pluginSettings[requirement.pluginName];
-          const missingKeys = requirement.requiredSettingsKeys.filter(
-            (key) =>
-              getNestedValue(entry as Record<string, unknown>, key) ===
-              undefined,
-          );
-          return {
-            pluginName: requirement.pluginName,
-            missingKeys,
-          };
-        })
-        .filter((item) => item.missingKeys.length > 0);
-    },
-    [pluginRequirements],
-  );
-
-  const buildSettingsWithPlugins = useCallback(
-    (settings: UserTemplateSettings) => {
-      const pluginSettings = buildPluginSettings();
-      if (!Object.keys(pluginSettings).length) {
-        return settings;
-      }
-
-      const mergedPlugins = {
-        ...(settings.plugins as Record<string, unknown> | undefined),
-        ...pluginSettings,
-      };
-
-      return {
-        ...settings,
-        plugins: mergedPlugins,
-      } as UserTemplateSettings;
-    },
-    [buildPluginSettings],
+  const mergeDraftSettings = useCallback(
+    (settings: UserTemplateSettings) => ({
+      ...(settingsDraft ?? {}),
+      ...settings,
+    }),
+    [settingsDraft],
   );
 
   const ensureFinalizeStage = useCallback(
@@ -624,17 +553,7 @@ const TemplateInstantiationPage: React.FC = () => {
         return;
       }
 
-      const mergedSettings = buildSettingsWithPlugins(data);
-      const missingRequired = findMissingRequiredPluginSettings(mergedSettings);
-      if (missingRequired.length > 0) {
-        toastNullError({
-          shortMessage: `Missing required plugin settings: ${missingRequired
-            .map((item) => `${item.pluginName}: ${item.missingKeys.join(", ")}`)
-            .join("; ")}`,
-        });
-        return;
-      }
-
+      const mergedSettings = mergeDraftSettings(data);
       setStoredFormData(mergedSettings);
       if (selectedDirectoryIdParam) {
         const newProjectResult = await createNewProject(
@@ -764,8 +683,7 @@ const TemplateInstantiationPage: React.FC = () => {
       await startFinalizeStages(mergedSettings);
     },
     [
-      buildSettingsWithPlugins,
-      findMissingRequiredPluginSettings,
+      mergeDraftSettings,
       projectRepositoryNameParam,
       rootTemplate,
       subTemplate,

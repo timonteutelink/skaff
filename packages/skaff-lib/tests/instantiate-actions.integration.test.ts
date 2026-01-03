@@ -7,10 +7,7 @@ import { generateNewProject } from "../src/actions/instantiate/generate-new-proj
 import { prepareInstantiationDiff } from "../src/actions/instantiate/prepare-instantiation-diff";
 import { prepareModificationDiff } from "../src/actions/instantiate/prepare-modification-diff";
 import { resolveProjectDiffPlanner } from "../src/core/diffing/ProjectDiffPlanner";
-import {
-  clearRegisteredPluginModules,
-  registerPluginModules,
-} from "../src/core/plugins";
+import { clearRegisteredPluginModules } from "../src/core/plugins";
 import {
   createDefaultContainer,
   resetSkaffContainer,
@@ -77,7 +74,7 @@ afterEach(async () => {
 });
 
 describe("instantiate actions integration", () => {
-  it("generates a project with plugin settings and persisted template settings", async () => {
+  it("generates a project and persists template settings", async () => {
     const result = await generateNewProject(
       "integration-project",
       "test_template",
@@ -114,13 +111,6 @@ describe("instantiate actions integration", () => {
         automaticallyInstantiatedByParent?: boolean;
       }>;
     };
-
-    const rootInstance = settings.instantiatedTemplates.find(
-      (template) => template.templateName === "test_template",
-    );
-    expect(rootInstance?.templateSettings).toMatchObject({
-      plugins: { greeter: { message: "Hello from the test suite!" } },
-    });
 
     const autoChild = settings.instantiatedTemplates.find(
       (template) => template.templateName === "test_stuff",
@@ -209,7 +199,6 @@ describe("instantiate actions integration", () => {
     expect(updatedRoot?.templateSettings).toMatchObject({
       test_boolean: true,
       test_string: "Updated string",
-      plugins: { greeter: { message: "Hello from the test suite!" } },
     });
   });
 
@@ -517,20 +506,4 @@ describe("instantiate actions integration", () => {
     }
   });
 
-  it("allows missing optional plugin settings", async () => {
-    const optionalSettings = {
-      ...baseUserSettings,
-      plugins: { greeter: {} },
-    };
-
-    const result = await generateNewProject(
-      "invalid-project",
-      "test_template",
-      projectParentDir,
-      optionalSettings,
-      { git: true },
-    );
-
-    expect("error" in result).toBe(false);
-  });
 });
