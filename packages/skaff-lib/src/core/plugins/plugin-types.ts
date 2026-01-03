@@ -558,7 +558,7 @@ export interface CliPluginContribution<TPrompts = CliPromptModule> {
 
 export type CliPluginEntrypoint<TPrompts = CliPromptModule> =
   | CliPluginContribution<TPrompts>
-  | (() =>
+  | ((input?: UiPluginFactoryInput) =>
       | CliPluginContribution<TPrompts>
       | Promise<CliPluginContribution<TPrompts>>);
 
@@ -586,7 +586,24 @@ export interface WebPluginContribution {
 
 export type WebPluginEntrypoint =
   | WebPluginContribution
-  | (() => WebPluginContribution | Promise<WebPluginContribution>);
+  | ((input?: UiPluginFactoryInput) =>
+      | WebPluginContribution
+      | Promise<WebPluginContribution>);
+
+/**
+ * Input provided to UI plugin factories (CLI/Web).
+ *
+ * Provides the same safe template view and template-scoped options used by
+ * template generation plugin factories, plus read-only project metadata.
+ */
+export interface UiPluginFactoryInput {
+  /** Read-only view of the template with minimal safe information */
+  template: TemplateView;
+  /** Plugin-specific options from the template configuration */
+  options?: unknown;
+  /** Read-only project metadata (name, author, root template) */
+  projectContext: ReadonlyProjectContext;
+}
 
 export interface NormalizedTemplatePluginConfig {
   module: string;
@@ -632,6 +649,10 @@ export interface BaseTemplateStageContext<TState = unknown> {
   projectRepositoryName?: string;
   /** Current user-provided settings (null before settings form) */
   currentSettings?: UserTemplateSettings | null;
+  /** Draft settings for the current template (if provided) */
+  settingsDraft?: UserTemplateSettings | null;
+  /** Update the draft template settings for the current template */
+  setSettingsDraft?: (next: UserTemplateSettings | null) => void;
   /**
    * Plugin-scoped state for this stage.
    * Automatically namespaced - plugins cannot see or modify other plugins' state.
@@ -653,6 +674,11 @@ export interface WebTemplateStageRenderProps<
    * State is automatically namespaced by plugin name to prevent collisions.
    */
   setStageState: (value: TState) => void;
+  /**
+   * Update the draft template settings for the current template.
+   * This does not modify other templates' settings.
+   */
+  setSettingsDraft: (next: UserTemplateSettings | null) => void;
 }
 
 /**

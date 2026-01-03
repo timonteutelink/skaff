@@ -44,6 +44,10 @@ import {
   type WebPluginStageEntry,
   type WebPluginRequirement,
 } from "@/lib/plugins/web-stage-loader";
+import {
+  buildSchemaAndDefaults,
+  normalizeNativeSchemaNode,
+} from "@/components/general/template-settings/schema-utils";
 
 // TODO: when updating to a new template version we should reiterate all settings of all templates for possible changes. Or we fully automate go directly to diff but require the template to setup sensible defaults for possible new options.
 
@@ -87,6 +91,8 @@ const TemplateInstantiationPage: React.FC = () => {
   );
   const [appliedDiff, setAppliedDiff] = useState<ParsedFile[] | null>(null);
   const [storedFormData, setStoredFormData] =
+    useState<UserTemplateSettings | null>(null);
+  const [settingsDraft, setSettingsDraft] =
     useState<UserTemplateSettings | null>(null);
   const [pluginStages, setPluginStages] = useState<WebPluginStageEntry[]>([]);
   const [pluginRequirements, setPluginRequirements] = useState<
@@ -270,8 +276,15 @@ const TemplateInstantiationPage: React.FC = () => {
       return;
     }
 
+    const projectContext = {
+      projectRepositoryName: projectRepositoryNameParam ?? "",
+      projectAuthor: project?.settings.projectAuthor ?? "",
+      rootTemplateName:
+        rootTemplate?.config.templateConfig.name ?? templateNameParam ?? "",
+    };
+
     Promise.all([
-      loadWebTemplateStages(subTemplate.data),
+      loadWebTemplateStages(subTemplate.data, projectContext),
       loadWebTemplatePluginRequirements(subTemplate.data),
     ]).then(([stages, requirements]) => {
       if (canceled) return;
@@ -288,7 +301,13 @@ const TemplateInstantiationPage: React.FC = () => {
     return () => {
       canceled = true;
     };
-  }, [subTemplate]);
+  }, [
+    subTemplate,
+    projectRepositoryNameParam,
+    project?.settings.projectAuthor,
+    rootTemplate?.config.templateConfig.name,
+    templateNameParam,
+  ]);
 
   // Now use entry.stateKey directly since it's pre-computed with proper namespacing
   const getStageKey = useCallback(
@@ -327,21 +346,76 @@ const TemplateInstantiationPage: React.FC = () => {
       templateName: templateNameParam ?? "",
       projectRepositoryName: projectRepositoryNameParam ?? undefined,
       currentSettings,
+      settingsDraft,
       stageState: stageState[getStageKey(entry)],
     }),
-    [projectRepositoryNameParam, getStageKey, stageState, templateNameParam],
+    [
+      projectRepositoryNameParam,
+      getStageKey,
+      settingsDraft,
+      stageState,
+      templateNameParam,
+    ],
   );
 
   const updateStageState = useCallback((key: string, value: unknown) => {
     setStageState((prev) => ({ ...prev, [key]: value }));
   }, []);
 
+  const baseTemplateSettingsDefaultValues: Record<string, any> = useMemo(() => {
+    if (storedFormData && Object.keys(storedFormData).length > 0) {
+      return storedFormData;
+    }
+
+    if (
+      !subTemplate ||
+      !project ||
+      !existingTemplateInstanceIdParam ||
+      "error" in subTemplate ||
+      !subTemplate.data
+    ) {
+      return {};
+    }
+
+    const instantiatedSettings =
+      project.settings.instantiatedTemplates.find(
+        (t) =>
+          t.id === existingTemplateInstanceIdParam &&
+          t.templateName === subTemplate.data?.config.templateConfig.name,
+      )?.templateSettings || {};
+
+    return instantiatedSettings;
+  }, [subTemplate, project, existingTemplateInstanceIdParam, storedFormData]);
+
+  const stageInitialSettings = useMemo(() => {
+    if (settingsDraft && Object.keys(settingsDraft).length > 0) {
+      return settingsDraft;
+    }
+    if (
+      existingTemplateInstanceIdParam &&
+      Object.keys(baseTemplateSettingsDefaultValues).length > 0
+    ) {
+      return baseTemplateSettingsDefaultValues;
+    }
+    return storedFormData;
+  }, [
+    baseTemplateSettingsDefaultValues,
+    existingTemplateInstanceIdParam,
+    settingsDraft,
+    storedFormData,
+  ]);
+
+  const readonlyStageSettings = useMemo(() => {
+    if (!stageInitialSettings) return null;
+    return Object.freeze({ ...stageInitialSettings });
+  }, [stageInitialSettings]);
+
   const ensureBeforeStage = useCallback(
     async (startIndex = 0) => {
       let cursor = startIndex;
       while (cursor < beforeStages.length) {
         const entry = beforeStages[cursor]!;
-        const context = buildStageContext(entry, null);
+        const context = buildStageContext(entry, readonlyStageSettings);
         const skip = await entry.stage.shouldSkip?.(context);
 
         if (!skip) {
@@ -353,7 +427,7 @@ const TemplateInstantiationPage: React.FC = () => {
       }
       setFlowPhase("form");
     },
-    [beforeStages, buildStageContext],
+    [beforeStages, buildStageContext, readonlyStageSettings],
   );
 
   const ensureInitStage = useCallback(
@@ -361,7 +435,7 @@ const TemplateInstantiationPage: React.FC = () => {
       let cursor = startIndex;
       while (cursor < initStages.length) {
         const entry = initStages[cursor]!;
-        const context = buildStageContext(entry, null);
+        const context = buildStageContext(entry, readonlyStageSettings);
         const skip = await entry.stage.shouldSkip?.(context);
 
         if (!skip) {
@@ -373,7 +447,7 @@ const TemplateInstantiationPage: React.FC = () => {
       }
       await ensureBeforeStage(0);
     },
-    [initStages, buildStageContext, ensureBeforeStage],
+    [initStages, buildStageContext, ensureBeforeStage, readonlyStageSettings],
   );
 
   useEffect(() => {
@@ -701,13 +775,55 @@ const TemplateInstantiationPage: React.FC = () => {
     [afterStages, ensureAfterStage, processSettingsSubmission],
   );
 
+  const normalizedSettingsSchema = useMemo(() => {
+    if (!subTemplate || "error" in subTemplate || !subTemplate.data) {
+      return null;
+    }
+    return normalizeNativeSchemaNode(
+      subTemplate.data.config.templateSettingsSchema,
+    );
+  }, [subTemplate]);
+
+  const settingsDraftSchema = useMemo(() => {
+    if (!normalizedSettingsSchema?.properties) return null;
+    const { schema } = buildSchemaAndDefaults(normalizedSettingsSchema);
+    return schema;
+  }, [normalizedSettingsSchema]);
+
+  const setDraftAndDefaults = useCallback(
+    (next: UserTemplateSettings | null) => {
+      setSettingsDraft(next);
+      setStoredFormData(next);
+    },
+    [],
+  );
+
+  const validateSettingsDraft = useCallback(() => {
+    if (!settingsDraft || !settingsDraftSchema) return true;
+    const parsed = settingsDraftSchema.safeParse(settingsDraft);
+    if (!parsed.success) {
+      toastNullError({
+        shortMessage: "Draft template settings are invalid.",
+        error: parsed.error,
+      });
+      return false;
+    }
+    return true;
+  }, [settingsDraft, settingsDraftSchema]);
+
   const handleBeforeContinue = useCallback(() => {
+    if (!validateSettingsDraft()) {
+      return;
+    }
     void ensureBeforeStage(beforeStageIndex + 1);
-  }, [beforeStageIndex, ensureBeforeStage]);
+  }, [beforeStageIndex, ensureBeforeStage, validateSettingsDraft]);
 
   const handleInitContinue = useCallback(() => {
+    if (!validateSettingsDraft()) {
+      return;
+    }
     void ensureInitStage(initStageIndex + 1);
-  }, [initStageIndex, ensureInitStage]);
+  }, [initStageIndex, ensureInitStage, validateSettingsDraft]);
 
   const handleAfterContinue = useCallback(() => {
     if (!pendingSettings) return;
@@ -921,29 +1037,25 @@ const TemplateInstantiationPage: React.FC = () => {
   }, []);
 
   const templateSettingsDefaultValues: Record<string, any> = useMemo(() => {
-    if (storedFormData && Object.keys(storedFormData).length > 0) {
-      return storedFormData;
+    if (settingsDraft && Object.keys(settingsDraft).length > 0) {
+      return settingsDraft;
     }
+    return baseTemplateSettingsDefaultValues;
+  }, [baseTemplateSettingsDefaultValues, settingsDraft]);
 
+  useEffect(() => {
     if (
-      !subTemplate ||
-      !project ||
-      !existingTemplateInstanceIdParam ||
-      "error" in subTemplate ||
-      !subTemplate.data
+      existingTemplateInstanceIdParam &&
+      !settingsDraft &&
+      Object.keys(baseTemplateSettingsDefaultValues).length > 0
     ) {
-      return {};
+      setSettingsDraft(baseTemplateSettingsDefaultValues as UserTemplateSettings);
     }
-
-    const instantiatedSettings =
-      project.settings.instantiatedTemplates.find(
-        (t) =>
-          t.id === existingTemplateInstanceIdParam &&
-          t.templateName === subTemplate.data?.config.templateConfig.name,
-      )?.templateSettings || {};
-
-    return instantiatedSettings;
-  }, [subTemplate, project, existingTemplateInstanceIdParam, storedFormData]);
+  }, [
+    existingTemplateInstanceIdParam,
+    settingsDraft,
+    baseTemplateSettingsDefaultValues,
+  ]);
 
   if (!projectRepositoryNameParam) {
     return (
@@ -978,9 +1090,11 @@ const TemplateInstantiationPage: React.FC = () => {
         {entry.stage.render({
           templateName: templateNameParam ?? "",
           projectRepositoryName: projectRepositoryNameParam ?? undefined,
-          currentSettings: storedFormData,
+          currentSettings: readonlyStageSettings,
+          settingsDraft,
           stageState: stageState[key],
           setStageState: (value) => updateStageState(key, value),
+          setSettingsDraft: setDraftAndDefaults,
           onContinue: handleInitContinue,
         })}
       </div>
@@ -996,9 +1110,11 @@ const TemplateInstantiationPage: React.FC = () => {
         {entry.stage.render({
           templateName: templateNameParam ?? "",
           projectRepositoryName: projectRepositoryNameParam ?? undefined,
-          currentSettings: storedFormData,
+          currentSettings: readonlyStageSettings,
+          settingsDraft,
           stageState: stageState[key],
           setStageState: (value) => updateStageState(key, value),
+          setSettingsDraft: setDraftAndDefaults,
           onContinue: handleBeforeContinue,
         })}
       </div>
@@ -1019,8 +1135,10 @@ const TemplateInstantiationPage: React.FC = () => {
           templateName: templateNameParam ?? "",
           projectRepositoryName: projectRepositoryNameParam ?? undefined,
           currentSettings: pendingSettings,
+          settingsDraft,
           stageState: stageState[key],
           setStageState: (value) => updateStageState(key, value),
+          setSettingsDraft: setDraftAndDefaults,
           onContinue: handleAfterContinue,
         })}
       </div>
@@ -1041,8 +1159,10 @@ const TemplateInstantiationPage: React.FC = () => {
           templateName: templateNameParam ?? "",
           projectRepositoryName: projectRepositoryNameParam ?? undefined,
           currentSettings: pendingFinalizeSettings,
+          settingsDraft,
           stageState: stageState[key],
           setStageState: (value) => updateStageState(key, value),
+          setSettingsDraft: setDraftAndDefaults,
           onContinue: handleFinalizeContinue,
         })}
       </div>
