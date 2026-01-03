@@ -13,6 +13,7 @@ import {
   PluginManifest,
   pluginManifestSchema,
   sortLoadedPluginsForLifecycle,
+  UiPluginFactoryInput,
 } from "./plugin-types";
 import { createTemplateView } from "./template-view";
 import {
@@ -250,25 +251,30 @@ function buildTemplatePlugin(
 }
 
 async function resolveEntrypoint<TEntry>(
-  entry?: (() => TEntry | Promise<TEntry>) | TEntry,
+  entry?: ((input?: UiPluginFactoryInput) => TEntry | Promise<TEntry>) | TEntry,
+  input?: UiPluginFactoryInput,
 ): Promise<TEntry | undefined> {
   if (!entry) return undefined;
   if (typeof entry === "function") {
-    return await (entry as () => TEntry | Promise<TEntry>)();
+    return await (entry as (input?: UiPluginFactoryInput) => TEntry | Promise<TEntry>)(
+      input,
+    );
   }
   return entry;
 }
 
 async function buildCliPlugin(
   module: SkaffPluginModule,
+  input?: UiPluginFactoryInput,
 ): Promise<CliPluginContribution | undefined> {
-  return resolveEntrypoint<CliPluginContribution>(module.cli);
+  return resolveEntrypoint<CliPluginContribution>(module.cli, input);
 }
 
 async function buildWebPlugin(
   module: SkaffPluginModule,
+  input?: UiPluginFactoryInput,
 ): Promise<WebPluginContribution | undefined> {
-  return resolveEntrypoint<WebPluginContribution>(module.web);
+  return resolveEntrypoint<WebPluginContribution>(module.web, input);
 }
 
 
@@ -383,6 +389,7 @@ export async function loadPluginsForTemplate(
     return { data: [] };
   }
 
+  const templateView = createTemplateView(template);
   const loaded: LoadedTemplatePlugin[] = [];
 
   for (const reference of normalized) {
@@ -431,6 +438,12 @@ export async function loadPluginsForTemplate(
       return globalConfigResult;
     }
 
+    const uiInput: UiPluginFactoryInput = {
+      template: templateView,
+      options: reference.options,
+      projectContext,
+    };
+
     const templatePlugin = buildTemplatePlugin(
       pluginModule,
       template,
@@ -442,8 +455,8 @@ export async function loadPluginsForTemplate(
     }
 
     const [cliPlugin, webPlugin] = await Promise.all([
-      buildCliPlugin(pluginModule),
-      buildWebPlugin(pluginModule),
+      buildCliPlugin(pluginModule, uiInput),
+      buildWebPlugin(pluginModule, uiInput),
     ]);
 
     loaded.push({

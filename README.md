@@ -119,6 +119,8 @@ Templates may also include tasks, linting and formatting setups so that your new
   multiple plugins are enabled.
 - Plugins target the `TemplateGenerationPlugin` interface, which receives a `PipelineBuilder` seeded with the default stages so
   they can inject, replace or remove steps while keeping the base pipeline intact and deterministic when no plugins load.
+- CLI and Web plugin entrypoints can be exported as factories that receive `{ template, options, projectContext }`, allowing
+  UI hooks to use template-scoped plugin options alongside a safe template view and read-only project metadata.
 - Plugins can persist namespaced data under `instantiatedTemplates.<id>.plugins.<pluginName>` using the shared
   `TemplatePluginSettingsStore`; these values are written to `templateSettings.json` alongside other template settings.
 - CLI plugins can surface commands through `skaff plugin run --list` / `--command <name>` while web plugins return lightweight

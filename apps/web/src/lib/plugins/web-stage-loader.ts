@@ -18,10 +18,13 @@ import type {
   TemplatePluginCompatibilityResult,
   SinglePluginCompatibilityResult,
   TemplateDTO,
+  ReadonlyProjectContext,
+  UiPluginFactoryInput,
 } from "@timonteutelink/skaff-lib/browser";
 import type { WebPluginContribution, WebTemplateStage } from "./plugin-types";
 
 import {
+  createTemplateViewFromDTO,
   normalizeTemplatePlugins,
   createPluginStageEntry,
   checkTemplatePluginCompatibility,
@@ -113,10 +116,11 @@ function buildInstalledPluginsMap(): Map<string, InstalledPluginInfo> {
  */
 async function resolveWebContribution(
   module: SkaffPluginModule,
+  input?: UiPluginFactoryInput,
 ): Promise<WebPluginContribution | undefined> {
   const entry = module.web;
   if (!entry) return undefined;
-  const resolved = typeof entry === "function" ? await entry() : entry;
+  const resolved = typeof entry === "function" ? await entry(input) : entry;
   return resolved as WebPluginContribution;
 }
 
@@ -226,6 +230,7 @@ export interface WebPluginRequirement {
  */
 export async function loadWebTemplateStages(
   template: TemplateDTO,
+  projectContext: ReadonlyProjectContext,
 ): Promise<WebPluginStageEntry[]> {
   const plugins = template.plugins;
 
@@ -261,7 +266,12 @@ export async function loadWebTemplateStages(
     if (!pluginModule) continue;
 
     // Resolve web contribution
-    const web = await resolveWebContribution(pluginModule);
+    const uiInput: UiPluginFactoryInput = {
+      template: createTemplateViewFromDTO(template),
+      options: reference.options,
+      projectContext,
+    };
+    const web = await resolveWebContribution(pluginModule, uiInput);
     if (!web?.templateStages?.length) continue;
 
     // Get the actual plugin name from manifest

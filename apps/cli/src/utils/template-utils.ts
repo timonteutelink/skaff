@@ -51,6 +51,10 @@ async function runStageSequence(
     const baseContext = {
       ...context,
       currentSettings: workingSettings,
+      settingsDraft: workingSettings,
+      setSettingsDraft: (next: UserTemplateSettings | null) => {
+        workingSettings = next ?? null
+      },
       stageState: stageState[key],
       setStageState: (value: unknown) => {
         stageState[key] = value
