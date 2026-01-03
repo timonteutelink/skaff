@@ -222,6 +222,18 @@ The CLI follows the standard `skaff <command> [options]` pattern. Common command
 
 Run `skaff --help` to see the full list of commands and flags.
 
+### Plugin settings
+
+The Web UI and CLI share the same system-wide plugin settings stored in
+`~/.config/skaff/settings.json`. Use these commands to manage per-plugin
+settings from the terminal:
+
+```bash
+skaff plugin-settings get
+skaff plugin-settings set @skaff/plugin-greeter '{"greeting":"Hello"}'
+skaff plugin-settings remove @skaff/plugin-greeter
+```
+
 ## Web interface
 
 In addition to the CLI, skaff provides a Web UI. The Web interface makes it easy to browse templates, enter values through forms, preview the file tree or diff and apply the changes interactively
