@@ -15,6 +15,7 @@ describe("plugin compatibility messages", () => {
       compatible: true,
       missing: [],
       available: [],
+      templateSettingsWarnings: [],
       hasTrustWarnings: false,
       untrustedPlugins: [],
     };
@@ -34,6 +35,7 @@ describe("plugin compatibility messages", () => {
           trustLevel: "official",
         },
       ],
+      templateSettingsWarnings: [],
       hasTrustWarnings: false,
       untrustedPlugins: [],
     };
@@ -65,6 +67,7 @@ describe("plugin compatibility messages", () => {
         },
       ],
       available: [],
+      templateSettingsWarnings: [],
       hasTrustWarnings: false,
       untrustedPlugins: [],
     };
@@ -109,6 +112,7 @@ describe("plugin compatibility messages", () => {
         },
       ],
       available: [],
+      templateSettingsWarnings: [],
       hasTrustWarnings: false,
       untrustedPlugins: [],
     };

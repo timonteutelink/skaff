@@ -23,11 +23,16 @@ import {
 } from "../generation/template-generation-types";
 import { z } from "zod";
 import { resolveHardenedSandbox } from "../infra/hardened-sandbox";
-import { extractPluginName } from "./plugin-compatibility";
+import {
+  checkTemplateSettingsSchemaCompatibility,
+  extractPluginName,
+  formatTemplateSettingsSchemaWarning,
+} from "./plugin-compatibility";
 import { getPluginSandboxLibraries } from "../infra/sandbox-endowments";
 import { getSkaffContainer } from "../../di/container";
 import { EsbuildInitializerToken } from "../../di/tokens";
 import path from "node:path";
+import { backendLogger } from "../../lib/logger";
 
 const projectContextSchema = z
   .object({
@@ -429,6 +434,18 @@ export async function loadPluginsForTemplate(
     }
 
     const pluginName = manifest.name;
+
+    if (pluginModule.requiredTemplateSettingsSchema) {
+      const compatibility = checkTemplateSettingsSchemaCompatibility(
+        template.config.templateSettingsSchema,
+        pluginModule.requiredTemplateSettingsSchema,
+      );
+      if (!compatibility.compatible) {
+        backendLogger.warn(
+          formatTemplateSettingsSchemaWarning(pluginName, compatibility),
+        );
+      }
+    }
 
     const globalConfigResult = await readGlobalConfig(pluginModule, pluginName);
 

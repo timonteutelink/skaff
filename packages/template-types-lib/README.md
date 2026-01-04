@@ -61,6 +61,20 @@ Plugin settings live in the template’s own `templateSettingsSchema`. Plugins c
 read and suggest settings through their CLI/Web stages, while templates remain
 the single source of truth for stored settings.
 
+If a plugin exports a `requiredTemplateSettingsSchema`, import it in your
+template and merge/extend it into `templateSettingsSchema` so plugin-required
+fields are validated. For example:
+
+```ts
+import { requiredTemplateSettingsSchema as greeterRequired } from "@timonteutelink/skaff-plugin-greeter";
+
+const templateSettingsSchema = z
+  .object({
+    greeting: z.string().default("hello"),
+  })
+  .merge(greeterRequired);
+```
+
 ## Template Layout Example
 
 Templates often follow a layered structure where the root `templateConfig.ts` defines global settings and delegates to optional

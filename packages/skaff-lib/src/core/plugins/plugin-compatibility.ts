@@ -6,7 +6,11 @@
  */
 
 import * as semver from "semver";
-import type { TemplatePluginConfig } from "@timonteutelink/template-types-lib";
+import type {
+  TemplatePluginConfig,
+  UserTemplateSettings,
+} from "@timonteutelink/template-types-lib";
+import { z } from "zod";
 import {
   normalizeTemplatePlugins,
   type NormalizedTemplatePluginConfig,
@@ -62,6 +66,8 @@ export interface TemplatePluginCompatibilityResult {
   allCompatible: boolean;
   /** Results for each plugin check */
   plugins: SinglePluginCompatibilityResult[];
+  /** Template settings schema warnings for compatible plugins */
+  templateSettingsWarnings: TemplateSettingsWarning[];
   /** List of missing plugins */
   missing: SinglePluginCompatibilityResult[];
   /** List of plugins with version mismatches */
@@ -72,10 +78,35 @@ export interface TemplatePluginCompatibilityResult {
   compatible: SinglePluginCompatibilityResult[];
 }
 
+/**
+ * Warning emitted when a template does not satisfy a plugin's required settings schema.
+ */
+export interface TemplateSettingsWarning {
+  /** The module specifier from the template config */
+  module: string;
+  /** Keys required by the plugin but missing from the template schema */
+  missingKeys: string[];
+  /** Keys that should be required but are optional in the template schema */
+  optionalKeys: string[];
+  /** Human-readable warning message */
+  message: string;
+}
+
 export type GlobalConfigValidator = (
   pluginConfig: NormalizedTemplatePluginConfig,
   installedPlugin: InstalledPluginInfo | undefined,
 ) => Result<void>;
+
+export type TemplateSettingsValidator = (
+  pluginConfig: NormalizedTemplatePluginConfig,
+  installedPlugin: InstalledPluginInfo | undefined,
+) => Result<TemplateSettingsWarning | undefined>;
+
+export interface TemplateSettingsSchemaCompatibility {
+  compatible: boolean;
+  missingKeys: string[];
+  optionalKeys: string[];
+}
 
 /**
  * Extracts the plugin name from a module specifier.
@@ -120,6 +151,62 @@ export function checkVersionSatisfies(
   // Check if the installed version satisfies the constraint
   const satisfies = semver.satisfies(cleanedInstalled, versionConstraint);
   return { satisfies };
+}
+
+/**
+ * Checks whether a template settings schema satisfies a plugin's required schema.
+ */
+export function checkTemplateSettingsSchemaCompatibility(
+  templateSettingsSchema: z.ZodObject<UserTemplateSettings>,
+  requiredTemplateSettingsSchema: z.ZodObject<UserTemplateSettings>,
+): TemplateSettingsSchemaCompatibility {
+  const templateShape = templateSettingsSchema.shape;
+  const requiredShape = requiredTemplateSettingsSchema.shape;
+
+  const missingKeys: string[] = [];
+  const optionalKeys: string[] = [];
+
+  for (const [key, requiredSchema] of Object.entries(requiredShape)) {
+    const templateSchema = templateShape[key];
+    if (!templateSchema) {
+      missingKeys.push(key);
+      continue;
+    }
+
+    const requiredAllowsUndefined = requiredSchema.safeParse(undefined).success;
+    const templateAllowsUndefined = templateSchema.safeParse(undefined).success;
+    if (!requiredAllowsUndefined && templateAllowsUndefined) {
+      optionalKeys.push(key);
+    }
+  }
+
+  return {
+    compatible: missingKeys.length === 0 && optionalKeys.length === 0,
+    missingKeys,
+    optionalKeys,
+  };
+}
+
+export function formatTemplateSettingsSchemaWarning(
+  pluginName: string,
+  compatibility: TemplateSettingsSchemaCompatibility,
+): string {
+  const parts: string[] = [];
+  if (compatibility.missingKeys.length > 0) {
+    parts.push(
+      `missing keys: ${compatibility.missingKeys.sort().join(", ")}`,
+    );
+  }
+  if (compatibility.optionalKeys.length > 0) {
+    parts.push(
+      `keys should be required: ${compatibility.optionalKeys.sort().join(", ")}`,
+    );
+  }
+
+  return (
+    `Template settings schema does not satisfy required settings for plugin "${pluginName}". ` +
+    `${parts.join("; ")}.`
+  );
 }
 
 /**
@@ -211,7 +298,10 @@ export function checkSinglePluginCompatibility(
 export function checkTemplatePluginCompatibility(
   templatePlugins: TemplatePluginConfig[] | undefined | null,
   installedPlugins: Map<string, InstalledPluginInfo>,
-  options?: { validateGlobalConfig?: GlobalConfigValidator },
+  options?: {
+    validateGlobalConfig?: GlobalConfigValidator;
+    validateTemplateSettings?: TemplateSettingsValidator;
+  },
 ): TemplatePluginCompatibilityResult {
   const normalized = normalizeTemplatePlugins(templatePlugins);
 
@@ -219,6 +309,7 @@ export function checkTemplatePluginCompatibility(
     return {
       allCompatible: true,
       plugins: [],
+      templateSettingsWarnings: [],
       missing: [],
       versionMismatches: [],
       invalidGlobalConfig: [],
@@ -227,6 +318,7 @@ export function checkTemplatePluginCompatibility(
   }
 
   const results: SinglePluginCompatibilityResult[] = [];
+  const templateSettingsWarnings: TemplateSettingsWarning[] = [];
   const missing: SinglePluginCompatibilityResult[] = [];
   const versionMismatches: SinglePluginCompatibilityResult[] = [];
   const invalidGlobalConfig: SinglePluginCompatibilityResult[] = [];
@@ -258,6 +350,23 @@ export function checkTemplatePluginCompatibility(
 
     results.push(finalResult);
 
+    if (result.compatible && options?.validateTemplateSettings) {
+      const templateSettingsResult = options.validateTemplateSettings(
+        pluginConfig,
+        installedPlugin,
+      );
+      if ("data" in templateSettingsResult && templateSettingsResult.data) {
+        templateSettingsWarnings.push(templateSettingsResult.data);
+      } else if ("error" in templateSettingsResult) {
+        templateSettingsWarnings.push({
+          module: pluginConfig.module,
+          missingKeys: [],
+          optionalKeys: [],
+          message: templateSettingsResult.error,
+        });
+      }
+    }
+
     if (finalResult.compatible) {
       compatible.push(finalResult);
     } else if (finalResult.reason === "not_installed") {
@@ -275,6 +384,7 @@ export function checkTemplatePluginCompatibility(
       versionMismatches.length === 0 &&
       invalidGlobalConfig.length === 0,
     plugins: results,
+    templateSettingsWarnings,
     missing,
     versionMismatches,
     invalidGlobalConfig,

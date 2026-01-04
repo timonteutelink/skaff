@@ -15,6 +15,8 @@ import type {
   TemplatePluginConfig,
   PluginTrustLevel,
   InstalledPluginInfo,
+  TemplateSettingsWarning,
+  TemplateSettingsSchemaCompatibility,
   TemplatePluginCompatibilityResult,
   SinglePluginCompatibilityResult,
   TemplateDTO,
@@ -29,6 +31,7 @@ import {
   createPluginStageEntry,
   checkTemplatePluginCompatibility,
   extractPluginName,
+  formatTemplateSettingsSchemaWarning,
 } from "@timonteutelink/skaff-lib/browser";
 
 import {
@@ -36,6 +39,7 @@ import {
   PLUGIN_MANIFEST,
   type PluginManifestEntry,
 } from "./generated-plugin-registry";
+import { z } from "zod";
 
 /**
  * Information about a plugin that is required but not installed.
@@ -77,6 +81,8 @@ export interface PluginCompatibilityResult {
   missing: MissingPluginInfo[];
   /** List of available and compatible plugins */
   available: AvailablePluginInfo[];
+  /** Template settings schema warnings for compatible plugins */
+  templateSettingsWarnings: TemplateSettingsWarning[];
   /** Whether any plugins have trust warnings */
   hasTrustWarnings: boolean;
   /** Plugins that are not from official scopes */
@@ -163,6 +169,8 @@ export function checkPluginCompatibility(
     checkTemplatePluginCompatibility(plugins, installedPluginsMap, {
       validateGlobalConfig: (pluginConfig) =>
         validateGlobalPluginSettings(pluginConfig, pluginSettings),
+      validateTemplateSettings: (pluginConfig) =>
+        validateTemplateSettingsSchema(pluginConfig, template),
     });
 
   // Convert to the web-specific format
@@ -215,6 +223,7 @@ export function checkPluginCompatibility(
     compatible: result.allCompatible,
     missing,
     available,
+    templateSettingsWarnings: result.templateSettingsWarnings,
     hasTrustWarnings: untrustedPlugins.length > 0,
     untrustedPlugins,
   };
@@ -251,6 +260,88 @@ function validateGlobalPluginSettings(
   }
 
   return { data: undefined };
+}
+
+function validateTemplateSettingsSchema(
+  pluginConfig: TemplatePluginConfig,
+  template: TemplateDTO,
+): { data: TemplateSettingsWarning | undefined } | { error: string } {
+  const pluginName = extractPluginName(pluginConfig.module);
+  const moduleExports = getInstalledPlugin(pluginName);
+  const resolvedModule = moduleExports ?? getInstalledPlugin(pluginConfig.module);
+
+  if (!resolvedModule) {
+    return {
+      error: `Plugin "${pluginName}" is installed but could not be loaded for template settings validation`,
+    };
+  }
+
+  const entry = pickEntrypoint(resolvedModule, pluginConfig.exportName);
+  const pluginModule = coerceToPluginModule(entry);
+  const requiredSchema = pluginModule?.requiredTemplateSettingsSchema;
+  if (!requiredSchema) {
+    return { data: undefined };
+  }
+
+  const compatibility = checkTemplateSettingsJsonCompatibility(
+    template.config.templateSettingsSchema,
+    z.toJSONSchema(requiredSchema),
+  );
+
+  if (compatibility.compatible) {
+    return { data: undefined };
+  }
+
+  const manifestName = pluginModule?.manifest?.name ?? pluginName;
+  return {
+    data: {
+      module: pluginConfig.module,
+      missingKeys: compatibility.missingKeys,
+      optionalKeys: compatibility.optionalKeys,
+      message: formatTemplateSettingsSchemaWarning(manifestName, compatibility),
+    },
+  };
+}
+
+function checkTemplateSettingsJsonCompatibility(
+  templateSchema: unknown,
+  requiredSchema: unknown,
+): TemplateSettingsSchemaCompatibility {
+  const templateInfo = getJsonSchemaInfo(templateSchema);
+  const requiredInfo = getJsonSchemaInfo(requiredSchema);
+
+  const missingKeys = [...requiredInfo.properties].filter(
+    (key) => !templateInfo.properties.has(key),
+  );
+  const optionalKeys = [...requiredInfo.required].filter(
+    (key) =>
+      templateInfo.properties.has(key) && !templateInfo.required.has(key),
+  );
+
+  return {
+    compatible: missingKeys.length === 0 && optionalKeys.length === 0,
+    missingKeys,
+    optionalKeys,
+  };
+}
+
+function getJsonSchemaInfo(schema: unknown): {
+  properties: Set<string>;
+  required: Set<string>;
+} {
+  if (!schema || typeof schema !== "object") {
+    return { properties: new Set(), required: new Set() };
+  }
+
+  const schemaRecord = schema as {
+    properties?: Record<string, unknown>;
+    required?: string[];
+  };
+  const properties = new Set(Object.keys(schemaRecord.properties ?? {}));
+  const required = new Set(
+    Array.isArray(schemaRecord.required) ? schemaRecord.required : [],
+  );
+  return { properties, required };
 }
 
 export type WebPluginStageEntry = PluginStageEntry<WebTemplateStage>;

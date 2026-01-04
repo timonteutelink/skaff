@@ -3,7 +3,11 @@ import {determinePluginTrust, extractPluginName, getTrustBadge} from '@timonteut
 
 import Base from '../../base-command.js'
 import {getCurrentProject} from '../../utils/cli-utils.js'
-import {checkTemplatePluginsCompatibility, formatPluginCompatibilityForCli} from '../../utils/plugin-manager.js'
+import {
+  checkTemplatePluginsCompatibility,
+  formatPluginCompatibilityForCli,
+  formatTemplateSettingsWarningsForCli,
+} from '../../utils/plugin-manager.js'
 
 export default class PluginsCheck extends Base {
   static description = 'Check if required plugins for the current project are installed'
@@ -48,7 +52,11 @@ export default class PluginsCheck extends Base {
     this.log('')
 
     // Check compatibility
-    const result = await checkTemplatePluginsCompatibility(this.config, templatePlugins)
+    const result = await checkTemplatePluginsCompatibility(
+      this.config,
+      templatePlugins,
+      project.rootTemplate.config.templateSettingsSchema,
+    )
 
     if (result.allCompatible) {
       this.log(`All ${result.plugins.length} required plugin(s) are installed and compatible.`)
@@ -76,11 +84,21 @@ export default class PluginsCheck extends Base {
         )
       }
 
+      if (result.templateSettingsWarnings.length > 0) {
+        this.log('')
+        this.warn(formatTemplateSettingsWarningsForCli(result.templateSettingsWarnings))
+      }
+
       return
     }
 
     // Show detailed compatibility issues
     this.log(formatPluginCompatibilityForCli(result))
+
+    if (result.templateSettingsWarnings.length > 0) {
+      this.log('')
+      this.warn(formatTemplateSettingsWarningsForCli(result.templateSettingsWarnings))
+    }
 
     if (flags.strict) {
       this.error('Plugin compatibility check failed', {exit: 1})

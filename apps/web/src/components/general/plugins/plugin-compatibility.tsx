@@ -10,6 +10,7 @@ import {
   formatPluginMismatch,
   formatPluginName,
   formatPluginRequirement,
+  formatTemplateSettingsWarning,
   getCompatibilityBreakdown,
 } from "@/lib/plugins/plugin-compatibility-messages";
 
@@ -22,8 +23,13 @@ export function PluginCompatibilitySummary({
   result,
   showDetails = false,
 }: PluginCompatibilitySummaryProps) {
-  const { missing, versionMismatches, invalidGlobalConfig, totalRequired } =
-    getCompatibilityBreakdown(result);
+  const {
+    missing,
+    versionMismatches,
+    invalidGlobalConfig,
+    totalRequired,
+    templateSettingsWarnings,
+  } = getCompatibilityBreakdown(result);
 
   const badgeLabel =
     totalRequired === 0
@@ -90,6 +96,20 @@ export function PluginCompatibilityDetails({
         <p className="text-sm text-muted-foreground">
           All required plugins are installed and compatible.
         </p>
+        {templateSettingsWarnings.length > 0 ? (
+          <Alert>
+            <AlertTitle>Template settings warnings</AlertTitle>
+            <AlertDescription>
+              <ul className="list-disc pl-4 text-sm">
+                {templateSettingsWarnings.map((warning) => (
+                  <li key={warning.module}>
+                    {formatTemplateSettingsWarning(warning)}
+                  </li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        ) : null}
       </section>
     );
   }
@@ -182,6 +202,25 @@ export function PluginCompatibilityDetails({
           ) : null}
         </AlertDescription>
       </Alert>
+      {templateSettingsWarnings.length > 0 ? (
+        <Alert>
+          <AlertTitle>Template settings warnings</AlertTitle>
+          <AlertDescription>
+            <p>
+              This template does not fully satisfy plugin-required settings
+              schemas. Extend the template&apos;s settings schema to match the
+              plugin requirements.
+            </p>
+            <ul className="list-disc pl-4 text-sm">
+              {templateSettingsWarnings.map((warning) => (
+                <li key={warning.module}>
+                  {formatTemplateSettingsWarning(warning)}
+                </li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      ) : null}
     </section>
   );
 }
