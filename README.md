@@ -263,6 +263,11 @@ bun --filter apps/web dev
 
 Open http://localhost:3000 to access the interface. When running locally the app uses your home directory’s `~/.config/skaff` by default, and you can update the settings through the UI.
 
+The Web UI build automatically generates an empty plugin registry when no web
+plugins are installed, so a fresh checkout can start without extra setup. To add
+plugins later, set `SKAFF_PLUGINS` and rebuild (`bun --filter apps/web build`) or
+run `bun --filter apps/web generate:plugins`.
+
 ## Contributing
 
 We appreciate contributions of all kinds. Please see the
