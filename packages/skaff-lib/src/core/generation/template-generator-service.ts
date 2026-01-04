@@ -113,7 +113,6 @@ export class TemplateGenerationSession {
       this.options,
       this.pipelineContext,
       this.projectSettingsSynchronizer,
-      this.loadTemplatePlugins.bind(this),
       this.instantiateTemplateInProject.bind(this),
     );
 
@@ -261,7 +260,7 @@ export class TemplateGenerationSession {
     userSettings: UserTemplateSettings,
     template: Template,
     parentInstanceId?: string,
-    options?: { templateInstanceId?: string; plugins?: LoadedTemplatePlugin[] },
+    options?: { templateInstanceId?: string },
   ): Promise<Result<LoadedTemplatePlugin[]>> {
     if (!(await template.isValid())) {
       backendLogger.error(
@@ -272,9 +271,7 @@ export class TemplateGenerationSession {
       };
     }
 
-    const pluginsResult = options?.plugins
-      ? { data: options.plugins }
-      : await this.loadTemplatePlugins(template);
+    const pluginsResult = await this.loadTemplatePlugins(template);
 
     if ("error" in pluginsResult) {
       return pluginsResult;
@@ -285,7 +282,6 @@ export class TemplateGenerationSession {
       userSettings,
       parentInstanceId,
       {
-        plugins: pluginsResult.data,
         templateInstanceId: options?.templateInstanceId,
       },
     );
@@ -448,7 +444,6 @@ export class TemplateGenerationSession {
       userSettings,
       projectSettings,
       instantiatedTemplate,
-      plugins: pluginLoadResult.data,
     };
 
     const cleanupOnFailure = async () => {
@@ -601,7 +596,6 @@ export class TemplateGenerationSession {
       undefined,
       {
         templateInstanceId: projectRootInstanceId,
-        plugins: pluginLoadResult.data,
       },
     );
 

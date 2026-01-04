@@ -23,8 +23,6 @@ import type { TemplateConfig } from "./template-config-types";
  * This type excludes sensitive information like filesystem paths and
  * repository URLs that could be used for attacks or information gathering.
  *
- * NOTE: Plugin input is stored within `templateSettings.plugins` to maintain
- * bijectional generation. Plugin output is computed at runtime, not stored.
  */
 export interface ReadonlyInstantiatedTemplate {
   /** Unique identifier for this template instance */
@@ -36,11 +34,7 @@ export interface ReadonlyInstantiatedTemplate {
   /** Template name */
   readonly templateName: string;
 
-  /**
-   * User-provided settings (frozen copy).
-   * Plugin input is stored under the `plugins` key if plugins are used.
-   * Example: { name: "foo", plugins: { greeter: { greeting: "Hello!" } } }
-   */
+  /** User-provided settings (frozen copy). */
   readonly templateSettings: Readonly<UserTemplateSettings>;
 
   /** Whether this was auto-instantiated by its parent */
@@ -169,34 +163,6 @@ export interface MapFinalSettingsInput<
 
   /** Parent template's final settings if applicable (frozen copy) */
   readonly parentSettings?: Readonly<TParentSettings>;
-}
-
-/**
- * Input for plugin's computeOutput function.
- *
- * All properties are readonly to ensure deterministic, pure computation.
- *
- * BIJECTIONAL GENERATION: The templateFinalSettings does NOT include a
- * `.plugins` field. This prevents plugins from reading other plugins'
- * input or output, ensuring each plugin's computation is independent
- * and deterministic.
- *
- * IMPORTANT: The computeOutput function must be pure and deterministic.
- * Given the same input, it must always produce the same output.
- * Do not use Date.now(), Math.random(), or any non-deterministic operations.
- */
-export interface PluginComputeOutputInput {
-  /**
-   * The template's computed final settings (frozen copy).
-   * Does NOT include `.plugins` - only pure template settings.
-   */
-  readonly templateFinalSettings: Readonly<FinalTemplateSettings>;
-
-  /** User-provided plugin input settings (frozen copy) */
-  readonly inputSettings: Readonly<Record<string, unknown>>;
-
-  /** Global plugin configuration (frozen copy) */
-  readonly globalConfig: Readonly<Record<string, unknown>> | undefined;
 }
 
 /**

@@ -15,8 +15,7 @@ export const templateConfig = {
 
 ## Exports
 
-- **`GREETER_PLUGIN_NAME`** – shared name for plugin-scoped settings.
-- **`GREETER_STAGE_STATE_KEY`** – default state key for before/after stages.
+- **`GREETER_PLUGIN_NAME`** – shared name for the greeter plugin manifest.
 - **`greeterTemplatePluginSpecifier`**, **`greeterCliPluginSpecifier`**,
   **`greeterWebPluginSpecifier`** – module specifiers for the individual
   runtime packages.

@@ -1,5 +1,4 @@
 import type {
-  ComputeOutputInput,
   PipelineStage,
   PluginGenerationResult,
   PluginLifecycle,
@@ -13,11 +12,6 @@ import {
   GREETER_PLUGIN_NAME,
   type GreeterPluginOptions,
 } from "@timonteutelink/skaff-plugin-greeter-types";
-import {
-  pluginInputSchema,
-  pluginOutputSchema,
-} from "@timonteutelink/template-types-lib";
-import z from "zod";
 
 function createGreetingStage(
   options?: GreeterPluginOptions,
@@ -125,30 +119,8 @@ const greeterPlugin: SkaffPluginModule = {
       cli: [],
       web: [],
     },
-    schemas: {
-      input: true,
-      output: true,
-    },
   },
   lifecycle: greeterLifecycle,
-  inputSchema: pluginInputSchema.extend({
-    message: z.string().optional(),
-    audience: z.string().optional(),
-  }),
-  outputSchema: pluginOutputSchema.extend({
-    message: z.string().optional(),
-    audience: z.string().optional(),
-  }),
-  /**
-   * Computes output settings from input.
-   *
-   * NOTE: This function must be deterministic. Avoid using Date.now(),
-   * Math.random(), or any non-deterministic operations.
-   */
-  computeOutput: ({ inputSettings }: ComputeOutputInput) => ({
-    message: (inputSettings as Record<string, unknown>).message ?? "Hello!",
-    audience: (inputSettings as Record<string, unknown>).audience ?? "World",
-  }),
   template: createGreeterTemplatePlugin,
 };
 

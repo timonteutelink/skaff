@@ -9,8 +9,6 @@ import { anyOrCallbackToAny, cloneValue } from "../../../lib/utils";
 import { GeneratorOptions } from "../template-generation-types";
 import { ProjectSettingsSynchronizer } from "../ProjectSettingsSynchronizer";
 import { TemplatePipelineContext } from "./TemplatePipelineContext";
-import { LoadedTemplatePlugin } from "../../plugins";
-import { Template } from "../../../models/template";
 
 /**
  * Plans and executes automatic subtemplate instantiation during pipeline runs.
@@ -25,9 +23,6 @@ export class AutoInstantiationCoordinator {
     private readonly options: GeneratorOptions,
     private readonly context: TemplatePipelineContext,
     private readonly projectSettingsSynchronizer: ProjectSettingsSynchronizer,
-    private readonly loadPluginsForTemplate: (
-      template: Template,
-    ) => Promise<Result<LoadedTemplatePlugin[]>>,
     private readonly instantiateTemplate: (
       templateInstanceId: string,
       options?: { removeOnFailure?: boolean },
@@ -117,20 +112,11 @@ export class AutoInstantiationCoordinator {
         };
       }
 
-      const pluginLoadResult = await this.loadPluginsForTemplate(
-        templateToInstantiate,
-      );
-
-      if ("error" in pluginLoadResult) {
-        return pluginLoadResult;
-      }
-
       const childFinalTemplateSettingsResult =
         this.projectSettingsSynchronizer.getFinalTemplateSettings(
           templateToInstantiate,
           childUserSettings,
           parentTemplateInstanceId,
-          { plugins: pluginLoadResult.data },
         );
 
       if ("error" in childFinalTemplateSettingsResult) {

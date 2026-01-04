@@ -13,7 +13,7 @@ type GreeterStageState = { disabled?: boolean; message?: string };
 const greeterInitWebStage: WebTemplateStage = {
   id: "greeter-init",
   placement: "init",
-  render: ({ onContinue, stageState, setStageState }) => {
+  render: ({ onContinue, stageState, setStageState, setSettingsDraft }) => {
     const typedState = stageState as GreeterStageState | undefined;
     const [message, setMessage] = useState(
       typeof typedState?.message === "string"
@@ -35,6 +35,7 @@ const greeterInitWebStage: WebTemplateStage = {
             const next = event.target.value;
             setMessage(next);
             setStageState({ message: next });
+            setSettingsDraft({ greeter_message: next });
           }}
         />
         <button
@@ -113,7 +114,7 @@ const greeterFinalizeWebStage: WebTemplateStage = {
     <div className="space-y-4 p-6 border rounded-md bg-white">
       <h2 className="text-xl font-semibold">Greeter finalize</h2>
       <p className="text-muted-foreground">
-        Final settings: {JSON.stringify(currentSettings?.plugins ?? {})}
+        Final settings: {JSON.stringify(currentSettings ?? {})}
       </p>
       <button
         type="button"

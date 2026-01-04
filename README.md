@@ -121,8 +121,11 @@ Templates may also include tasks, linting and formatting setups so that your new
   they can inject, replace or remove steps while keeping the base pipeline intact and deterministic when no plugins load.
 - CLI and Web plugin entrypoints can be exported as factories that receive `{ template, options, projectContext }`, allowing
   UI hooks to use template-scoped plugin options alongside a safe template view and read-only project metadata.
-- Plugins can persist namespaced data under `instantiatedTemplates.<id>.plugins.<pluginName>` using the shared
-  `TemplatePluginSettingsStore`; these values are written to `templateSettings.json` alongside other template settings.
+- Template settings are the single source of truth; plugins can surface UI or CLI stages to suggest or update settings, while
+  templates own the schema that gets persisted to `templateSettings.json`.
+- Plugins can export a `requiredTemplateSettingsSchema` that templates should merge or extend into their own
+  `templateSettingsSchema` (for example, `templateSettingsSchema.merge(pluginRequiredSchema)`), ensuring plugin-required
+  fields are validated. Skaff warns when a template does not satisfy a plugin’s required settings schema.
 - CLI plugins can surface commands through `skaff plugin run --list` / `--command <name>` while web plugins return lightweight
   notices that the UI can render next to project details.
 - Template authors who publish plugin-specific type helpers can keep them separate from runtime code—for example, the

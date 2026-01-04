@@ -33,7 +33,6 @@ export type {
   ReadonlyTemplateView,
   PluginScopedContext,
   MapFinalSettingsInput,
-  PluginComputeOutputInput,
   TemplateCallbackContext,
 } from "./sandbox-safe-types";
 
@@ -43,17 +42,9 @@ export {
 } from "./sandbox-safe-types";
 
 // Plugin settings types
-export type {
-  PluginGlobalConfig,
-  PluginInputSettings,
-  PluginOutputSettings,
-} from "./plugin-settings-schemas";
+export type { PluginGlobalConfig } from "./plugin-global-config";
 
-export {
-  pluginGlobalConfigSchema,
-  pluginInputSchema,
-  pluginOutputSchema,
-} from "./plugin-settings-schemas";
+export { pluginGlobalConfigSchema } from "./plugin-global-config";
 
 export {
   instantiatedTemplateSchema,

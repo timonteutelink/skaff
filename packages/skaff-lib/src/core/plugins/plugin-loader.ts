@@ -23,11 +23,16 @@ import {
 } from "../generation/template-generation-types";
 import { z } from "zod";
 import { resolveHardenedSandbox } from "../infra/hardened-sandbox";
-import { extractPluginName } from "./plugin-compatibility";
+import {
+  checkTemplateSettingsSchemaCompatibility,
+  extractPluginName,
+  formatTemplateSettingsSchemaWarning,
+} from "./plugin-compatibility";
 import { getPluginSandboxLibraries } from "../infra/sandbox-endowments";
 import { getSkaffContainer } from "../../di/container";
 import { EsbuildInitializerToken } from "../../di/tokens";
 import path from "node:path";
+import { backendLogger } from "../../lib/logger";
 
 const projectContextSchema = z
   .object({
@@ -315,35 +320,6 @@ function validateManifest(
     return { error: `Invalid plugin manifest: ${parsed.error}` };
   }
 
-  const declaresSchema = parsed.data.schemas ?? {};
-
-  if (module.globalConfigSchema && !declaresSchema.globalConfig) {
-    return {
-      error: `Plugin ${parsed.data.name} must declare globalConfig schema support in its manifest.schemas.globalConfig field when exporting globalConfigSchema`,
-    };
-  }
-
-  if (module.inputSchema && !declaresSchema.input) {
-    return {
-      error: `Plugin ${parsed.data.name} must declare input schema support in its manifest.schemas.input field when exporting inputSchema`,
-    };
-  }
-
-  if (module.outputSchema && !declaresSchema.output) {
-    return {
-      error: `Plugin ${parsed.data.name} must declare output schema support in its manifest.schemas.output field when exporting outputSchema`,
-    };
-  }
-
-  if (
-    parsed.data.requiredSettingsKeys?.length &&
-    (!module.inputSchema || !module.outputSchema)
-  ) {
-    return {
-      error: `Plugin ${parsed.data.name} declares required settings keys but does not export both inputSchema and outputSchema`,
-    };
-  }
-
   return { data: parsed.data };
 }
 
@@ -459,6 +435,18 @@ export async function loadPluginsForTemplate(
 
     const pluginName = manifest.name;
 
+    if (pluginModule.requiredTemplateSettingsSchema) {
+      const compatibility = checkTemplateSettingsSchemaCompatibility(
+        template.config.templateSettingsSchema,
+        pluginModule.requiredTemplateSettingsSchema,
+      );
+      if (!compatibility.compatible) {
+        backendLogger.warn(
+          formatTemplateSettingsSchemaWarning(pluginName, compatibility),
+        );
+      }
+    }
+
     const globalConfigResult = await readGlobalConfig(pluginModule, pluginName);
 
     if ("error" in globalConfigResult) {
@@ -491,13 +479,7 @@ export async function loadPluginsForTemplate(
       module: pluginModule,
       name: pluginName,
       version: manifest.version,
-      requiredSettingsKeys: manifest.requiredSettingsKeys,
       globalConfig: globalConfigResult.data,
-      inputSchema:
-        pluginModule.inputSchema ?? (z.object({}).strict() as z.ZodTypeAny),
-      outputSchema:
-        pluginModule.outputSchema ?? (z.object({}).strict() as z.ZodTypeAny),
-      computeOutput: pluginModule.computeOutput,
       lifecycle: pluginModule.lifecycle,
       templatePlugin: templatePlugin.data,
       cliPlugin,

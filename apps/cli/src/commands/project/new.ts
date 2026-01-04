@@ -3,7 +3,11 @@ import * as skaffLib from '@timonteutelink/skaff-lib'
 
 import Base from '../../base-command.js'
 import {viewParsedDiffWithGit} from '../../utils/diff-utils.js'
-import {checkTemplatePluginsCompatibility, formatPluginCompatibilityForCli} from '../../utils/plugin-manager.js'
+import {
+  checkTemplatePluginsCompatibility,
+  formatPluginCompatibilityForCli,
+  formatTemplateSettingsWarningsForCli,
+} from '../../utils/plugin-manager.js'
 import {readUserTemplateSettings} from '../../utils/template-utils.js'
 
 export default class InstantiationProjectNew extends Base {
@@ -56,7 +60,11 @@ export default class InstantiationProjectNew extends Base {
 
       const plugins = templateData.template.config.plugins
       if (plugins && plugins.length > 0) {
-        const compatibility = await checkTemplatePluginsCompatibility(this.config, plugins)
+        const compatibility = await checkTemplatePluginsCompatibility(
+          this.config,
+          plugins,
+          templateData.template.config.templateSettingsSchema,
+        )
 
         if (!compatibility.allCompatible) {
           this.log('Plugin compatibility check failed:')
@@ -65,6 +73,10 @@ export default class InstantiationProjectNew extends Base {
             'Cannot create project: missing or incompatible plugins. Use --skip-plugin-check to bypass this check.',
             {exit: 1},
           )
+        }
+
+        if (compatibility.templateSettingsWarnings.length > 0) {
+          this.warn(formatTemplateSettingsWarningsForCli(compatibility.templateSettingsWarnings))
         }
       }
     }
