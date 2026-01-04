@@ -4,11 +4,11 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --webpack --port 3000",
+    "dev": "bun run generate:plugins && next dev --webpack --port 3000",
     "build": "bun run generate:plugins && next build --webpack",
     "start": "next start",
-    "lint": "next lint --max-warnings 0",
-    "check-types": "tsc --noEmit",
+    "lint": "bun run generate:plugins && next lint --max-warnings 0",
+    "check-types": "bun run generate:plugins && tsc --noEmit",
     "generate:plugins": "bun run scripts/generate-plugin-registry.ts"
   },
   "dependencies": {
