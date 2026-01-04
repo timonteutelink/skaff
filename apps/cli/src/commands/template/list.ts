@@ -47,7 +47,11 @@ export default class TemplateList extends Base {
         let missingPlugins = ''
 
         if (template.config.plugins && template.config.plugins.length > 0) {
-          const compatibility = await checkTemplatePluginsCompatibility(this.config, template.config.plugins)
+          const compatibility = await checkTemplatePluginsCompatibility(
+            this.config,
+            template.config.plugins,
+            template.config.templateSettingsSchema,
+          )
 
           if (!compatibility.allCompatible) {
             pluginStatus = 'plugins-missing'

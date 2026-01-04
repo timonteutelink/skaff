@@ -20,6 +20,10 @@ const templateSettingsSchema = z.object({
     .max(100)
     .default(21)
     .describe("A number to test with"),
+  greeter_message: z
+    .string()
+    .optional()
+    .describe("A greeting message provided by the greeter plugin"),
   test_object: z.object({
     test_array: z
       .array(

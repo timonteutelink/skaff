@@ -8,6 +8,7 @@ export interface PluginCompatibilityBreakdown {
   missing: MissingPluginInfo[];
   versionMismatches: MissingPluginInfo[];
   invalidGlobalConfig: MissingPluginInfo[];
+  templateSettingsWarnings: PluginCompatibilityResult["templateSettingsWarnings"];
   totalRequired: number;
 }
 
@@ -29,7 +30,13 @@ export function getCompatibilityBreakdown(
     invalidGlobalConfig.length +
     result.available.length;
 
-  return { missing, versionMismatches, invalidGlobalConfig, totalRequired };
+  return {
+    missing,
+    versionMismatches,
+    invalidGlobalConfig,
+    templateSettingsWarnings: result.templateSettingsWarnings,
+    totalRequired,
+  };
 }
 
 export function formatPluginRequirement(plugin: MissingPluginInfo): string {
@@ -57,6 +64,12 @@ export function formatGlobalConfigIssue(plugin: MissingPluginInfo): string {
   return plugin.message
     ? `${baseName}: ${plugin.message}`
     : `${baseName}: invalid global settings`;
+}
+
+export function formatTemplateSettingsWarning(
+  warning: PluginCompatibilityResult["templateSettingsWarnings"][number],
+): string {
+  return warning.message;
 }
 
 export function buildCompatibilitySummary(

@@ -119,7 +119,6 @@ const TemplateInstantiationPage: React.FC = () => {
     useState<UserTemplateSettings | null>(null);
   const [pendingFinalizeSettings, setPendingFinalizeSettings] =
     useState<UserTemplateSettings | null>(null);
-
   useEffect(() => {
     if (!projectRepositoryNameParam) {
       toastNullError({
@@ -753,10 +752,19 @@ const TemplateInstantiationPage: React.FC = () => {
 
   const setDraftAndDefaults = useCallback(
     (next: UserTemplateSettings | null) => {
-      setSettingsDraft(next);
-      setStoredFormData(next);
+      if (!next) {
+        setSettingsDraft(null);
+        setStoredFormData(null);
+        return;
+      }
+      const merged = {
+        ...(settingsDraft ?? storedFormData ?? {}),
+        ...next,
+      };
+      setSettingsDraft(merged);
+      setStoredFormData(merged);
     },
-    [],
+    [settingsDraft, storedFormData],
   );
 
   const validateSettingsDraft = useCallback(() => {

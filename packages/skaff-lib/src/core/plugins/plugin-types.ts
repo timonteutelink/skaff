@@ -769,6 +769,14 @@ export interface SkaffPluginModule {
    */
   globalConfigSchema?: z.ZodType<PluginGlobalConfig>;
 
+  /**
+   * Optional schema for template settings required by this plugin.
+   *
+   * Templates should merge/extend this schema into their own templateSettingsSchema
+   * to ensure required plugin settings are present and validated.
+   */
+  requiredTemplateSettingsSchema?: z.ZodObject<UserTemplateSettings>;
+
   /** Template generation plugin entrypoint */
   template?: TemplatePluginEntrypoint;
 

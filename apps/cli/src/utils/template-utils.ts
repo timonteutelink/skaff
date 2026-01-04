@@ -42,7 +42,11 @@ async function runStageSequence(
       currentSettings: workingSettings,
       settingsDraft: workingSettings,
       setSettingsDraft: (next: UserTemplateSettings | null) => {
-        workingSettings = next ?? null
+        if (!next) {
+          workingSettings = null
+          return
+        }
+        workingSettings = mergeUserSettings(next, workingSettings)
       },
       stageState: stageState[key],
       setStageState: (value: unknown) => {
@@ -188,7 +192,6 @@ export async function readUserTemplateSettings(
 ): Promise<UserTemplateSettings> {
   if (!arg) return promptUserTemplateSettings(rootTemplateName, templateName, defaults, options)
   const parsedSettings = fs.existsSync(arg) ? JSON.parse(fs.readFileSync(arg, 'utf8')) : JSON.parse(arg)
-
   const rootTpl = await skaffLib.getTemplate(rootTemplateName)
   if ('error' in rootTpl) throw new Error(rootTpl.error)
   if (!rootTpl.data) throw new Error(`No template named "${rootTemplateName}"`)

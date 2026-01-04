@@ -55,6 +55,7 @@ const greeterCliInitStage: CliTemplateStage<
       default: "Hello from greeter!",
     });
     setStageState({ message });
+    return { greeter_message: message };
   },
 };
 

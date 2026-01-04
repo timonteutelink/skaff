@@ -1,11 +1,14 @@
 import {
+  checkTemplateSettingsSchemaCompatibility,
   checkVersionSatisfies,
   checkSinglePluginCompatibility,
   checkTemplatePluginCompatibility,
   formatCompatibilitySummary,
+  formatTemplateSettingsSchemaWarning,
   type InstalledPluginInfo,
 } from "../src/core/plugins/plugin-compatibility";
 import { parsePackageSpec } from "../src/core/plugins/package-spec";
+import { z } from "zod";
 
 describe("plugin-compatibility", () => {
   describe("parsePackageSpec", () => {
@@ -203,6 +206,7 @@ describe("plugin-compatibility", () => {
       expect(result.allCompatible).toBe(true);
       expect(result.plugins).toHaveLength(0);
       expect(result.invalidGlobalConfig).toHaveLength(0);
+      expect(result.templateSettingsWarnings).toHaveLength(0);
     });
 
     it("should return allCompatible true when all plugins are compatible", () => {
@@ -224,6 +228,7 @@ describe("plugin-compatibility", () => {
       expect(result.missing).toHaveLength(0);
       expect(result.versionMismatches).toHaveLength(0);
       expect(result.invalidGlobalConfig).toHaveLength(0);
+      expect(result.templateSettingsWarnings).toHaveLength(0);
     });
 
     it("should identify missing plugins", () => {
@@ -240,6 +245,7 @@ describe("plugin-compatibility", () => {
       expect(result.missing).toHaveLength(1);
       expect(result.missing[0].module).toBe("@skaff/plugin-b");
       expect(result.invalidGlobalConfig).toHaveLength(0);
+      expect(result.templateSettingsWarnings).toHaveLength(0);
     });
 
     it("should identify version mismatches", () => {
@@ -261,6 +267,32 @@ describe("plugin-compatibility", () => {
       expect(result.versionMismatches).toHaveLength(1);
       expect(result.versionMismatches[0].module).toBe("@skaff/plugin-b");
       expect(result.invalidGlobalConfig).toHaveLength(0);
+      expect(result.templateSettingsWarnings).toHaveLength(0);
+    });
+  });
+
+  describe("checkTemplateSettingsSchemaCompatibility", () => {
+    it("detects missing required keys and optional mismatches", () => {
+      const templateSettingsSchema = z.object({
+        requiredKey: z.string().optional(),
+        extraKey: z.boolean().optional(),
+      });
+      const requiredSchema = z.object({
+        requiredKey: z.string(),
+        missingKey: z.number(),
+      });
+
+      const result = checkTemplateSettingsSchemaCompatibility(
+        templateSettingsSchema,
+        requiredSchema,
+      );
+
+      expect(result.compatible).toBe(false);
+      expect(result.missingKeys).toEqual(["missingKey"]);
+      expect(result.optionalKeys).toEqual(["requiredKey"]);
+      expect(
+        formatTemplateSettingsSchemaWarning("test-plugin", result),
+      ).toContain("test-plugin");
     });
   });
 
@@ -269,6 +301,7 @@ describe("plugin-compatibility", () => {
       const summary = formatCompatibilitySummary({
         allCompatible: true,
         plugins: [],
+        templateSettingsWarnings: [],
         missing: [],
         versionMismatches: [],
         invalidGlobalConfig: [],
@@ -285,6 +318,7 @@ describe("plugin-compatibility", () => {
           { module: "a", compatible: true },
           { module: "b", compatible: true },
         ],
+        templateSettingsWarnings: [],
         missing: [],
         versionMismatches: [],
         invalidGlobalConfig: [],
@@ -307,6 +341,7 @@ describe("plugin-compatibility", () => {
             reason: "not_installed",
           },
         ],
+        templateSettingsWarnings: [],
         missing: [
           {
             module: "@skaff/plugin-foo",
@@ -335,6 +370,7 @@ describe("plugin-compatibility", () => {
             requiredVersion: "^2.0.0",
           },
         ],
+        templateSettingsWarnings: [],
         missing: [],
         versionMismatches: [
           {
@@ -365,6 +401,7 @@ describe("plugin-compatibility", () => {
             message: "Invalid global config for plugin @skaff/plugin-foo",
           },
         ],
+        templateSettingsWarnings: [],
         missing: [],
         versionMismatches: [],
         invalidGlobalConfig: [
