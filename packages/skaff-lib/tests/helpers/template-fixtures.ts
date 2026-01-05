@@ -51,7 +51,7 @@ afterEach(async () => {
   }
 });
 
-function registerCleanup(fn: () => Promise<void>): () => Promise<void> {
+export function registerCleanup(fn: () => Promise<void>): () => Promise<void> {
   let active = true;
   const wrapped = async () => {
     if (!active) {

@@ -1,7 +1,14 @@
-import { describe, it } from 'mocha';
+import { before, describe, it } from 'mocha';
 import { strict as assert } from 'node:assert';
 
-import { parsePluginBundleMetadata } from '../../src/utils/plugin-manager.js';
+import { setupTestSandbox } from '../lib/test-plugins.js';
+
+let parsePluginBundleMetadata: (packageJson: unknown) => { cli?: string; web?: string } | null;
+
+before(async () => {
+  await setupTestSandbox();
+  ({ parsePluginBundleMetadata } = await import('../../src/utils/plugin-manager.js'));
+});
 
 describe('plugin bundle metadata', () => {
   it('parses bundle metadata from package.json', () => {

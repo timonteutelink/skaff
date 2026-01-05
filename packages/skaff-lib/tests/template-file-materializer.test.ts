@@ -1,5 +1,4 @@
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 
 import { describe, expect, it, jest } from "@jest/globals";
@@ -13,6 +12,7 @@ import { HandlebarsEnvironment } from "../src/core/shared/HandlebarsEnvironment"
 import { TargetPathResolver } from "../src/core/generation/pipeline/TargetPathResolver";
 import { TemplatePipelineContext } from "../src/core/generation/pipeline/TemplatePipelineContext";
 import { TemplateFileMaterializer } from "../src/core/generation/pipeline/TemplateFileMaterializer";
+import { createTempDir, writeTemplateFileTree } from "./lib/fs-fixtures";
 
 jest.mock("../src/core/infra/hardened-sandbox", () => ({
   ...createMockHardenedSandboxModule(),
@@ -30,16 +30,13 @@ jest.mock("../src/lib/logger", () => ({
 
 describe("TemplateFileMaterializer", () => {
   it("renders Handlebars helpers defined by the template", async () => {
-    const baseDir = await fs.mkdtemp(path.join(os.tmpdir(), "skaff-helper-"));
-    const filesDir = path.join(baseDir, "template", "files");
+    const { root: baseDir } = await createTempDir("skaff-helper-");
+    const templateDir = path.join(baseDir, "template");
+    const { filesDir } = await writeTemplateFileTree({
+      root: templateDir,
+      files: { "message.hbs": "Hi {{shout message}}" },
+    });
     const outputDir = path.join(baseDir, "output");
-
-    await fs.mkdir(filesDir, { recursive: true });
-    await fs.writeFile(
-      path.join(filesDir, "message.hbs"),
-      "Hi {{shout message}}",
-      "utf8",
-    );
 
     const templateSettingsSchema = z.object({ message: z.string() });
     const templateConfig: GenericTemplateConfigModule = {
@@ -59,7 +56,7 @@ describe("TemplateFileMaterializer", () => {
     const template = new Template({
       config: templateConfig,
       absoluteBaseDir: baseDir,
-      absoluteDir: path.join(baseDir, "template"),
+      absoluteDir: templateDir,
       absoluteFilesDir: filesDir,
     });
 
@@ -79,17 +76,10 @@ describe("TemplateFileMaterializer", () => {
       handlebars,
     );
 
-    try {
-      const result = await materializer.copyTemplateDirectory();
-      expect(result).toEqual({ data: undefined });
+    const result = await materializer.copyTemplateDirectory();
+    expect(result).toEqual({ data: undefined });
 
-      const output = await fs.readFile(
-        path.join(outputDir, "message"),
-        "utf8",
-      );
-      expect(output).toBe("Hi HELLO");
-    } finally {
-      await fs.rm(baseDir, { recursive: true, force: true });
-    }
+    const output = await fs.readFile(path.join(outputDir, "message"), "utf8");
+    expect(output).toBe("Hi HELLO");
   });
 });

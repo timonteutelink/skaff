@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { tmpdir } from "node:os";
 import { withTestContainer } from "../src/di/testing";
 import { CacheService } from "../src/core/infra/cache-service";
+import { createTempDir } from "./lib/fs-fixtures";
 
 jest.mock("../src/lib/logger", () => ({
   backendLogger: {
@@ -20,7 +20,8 @@ describe("cache-service", () => {
   let cacheDir: string;
 
   beforeEach(async () => {
-    cacheDir = await fs.mkdtemp(path.join(tmpdir(), "skaff-test-"));
+    const { root } = await createTempDir("skaff-test-");
+    cacheDir = root;
     process.env.SKAFF_CACHE_PATH = cacheDir;
   });
 
@@ -94,4 +95,3 @@ describe("cache-service", () => {
     }),
   );
 });
-

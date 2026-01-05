@@ -1,5 +1,4 @@
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 
 import { describe, expect, it, jest } from "@jest/globals";
@@ -9,6 +8,7 @@ import { z } from "zod";
 import { Template } from "../src/core/templates/Template";
 import { validateTemplateResources } from "../src/core/templates/TemplateValidation";
 import type { GenericTemplateConfigModule } from "../src/lib/types";
+import { createTempDir, writeTemplateFileTree } from "./lib/fs-fixtures";
 
 jest.mock("../src/lib/logger", () => ({
   backendLogger: {
@@ -22,7 +22,6 @@ jest.mock("../src/lib/logger", () => ({
 
 type TemplateFixture = {
   template: Template;
-  cleanup: () => Promise<void>;
 };
 
 async function createTemplateFixture(options: {
@@ -32,20 +31,17 @@ async function createTemplateFixture(options: {
   partials?: Record<string, string>;
   handlebarHelpers?: Record<string, HelperDelegate>;
 }): Promise<TemplateFixture> {
-  const baseDir = await fs.mkdtemp(path.join(os.tmpdir(), "skaff-hbs-"));
+  const { root: baseDir } = await createTempDir("skaff-hbs-");
   const templateDir = path.join(baseDir, "template");
-  const filesDir = path.join(templateDir, "files");
-  await fs.mkdir(filesDir, { recursive: true });
   const files =
     options.files ??
     (options.fileContents
       ? { "template.txt": options.fileContents }
       : undefined);
-  if (files) {
-    for (const [name, contents] of Object.entries(files)) {
-      await fs.writeFile(path.join(filesDir, name), contents, "utf8");
-    }
-  }
+  const { filesDir } = await writeTemplateFileTree({
+    root: templateDir,
+    files: files ?? { "template.txt": "" },
+  });
 
   let partialsDir: string | undefined;
   if (options.partials) {
@@ -78,7 +74,6 @@ async function createTemplateFixture(options: {
 
   return {
     template,
-    cleanup: () => fs.rm(baseDir, { recursive: true, force: true }),
   };
 }
 
@@ -89,15 +84,11 @@ describe("handlebars template validation", () => {
       schema: z.object({ message: z.string().default("hi") }),
     });
 
-    try {
-      await expect(validateTemplateResources(fixture.template)).rejects.toMatchObject({
-        name: "TemplateResourceValidationError",
-        templateName: "validation-template",
-        missingPartials: ["missing_partial"],
-      });
-    } finally {
-      await fixture.cleanup();
-    }
+    await expect(validateTemplateResources(fixture.template)).rejects.toMatchObject({
+      name: "TemplateResourceValidationError",
+      templateName: "validation-template",
+      missingPartials: ["missing_partial"],
+    });
   });
 
   it("reports missing settings", async () => {
@@ -106,15 +97,11 @@ describe("handlebars template validation", () => {
       schema: z.object({ message: z.string().default("hi") }),
     });
 
-    try {
-      await expect(validateTemplateResources(fixture.template)).rejects.toMatchObject({
-        name: "TemplateResourceValidationError",
-        templateName: "validation-template",
-        missingSettings: ["missing_setting"],
-      });
-    } finally {
-      await fixture.cleanup();
-    }
+    await expect(validateTemplateResources(fixture.template)).rejects.toMatchObject({
+      name: "TemplateResourceValidationError",
+      templateName: "validation-template",
+      missingSettings: ["missing_setting"],
+    });
   });
 
   it("reports missing helpers", async () => {
@@ -123,15 +110,11 @@ describe("handlebars template validation", () => {
       schema: z.object({ message: z.string().default("hi") }),
     });
 
-    try {
-      await expect(validateTemplateResources(fixture.template)).rejects.toMatchObject({
-        name: "TemplateResourceValidationError",
-        templateName: "validation-template",
-        missingHelpers: ["missingHelper"],
-      });
-    } finally {
-      await fixture.cleanup();
-    }
+    await expect(validateTemplateResources(fixture.template)).rejects.toMatchObject({
+      name: "TemplateResourceValidationError",
+      templateName: "validation-template",
+      missingHelpers: ["missingHelper"],
+    });
   });
 
   it("allows built-in and default helpers", async () => {
@@ -145,11 +128,7 @@ describe("handlebars template validation", () => {
       }),
     });
 
-    try {
-      await expect(validateTemplateResources(fixture.template)).resolves.toBeUndefined();
-    } finally {
-      await fixture.cleanup();
-    }
+    await expect(validateTemplateResources(fixture.template)).resolves.toBeUndefined();
   });
 
   it("allows helpers defined on the template", async () => {
@@ -161,11 +140,7 @@ describe("handlebars template validation", () => {
       },
     });
 
-    try {
-      await expect(validateTemplateResources(fixture.template)).resolves.toBeUndefined();
-    } finally {
-      await fixture.cleanup();
-    }
+    await expect(validateTemplateResources(fixture.template)).resolves.toBeUndefined();
   });
 
   it("detects missing settings referenced in partials", async () => {
@@ -177,14 +152,10 @@ describe("handlebars template validation", () => {
       },
     });
 
-    try {
-      await expect(validateTemplateResources(fixture.template)).rejects.toMatchObject({
-        name: "TemplateResourceValidationError",
-        missingSettings: ["missing_setting"],
-      });
-    } finally {
-      await fixture.cleanup();
-    }
+    await expect(validateTemplateResources(fixture.template)).rejects.toMatchObject({
+      name: "TemplateResourceValidationError",
+      missingSettings: ["missing_setting"],
+    });
   });
 
   it("supports nested settings paths and array indices", async () => {
@@ -195,11 +166,7 @@ describe("handlebars template validation", () => {
       }),
     });
 
-    try {
-      await expect(validateTemplateResources(fixture.template)).resolves.toBeUndefined();
-    } finally {
-      await fixture.cleanup();
-    }
+    await expect(validateTemplateResources(fixture.template)).resolves.toBeUndefined();
   });
 
   it("detects missing helpers in subexpressions", async () => {
@@ -211,13 +178,9 @@ describe("handlebars template validation", () => {
       },
     });
 
-    try {
-      await expect(validateTemplateResources(fixture.template)).rejects.toMatchObject({
-        name: "TemplateResourceValidationError",
-        missingHelpers: ["missingSubHelper"],
-      });
-    } finally {
-      await fixture.cleanup();
-    }
+    await expect(validateTemplateResources(fixture.template)).rejects.toMatchObject({
+      name: "TemplateResourceValidationError",
+      missingHelpers: ["missingSubHelper"],
+    });
   });
 });
