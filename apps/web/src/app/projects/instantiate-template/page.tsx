@@ -32,7 +32,7 @@ import {
 } from "@timonteutelink/skaff-lib/browser";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toastNullError } from "@/lib/utils";
 import {
   FileUploadDialog,
@@ -119,6 +119,7 @@ const TemplateInstantiationPage: React.FC = () => {
     useState<UserTemplateSettings | null>(null);
   const [pendingFinalizeSettings, setPendingFinalizeSettings] =
     useState<UserTemplateSettings | null>(null);
+  const lastInvalidStageKey = useRef<string | null>(null);
   useEffect(() => {
     if (!projectRepositoryNameParam) {
       toastNullError({
@@ -402,6 +403,32 @@ const TemplateInstantiationPage: React.FC = () => {
   const updateStageState = useCallback((key: string, value: unknown) => {
     setStageState((prev) => ({ ...prev, [key]: value }));
   }, []);
+
+  const validateStageState = useCallback(
+    (entry: WebPluginStageEntry, value: unknown) => {
+      if (!entry.stage.stateSchema) {
+        return true;
+      }
+
+      const parsed = entry.stage.stateSchema.safeParse(value);
+      if (!parsed.success) {
+        if (lastInvalidStageKey.current !== entry.stateKey) {
+          lastInvalidStageKey.current = entry.stateKey;
+          toastNullError({
+            shortMessage: `Stage state for "${entry.stage.id}" is invalid.`,
+            error: parsed.error,
+          });
+        }
+        return false;
+      }
+
+      if (lastInvalidStageKey.current === entry.stateKey) {
+        lastInvalidStageKey.current = null;
+      }
+      return true;
+    },
+    [],
+  );
 
   const baseTemplateSettingsDefaultValues: Record<string, any> = useMemo(() => {
     if (storedFormData && Object.keys(storedFormData).length > 0) {
@@ -1053,6 +1080,7 @@ const TemplateInstantiationPage: React.FC = () => {
   if (flowPhase === "init" && initStages[initStageIndex]) {
     const entry = initStages[initStageIndex]!;
     const key = getStageKey(entry);
+    validateStageState(entry, stageState[key]);
 
     return (
       <div className="container py-4 mx-auto">
@@ -1064,7 +1092,12 @@ const TemplateInstantiationPage: React.FC = () => {
           stageState: stageState[key],
           setStageState: (value) => updateStageState(key, value),
           setSettingsDraft: setDraftAndDefaults,
-          onContinue: handleInitContinue,
+          onContinue: () => {
+            if (!validateStageState(entry, stageState[key])) {
+              return;
+            }
+            handleInitContinue();
+          },
         })}
       </div>
     );
@@ -1073,6 +1106,7 @@ const TemplateInstantiationPage: React.FC = () => {
   if (flowPhase === "before" && beforeStages[beforeStageIndex]) {
     const entry = beforeStages[beforeStageIndex]!;
     const key = getStageKey(entry);
+    validateStageState(entry, stageState[key]);
 
     return (
       <div className="container py-4 mx-auto">
@@ -1084,7 +1118,12 @@ const TemplateInstantiationPage: React.FC = () => {
           stageState: stageState[key],
           setStageState: (value) => updateStageState(key, value),
           setSettingsDraft: setDraftAndDefaults,
-          onContinue: handleBeforeContinue,
+          onContinue: () => {
+            if (!validateStageState(entry, stageState[key])) {
+              return;
+            }
+            handleBeforeContinue();
+          },
         })}
       </div>
     );
@@ -1097,6 +1136,7 @@ const TemplateInstantiationPage: React.FC = () => {
   ) {
     const entry = afterStages[afterStageIndex]!;
     const key = getStageKey(entry);
+    validateStageState(entry, stageState[key]);
 
     return (
       <div className="container py-4 mx-auto">
@@ -1108,7 +1148,12 @@ const TemplateInstantiationPage: React.FC = () => {
           stageState: stageState[key],
           setStageState: (value) => updateStageState(key, value),
           setSettingsDraft: setDraftAndDefaults,
-          onContinue: handleAfterContinue,
+          onContinue: () => {
+            if (!validateStageState(entry, stageState[key])) {
+              return;
+            }
+            handleAfterContinue();
+          },
         })}
       </div>
     );
@@ -1121,6 +1166,7 @@ const TemplateInstantiationPage: React.FC = () => {
   ) {
     const entry = finalizeStages[finalizeStageIndex]!;
     const key = getStageKey(entry);
+    validateStageState(entry, stageState[key]);
 
     return (
       <div className="container py-4 mx-auto">
@@ -1132,7 +1178,12 @@ const TemplateInstantiationPage: React.FC = () => {
           stageState: stageState[key],
           setStageState: (value) => updateStageState(key, value),
           setSettingsDraft: setDraftAndDefaults,
-          onContinue: handleFinalizeContinue,
+          onContinue: () => {
+            if (!validateStageState(entry, stageState[key])) {
+              return;
+            }
+            handleFinalizeContinue();
+          },
         })}
       </div>
     );

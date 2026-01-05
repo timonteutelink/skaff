@@ -37,6 +37,14 @@ async function runStageSequence(
 
   for (const entry of stages) {
     const key = entry.stateKey
+    if (entry.stage.stateSchema) {
+      const parsed = entry.stage.stateSchema.safeParse(stageState[key])
+      if (!parsed.success) {
+        throw new Error(
+          `Stage state for "${entry.stage.id}" is invalid: ${parsed.error.message}`,
+        )
+      }
+    }
     const baseContext = {
       ...context,
       currentSettings: workingSettings,
