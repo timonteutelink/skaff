@@ -9,7 +9,7 @@ import { resolveProjectDiffPlanner } from "../src/core/diffing/ProjectDiffPlanne
 import { createDefaultContainer, resetSkaffContainer, setSkaffContainer } from "../src/di/container";
 import { NpmService } from "../src/core/infra/npm-service";
 import { Project } from "../src/models/project";
-import { setupIntegrationTestEnvironment } from "./helpers/integration-fixtures";
+import { setupIntegrationTestEnvironment } from "./lib";
 
 jest.setTimeout(60000);
 

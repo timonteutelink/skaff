@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 
-import { afterEach, jest } from "@jest/globals";
+import { jest } from "@jest/globals";
 import {
   FinalTemplateSettings,
   ProjectSettings,
@@ -15,12 +15,13 @@ import { Project } from "../../src/models/project";
 import { GitStatus } from "../../src/lib/types";
 import { getSkaffContainer } from "../../src/di/container";
 import { TemplateTreeBuilderToken } from "../../src/di/tokens";
+import { registerCleanup } from "./cleanup";
 
 /**
  * Utility helpers for tests that need real template trees and project settings on disk.
  *
  * ```ts
- * import { createTestTemplate, createTestProject } from "../helpers/template-fixtures";
+ * import { createTestTemplate, createTestProject } from "../lib/template-fixtures";
  *
  * describe("my feature", () => {
  *   it("works", async () => {
@@ -40,29 +41,6 @@ import { TemplateTreeBuilderToken } from "../../src/di/tokens";
  * Every helper registers automatic cleanups with Jest so temporary directories
  * and cache locations never leak between tests.
  */
-
-const activeCleanups = new Set<() => Promise<void>>();
-
-afterEach(async () => {
-  const cleanups = Array.from(activeCleanups).reverse();
-  activeCleanups.clear();
-  for (const cleanup of cleanups) {
-    await cleanup();
-  }
-});
-
-export function registerCleanup(fn: () => Promise<void>): () => Promise<void> {
-  let active = true;
-  const wrapped = async () => {
-    if (!active) {
-      return;
-    }
-    active = false;
-    await fn();
-  };
-  activeCleanups.add(wrapped);
-  return wrapped;
-}
 
 function serializeTemplateConfig(
   name: string,

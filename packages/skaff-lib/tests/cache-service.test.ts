@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { withTestContainer } from "../src/di/testing";
 import { CacheService } from "../src/core/infra/cache-service";
-import { createTempDir } from "./lib/fs-fixtures";
+import { createTempDir } from "./lib";
 
 jest.mock("../src/lib/logger", () => ({
   backendLogger: {

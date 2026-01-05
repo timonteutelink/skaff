@@ -18,7 +18,7 @@ import {
   baseUserSettings,
   registerGreeterPlugins,
   setupIntegrationTestEnvironment,
-} from "./helpers/integration-fixtures";
+} from "./lib";
 
 jest.setTimeout(30000);
 

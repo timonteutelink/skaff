@@ -4,7 +4,11 @@ import path from "node:path";
 import { describe, expect, it, jest } from "@jest/globals";
 import { z } from "zod";
 
-import { createMockHardenedSandboxModule } from "./helpers/mock-sandbox";
+import {
+  createMockHardenedSandboxModule,
+  createTempDir,
+  writeTemplateFileTree,
+} from "./lib";
 import type { GenericTemplateConfigModule } from "../src/lib/types";
 import { Template } from "../src/core/templates/Template";
 import { RollbackFileSystem } from "../src/core/generation/RollbackFileSystem";
@@ -12,7 +16,6 @@ import { HandlebarsEnvironment } from "../src/core/shared/HandlebarsEnvironment"
 import { TargetPathResolver } from "../src/core/generation/pipeline/TargetPathResolver";
 import { TemplatePipelineContext } from "../src/core/generation/pipeline/TemplatePipelineContext";
 import { TemplateFileMaterializer } from "../src/core/generation/pipeline/TemplateFileMaterializer";
-import { createTempDir, writeTemplateFileTree } from "./lib/fs-fixtures";
 
 jest.mock("../src/core/infra/hardened-sandbox", () => ({
   ...createMockHardenedSandboxModule(),
