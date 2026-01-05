@@ -7,6 +7,7 @@
 	},
 	"scripts": {
 		"jupyter": "deno task jupyter",
-		"install-jupyter": "deno task install-jupyter"
+		"install-jupyter": "deno task install-jupyter",
+		"test": "echo \"No automated tests for @repo/notebook\""
 	}
 }

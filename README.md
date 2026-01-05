@@ -280,6 +280,16 @@ for the full guide. In summary:
 - Work on a feature branch and open a Pull Request against `main`. PRs run continuous integration and should be kept focused
 - Releases are handled by maintainers via semantic versioning and GitHub Actions; you usually don’t need to publish packages yourself
 
+### Helpful local commands
+
+The Makefile and Turbo scripts expose short-hands for common flows:
+
+- **Clean + install:** `make cr && bun install`
+- **Build everything (libs + apps):** `make build-all`
+- **Build everything incl. Docker web image:** `make build-all-all`
+- **Run all tests registered in workspaces:** `bun run test`
+- **Run the required skaff-lib test suite:** `cd packages/skaff-lib && bun run test`
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.

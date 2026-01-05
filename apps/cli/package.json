@@ -89,8 +89,10 @@
   },
   "repository": "timonteutelink/skaff",
   "scripts": {
-    "rundev": "",
+    "dev": "oclif dev",
     "build": "rm -rf dist && tsc -b",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist oclif.manifest.json",
     "lint": "eslint",
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "true",

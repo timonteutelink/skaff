@@ -14,10 +14,15 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "test": "bun run build"
+  },
+  "dependencies": {
+    "@timonteutelink/template-types-lib": "workspace:*"
   },
   "devDependencies": {
-    "@timonteutelink/template-types-lib": "workspace:*",
     "typescript": "5.9.3"
   }
 }
