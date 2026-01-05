@@ -586,6 +586,36 @@ export interface UiPluginFactoryInput {
   projectContext: ReadonlyProjectContext;
 }
 
+/**
+ * Context provided to plugin settings input transforms.
+ *
+ * This context intentionally exposes only template identity, read-only
+ * project metadata, and plugin-scoped options. No filesystem access is allowed.
+ */
+export interface SettingsInputTransformContext {
+  /** The template's unique name identifier */
+  templateName: string;
+  /** Read-only project metadata (name, author, root template) */
+  projectContext: ReadonlyProjectContext;
+  /** Plugin-specific options from the template configuration */
+  options?: unknown;
+}
+
+/**
+ * Hook to normalize or preprocess user template settings before validation.
+ */
+export type SettingsInputTransformHook = (
+  input: unknown,
+  context: SettingsInputTransformContext,
+) => UserTemplateSettings;
+
+/**
+ * A bound settings input transform that already captures its safe context.
+ */
+export type BoundSettingsInputTransform = (
+  input: unknown,
+) => UserTemplateSettings;
+
 export interface NormalizedTemplatePluginConfig {
   module: string;
   /** Semver version constraint for the plugin */
@@ -777,6 +807,11 @@ export interface SkaffPluginModule {
    */
   requiredTemplateSettingsSchema?: z.ZodObject<UserTemplateSettings>;
 
+  /**
+   * Optional hook to preprocess settings input before schema validation.
+   */
+  settingsInputTransform?: SettingsInputTransformHook;
+
   /** Template generation plugin entrypoint */
   template?: TemplatePluginEntrypoint;
 
@@ -813,6 +848,9 @@ export interface LoadedTemplatePlugin {
 
   /** Template generation plugin (if template capability) */
   templatePlugin?: TemplateGenerationPlugin;
+
+  /** Preprocess settings input before schema validation (sandboxed) */
+  settingsInputTransform?: BoundSettingsInputTransform;
 
   /** CLI contributions (if cli capability) */
   cliPlugin?: CliPluginContribution;

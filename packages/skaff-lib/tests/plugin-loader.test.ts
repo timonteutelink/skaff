@@ -304,6 +304,66 @@ describeIfSES("plugin loading", () => {
     expect(notices).toEqual(["hello web"]);
   });
 
+  it("runs settings input transforms with a sandboxed, minimal context", async () => {
+    const { baseDir, template, projectSettings } =
+      await createTemplateWorkspace();
+
+    const pluginPath = path.join(baseDir, "settings-plugin.cjs");
+    await fs.writeFile(
+      pluginPath,
+      [
+        "module.exports = {",
+        "  manifest: {",
+        "    name: 'settings-plugin',",
+        "    version: '0.0.0',",
+        "    capabilities: ['template'],",
+        "    supportedHooks: { template: [], cli: [], web: [] },",
+        "  },",
+        "  settingsInputTransform(input, context) {",
+        "    return {",
+        "      received: input,",
+        "      templateName: context.templateName,",
+        "      projectRepositoryName: context.projectContext.projectRepositoryName,",
+        "      projectAuthor: context.projectContext.projectAuthor,",
+        "      rootTemplateName: context.projectContext.rootTemplateName,",
+        "      hasInstantiatedTemplates: 'instantiatedTemplates' in context.projectContext,",
+        "      hasTemplateView: 'template' in context,",
+        "      options: context.options ?? null,",
+        "    };",
+        "  },",
+        "};",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const packageName = "settings-plugin-package";
+    await registerPluginModule(pluginPath, packageName);
+
+    template.config.plugins = [{ module: packageName, options: { flag: true } }];
+
+    const pluginsResult = await loadPluginsForTemplate(
+      template,
+      createReadonlyProjectContext(projectSettings),
+    );
+    if ("error" in pluginsResult) {
+      throw new Error(pluginsResult.error);
+    }
+
+    const loaded = pluginsResult.data[0]!;
+    const transformed = loaded.settingsInputTransform?.({ hello: "world" });
+
+    expect(transformed).toEqual({
+      received: { hello: "world" },
+      templateName: template.config.templateConfig.name,
+      projectRepositoryName: projectSettings.projectRepositoryName,
+      projectAuthor: projectSettings.projectAuthor,
+      rootTemplateName: projectSettings.rootTemplateName,
+      hasInstantiatedTemplates: false,
+      hasTemplateView: false,
+      options: { flag: true },
+    });
+  });
+
   it("rejects plugins with blocked imports in sandboxed exports", async () => {
     const { baseDir, template, projectSettings } =
       await createTemplateWorkspace();
