@@ -396,40 +396,25 @@ export async function checkTemplatePluginsCompatibility(
         }
       }
 
-      const pluginModule = moduleResult.data
-      const pluginName = pluginModule.manifest?.name ?? skaffLib.extractPluginName(pluginConfig.module)
-      let updatedPluginResult = pluginResult
-      if (pluginModule.globalConfigSchema) {
-        const rawSettings = pluginSettings[pluginName]
-        const parsed = pluginModule.globalConfigSchema.safeParse(rawSettings ?? {})
-
-        if (!parsed.success) {
-          updatedPluginResult = {
-            ...pluginResult,
-            compatible: false,
-            reason: 'invalid_global_config' as const,
-            message: `Invalid global config for plugin ${pluginName}: ${parsed.error}`,
-          }
-        }
-      }
-
-      let warning: TemplateSettingsWarning | undefined
-      if (templateSettingsSchema && pluginModule.requiredTemplateSettingsSchema) {
-        const compatibility = skaffLib.checkTemplateSettingsSchemaCompatibility(
+      const {globalConfigResult, templateSettingsWarning} =
+        skaffLib.validatePluginCompatibilitySettings({
+          pluginConfig,
+          pluginModule: moduleResult.data,
+          pluginSettings,
           templateSettingsSchema,
-          pluginModule.requiredTemplateSettingsSchema,
-        )
-        if (!compatibility.compatible) {
-          warning = {
-            module: pluginConfig.module,
-            missingKeys: compatibility.missingKeys,
-            optionalKeys: compatibility.optionalKeys,
-            message: skaffLib.formatTemplateSettingsSchemaWarning(pluginName, compatibility),
-          }
-        }
-      }
+        })
 
-      return {pluginResult: updatedPluginResult, warning}
+      const updatedPluginResult =
+        'error' in globalConfigResult
+          ? {
+              ...pluginResult,
+              compatible: false,
+              reason: 'invalid_global_config' as const,
+              message: globalConfigResult.error,
+            }
+          : pluginResult
+
+      return {pluginResult: updatedPluginResult, warning: templateSettingsWarning}
     }),
   )
 
