@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
+  "scripts": {
+    "build": "echo \"No build step for @repo/typescript-config\"",
+    "test": "echo \"No tests for @repo/typescript-config\""
+  },
   "publishConfig": {
     "access": "public"
   }

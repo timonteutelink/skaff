@@ -2,10 +2,23 @@
   "name": "skaff",
   "private": true,
   "scripts": {
+    "build": "turbo run build",
+    "build:apps": "turbo run build --filter=./apps/*",
+    "build:cli": "turbo run build --filter=./apps/cli",
+    "build:web": "turbo run build --filter=./apps/web",
+    "build:libs": "turbo run build --filter=./packages/*",
+    "build:plugins": "turbo run build --filter=./examples/plugins/*",
     "buildNixWeb": "nix-web && bun i && git add -A && nix build .#skaff-web",
     "buildNixCli": "nix-cli && bun i && git add -A && nix build .#skaff-cli",
+    "check-types": "turbo run check-types",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "postinstall": "./scripts/bun2nix.sh || exit 0",
+    "lint": "turbo run lint",
+    "test": "turbo run test --concurrency=1",
+    "test:apps": "turbo run test --filter=./apps/* --concurrency=1",
+    "test:cli": "turbo run test --filter=./apps/cli --concurrency=1",
+    "test:libs": "turbo run test --filter=./packages/* --concurrency=1",
+    "test:plugins": "turbo run test --filter=./examples/plugins/* --concurrency=1",
     "test:skaff-lib": "cd packages/skaff-lib && bun run test:ci"
   },
   "devDependencies": {

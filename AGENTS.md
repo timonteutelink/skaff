@@ -16,6 +16,24 @@
 - Skaff-lib and template-types-lib are referenced via their built JavaScript outputs. Always build both before running tests. Use `bun run test:skaff-lib` from the repo root (or `bun run test:ci` inside `packages/skaff-lib`) to run the builds + tests together.
 - If dependency state gets inconsistent, optionally run `make cr` before `bun install`, builds, and tests.
 
+## Testing guidance (detailed)
+The test flow depends on built outputs, so the safest path is:
+
+1. **Optional cleanup & install**
+   - `make cr` (removes lockfiles + node_modules for a clean install)
+   - `bun install`
+2. **Library-first test path (required before submitting)**
+   - `cd packages/skaff-lib && bun run test`
+     - This is the *required* full test suite check.
+     - Internally it runs the build prerequisites and then Jest.
+3. **Repo-wide tests (optional but recommended when touching CLI/Web/examples)**
+   - `bun run test` (Turbo runs `test` across all packages that expose it)
+   - `bun run test:cli` (CLI-specific test suite)
+   - `bun run test:skaff-lib` (builds template-types + skaff-lib + plugin types, then runs Jest)
+
+If you just need the single-command "build + test" pipeline for skaff-lib, use:
+`bun run test:skaff-lib`
+
 ## General expectations
 - Ensure any documentation edits remain consistent across the repo.
 - When touching documentation, always look for opportunities to improve clarity or completeness.

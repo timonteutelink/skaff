@@ -4,12 +4,14 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "clean": "rm -rf .next",
     "dev": "bun run generate:plugins && next dev --webpack --port 3000",
     "build": "bun run generate:plugins && next build --webpack",
     "start": "next start",
     "lint": "bun run generate:plugins && next lint --max-warnings 0",
     "check-types": "bun run generate:plugins && tsc --noEmit",
-    "generate:plugins": "bun run scripts/generate-plugin-registry.ts"
+    "generate:plugins": "bun run scripts/generate-plugin-registry.ts",
+    "test": "bun run lint && bun run check-types"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

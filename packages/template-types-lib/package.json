@@ -18,7 +18,9 @@
   "scripts": {
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
-    "build": "rm -rf dist && tsc -p tsconfig.json"
+    "build": "rm -rf dist && tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "test": "bun run lint && bun run check-types"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
