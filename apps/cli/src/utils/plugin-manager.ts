@@ -14,6 +14,7 @@ import * as skaffLib from '@timonteutelink/skaff-lib'
 import type {
   InstalledPluginInfo,
   PluginTrustLevel,
+  SkaffPluginModule,
   SinglePluginCompatibilityResult,
   TemplateSettingsWarning,
   TemplatePluginCompatibilityResult,
@@ -365,110 +366,41 @@ export async function checkTemplatePluginsCompatibility(
   templateSettingsSchema?: z.ZodObject<UserTemplateSettings>,
 ): Promise<TemplatePluginCompatibilityResult> {
   const installedMap = await buildInstalledPluginsMap(config)
-  const baseResult = skaffLib.checkTemplatePluginCompatibility(templatePlugins, installedMap)
   const normalized = skaffLib.normalizeTemplatePlugins(templatePlugins)
 
   if (!normalized.length) {
-    return baseResult
+    return skaffLib.checkTemplatePluginCompatibility(templatePlugins, installedMap)
   }
 
   const pluginSettings = await skaffLib.getAllPluginSystemSettings()
-  const updatedEntries = await Promise.all(
-    baseResult.plugins.map(async (pluginResult) => {
-      if (!pluginResult.compatible) {
-        return {pluginResult}
-      }
+  const pluginModuleResults = new Map<string, skaffLib.Result<SkaffPluginModule>>()
 
-      const pluginConfig = normalized.find((entry) => entry.module === pluginResult.module)
-      if (!pluginConfig) {
-        return {pluginResult}
-      }
-
+  await Promise.all(
+    normalized.map(async (pluginConfig) => {
       const moduleResult = await skaffLib.resolveRegisteredPluginModule(pluginConfig)
-      if ('error' in moduleResult) {
-        return {
-          pluginResult: {
-            ...pluginResult,
-            compatible: false,
-            reason: 'invalid_global_config' as const,
-            message: `Unable to load plugin for global settings validation: ${moduleResult.error}`,
-          },
-        }
-      }
-
-      const pluginModule = moduleResult.data
-      const pluginName = pluginModule.manifest?.name ?? skaffLib.extractPluginName(pluginConfig.module)
-      let updatedPluginResult = pluginResult
-      if (pluginModule.globalConfigSchema) {
-        const rawSettings = pluginSettings[pluginName]
-        const parsed = pluginModule.globalConfigSchema.safeParse(rawSettings ?? {})
-
-        if (!parsed.success) {
-          updatedPluginResult = {
-            ...pluginResult,
-            compatible: false,
-            reason: 'invalid_global_config' as const,
-            message: `Invalid global config for plugin ${pluginName}: ${parsed.error}`,
-          }
-        }
-      }
-
-      let warning: TemplateSettingsWarning | undefined
-      if (templateSettingsSchema && pluginModule.requiredTemplateSettingsSchema) {
-        const compatibility = skaffLib.checkTemplateSettingsSchemaCompatibility(
-          templateSettingsSchema,
-          pluginModule.requiredTemplateSettingsSchema,
-        )
-        if (!compatibility.compatible) {
-          warning = {
-            module: pluginConfig.module,
-            missingKeys: compatibility.missingKeys,
-            optionalKeys: compatibility.optionalKeys,
-            message: skaffLib.formatTemplateSettingsSchemaWarning(pluginName, compatibility),
-          }
-        }
-      }
-
-      return {pluginResult: updatedPluginResult, warning}
+      pluginModuleResults.set(pluginConfig.module, moduleResult)
     }),
   )
 
-  const missing: SinglePluginCompatibilityResult[] = []
-  const versionMismatches: SinglePluginCompatibilityResult[] = []
-  const invalidGlobalConfig: SinglePluginCompatibilityResult[] = []
-  const compatible: SinglePluginCompatibilityResult[] = []
-  const templateSettingsWarnings: TemplateSettingsWarning[] = []
+  const {validateGlobalConfig, validateTemplateSettings} = skaffLib.createPluginCompatibilityValidators({
+    pluginSettings,
+    templateSettingsSchema,
+    resolvePluginModule: (pluginConfig) => {
+      const moduleResult = pluginModuleResults.get(pluginConfig.module)
+      if (moduleResult) {
+        return moduleResult
+      }
+      return {
+        error: `Plugin ${pluginConfig.module} could not be resolved for settings validation`,
+      }
+    },
+    includeTemplateSettingsLoadErrors: false,
+  })
 
-  const updatedPlugins = updatedEntries.map((entry) => entry.pluginResult)
-
-  for (const entry of updatedEntries) {
-    if (entry.warning) {
-      templateSettingsWarnings.push(entry.warning)
-    }
-
-    const result = entry.pluginResult
-    if (result.compatible) {
-      compatible.push(result)
-    } else if (result.reason === 'not_installed') {
-      missing.push(result)
-    } else if (result.reason === 'invalid_global_config') {
-      invalidGlobalConfig.push(result)
-    } else {
-      versionMismatches.push(result)
-    }
-  }
-
-  return {
-    ...baseResult,
-    plugins: updatedPlugins,
-    missing,
-    versionMismatches,
-    invalidGlobalConfig,
-    compatible,
-    allCompatible:
-      missing.length === 0 && versionMismatches.length === 0 && invalidGlobalConfig.length === 0,
-    templateSettingsWarnings,
-  }
+  return skaffLib.checkTemplatePluginCompatibility(templatePlugins, installedMap, {
+    validateGlobalConfig,
+    validateTemplateSettings,
+  })
 }
 
 /**

@@ -12,11 +12,9 @@
 import type {
   SkaffPluginModule,
   PluginStageEntry,
-  TemplatePluginConfig,
   PluginTrustLevel,
   InstalledPluginInfo,
   TemplateSettingsWarning,
-  TemplateSettingsSchemaCompatibility,
   TemplatePluginCompatibilityResult,
   SinglePluginCompatibilityResult,
   TemplateDTO,
@@ -31,7 +29,7 @@ import {
   createPluginStageEntry,
   checkTemplatePluginCompatibility,
   extractPluginName,
-  formatTemplateSettingsSchemaWarning,
+  createPluginCompatibilityValidators,
 } from "@timonteutelink/skaff-lib/browser";
 
 import {
@@ -39,7 +37,6 @@ import {
   PLUGIN_MANIFEST,
   type PluginManifestEntry,
 } from "./generated-plugin-registry";
-import { z } from "zod";
 
 /**
  * Information about a plugin that is required but not installed.
@@ -165,12 +162,43 @@ export function checkPluginCompatibility(
 
   // Use the skaff-lib compatibility checker with semver support
   const installedPluginsMap = buildInstalledPluginsMap();
+  const { validateGlobalConfig, validateTemplateSettings } =
+    createPluginCompatibilityValidators({
+      pluginSettings,
+      templateSettingsSchema: template.config.templateSettingsSchema,
+      resolvePluginModule: (pluginConfig) => {
+        const pluginName = extractPluginName(pluginConfig.module);
+        const moduleExports = getInstalledPlugin(pluginName);
+        const resolvedModule =
+          moduleExports ?? getInstalledPlugin(pluginConfig.module);
+
+        if (!resolvedModule) {
+          return {
+            error: `Plugin "${pluginName}" is installed but could not be loaded`,
+          };
+        }
+
+        const entry = pickEntrypoint(resolvedModule, pluginConfig.exportName);
+        const pluginModule = coerceToPluginModule(entry);
+        if (!pluginModule) {
+          return {
+            error: `Plugin "${pluginName}" is installed but could not be loaded`,
+          };
+        }
+
+        return { data: pluginModule };
+      },
+      formatModuleLoadError: (pluginName, purpose) => {
+        if (purpose === "template_settings") {
+          return `Plugin "${pluginName}" is installed but could not be loaded for template settings validation`;
+        }
+        return `Plugin "${pluginName}" is installed but could not be loaded for settings validation`;
+      },
+    });
   const result: TemplatePluginCompatibilityResult =
     checkTemplatePluginCompatibility(plugins, installedPluginsMap, {
-      validateGlobalConfig: (pluginConfig) =>
-        validateGlobalPluginSettings(pluginConfig, pluginSettings),
-      validateTemplateSettings: (pluginConfig) =>
-        validateTemplateSettingsSchema(pluginConfig, template),
+      validateGlobalConfig,
+      validateTemplateSettings,
     });
 
   // Convert to the web-specific format
@@ -227,121 +255,6 @@ export function checkPluginCompatibility(
     hasTrustWarnings: untrustedPlugins.length > 0,
     untrustedPlugins,
   };
-}
-
-function validateGlobalPluginSettings(
-  pluginConfig: TemplatePluginConfig,
-  pluginSettings?: Record<string, unknown>,
-): { data: undefined } | { error: string } {
-  const pluginName = extractPluginName(pluginConfig.module);
-  const moduleExports = getInstalledPlugin(pluginName);
-  const resolvedModule = moduleExports ?? getInstalledPlugin(pluginConfig.module);
-
-  if (!resolvedModule) {
-    return {
-      error: `Plugin "${pluginName}" is installed but could not be loaded for settings validation`,
-    };
-  }
-
-  const entry = pickEntrypoint(resolvedModule, pluginConfig.exportName);
-  const pluginModule = coerceToPluginModule(entry);
-  if (!pluginModule?.globalConfigSchema) {
-    return { data: undefined };
-  }
-
-  const manifestName = pluginModule.manifest?.name ?? pluginName;
-  const rawSettings = pluginSettings?.[manifestName];
-  const parsed = pluginModule.globalConfigSchema.safeParse(rawSettings ?? {});
-
-  if (!parsed.success) {
-    return {
-      error: `Invalid global config for plugin ${manifestName}: ${parsed.error}`,
-    };
-  }
-
-  return { data: undefined };
-}
-
-function validateTemplateSettingsSchema(
-  pluginConfig: TemplatePluginConfig,
-  template: TemplateDTO,
-): { data: TemplateSettingsWarning | undefined } | { error: string } {
-  const pluginName = extractPluginName(pluginConfig.module);
-  const moduleExports = getInstalledPlugin(pluginName);
-  const resolvedModule = moduleExports ?? getInstalledPlugin(pluginConfig.module);
-
-  if (!resolvedModule) {
-    return {
-      error: `Plugin "${pluginName}" is installed but could not be loaded for template settings validation`,
-    };
-  }
-
-  const entry = pickEntrypoint(resolvedModule, pluginConfig.exportName);
-  const pluginModule = coerceToPluginModule(entry);
-  const requiredSchema = pluginModule?.requiredTemplateSettingsSchema;
-  if (!requiredSchema) {
-    return { data: undefined };
-  }
-
-  const compatibility = checkTemplateSettingsJsonCompatibility(
-    template.config.templateSettingsSchema,
-    z.toJSONSchema(requiredSchema),
-  );
-
-  if (compatibility.compatible) {
-    return { data: undefined };
-  }
-
-  const manifestName = pluginModule?.manifest?.name ?? pluginName;
-  return {
-    data: {
-      module: pluginConfig.module,
-      missingKeys: compatibility.missingKeys,
-      optionalKeys: compatibility.optionalKeys,
-      message: formatTemplateSettingsSchemaWarning(manifestName, compatibility),
-    },
-  };
-}
-
-function checkTemplateSettingsJsonCompatibility(
-  templateSchema: unknown,
-  requiredSchema: unknown,
-): TemplateSettingsSchemaCompatibility {
-  const templateInfo = getJsonSchemaInfo(templateSchema);
-  const requiredInfo = getJsonSchemaInfo(requiredSchema);
-
-  const missingKeys = [...requiredInfo.properties].filter(
-    (key) => !templateInfo.properties.has(key),
-  );
-  const optionalKeys = [...requiredInfo.required].filter(
-    (key) =>
-      templateInfo.properties.has(key) && !templateInfo.required.has(key),
-  );
-
-  return {
-    compatible: missingKeys.length === 0 && optionalKeys.length === 0,
-    missingKeys,
-    optionalKeys,
-  };
-}
-
-function getJsonSchemaInfo(schema: unknown): {
-  properties: Set<string>;
-  required: Set<string>;
-} {
-  if (!schema || typeof schema !== "object") {
-    return { properties: new Set(), required: new Set() };
-  }
-
-  const schemaRecord = schema as {
-    properties?: Record<string, unknown>;
-    required?: string[];
-  };
-  const properties = new Set(Object.keys(schemaRecord.properties ?? {}));
-  const required = new Set(
-    Array.isArray(schemaRecord.required) ? schemaRecord.required : [],
-  );
-  return { properties, required };
 }
 
 export type WebPluginStageEntry = PluginStageEntry<WebTemplateStage>;
