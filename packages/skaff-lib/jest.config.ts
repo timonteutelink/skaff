@@ -20,7 +20,7 @@ const config: Config = {
       },
     ],
   },
-  setupFiles: ["<rootDir>/tests/setup-env.ts"],
+  setupFilesAfterEnv: ["<rootDir>/tests/setup-env.ts"],
   moduleNameMapper: {
     "^@timonteutelink/template-types-lib$":
       "<rootDir>/../template-types-lib/dist/index.js",

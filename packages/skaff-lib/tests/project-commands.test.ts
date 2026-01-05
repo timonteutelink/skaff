@@ -4,9 +4,12 @@ import path from "node:path";
 import { beforeAll, describe, expect, it, jest } from "@jest/globals";
 import { z } from "zod";
 
-import { createMockHardenedSandboxModule } from "./helpers/mock-sandbox";
+import {
+  createMockHardenedSandboxModule,
+  createTempDir,
+  writeTemplateFileTree,
+} from "./lib";
 import type { GenericTemplateConfigModule } from "../src/lib/types";
-import { createTempDir, writeTemplateFileTree } from "./lib/fs-fixtures";
 import { getSkaffContainer } from "../src/di/container";
 import { ShellServiceToken } from "../src/di/tokens";
 

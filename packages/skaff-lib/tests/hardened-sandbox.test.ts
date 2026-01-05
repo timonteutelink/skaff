@@ -9,7 +9,7 @@
  * created that run in an isolated process with SES lockdown enabled.
  */
 
-import { MockHardenedSandboxService } from "./helpers/mock-sandbox";
+import { MockHardenedSandboxService } from "./lib";
 
 describe("MockHardenedSandboxService", () => {
   let sandbox: MockHardenedSandboxService;

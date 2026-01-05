@@ -8,7 +8,7 @@ import { z } from "zod";
 import { Template } from "../src/core/templates/Template";
 import { validateTemplateResources } from "../src/core/templates/TemplateValidation";
 import type { GenericTemplateConfigModule } from "../src/lib/types";
-import { createTempDir, writeTemplateFileTree } from "./lib/fs-fixtures";
+import { createTempDir, writeTemplateFileTree } from "./lib";
 
 jest.mock("../src/lib/logger", () => ({
   backendLogger: {

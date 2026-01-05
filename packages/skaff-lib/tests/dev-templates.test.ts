@@ -10,7 +10,7 @@ import type { GitService } from "../src/core/infra/git-service";
 import type { HardenedSandboxService } from "../src/core/infra/hardened-sandbox";
 import type { EsbuildInitializer } from "../src/utils/get-esbuild";
 import type { GenericTemplateConfigModule } from "../src/lib/types";
-import { createTempDir, writeTemplateFileTree } from "./lib/fs-fixtures";
+import { createTempDir, writeTemplateFileTree } from "./lib";
 
 describe("dev templates", () => {
   it("skips clean repo checks when dev mode is enabled", async () => {
