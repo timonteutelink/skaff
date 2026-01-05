@@ -204,6 +204,11 @@ export async function readUserTemplateSettings(
   if ('error' in rootTpl) throw new Error(rootTpl.error)
   if (!rootTpl.data) throw new Error(`No template named "${rootTemplateName}"`)
 
+  const subTpl = rootTpl.data.template.findSubTemplate(templateName)
+  if (!subTpl) {
+    throw new Error(`No sub-template "${templateName}" in root template "${rootTemplateName}"`)
+  }
+
   const projectSettings: ProjectSettings =
     options?.projectSettings ??
     ({
@@ -228,5 +233,17 @@ export async function readUserTemplateSettings(
     throw new Error(pluginsResult.error)
   }
 
-  return parsedSettings
+  let transformedSettings: unknown = parsedSettings
+
+  for (const plugin of pluginsResult.data) {
+    if (!plugin.settingsInputTransform) continue
+    transformedSettings = plugin.settingsInputTransform(transformedSettings)
+  }
+
+  const parsedResult = subTpl.config.templateSettingsSchema.safeParse(transformedSettings ?? {})
+  if (!parsedResult.success) {
+    throw new Error(`Invalid template settings for "${templateName}": ${parsedResult.error.message}`)
+  }
+
+  return parsedResult.data as UserTemplateSettings
 }

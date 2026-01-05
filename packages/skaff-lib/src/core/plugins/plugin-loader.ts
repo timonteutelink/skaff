@@ -4,10 +4,13 @@ import type { Result } from "../../lib/types";
 import { getPluginSystemSettings } from "../../lib/config";
 import type { Template } from "../templates/Template";
 import {
+  BoundSettingsInputTransform,
   CliPluginContribution,
   LoadedTemplatePlugin,
   NormalizedTemplatePluginConfig,
   SkaffPluginModule,
+  SettingsInputTransformContext,
+  SettingsInputTransformHook,
   WebPluginContribution,
   normalizeTemplatePlugins,
   PluginManifest,
@@ -309,6 +312,31 @@ async function buildWebPlugin(
   return resolveEntrypoint<WebPluginContribution>(module.web, input);
 }
 
+function buildSettingsInputTransform(
+  module: SkaffPluginModule,
+  context: SettingsInputTransformContext,
+): Result<BoundSettingsInputTransform | undefined> {
+  const entrypoint = module.settingsInputTransform;
+  if (!entrypoint) return { data: undefined };
+
+  if (typeof entrypoint !== "function") {
+    return {
+      error: `Plugin ${module.manifest.name} settingsInputTransform must be a function`,
+    };
+  }
+
+  return {
+    data: (input: unknown) => {
+      const sandbox = resolveHardenedSandbox();
+      return sandbox.invokeFunctionWithArgs(
+        entrypoint as SettingsInputTransformHook,
+        input,
+        context,
+      );
+    },
+  };
+}
+
 
 function validateManifest(
   manifest: PluginManifest,
@@ -459,6 +487,20 @@ export async function loadPluginsForTemplate(
       projectContext,
     };
 
+    const settingsTransformContext: SettingsInputTransformContext = {
+      templateName: template.config.templateConfig.name,
+      projectContext,
+      options: reference.options,
+    };
+
+    const settingsInputTransform = buildSettingsInputTransform(
+      pluginModule,
+      settingsTransformContext,
+    );
+    if ("error" in settingsInputTransform) {
+      return { error: settingsInputTransform.error };
+    }
+
     const templatePlugin = buildTemplatePlugin(
       pluginModule,
       template,
@@ -482,6 +524,7 @@ export async function loadPluginsForTemplate(
       globalConfig: globalConfigResult.data,
       lifecycle: pluginModule.lifecycle,
       templatePlugin: templatePlugin.data,
+      settingsInputTransform: settingsInputTransform.data,
       cliPlugin,
       webPlugin,
     });
