@@ -22,6 +22,44 @@ export class InvalidTemplateSpecVersionError extends Error {
   }
 }
 
+export class TemplateResourceValidationError extends Error {
+  public readonly templateName: string;
+  public readonly missingPartials: string[];
+  public readonly missingHelpers: string[];
+  public readonly missingSettings: string[];
+
+  constructor(args: {
+    templateName: string;
+    missingPartials: string[];
+    missingHelpers: string[];
+    missingSettings: string[];
+  }) {
+    const missingMessages = [
+      args.missingPartials.length > 0
+        ? `partials: ${args.missingPartials.join(", ")}`
+        : null,
+      args.missingHelpers.length > 0
+        ? `helpers: ${args.missingHelpers.join(", ")}`
+        : null,
+      args.missingSettings.length > 0
+        ? `settings: ${args.missingSettings.join(", ")}`
+        : null,
+    ].filter(Boolean);
+
+    const messageSuffix =
+      missingMessages.length > 0
+        ? `Missing ${missingMessages.join("; ")}`
+        : "Missing required template resources.";
+
+    super(`Template ${args.templateName} validation failed. ${messageSuffix}`);
+    this.name = "TemplateResourceValidationError";
+    this.templateName = args.templateName;
+    this.missingPartials = args.missingPartials;
+    this.missingHelpers = args.missingHelpers;
+    this.missingSettings = args.missingSettings;
+  }
+}
+
 export function validateTemplateSpecVersion(
   templateName: string,
   specVersion: string,
@@ -35,8 +73,21 @@ export function validateTemplateSpecVersion(
 
 export async function validateTemplateResources(template: Template): Promise<void> {
   try {
-    await checkMissingSettings(template);
-    await checkMissingPartials(template);
+    const settingsCheck = await checkMissingSettings(template);
+    const partialsCheck = await checkMissingPartials(template);
+
+    if (
+      settingsCheck.missingSettings.length > 0 ||
+      settingsCheck.missingHelpers.length > 0 ||
+      partialsCheck.missingPartials.length > 0
+    ) {
+      throw new TemplateResourceValidationError({
+        templateName: template.config.templateConfig.name,
+        missingPartials: partialsCheck.missingPartials,
+        missingHelpers: settingsCheck.missingHelpers,
+        missingSettings: settingsCheck.missingSettings,
+      });
+    }
   } catch (error) {
     logError({
       error,
