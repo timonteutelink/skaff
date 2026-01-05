@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { registerCleanup } from "../helpers/template-fixtures";
+import { registerCleanup } from "./cleanup";
 
 export interface TempDirFixture {
   root: string;

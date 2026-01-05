@@ -2,7 +2,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { z } from "zod";
 import type { ProjectSettings } from "@timonteutelink/template-types-lib";
 
-import { createMockHardenedSandboxModule } from "./helpers/mock-sandbox";
+import { createMockHardenedSandboxModule } from "./lib";
 import { Project } from "../src/models/project";
 import type { Template } from "../src/models/template";
 

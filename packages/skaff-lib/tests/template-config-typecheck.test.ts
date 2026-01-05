@@ -6,7 +6,7 @@ import { HardenedSandboxService } from "../src/core/infra/hardened-sandbox";
 import { TemplateConfigLoader } from "../src/core/templates/config/TemplateConfigLoader";
 import { EsbuildInitializer } from "../src/utils/get-esbuild";
 import type { CacheService } from "../src/core/infra/cache-service";
-import { createTempDir, writeTemplateFileTree } from "./lib/fs-fixtures";
+import { createTempDir, writeTemplateFileTree } from "./lib";
 
 async function createTemplateRoot(): Promise<{
   rootDir: string;

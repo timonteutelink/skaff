@@ -1,33 +1,19 @@
+import * as fs from "node:fs/promises";
+import path from "node:path";
 import { z } from "zod";
 
 import type { TemplateParentReference } from "@timonteutelink/template-types-lib";
 
 import type { Template } from "../src/core/templates/Template";
-import { ProjectSettingsManager } from "../src/core/projects/ProjectSettingsManager";
-
-jest.mock("../src/lib/logger", () => ({
-  backendLogger: { warn: jest.fn(), info: jest.fn(), error: jest.fn() },
-}));
-
-jest.mock("../src/repositories", () => ({
-  resolveRootTemplateRepository: jest.fn(),
-}));
-
-jest.mock("node:fs/promises", () => ({
-  readFile: jest.fn(),
-  writeFile: jest.fn(),
-  access: jest.fn(),
-  readdir: jest.fn(),
-  stat: jest.fn(),
-}));
-
-const readFileMock = (jest.requireMock(
-  "node:fs/promises",
-) as typeof import("node:fs/promises")).readFile as jest.Mock;
-
-const resolveRootTemplateRepository = jest.requireMock(
-  "../src/repositories",
-).resolveRootTemplateRepository as jest.Mock;
+import { createTestContainer } from "../src/di/testing";
+import { RootTemplateRepositoryToken } from "../src/di/tokens";
+import {
+  peekSkaffContainer,
+  resetSkaffContainer,
+  setSkaffContainer,
+} from "../src/di/container";
+import { backendLogger } from "../src/lib/logger";
+import { createTempDir } from "./lib";
 
 interface TemplateStubInit {
   name: string;
@@ -75,8 +61,25 @@ class TemplateStub {
 }
 
 describe("ProjectSettingsManager.load", () => {
+  let ProjectSettingsManager: typeof import("../src/core/projects/ProjectSettingsManager").ProjectSettingsManager;
+
   beforeEach(() => {
     jest.resetAllMocks();
+    jest
+      .spyOn(backendLogger, "warn")
+      .mockImplementation(() => backendLogger);
+    jest
+      .spyOn(backendLogger, "info")
+      .mockImplementation(() => backendLogger);
+    jest
+      .spyOn(backendLogger, "error")
+      .mockImplementation(() => backendLogger);
+    ProjectSettingsManager =
+      require("../src/core/projects/ProjectSettingsManager").ProjectSettingsManager;
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it("attaches detached child templates and fills repo metadata", async () => {
@@ -121,13 +124,6 @@ describe("ProjectSettingsManager.load", () => {
       },
     );
 
-    resolveRootTemplateRepository.mockReturnValue({
-      addRemoteRepo,
-      loadRevision,
-      findTemplate,
-      attachDetachedChild,
-    });
-
     const templateSettings = {
       projectRepositoryName: "demo",
       projectAuthor: "me",
@@ -153,10 +149,37 @@ describe("ProjectSettingsManager.load", () => {
       ],
     } satisfies Parameters<ProjectSettingsManager["writeSettings"]>[0];
 
-    readFileMock.mockResolvedValue(JSON.stringify(templateSettings));
+    const { root } = await createTempDir("skaff-project-settings-");
+    const projectDir = path.join(root, "project");
+    await fs.mkdir(projectDir, { recursive: true });
+    await fs.writeFile(
+      path.join(projectDir, "templateSettings.json"),
+      JSON.stringify(templateSettings),
+      "utf-8",
+    );
 
-    const manager = new ProjectSettingsManager("/tmp/project");
-    const result = await manager.load();
+    const previousContainer = peekSkaffContainer();
+    const testContainer = createTestContainer((container) => {
+      container.registerInstance(RootTemplateRepositoryToken, {
+        addRemoteRepo,
+        loadRevision,
+        findTemplate,
+        attachDetachedChild,
+      });
+    });
+    setSkaffContainer(testContainer);
+
+    let result: Awaited<ReturnType<ProjectSettingsManager["load"]>>;
+    try {
+      const manager = new ProjectSettingsManager(projectDir);
+      result = await manager.load();
+    } finally {
+      if (previousContainer) {
+        setSkaffContainer(previousContainer);
+      } else {
+        resetSkaffContainer();
+      }
+    }
 
     expect(result).toHaveProperty("data");
 

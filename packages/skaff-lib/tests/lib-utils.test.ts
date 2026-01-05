@@ -1,25 +1,23 @@
-import { anyOrCallbackToAny, stringOrCallbackToString, logError } from "../src/lib/utils";
 import type { Result } from "../src/lib/types";
+import { backendLogger } from "../src/lib/logger";
 
-jest.mock("../src/lib/logger", () => {
-  const log = jest.fn();
-  return {
-    backendLogger: {
-      error: log,
-      warn: log,
-      info: log,
-      debug: log,
-      trace: log,
-      fatal: log,
-    },
-  };
-});
-
-const { backendLogger } = require("../src/lib/logger");
+let anyOrCallbackToAny: typeof import("../src/lib/utils").anyOrCallbackToAny;
+let stringOrCallbackToString: typeof import("../src/lib/utils").stringOrCallbackToString;
+let logError: typeof import("../src/lib/utils").logError;
 
 describe("lib-utils", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest
+      .spyOn(backendLogger, "error")
+      .mockImplementation(() => backendLogger);
+    ({ anyOrCallbackToAny, stringOrCallbackToString, logError } = require(
+      "../src/lib/utils",
+    ));
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe("anyOrCallbackToAny", () => {

@@ -9,7 +9,7 @@ import type {
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import type { GenericTemplateConfigModule } from "../src/lib/types";
-import { createTempDir } from "./lib/fs-fixtures";
+import { createTempDir } from "./lib";
 
 jest.mock("../src/lib/logger", () => ({
   backendLogger: {

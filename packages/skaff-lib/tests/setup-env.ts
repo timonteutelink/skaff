@@ -7,8 +7,10 @@
  */
 import { markHardenedEnvironmentForTesting } from "../src/core/infra/hardened-sandbox";
 import { registerPluginSandboxLibraries } from "../src/core/infra/sandbox-endowments";
+import { initializeTestCleanup } from "./lib";
 
 markHardenedEnvironmentForTesting();
+initializeTestCleanup();
 
 registerPluginSandboxLibraries({
   react: {

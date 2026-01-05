@@ -14,7 +14,7 @@ import {
   registerPluginModules,
 } from "../src/core/plugins";
 import { PipelineBuilder } from "../src/core/generation/pipeline/pipeline-runner";
-import { createTempDir, writeTemplateFileTree } from "./lib/fs-fixtures";
+import { createTempDir, writeTemplateFileTree } from "./lib";
 
 // These tests require the full SES lockdown which is not available when running
 // with Jest mocks (Jest uses Node.js domains which conflict with SES lockdown).

@@ -13,8 +13,7 @@ import { createReadonlyProjectContext } from "@timonteutelink/template-types-lib
 import { createTemplateView } from "../src/core/plugins/template-view";
 import { PipelineBuilder, PipelineRunner } from "../src/core/generation/pipeline/pipeline-runner";
 import type { TemplateInstantiationPipelineContext } from "../src/core/generation/pipeline/pipeline-stages";
-import { createLocalTestTemplateRepository } from "./helpers/template-fixtures";
-import { registerGreeterPlugins } from "./helpers/integration-fixtures";
+import { createLocalTestTemplateRepository, registerGreeterPlugins } from "./lib";
 
 jest.setTimeout(30000);
 
