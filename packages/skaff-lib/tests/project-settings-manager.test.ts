@@ -3,31 +3,10 @@ import { z } from "zod";
 import type { TemplateParentReference } from "@timonteutelink/template-types-lib";
 
 import type { Template } from "../src/core/templates/Template";
-import { ProjectSettingsManager } from "../src/core/projects/ProjectSettingsManager";
 
-jest.mock("../src/lib/logger", () => ({
-  backendLogger: { warn: jest.fn(), info: jest.fn(), error: jest.fn() },
-}));
-
-jest.mock("../src/repositories", () => ({
-  resolveRootTemplateRepository: jest.fn(),
-}));
-
-jest.mock("node:fs/promises", () => ({
-  readFile: jest.fn(),
-  writeFile: jest.fn(),
-  access: jest.fn(),
-  readdir: jest.fn(),
-  stat: jest.fn(),
-}));
-
-const readFileMock = (jest.requireMock(
-  "node:fs/promises",
-) as typeof import("node:fs/promises")).readFile as jest.Mock;
-
-const resolveRootTemplateRepository = jest.requireMock(
-  "../src/repositories",
-).resolveRootTemplateRepository as jest.Mock;
+let ProjectSettingsManager: typeof import("../src/core/projects/ProjectSettingsManager").ProjectSettingsManager;
+let resolveRootTemplateRepository: jest.Mock;
+let readFileMock: jest.Mock;
 
 interface TemplateStubInit {
   name: string;
@@ -76,6 +55,37 @@ class TemplateStub {
 
 describe("ProjectSettingsManager.load", () => {
   beforeEach(() => {
+    jest.resetModules();
+    jest.doMock("../src/lib/logger", () => ({
+      backendLogger: { warn: jest.fn(), info: jest.fn(), error: jest.fn() },
+    }));
+
+    jest.doMock("../src/repositories", () => ({
+      resolveRootTemplateRepository: jest.fn(),
+    }));
+
+    jest.doMock("node:fs/promises", () => ({
+      readFile: jest.fn(),
+      writeFile: jest.fn(),
+      access: jest.fn(),
+      readdir: jest.fn(),
+      stat: jest.fn(),
+    }));
+
+    ProjectSettingsManager = (
+      require("../src/core/projects/ProjectSettingsManager") as typeof import(
+        "../src/core/projects/ProjectSettingsManager"
+      )
+    ).ProjectSettingsManager;
+
+    resolveRootTemplateRepository = (
+      require("../src/repositories") as typeof import("../src/repositories")
+    ).resolveRootTemplateRepository as jest.Mock;
+
+    readFileMock = (
+      require("node:fs/promises") as typeof import("node:fs/promises")
+    ).readFile as jest.Mock;
+
     jest.resetAllMocks();
   });
 

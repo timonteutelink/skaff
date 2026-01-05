@@ -15,6 +15,7 @@
 - If your work affects behavior that lacks coverage, add or extend tests accordingly.
 - Skaff-lib and template-types-lib are referenced via their built JavaScript outputs. Always build both before running tests. Use `bun run test:skaff-lib` from the repo root (or `bun run test:ci` inside `packages/skaff-lib`) to run the builds + tests together.
 - If dependency state gets inconsistent, optionally run `make cr` before `bun install`, builds, and tests.
+  - If you hit missing export/type errors when running skaff-lib tests, run `make cr && bun install` and re-run the skaff-lib test command to ensure `template-types-lib` is rebuilt first.
 
 ## Testing guidance (detailed)
 The test flow depends on built outputs, so the safest path is:

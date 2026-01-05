@@ -289,6 +289,10 @@ The Makefile and Turbo scripts expose short-hands for common flows:
 - **Build everything incl. Docker web image:** `make build-all-all`
 - **Run all tests registered in workspaces:** `bun run test`
 - **Run the required skaff-lib test suite:** `cd packages/skaff-lib && bun run test`
+  - **Important:** skaff-lib tests depend on the built output from `template-types-lib`.
+    Always build `template-types-lib` before running skaff-lib tests (the `bun run test` script
+    for skaff-lib already does this). If you see missing export/type errors, run
+    `make cr && bun install`, then re-run `cd packages/skaff-lib && bun run test`.
 
 ## License
 

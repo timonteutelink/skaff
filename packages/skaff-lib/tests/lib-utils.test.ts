@@ -1,24 +1,34 @@
-import { anyOrCallbackToAny, stringOrCallbackToString, logError } from "../src/lib/utils";
 import type { Result } from "../src/lib/types";
 
-jest.mock("../src/lib/logger", () => {
-  const log = jest.fn();
-  return {
-    backendLogger: {
-      error: log,
-      warn: log,
-      info: log,
-      debug: log,
-      trace: log,
-      fatal: log,
-    },
-  };
-});
-
-const { backendLogger } = require("../src/lib/logger");
+let anyOrCallbackToAny: typeof import("../src/lib/utils").anyOrCallbackToAny;
+let stringOrCallbackToString: typeof import("../src/lib/utils").stringOrCallbackToString;
+let logError: typeof import("../src/lib/utils").logError;
+let backendLogger: typeof import("../src/lib/logger").backendLogger;
 
 describe("lib-utils", () => {
   beforeEach(() => {
+    jest.resetModules();
+    jest.doMock("../src/lib/logger", () => {
+      const log = jest.fn();
+      return {
+        backendLogger: {
+          error: log,
+          warn: log,
+          info: log,
+          debug: log,
+          trace: log,
+          fatal: log,
+        },
+      };
+    });
+
+    const utils = require("../src/lib/utils") as typeof import("../src/lib/utils");
+    anyOrCallbackToAny = utils.anyOrCallbackToAny;
+    stringOrCallbackToString = utils.stringOrCallbackToString;
+    logError = utils.logError;
+    backendLogger = (require("../src/lib/logger") as typeof import("../src/lib/logger"))
+      .backendLogger;
+
     jest.clearAllMocks();
   });
 
