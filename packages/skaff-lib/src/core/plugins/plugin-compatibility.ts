@@ -15,6 +15,7 @@ import {
   normalizeTemplatePlugins,
   type NormalizedTemplatePluginConfig,
 } from "./plugin-types";
+import type { SkaffPluginModule } from "./plugin-types";
 import { parsePackageSpec } from "./package-spec";
 import type { Result } from "../../lib/types";
 
@@ -108,6 +109,17 @@ export interface TemplateSettingsSchemaCompatibility {
   optionalKeys: string[];
 }
 
+export interface JsonSchemaShape {
+  properties?: Record<string, unknown>;
+  required?: string[];
+}
+
+export type TemplateSettingsSchemaInput =
+  | z.ZodTypeAny
+  | JsonSchemaShape
+  | null
+  | undefined;
+
 /**
  * Extracts the plugin name from a module specifier.
  * Handles scoped packages like @scope/plugin-name and version suffixes.
@@ -187,6 +199,32 @@ export function checkTemplateSettingsSchemaCompatibility(
   };
 }
 
+export function checkTemplateSettingsSchemaCompatibilityInput(
+  templateSettingsSchema: TemplateSettingsSchemaInput,
+  requiredTemplateSettingsSchema: TemplateSettingsSchemaInput,
+): TemplateSettingsSchemaCompatibility {
+  const templateInfo = getJsonSchemaInfo(
+    normalizeSchemaInput(templateSettingsSchema),
+  );
+  const requiredInfo = getJsonSchemaInfo(
+    normalizeSchemaInput(requiredTemplateSettingsSchema),
+  );
+
+  const missingKeys = [...requiredInfo.properties].filter(
+    (key) => !templateInfo.properties.has(key),
+  );
+  const optionalKeys = [...requiredInfo.required].filter(
+    (key) =>
+      templateInfo.properties.has(key) && !templateInfo.required.has(key),
+  );
+
+  return {
+    compatible: missingKeys.length === 0 && optionalKeys.length === 0,
+    missingKeys,
+    optionalKeys,
+  };
+}
+
 export function formatTemplateSettingsSchemaWarning(
   pluginName: string,
   compatibility: TemplateSettingsSchemaCompatibility,
@@ -207,6 +245,137 @@ export function formatTemplateSettingsSchemaWarning(
     `Template settings schema does not satisfy required settings for plugin "${pluginName}". ` +
     `${parts.join("; ")}.`
   );
+}
+
+export interface PluginCompatibilityValidatorOptions {
+  pluginSettings?: Record<string, unknown>;
+  templateSettingsSchema?: TemplateSettingsSchemaInput;
+  resolvePluginModule: (
+    pluginConfig: NormalizedTemplatePluginConfig,
+    installedPlugin: InstalledPluginInfo | undefined,
+  ) => Result<SkaffPluginModule>;
+  formatModuleLoadError?: (
+    pluginName: string,
+    purpose: "global_config" | "template_settings",
+    error: string,
+  ) => string;
+  includeTemplateSettingsLoadErrors?: boolean;
+}
+
+export function createPluginCompatibilityValidators(
+  options: PluginCompatibilityValidatorOptions,
+): {
+  validateGlobalConfig: GlobalConfigValidator;
+  validateTemplateSettings: TemplateSettingsValidator;
+} {
+  const formatModuleLoadError =
+    options.formatModuleLoadError ??
+    ((_pluginName, purpose, error) => {
+      if (purpose === "template_settings") {
+        return `Unable to load plugin for template settings validation: ${error}`;
+      }
+      return `Unable to load plugin for global settings validation: ${error}`;
+    });
+  const includeTemplateSettingsLoadErrors =
+    options.includeTemplateSettingsLoadErrors ?? true;
+
+  const resolveModule = (
+    pluginConfig: NormalizedTemplatePluginConfig,
+    installedPlugin: InstalledPluginInfo | undefined,
+  ): Result<SkaffPluginModule> => {
+    return options.resolvePluginModule(pluginConfig, installedPlugin);
+  };
+
+  const validateGlobalConfig: GlobalConfigValidator = (
+    pluginConfig,
+    installedPlugin,
+  ) => {
+    const pluginName = extractPluginName(pluginConfig.module);
+    const moduleResult = resolveModule(pluginConfig, installedPlugin);
+    if ("error" in moduleResult) {
+      return {
+        error: formatModuleLoadError(
+          pluginName,
+          "global_config",
+          moduleResult.error,
+        ),
+      };
+    }
+
+    const pluginModule = moduleResult.data;
+    if (!pluginModule.globalConfigSchema) {
+      return { data: undefined };
+    }
+
+    const manifestName = pluginModule.manifest?.name ?? pluginName;
+    const rawSettings = options.pluginSettings?.[manifestName];
+    const parsed = pluginModule.globalConfigSchema.safeParse(rawSettings ?? {});
+
+    if (!parsed.success) {
+      return {
+        error: `Invalid global config for plugin ${manifestName}: ${parsed.error}`,
+      };
+    }
+
+    return { data: undefined };
+  };
+
+  const validateTemplateSettings: TemplateSettingsValidator = (
+    pluginConfig,
+    installedPlugin,
+  ) => {
+    if (!options.templateSettingsSchema) {
+      return { data: undefined };
+    }
+
+    const pluginName = extractPluginName(pluginConfig.module);
+    const moduleResult = resolveModule(pluginConfig, installedPlugin);
+    if ("error" in moduleResult) {
+      if (!includeTemplateSettingsLoadErrors) {
+        return { data: undefined };
+      }
+      return {
+        error: formatModuleLoadError(
+          pluginName,
+          "template_settings",
+          moduleResult.error,
+        ),
+      };
+    }
+
+    const pluginModule = moduleResult.data;
+    const requiredSchema = pluginModule.requiredTemplateSettingsSchema;
+    if (!requiredSchema) {
+      return { data: undefined };
+    }
+
+    const compatibility = checkTemplateSettingsSchemaCompatibilityInput(
+      options.templateSettingsSchema,
+      requiredSchema,
+    );
+
+    if (compatibility.compatible) {
+      return { data: undefined };
+    }
+
+    const manifestName = pluginModule.manifest?.name ?? pluginName;
+    return {
+      data: {
+        module: pluginConfig.module,
+        missingKeys: compatibility.missingKeys,
+        optionalKeys: compatibility.optionalKeys,
+        message: formatTemplateSettingsSchemaWarning(
+          manifestName,
+          compatibility,
+        ),
+      },
+    };
+  };
+
+  return {
+    validateGlobalConfig,
+    validateTemplateSettings,
+  };
 }
 
 /**
@@ -466,4 +635,46 @@ function findInstalledPluginInfo(
   }
 
   return installedPlugin;
+}
+
+function normalizeSchemaInput(
+  schema: TemplateSettingsSchemaInput,
+): JsonSchemaShape | undefined {
+  if (!schema) {
+    return undefined;
+  }
+
+  if (isZodSchema(schema)) {
+    return z.toJSONSchema(schema);
+  }
+
+  if (typeof schema === "object") {
+    return schema as JsonSchemaShape;
+  }
+
+  return undefined;
+}
+
+function isZodSchema(value: unknown): value is z.ZodTypeAny {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  return (
+    "safeParse" in value &&
+    typeof (value as z.ZodTypeAny).safeParse === "function"
+  );
+}
+
+function getJsonSchemaInfo(
+  schema: JsonSchemaShape | undefined,
+): { properties: Set<string>; required: Set<string> } {
+  if (!schema || typeof schema !== "object") {
+    return { properties: new Set(), required: new Set() };
+  }
+
+  const properties = new Set(Object.keys(schema.properties ?? {}));
+  const required = new Set(
+    Array.isArray(schema.required) ? schema.required : [],
+  );
+  return { properties, required };
 }
