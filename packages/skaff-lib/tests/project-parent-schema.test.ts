@@ -1,8 +1,7 @@
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 
-import { afterEach, describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "@jest/globals";
 import z from "zod";
 
 import type {
@@ -10,6 +9,7 @@ import type {
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
 import type { GenericTemplateConfigModule } from "../src/lib/types";
+import { createTempDir } from "./lib/fs-fixtures";
 
 jest.mock("../src/lib/logger", () => ({
   backendLogger: {
@@ -65,14 +65,6 @@ const { Project } =
 const { Template } =
   require("../src/core/templates/Template") as typeof import("../src/core/templates/Template");
 
-const cleanups: Array<() => Promise<void>> = [];
-
-afterEach(async () => {
-  while (cleanups.length) {
-    await cleanups.pop()!();
-  }
-});
-
 async function createTemplate({
   name,
   schema,
@@ -125,13 +117,8 @@ describe("Project parent final settings validation", () => {
   }
 
   async function setupTemplates() {
-    const baseDir = await fs.mkdtemp(path.join(os.tmpdir(), "parent-"));
-    const childBaseDir = await fs.mkdtemp(path.join(os.tmpdir(), "child-"));
-
-    cleanups.push(async () => {
-      await fs.rm(baseDir, { recursive: true, force: true });
-      await fs.rm(childBaseDir, { recursive: true, force: true });
-    });
+    const { root: baseDir } = await createTempDir("parent-");
+    const { root: childBaseDir } = await createTempDir("child-");
 
     const parentSchema = z.object({ parentValue: z.string() });
     const parent = await createTemplate({

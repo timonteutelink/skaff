@@ -1,5 +1,4 @@
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -15,6 +14,7 @@ import {
   registerPluginModules,
 } from "../src/core/plugins";
 import { PipelineBuilder } from "../src/core/generation/pipeline/pipeline-runner";
+import { createTempDir, writeTemplateFileTree } from "./lib/fs-fixtures";
 
 // These tests require the full SES lockdown which is not available when running
 // with Jest mocks (Jest uses Node.js domains which conflict with SES lockdown).
@@ -68,10 +68,9 @@ describeIfSES("plugin loading", () => {
   };
 
   async function createTemplateWorkspace() {
-    const baseDir = await fs.mkdtemp(path.join(os.tmpdir(), "skaff-plugin-"));
+    const { root: baseDir } = await createTempDir("skaff-plugin-");
     const templateDir = path.join(baseDir, "template");
-    const filesDir = path.join(templateDir, "files");
-    await fs.mkdir(filesDir, { recursive: true });
+    const { filesDir } = await writeTemplateFileTree({ root: templateDir });
     await fs.writeFile(path.join(baseDir, "package.json"), "{}", "utf8");
 
     const template: Template = {
