@@ -1,6 +1,5 @@
 "use client";
 
-import "@dineug/erd-editor";
 import type {
   ErdEditorElement,
 } from "@dineug/erd-editor";
@@ -19,24 +18,14 @@ import type {
   ErdTemplateMappers,
 } from "@timonteutelink/skaff-plugin-erd-types";
 import { erdSchemaZod } from "@timonteutelink/skaff-plugin-erd-types";
-import type {
-  DetailedHTMLProps,
-  HTMLAttributes,
-} from "react";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import * as React from "react";
 
 const ERD_STAGE_ID = "erd-editor";
 
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      "erd-editor": DetailedHTMLProps<
-        HTMLAttributes<ErdEditorElement>,
-        ErdEditorElement
-      >;
-    }
-  }
-}
+const ErdEditor = React.forwardRef<
+  ErdEditorElement,
+  React.HTMLAttributes<ErdEditorElement>
+>((props, ref) => React.createElement("erd-editor", { ...props, ref }));
 
 type ErdStageProps = TemplateStageRenderProps<ErdSchema | undefined> & {
   mappers?: ErdTemplateMappers;
@@ -51,36 +40,40 @@ function ErdStage({
   stageState,
   mappers,
 }: ErdStageProps) {
-  const editorRef = useRef<ErdEditorElement | null>(null);
-  const hasInitializedRef = useRef(false);
+  const editorRef = React.useRef<ErdEditorElement | null>(null);
+  const hasInitializedRef = React.useRef(false);
 
-  const settingsInput = useMemo(() => {
+  const settingsInput = React.useMemo(() => {
     if (settingsDraft && Object.keys(settingsDraft).length > 0) {
       return settingsDraft;
     }
     return currentSettings ?? {};
   }, [currentSettings, settingsDraft]);
 
-  const erdInput = useMemo(() => {
+  const erdInput = React.useMemo(() => {
     if (!mappers) {
       return null;
     }
     return mapSettingsToErd(settingsInput, mappers);
   }, [mappers, settingsInput]);
 
-  const initialErdInput = useMemo(() => stageState ?? erdInput, [
+  const initialErdInput = React.useMemo(() => stageState ?? erdInput, [
     stageState,
     erdInput,
   ]);
 
-  const serializedErdInput = useMemo(() => {
+  const serializedErdInput = React.useMemo(() => {
     if (!initialErdInput) {
       return null;
     }
     return JSON.stringify(initialErdInput);
   }, [initialErdInput]);
 
-  useEffect(() => {
+  React.useEffect(() => {
+    void import("@dineug/erd-editor");
+  }, []);
+
+  React.useEffect(() => {
     const editor = editorRef.current;
     if (!editor) {
       return;
@@ -90,7 +83,7 @@ function ErdStage({
     editor.enableThemeBuilder = true;
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const editor = editorRef.current;
     if (!editor || !serializedErdInput || hasInitializedRef.current) {
       return;
@@ -102,7 +95,7 @@ function ErdStage({
     }
   }, [initialErdInput, serializedErdInput, setStageState, stageState]);
 
-  const handleContinue = useCallback(() => {
+  const handleContinue = React.useCallback(() => {
     const editor = editorRef.current;
     if (!editor || !mappers) {
       return;
@@ -133,7 +126,7 @@ function ErdStage({
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-lg border border-border bg-card p-3 shadow-sm">
-        <erd-editor
+        <ErdEditor
           ref={editorRef}
           className="block h-[70vh] w-full"
         />
@@ -160,7 +153,12 @@ const createErdWebContribution: WebPluginEntrypoint = (input) => {
       id: ERD_STAGE_ID,
       placement: "before-settings",
       stateSchema: erdSchemaZod.optional(),
-      render: (props) => <ErdStage {...props} mappers={mappers} />,
+      render: (props) => (
+        <ErdStage
+          {...(props as TemplateStageRenderProps<ErdSchema | undefined>)}
+          mappers={mappers}
+        />
+      ),
     },
   ];
 

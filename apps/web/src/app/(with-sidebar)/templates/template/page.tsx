@@ -332,7 +332,11 @@ export default function TemplatePage() {
         result: settingsResult,
         shortMessage: "Error retrieving plugin settings",
       });
-      setPluginSettings(settings ?? {});
+      if (!settings) {
+        setPluginSettings(null);
+        return;
+      }
+      setPluginSettings(settings);
     });
   }, []);
 

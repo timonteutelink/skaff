@@ -135,12 +135,12 @@ export const erdSchemaZod = z.object({
   settings: settingsSchema,
   doc: docSchema,
   collections: z.object({
-    tableEntities: z.record(tableSchema),
-    tableColumnEntities: z.record(columnSchema),
-    relationshipEntities: z.record(relationshipSchema),
-    indexEntities: z.record(indexSchema),
-    indexColumnEntities: z.record(indexColumnSchema),
-    memoEntities: z.record(memoSchema),
+    tableEntities: z.record(z.string(), tableSchema),
+    tableColumnEntities: z.record(z.string(), columnSchema),
+    relationshipEntities: z.record(z.string(), relationshipSchema),
+    indexEntities: z.record(z.string(), indexSchema),
+    indexColumnEntities: z.record(z.string(), indexColumnSchema),
+    memoEntities: z.record(z.string(), memoSchema),
   }),
 });
 
