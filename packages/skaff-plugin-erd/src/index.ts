@@ -13,9 +13,14 @@ import type { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { z } from "zod";
 import { erdSchemaZod } from "@timonteutelink/skaff-plugin-erd-types";
 
+const erdSchemaAny = erdSchemaZod as unknown as z.ZodTypeAny;
+
 const erdMappersSchema = z.object({
-  toErd: z.function().args(z.unknown()).returns(erdSchemaZod),
-  fromErd: z.function().args(erdSchemaZod).returns(z.record(z.unknown())),
+  toErd: z.function().args(z.unknown()).returns(erdSchemaAny),
+  fromErd: z
+    .function()
+    .args(erdSchemaAny)
+    .returns(z.record(z.string(), z.unknown())),
 });
 
 const erdPluginOptionsSchema = z.object({
