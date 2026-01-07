@@ -233,6 +233,41 @@
         "typescript-eslint": "^8.46.4",
       },
     },
+    "packages/skaff-plugin-erd": {
+      "name": "@timonteutelink/skaff-plugin-erd",
+      "version": "0.0.1",
+      "dependencies": {
+        "@timonteutelink/skaff-lib": "workspace:*",
+        "@timonteutelink/skaff-plugin-erd-types": "workspace:*",
+        "zod": "^3.24.1",
+      },
+      "devDependencies": {
+        "typescript": "5.9.3",
+      },
+    },
+    "packages/skaff-plugin-erd-types": {
+      "name": "@timonteutelink/skaff-plugin-erd-types",
+      "version": "0.0.1",
+      "dependencies": {
+        "@timonteutelink/template-types-lib": "workspace:*",
+        "zod": "^4.1.12",
+      },
+      "devDependencies": {
+        "typescript": "5.9.3",
+      },
+    },
+    "packages/skaff-plugin-erd-web": {
+      "name": "@timonteutelink/skaff-plugin-erd-web",
+      "version": "0.0.1",
+      "dependencies": {
+        "@timonteutelink/skaff-lib": "workspace:*",
+        "@timonteutelink/skaff-plugin-erd-types": "workspace:*",
+        "react": "19.2.0",
+      },
+      "devDependencies": {
+        "typescript": "5.9.3",
+      },
+    },
     "packages/tailwind-config": {
       "name": "@repo/tailwind-config",
       "version": "0.0.0",
@@ -1056,6 +1091,12 @@
     "@timonteutelink/skaff": ["@timonteutelink/skaff@workspace:apps/cli"],
 
     "@timonteutelink/skaff-lib": ["@timonteutelink/skaff-lib@workspace:packages/skaff-lib"],
+
+    "@timonteutelink/skaff-plugin-erd": ["@timonteutelink/skaff-plugin-erd@workspace:packages/skaff-plugin-erd"],
+
+    "@timonteutelink/skaff-plugin-erd-types": ["@timonteutelink/skaff-plugin-erd-types@workspace:packages/skaff-plugin-erd-types"],
+
+    "@timonteutelink/skaff-plugin-erd-web": ["@timonteutelink/skaff-plugin-erd-web@workspace:packages/skaff-plugin-erd-web"],
 
     "@timonteutelink/skaff-plugin-greeter": ["@timonteutelink/skaff-plugin-greeter@workspace:examples/plugins/plugin-greeter"],
 
@@ -2776,6 +2817,8 @@
     "@tailwindcss/oxide-wasm32-wasi/@tybys/wasm-util": ["@tybys/wasm-util@0.10.1", "", { "dependencies": { "tslib": "^2.4.0" }, "bundled": true }, "sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg=="],
 
     "@tailwindcss/oxide-wasm32-wasi/tslib": ["tslib@2.8.1", "", { "bundled": true }, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
+
+    "@timonteutelink/skaff-plugin-erd/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
 
     "@timonteutelink/skaff-plugin-greeter-cli/@inquirer/prompts": ["@inquirer/prompts@5.5.0", "", { "dependencies": { "@inquirer/checkbox": "^2.5.0", "@inquirer/confirm": "^3.2.0", "@inquirer/editor": "^2.2.0", "@inquirer/expand": "^2.3.0", "@inquirer/input": "^2.3.0", "@inquirer/number": "^1.1.0", "@inquirer/password": "^2.2.0", "@inquirer/rawlist": "^2.3.0", "@inquirer/search": "^1.1.0", "@inquirer/select": "^2.5.0" } }, "sha512-BHDeL0catgHdcHbSFFUddNzvx/imzJMft+tWDPwTm3hfu8/tApk1HrooNngB2Mb4qY+KaRWF+iZqoVUPeslEog=="],
 
