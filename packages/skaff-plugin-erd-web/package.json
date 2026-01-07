@@ -17,7 +17,9 @@
     "test": "bun run build"
   },
   "dependencies": {
+    "@dineug/erd-editor": "3.3.0",
     "@timonteutelink/skaff-lib": "workspace:*",
+    "@timonteutelink/skaff-plugin-erd": "workspace:*",
     "@timonteutelink/skaff-plugin-erd-types": "workspace:*",
     "react": "19.2.0"
   },

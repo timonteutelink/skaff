@@ -260,7 +260,9 @@
       "name": "@timonteutelink/skaff-plugin-erd-web",
       "version": "0.0.1",
       "dependencies": {
+        "@dineug/erd-editor": "3.3.0",
         "@timonteutelink/skaff-lib": "workspace:*",
+        "@timonteutelink/skaff-plugin-erd": "workspace:*",
         "@timonteutelink/skaff-plugin-erd-types": "workspace:*",
         "react": "19.2.0",
       },
@@ -471,6 +473,8 @@
     "@dabh/diagnostics": ["@dabh/diagnostics@2.0.8", "", { "dependencies": { "@so-ric/colorspace": "^1.1.6", "enabled": "2.0.x", "kuler": "^2.0.0" } }, "sha512-R4MSXTVnuMzGD7bzHdW2ZhhdPC/igELENcq5IjEverBvq5hn1SXCWcsi6eSsdWP0/Ur+SItRRjAktmdoX/8R/Q=="],
 
     "@date-fns/tz": ["@date-fns/tz@1.4.1", "", {}, "sha512-P5LUNhtbj6YfI3iJjw5EL9eUAG6OitD0W3fWQcpQjDRc/QIsL0tRNuO1PcDvPccWL1fSTXXdE1ds+l95DV/OFA=="],
+
+    "@dineug/erd-editor": ["@dineug/erd-editor@3.3.0", "", {}, "sha512-XcpzYqTGQzUH+TMyhCd6WQx4GQ0P5r7tLcKlXgG26xz7dineNEUpx1xxc7YMuF1kGJtcuKAxAE3+LDGJZNmLZg=="],
 
     "@emnapi/core": ["@emnapi/core@1.8.1", "", { "dependencies": { "@emnapi/wasi-threads": "1.1.0", "tslib": "^2.4.0" } }, "sha512-AvT9QFpxK0Zd8J0jopedNm+w/2fIzvtPKPjqyw9jwvBaReTTqPBk9Hixaz7KbjimP+QNz605/XnjFcDAL2pqBg=="],
 
