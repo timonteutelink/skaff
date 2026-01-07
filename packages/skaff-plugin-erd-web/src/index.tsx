@@ -1,8 +1,7 @@
 "use client";
 
-import type {
-  ErdEditorElement,
-} from "@dineug/erd-editor";
+import "@dineug/erd-editor";
+import type { ErdEditorElement } from "@dineug/erd-editor";
 import type {
   TemplateStageRenderProps,
   WebPluginContribution,
@@ -68,10 +67,6 @@ function ErdStage({
     }
     return JSON.stringify(initialErdInput);
   }, [initialErdInput]);
-
-  React.useEffect(() => {
-    void import("@dineug/erd-editor");
-  }, []);
 
   React.useEffect(() => {
     const editor = editorRef.current;
