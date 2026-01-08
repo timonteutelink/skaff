@@ -502,6 +502,7 @@ export function findPluginCommand(
 
 export interface CliPluginContribution<TPrompts = CliPromptModule> {
   commands?: PluginCliCommand[];
+  inputSources?: CliPluginInputSource[];
   templateStages?: CliTemplateStage<any, TPrompts>[];
 }
 
@@ -510,6 +511,15 @@ export type CliPluginEntrypoint<TPrompts = CliPromptModule> =
   | ((input?: UiPluginFactoryInput) =>
       | CliPluginContribution<TPrompts>
       | Promise<CliPluginContribution<TPrompts>>);
+
+export interface CliPluginInputSource {
+  /** Unique identifier for this input source within the plugin */
+  id: string;
+  /** Optional description shown in CLI help or error messages */
+  description?: string;
+  /** Optional environment variable to read default input from */
+  env?: string;
+}
 
 /**
  * Context provided to web plugin getNotices function.
@@ -567,6 +577,8 @@ export interface SettingsInputTransformContext {
   projectContext: ReadonlyProjectContext;
   /** Plugin-specific options from the template configuration */
   options?: unknown;
+  /** Plugin-specific CLI inputs (parsed from flags/env) */
+  pluginInputs?: PluginInputValues;
 }
 
 /**
@@ -583,6 +595,13 @@ export type SettingsInputTransformHook = (
 export type BoundSettingsInputTransform = (
   input: unknown,
 ) => UserTemplateSettings;
+
+export type PluginInputValues = Record<string, unknown>;
+export type PluginInputsByPlugin = Record<string, PluginInputValues>;
+
+export interface LoadPluginsForTemplateOptions {
+  pluginInputs?: PluginInputsByPlugin;
+}
 
 export interface NormalizedTemplatePluginConfig {
   module: string;
