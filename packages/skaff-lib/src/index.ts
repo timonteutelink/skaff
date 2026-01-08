@@ -1,9 +1,3 @@
-// Initialize the hardened environment as early as possible
-import { initializeHardenedEnvironment } from "./core/infra/hardened-sandbox";
-if (typeof window === "undefined") {
-  initializeHardenedEnvironment();
-}
-
 import type { CacheKey } from "./core/infra/cache-service";
 
 export * from "./repositories";

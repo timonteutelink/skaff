@@ -2,7 +2,7 @@ import type React from "react";
 import type {
   WebPluginContribution as BaseWebPluginContribution,
   WebTemplateStage as BaseWebTemplateStage,
-} from "@timonteutelink/skaff-lib";
+} from "@timonteutelink/skaff-lib/browser";
 
 export type WebTemplateStage<TState = unknown> = BaseWebTemplateStage<
   TState,
