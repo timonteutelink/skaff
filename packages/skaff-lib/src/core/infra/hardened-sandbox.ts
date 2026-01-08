@@ -160,14 +160,12 @@ export function markHardenedEnvironmentForTesting(): void {
 }
 
 /**
- * Ensures the hardened environment is initialized, throwing if not.
+ * Ensures the hardened environment is initialized.
  * Call this before any sandbox operations.
  */
 export function ensureHardenedEnvironment(): void {
   if (!isLockedDown) {
-    throw new Error(
-      "Hardened environment not initialized. Call initializeHardenedEnvironment() before using the sandbox.",
-    );
+    initializeHardenedEnvironment();
   }
 }
 
