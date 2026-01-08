@@ -6,7 +6,6 @@ import type {
   WebTemplateStage,
 } from "@timonteutelink/skaff-lib";
 import React, { useState } from "react";
-import { GREETER_PLUGIN_NAME } from "@timonteutelink/skaff-plugin-greeter-types";
 
 type GreeterStageState = { disabled?: boolean; message?: string };
 
@@ -144,12 +143,6 @@ const greeterWebContribution: WebPluginContribution = {
 };
 
 const greeterWebPlugin = {
-  manifest: {
-    name: GREETER_PLUGIN_NAME,
-    version: "0.0.0",
-    capabilities: ["web"],
-    supportedHooks: { template: [], cli: [], web: [] },
-  },
   web: greeterWebContribution,
 };
 

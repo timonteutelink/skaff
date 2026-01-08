@@ -21,6 +21,7 @@ export function ensureWebPluginsRegistered(): void {
     moduleExports: entry.module,
     modulePath: entry.modulePath,
     packageName: entry.packageName,
+    manifest: entry.manifest,
   }));
 
   if (entries.length > 0) {

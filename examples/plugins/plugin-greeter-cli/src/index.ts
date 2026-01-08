@@ -3,7 +3,6 @@ import type {
   CliTemplateStage,
   PluginCliCommand,
 } from "@timonteutelink/skaff-lib";
-import { GREETER_PLUGIN_NAME } from "@timonteutelink/skaff-plugin-greeter-types";
 
 type GreeterStageState = { disabled?: boolean; message?: string };
 type InquirerPrompts = typeof import("@inquirer/prompts");
@@ -89,12 +88,6 @@ const greeterCliContribution: CliPluginContribution<InquirerPrompts> = {
 };
 
 const greeterCliPlugin = {
-  manifest: {
-    name: GREETER_PLUGIN_NAME,
-    version: "0.0.0",
-    capabilities: ["cli"],
-    supportedHooks: { template: [], cli: [], web: [] },
-  },
   cli: greeterCliContribution,
 };
 

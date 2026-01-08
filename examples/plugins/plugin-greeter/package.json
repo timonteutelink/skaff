@@ -24,6 +24,20 @@
     "@timonteutelink/template-types-lib": "workspace:*"
   },
   "skaff": {
+    "manifest": {
+      "name": "greeter",
+      "version": "0.0.1",
+      "capabilities": [
+        "template"
+      ],
+      "supportedHooks": {
+        "template": [
+          "configureTemplateInstantiationPipeline"
+        ],
+        "cli": [],
+        "web": []
+      }
+    },
     "bundle": {
       "cli": "@timonteutelink/skaff-plugin-greeter-cli",
       "web": "@timonteutelink/skaff-plugin-greeter-web"

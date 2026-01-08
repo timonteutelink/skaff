@@ -150,10 +150,21 @@ function pickEntrypoint(
 
 function coerceToPluginModule(entry: unknown): SkaffPluginModule | null {
   if (!entry || typeof entry !== "object") return null;
-  if ("manifest" in (entry as Record<string, unknown>)) {
-    return entry as SkaffPluginModule;
-  }
-  return null;
+  return entry as SkaffPluginModule;
+}
+
+function resolveInstalledManifest(
+  moduleSpecifier: string,
+): PluginManifestEntry | undefined {
+  const pluginName = extractPluginName(moduleSpecifier);
+  return (
+    PLUGIN_MANIFEST.find(
+      (entry) =>
+        entry.name === pluginName ||
+        entry.packageName === moduleSpecifier ||
+        entry.packageName === pluginName,
+    ) ?? undefined
+  );
 }
 
 /**
@@ -327,7 +338,8 @@ export async function loadWebTemplateStages(
     if (!web?.templateStages?.length) continue;
 
     // Get the actual plugin name from manifest
-    const manifestName = pluginModule.manifest?.name || pluginName;
+    const manifestName =
+      resolveInstalledManifest(reference.module)?.name ?? pluginName;
 
     for (const stage of web.templateStages) {
       // Use createPluginStageEntry for automatic state key namespacing
@@ -366,13 +378,13 @@ export async function loadWebTemplatePluginRequirements(
     if (!pluginModule) {
       continue;
     }
-    const requiredSettingsKeys = (
-      pluginModule.manifest as { requiredSettingsKeys?: string[] } | undefined
-    )?.requiredSettingsKeys;
+    const requiredSettingsKeys =
+      resolveInstalledManifest(reference.module)?.manifest.requiredSettingsKeys;
     if (!requiredSettingsKeys?.length) continue;
 
     requirements.push({
-      pluginName: pluginModule.manifest.name ?? pluginName,
+      pluginName:
+        resolveInstalledManifest(reference.module)?.name ?? pluginName,
       requiredSettingsKeys,
     });
   }

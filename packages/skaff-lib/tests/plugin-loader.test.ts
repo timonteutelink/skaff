@@ -13,6 +13,7 @@ import {
   loadPluginsForTemplate,
   registerPluginModules,
 } from "../src/core/plugins";
+import type { PluginManifest } from "../src/core/plugins";
 import { PipelineBuilder } from "../src/core/generation/pipeline/pipeline-runner";
 import { createTempDir, writeTemplateFileTree } from "./lib";
 
@@ -109,6 +110,7 @@ describeIfSES("plugin loading", () => {
   async function registerPluginModule(
     pluginPath: string,
     packageName: string,
+    manifest: PluginManifest,
   ) {
     const moduleNamespace = await import(pathToFileURL(pluginPath).href);
     registerPluginModules([
@@ -116,6 +118,7 @@ describeIfSES("plugin loading", () => {
         moduleExports: moduleNamespace,
         modulePath: pluginPath,
         packageName,
+        manifest,
       },
     ]);
   }
@@ -129,16 +132,20 @@ describeIfSES("plugin loading", () => {
       await createTemplateWorkspace();
 
     const pluginPath = path.join(baseDir, "plugin.cjs");
+    const manifest: PluginManifest = {
+      name: "test-plugin",
+      version: "0.0.0",
+      capabilities: ["template"],
+      supportedHooks: {
+        template: ["configureTemplateInstantiationPipeline"],
+        cli: [],
+        web: [],
+      },
+    };
     await fs.writeFile(
       pluginPath,
       [
         "module.exports = {",
-        "  manifest: {",
-        "    name: 'test-plugin',",
-        "    version: '0.0.0',",
-        "    capabilities: ['template'],",
-        "    supportedHooks: { template: ['configureTemplateInstantiationPipeline'], cli: [], web: [] },",
-        "  },",
         "  template: ({ options }) => ({",
         "    captured: options,",
         "    configureTemplateInstantiationPipeline(builder) {",
@@ -156,7 +163,7 @@ describeIfSES("plugin loading", () => {
     );
 
     const packageName = "test-plugin-package";
-    await registerPluginModule(pluginPath, packageName);
+    await registerPluginModule(pluginPath, packageName, manifest);
 
     template.config.plugins = [
       { module: packageName, options: { flag: true } },
@@ -192,16 +199,16 @@ describeIfSES("plugin loading", () => {
       await createTemplateWorkspace();
 
     const pluginPath = path.join(baseDir, "path-guard-plugin.cjs");
+    const manifest: PluginManifest = {
+      name: "path-guard-plugin",
+      version: "0.0.0",
+      capabilities: ["template"],
+      supportedHooks: { template: [], cli: [], web: [] },
+    };
     await fs.writeFile(
       pluginPath,
       [
         "module.exports = {",
-        "  manifest: {",
-        "    name: 'path-guard-plugin',",
-        "    version: '0.0.0',",
-        "    capabilities: ['template'],",
-        "    supportedHooks: { template: [], cli: [], web: [] },",
-        "  },",
         "  template: ({ template, projectContext }) => ({",
         "    captured: {",
         "      hasAbsoluteDir: Boolean(template.absoluteDir),",
@@ -216,7 +223,7 @@ describeIfSES("plugin loading", () => {
     );
 
     const packageName = "path-guard-plugin-package";
-    await registerPluginModule(pluginPath, packageName);
+    await registerPluginModule(pluginPath, packageName, manifest);
 
     template.config.plugins = [{ module: packageName }];
 
@@ -242,16 +249,20 @@ describeIfSES("plugin loading", () => {
       await createTemplateWorkspace();
 
     const pluginPath = path.join(baseDir, "plugin.cjs");
+    const manifest: PluginManifest = {
+      name: "test-plugin",
+      version: "0.0.0",
+      capabilities: ["template", "cli", "web"],
+      supportedHooks: {
+        template: ["configureTemplateInstantiationPipeline"],
+        cli: [],
+        web: [],
+      },
+    };
     await fs.writeFile(
       pluginPath,
       [
         "module.exports = {",
-        "  manifest: {",
-        "    name: 'test-plugin',",
-        "    version: '0.0.0',",
-        "    capabilities: ['template', 'cli', 'web'],",
-        "    supportedHooks: { template: ['configureTemplateInstantiationPipeline'], cli: [], web: [] },",
-        "  },",
         "  template: {",
         "    configureTemplateInstantiationPipeline(builder) {",
         "      builder.add({",
@@ -275,7 +286,7 @@ describeIfSES("plugin loading", () => {
     );
 
     const packageName = "test-plugin-package";
-    await registerPluginModule(pluginPath, packageName);
+    await registerPluginModule(pluginPath, packageName, manifest);
 
     template.config.plugins = [{ module: packageName }];
 
@@ -308,16 +319,16 @@ describeIfSES("plugin loading", () => {
       await createTemplateWorkspace();
 
     const pluginPath = path.join(baseDir, "settings-plugin.cjs");
+    const manifest: PluginManifest = {
+      name: "settings-plugin",
+      version: "0.0.0",
+      capabilities: ["template"],
+      supportedHooks: { template: [], cli: [], web: [] },
+    };
     await fs.writeFile(
       pluginPath,
       [
         "module.exports = {",
-        "  manifest: {",
-        "    name: 'settings-plugin',",
-        "    version: '0.0.0',",
-        "    capabilities: ['template'],",
-        "    supportedHooks: { template: [], cli: [], web: [] },",
-        "  },",
         "  settingsInputTransform(input, context) {",
         "    return {",
         "      received: input,",
@@ -336,7 +347,7 @@ describeIfSES("plugin loading", () => {
     );
 
     const packageName = "settings-plugin-package";
-    await registerPluginModule(pluginPath, packageName);
+    await registerPluginModule(pluginPath, packageName, manifest);
 
     template.config.plugins = [{ module: packageName, options: { flag: true } }];
 
@@ -368,16 +379,16 @@ describeIfSES("plugin loading", () => {
       await createTemplateWorkspace();
 
     const pluginPath = path.join(baseDir, "unsafe-plugin.cjs");
+    const manifest: PluginManifest = {
+      name: "unsafe-plugin",
+      version: "0.0.1",
+      capabilities: ["template"],
+      supportedHooks: { template: [], cli: [], web: [] },
+    };
     await fs.writeFile(
       pluginPath,
       [
         "module.exports = {",
-        "  manifest: {",
-        "    name: 'unsafe-plugin',",
-        "    version: '0.0.1',",
-        "    capabilities: ['template'],",
-        "    supportedHooks: { template: [], cli: [], web: [] },",
-        "  },",
         "  template: {},",
         "  globalConfigSchema: require('fs'),",
         "};",
@@ -386,7 +397,7 @@ describeIfSES("plugin loading", () => {
     );
 
     const packageName = "unsafe-plugin-package";
-    await registerPluginModule(pluginPath, packageName);
+    await registerPluginModule(pluginPath, packageName, manifest);
 
     template.config.plugins = [{ module: packageName }];
 

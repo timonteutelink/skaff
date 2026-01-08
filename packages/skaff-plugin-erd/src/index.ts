@@ -16,11 +16,11 @@ import { erdSchemaZod } from "@timonteutelink/skaff-plugin-erd-types";
 const erdSchemaAny = erdSchemaZod as unknown as z.ZodTypeAny;
 
 const erdMappersSchema = z.object({
-  toErd: z.function().args(z.unknown()).returns(erdSchemaAny),
+  toErd: z.function().input([z.unknown()]).output(erdSchemaAny),
   fromErd: z
     .function()
-    .args(erdSchemaAny)
-    .returns(z.record(z.string(), z.unknown())),
+    .input([erdSchemaAny])
+    .output(z.record(z.string(), z.unknown())),
 });
 
 const erdPluginOptionsSchema = z.object({
@@ -75,12 +75,6 @@ const createErdTemplatePlugin: TemplatePluginEntrypoint = (input) => {
 };
 
 const erdPlugin: SkaffPluginModule = {
-  manifest: {
-    name: "erd",
-    version: "0.0.0",
-    capabilities: ["template"],
-    supportedHooks: { template: [], cli: [], web: [] },
-  },
   template: createErdTemplatePlugin,
 };
 

@@ -351,6 +351,7 @@ export const pluginManifestSchema = z.object({
       web: z.array(z.string()).default([]),
     })
     .default({ template: [], cli: [], web: [] }),
+  requiredSettingsKeys: z.array(z.string()).optional(),
 });
 
 export type PluginManifest = z.infer<typeof pluginManifestSchema>;
@@ -735,25 +736,16 @@ export interface CliTemplateStage<
  * The main plugin module interface.
  *
  * This is what a plugin package must export as its default or named export.
- * It defines the plugin's manifest, optional global configuration schema,
- * and entrypoints.
+ * It defines the plugin's optional configuration schemas and entrypoints.
  *
  * @example
  * ```typescript
  * const myPlugin: SkaffPluginModule = {
- *   manifest: {
- *     name: "my-plugin",
- *     version: "1.0.0",
- *     capabilities: ["template"],
- *   },
  *   template: (input) => ({ ... }),
  * };
  * ```
  */
 export interface SkaffPluginModule {
-  /** Plugin manifest with metadata and capability declarations */
-  manifest: PluginManifest;
-
   /**
    * Optional lifecycle hooks for the plugin.
    * These are called at specific points during plugin and generation operations.
@@ -804,10 +796,10 @@ export interface LoadedTemplatePlugin {
   /** The loaded plugin module */
   module: SkaffPluginModule;
 
-  /** Plugin name from manifest */
+  /** Plugin name from manifest metadata */
   name: string;
 
-  /** Plugin version from manifest */
+  /** Plugin version from manifest metadata */
   version: string;
 
   /** Resolved global configuration for this plugin */

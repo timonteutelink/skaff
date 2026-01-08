@@ -90,6 +90,7 @@ export interface RegisteredPluginModule {
   modulePath?: string;
   sandboxedExports?: unknown;
   packageName?: string;
+  manifest: PluginManifest;
 }
 
 const registeredPlugins = new Map<string, RegisteredPluginModule>();
@@ -101,6 +102,7 @@ export function registerPluginModules(entries: RegisteredPluginModule[]): void {
       registeredPlugins.set(packageName, entry);
       registeredPlugins.set(extractPluginName(packageName), entry);
     }
+    registeredPlugins.set(entry.manifest.name, entry);
   }
 }
 
@@ -110,10 +112,7 @@ export function clearRegisteredPluginModules(): void {
 
 function coerceToPluginModule(entry: unknown): SkaffPluginModule | null {
   if (!entry || typeof entry !== "object") return null;
-  if ("manifest" in (entry as Record<string, unknown>)) {
-    return entry as SkaffPluginModule;
-  }
-  return null;
+  return entry as SkaffPluginModule;
 }
 
 export async function resolveRegisteredPluginModule(
@@ -136,7 +135,7 @@ export async function resolveRegisteredPluginModule(
   const pluginModule = coerceToPluginModule(entry);
   if (!pluginModule) {
     return {
-      error: `Plugin ${reference.module} did not export a usable entry point with a manifest`,
+      error: `Plugin ${reference.module} did not export a usable entry point`,
     };
   }
 
@@ -314,6 +313,7 @@ async function buildWebPlugin(
 
 function buildSettingsInputTransform(
   module: SkaffPluginModule,
+  pluginName: string,
   context: SettingsInputTransformContext,
 ): Result<BoundSettingsInputTransform | undefined> {
   const entrypoint = module.settingsInputTransform;
@@ -321,7 +321,7 @@ function buildSettingsInputTransform(
 
   if (typeof entrypoint !== "function") {
     return {
-      error: `Plugin ${module.manifest.name} settingsInputTransform must be a function`,
+      error: `Plugin ${pluginName} settingsInputTransform must be a function`,
     };
   }
 
@@ -338,10 +338,7 @@ function buildSettingsInputTransform(
 }
 
 
-function validateManifest(
-  manifest: PluginManifest,
-  module: SkaffPluginModule,
-): Result<PluginManifest> {
+function validateManifest(manifest: PluginManifest): Result<PluginManifest> {
   const parsed = pluginManifestSchema.safeParse(manifest);
 
   if (!parsed.success) {
@@ -429,6 +426,12 @@ export async function loadPluginsForTemplate(
       return { error: moduleResult.error };
     }
 
+    const manifestResult = validateManifest(moduleResult.data.manifest);
+
+    if ("error" in manifestResult) {
+      return manifestResult;
+    }
+
     const exportsResult = await resolveSandboxedPluginExports(
       moduleResult.data,
       reference,
@@ -441,17 +444,8 @@ export async function loadPluginsForTemplate(
     const pluginModule = coerceToPluginModule(entry);
     if (!pluginModule) {
       return {
-        error: `Plugin ${reference.module} did not export a usable entry point with a manifest`,
+        error: `Plugin ${reference.module} did not export a usable entry point`,
       };
-    }
-
-    const manifestResult = validateManifest(
-      pluginModule.manifest,
-      pluginModule,
-    );
-
-    if ("error" in manifestResult) {
-      return manifestResult;
     }
 
     const manifest = manifestResult.data;
@@ -495,6 +489,7 @@ export async function loadPluginsForTemplate(
 
     const settingsInputTransform = buildSettingsInputTransform(
       pluginModule,
+      pluginName,
       settingsTransformContext,
     );
     if ("error" in settingsInputTransform) {

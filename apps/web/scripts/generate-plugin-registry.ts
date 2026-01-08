@@ -29,6 +29,7 @@ import {
   determinePluginTrustBasic,
   type PluginTrustLevel,
 } from "@timonteutelink/skaff-lib/browser";
+import { z } from "zod";
 
 interface ParsedPackageSpec {
   name: string;
@@ -65,21 +66,36 @@ function parsePackageSpec(packageSpec: string): ParsedPackageSpec {
 
 const require = createRequire(import.meta.url);
 
-interface PluginManifest {
-  name: string;
-  version: string;
-  capabilities: ("template" | "cli" | "web")[];
-  supportedHooks?: {
-    template?: string[];
-    cli?: string[];
-    web?: string[];
-  };
-  schemas?: {
-    globalConfig?: boolean;
-    input?: boolean;
-    output?: boolean;
-  };
-}
+const pluginManifestSchema = z.object({
+  name: z
+    .string()
+    .min(1)
+    .regex(/^[a-zA-Z0-9-_.:@/]+$/, "Plugin names must be identifier-like."),
+  version: z
+    .string()
+    .regex(
+      /^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-.]+)?$/,
+      "Version must be semver.",
+    ),
+  capabilities: z.array(z.enum(["template", "cli", "web"])).min(1),
+  supportedHooks: z
+    .object({
+      template: z
+        .array(
+          z.enum([
+            "configureTemplateInstantiationPipeline",
+            "configureProjectCreationPipeline",
+          ]),
+        )
+        .default([]),
+      cli: z.array(z.string()).default([]),
+      web: z.array(z.string()).default([]),
+    })
+    .default({ template: [], cli: [], web: [] }),
+  requiredSettingsKeys: z.array(z.string()).optional(),
+});
+
+type PluginManifest = z.infer<typeof pluginManifestSchema>;
 
 interface PluginPackageJson {
   name: string;
@@ -88,6 +104,7 @@ interface PluginPackageJson {
     bundle?: {
       web?: string;
     };
+    manifest?: unknown;
   };
 }
 
@@ -97,6 +114,7 @@ interface DiscoveredPlugin {
   importPath: string;
   modulePath: string;
   manifestName?: string;
+  manifest: PluginManifest;
   trustLevel: PluginTrustLevel;
 }
 
@@ -106,44 +124,24 @@ const OUTPUT_FILE = resolve(OUTPUT_DIR, "generated-plugin-registry.ts");
 const MANIFEST_FILE = resolve(WEB_ROOT, "public/plugin-manifest.json");
 
 /**
- * Attempts to load and validate a plugin module to check if it's a valid Skaff plugin
- */
-async function validatePlugin(
-  packageName: string,
-): Promise<{ valid: boolean; manifest?: PluginManifest }> {
-  try {
-    // Try to require the package to get its exports
-    const modulePath = require.resolve(packageName, { paths: [WEB_ROOT] });
-    const module = await import(modulePath);
-
-    const pluginModule = module.default ?? module;
-
-    // Check if it has a manifest with web capability
-    if (
-      pluginModule?.manifest?.name &&
-      pluginModule?.manifest?.version &&
-      Array.isArray(pluginModule?.manifest?.capabilities)
-    ) {
-      const manifest = pluginModule.manifest as PluginManifest;
-      if (manifest.capabilities.includes("web")) {
-        return { valid: true, manifest };
-      }
-    }
-
-    return { valid: false };
-  } catch {
-    return { valid: false };
-  }
-}
-
-/**
  * Gets the package.json of an installed package
  */
 function getPackageJson(packageName: string): PluginPackageJson | null {
   try {
-    const pkgPath = require.resolve(`${packageName}/package.json`, {
-      paths: [WEB_ROOT],
-    });
+    const entryPath = require.resolve(packageName, { paths: [WEB_ROOT] });
+    let currentDir = dirname(entryPath);
+    let pkgPath: string | null = null;
+    while (currentDir && currentDir !== dirname(currentDir)) {
+      const candidate = resolve(currentDir, "package.json");
+      if (existsSync(candidate)) {
+        pkgPath = candidate;
+        break;
+      }
+      currentDir = dirname(currentDir);
+    }
+    if (!pkgPath) {
+      return null;
+    }
     const content = readFileSync(pkgPath, "utf-8");
     return JSON.parse(content);
   } catch {
@@ -217,14 +215,21 @@ async function discoverPlugins(): Promise<DiscoveredPlugin[]> {
       continue;
     }
 
-    const validation = await validatePlugin(packageName);
-    if (!validation.valid || !validation.manifest) {
-      console.log(`    Skipped: Not a valid Skaff web plugin`);
+    const manifestCandidate = pkgJson.skaff?.manifest;
+    const manifestResult = pluginManifestSchema.safeParse(manifestCandidate);
+    if (!manifestResult.success) {
+      console.log(`    Skipped: Missing or invalid skaff.manifest`);
+      continue;
+    }
+
+    const manifest = manifestResult.data;
+    if (!manifest.capabilities.includes("web")) {
+      console.log(`    Skipped: Missing web capability`);
       continue;
     }
 
     console.log(
-      `    Found: ${validation.manifest.name} v${validation.manifest.version}`,
+      `    Found: ${manifest.name} v${manifest.version}`,
     );
 
     const trustLevel = determinePluginTrustBasic(packageName);
@@ -237,7 +242,8 @@ async function discoverPlugins(): Promise<DiscoveredPlugin[]> {
       version: pkgJson.version,
       importPath: packageName,
       modulePath,
-      manifestName: validation.manifest.name,
+      manifestName: manifest.name,
+      manifest,
       trustLevel,
     });
   }
@@ -261,6 +267,7 @@ function generateRegistryFile(plugins: DiscoveredPlugin[]): string {
     packageName: "${p.packageName}",
     modulePath: "${p.modulePath}",
     version: "${p.version}",
+    manifest: ${JSON.stringify(p.manifest, null, 2).replace(/\n/g, "\n    ")},
     trustLevel: "${p.trustLevel}",
   }`,
     )
@@ -273,6 +280,7 @@ function generateRegistryFile(plugins: DiscoveredPlugin[]): string {
     name: "${p.manifestName ?? p.packageName}",
     packageName: "${p.packageName}",
     version: "${p.version}",
+    manifest: ${JSON.stringify(p.manifest, null, 2).replace(/\n/g, "\n    ")},
     trustLevel: "${p.trustLevel}",
   }`,
     )
@@ -289,7 +297,7 @@ function generateRegistryFile(plugins: DiscoveredPlugin[]): string {
  * Generated: ${new Date().toISOString()}
  */
 
-import type { PluginTrustLevel } from "@timonteutelink/skaff-lib";
+import type { PluginManifest, PluginTrustLevel } from "@timonteutelink/skaff-lib";
 
 ${imports}
 
@@ -298,6 +306,7 @@ export interface InstalledPluginEntry {
   packageName: string;
   modulePath: string;
   version: string;
+  manifest: PluginManifest;
   trustLevel: PluginTrustLevel;
 }
 
@@ -305,6 +314,7 @@ export interface PluginManifestEntry {
   name: string;
   packageName: string;
   version: string;
+  manifest: PluginManifest;
   trustLevel: PluginTrustLevel;
 }
 
@@ -369,6 +379,7 @@ function generateManifestJson(plugins: DiscoveredPlugin[]): string {
     packageName: p.packageName,
     version: p.version,
     trustLevel: p.trustLevel,
+    manifest: p.manifest,
   }));
 
   return JSON.stringify(manifest, null, 2);
