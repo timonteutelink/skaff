@@ -15,7 +15,6 @@
  *   bun run scripts/generate-plugin-registry.ts
  *
  * The script reads from:
- *   - package.json dependencies
  *   - SKAFF_PLUGINS environment variable (space-separated list)
  *
  * And generates:
@@ -85,12 +84,8 @@ interface PluginManifest {
 interface PluginPackageJson {
   name: string;
   version: string;
-  main?: string;
-  exports?: Record<string, string> | string;
   skaff?: {
-    plugin?: boolean;
     bundle?: {
-      cli?: string;
       web?: string;
     };
   };
@@ -156,40 +151,37 @@ function getPackageJson(packageName: string): PluginPackageJson | null {
   }
 }
 
+const DEV_DEFAULT_PLUGINS = ["@skaff/plugin-greeter"];
+
+function shouldIncludeDevDefaults(): boolean {
+  return (
+    process.env.NODE_ENV === "development" ||
+    process.env.SKAFF_DEV_PLUGINS === "1" ||
+    process.env.SKAFF_DEV_TEMPLATES === "1"
+  );
+}
+
 /**
  * Discovers plugins from environment variable
  */
 function getPluginsFromEnv(): string[] {
   const envPlugins = process.env.SKAFF_PLUGINS ?? "";
-  return envPlugins
+  const plugins = envPlugins
     .split(/\s+/)
     .map((p: string) => p.trim())
     .filter(Boolean)
     .map((spec: string) => parsePackageSpec(spec).name);
-}
 
-/**
- * Discovers plugins from package.json dependencies
- * Only considers packages with "skaff-plugin" or "@skaff/" in the name
- */
-function getPluginsFromPackageJson(): string[] {
-  try {
-    const pkgPath = resolve(WEB_ROOT, "package.json");
-    const content = readFileSync(pkgPath, "utf-8");
-    const pkg = JSON.parse(content);
-
-    const deps = {
-      ...pkg.dependencies,
-      ...pkg.devDependencies,
-    };
-
-    return Object.keys(deps);
-  } catch {
-    return [];
+  if (shouldIncludeDevDefaults()) {
+    for (const plugin of DEV_DEFAULT_PLUGINS) {
+      plugins.push(plugin);
+    }
   }
+
+  return [...new Set(plugins)];
 }
 
-function expandWebBundles(packageNames: string[]): string[] {
+function expandBundledPlugins(packageNames: string[]): string[] {
   const expanded = new Set<string>(packageNames);
 
   for (const packageName of packageNames) {
@@ -208,12 +200,9 @@ function expandWebBundles(packageNames: string[]): string[] {
  */
 async function discoverPlugins(): Promise<DiscoveredPlugin[]> {
   const envPlugins = getPluginsFromEnv();
-  const pkgPlugins = getPluginsFromPackageJson();
 
   // Combine and deduplicate
-  const allPackages = expandWebBundles([
-    ...new Set([...envPlugins, ...pkgPlugins]),
-  ]);
+  const allPackages = expandBundledPlugins([...new Set(envPlugins)]);
 
   console.log(`Scanning ${allPackages.length} potential plugin packages...`);
 
@@ -295,8 +284,7 @@ function generateRegistryFile(plugins: DiscoveredPlugin[]): string {
  * This file is generated at build time by scripts/generate-plugin-registry.ts
  * It contains static imports for all installed Skaff web plugins.
  *
- * To add or remove plugins, modify the SKAFF_PLUGINS build argument or
- * update package.json dependencies, then rebuild.
+ * To add or remove plugins, modify the SKAFF_PLUGINS build argument, then rebuild.
  *
  * Generated: ${new Date().toISOString()}
  */
