@@ -83,6 +83,7 @@ async function promptUserTemplateSettings(
   options?: {
     projectSettings?: ProjectSettings
     templateInstanceId?: string
+    pluginInputs?: skaffLib.PluginInputsByPlugin
   },
 ): Promise<UserTemplateSettings> {
   const rootTpl = await skaffLib.getTemplate(rootTemplateName)
@@ -112,6 +113,7 @@ async function promptUserTemplateSettings(
   const pluginsResult = await skaffLib.loadPluginsForTemplate(
     rootTpl.data.template,
     templateTypes.createReadonlyProjectContext(projectSettings),
+    {pluginInputs: options?.pluginInputs},
   )
 
   if ('error' in pluginsResult) {
@@ -196,6 +198,7 @@ export async function readUserTemplateSettings(
   options?: {
     projectSettings?: ProjectSettings
     templateInstanceId?: string
+    pluginInputs?: skaffLib.PluginInputsByPlugin
   },
 ): Promise<UserTemplateSettings> {
   if (!arg) return promptUserTemplateSettings(rootTemplateName, templateName, defaults, options)
@@ -227,6 +230,7 @@ export async function readUserTemplateSettings(
   const pluginsResult = await skaffLib.loadPluginsForTemplate(
     rootTpl.data.template,
     templateTypes.createReadonlyProjectContext(projectSettings),
+    {pluginInputs: options?.pluginInputs},
   )
 
   if ('error' in pluginsResult) {

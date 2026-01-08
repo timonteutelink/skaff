@@ -6,6 +6,7 @@ import type { Template } from "../templates/Template";
 import {
   BoundSettingsInputTransform,
   CliPluginContribution,
+  LoadPluginsForTemplateOptions,
   LoadedTemplatePlugin,
   NormalizedTemplatePluginConfig,
   SkaffPluginModule,
@@ -411,6 +412,7 @@ async function readGlobalConfig(
 export async function loadPluginsForTemplate(
   template: Template,
   projectContext: ReadonlyProjectContext,
+  options?: LoadPluginsForTemplateOptions,
 ): Promise<Result<LoadedTemplatePlugin[]>> {
   const normalized = normalizeTemplatePlugins(template.config.plugins);
   if (!normalized.length) {
@@ -481,10 +483,14 @@ export async function loadPluginsForTemplate(
       projectContext,
     };
 
+    const pluginInputs =
+      options?.pluginInputs?.[pluginName] ??
+      options?.pluginInputs?.[reference.module];
     const settingsTransformContext: SettingsInputTransformContext = {
       templateName: template.config.templateConfig.name,
       projectContext,
       options: reference.options,
+      pluginInputs,
     };
 
     const settingsInputTransform = buildSettingsInputTransform(

@@ -1,5 +1,6 @@
 import {Args, Flags} from '@oclif/core'
 import * as skaffLib from '@timonteutelink/skaff-lib'
+import {createReadonlyProjectContext} from '@timonteutelink/template-types-lib'
 
 import Base from '../../base-command.js'
 import {viewParsedDiffWithGit} from '../../utils/diff-utils.js'
@@ -8,6 +9,7 @@ import {
   formatPluginCompatibilityForCli,
   formatTemplateSettingsWarningsForCli,
 } from '../../utils/plugin-manager.js'
+import {resolveCliPluginInputs} from '../../utils/plugin-inputs.js'
 import {readUserTemplateSettings} from '../../utils/template-utils.js'
 
 export default class InstantiationProjectNew extends Base {
@@ -21,6 +23,11 @@ export default class InstantiationProjectNew extends Base {
     settings: Flags.string({
       char: 's',
       description: 'Inline JSON or path to JSON file with template settings. If omitted, settings are prompted.',
+    }),
+    'plugin-input': Flags.string({
+      description:
+        'Plugin input in the form "<plugin>:<input>=<value>" (repeatable). Prefix value with "@" to load JSON from a file.',
+      multiple: true,
     }),
     repo: Flags.string({description: 'Git repository URL or path to load before instantiation'}),
     branch: Flags.string({description: 'Branch to checkout when loading repo (optional)'}),
@@ -46,18 +53,18 @@ export default class InstantiationProjectNew extends Base {
       }
     }
 
+    const templateResult = await skaffLib.getTemplate(args.templateName)
+    if ('error' in templateResult) {
+      this.error(templateResult.error, {exit: 1})
+    }
+
+    const templateData = templateResult.data
+    if (!templateData) {
+      this.error(`Template "${args.templateName}" not found.`, {exit: 1})
+    }
+
     // Check plugin compatibility before proceeding
     if (!flags['skip-plugin-check']) {
-      const templateResult = await skaffLib.getTemplate(args.templateName)
-      if ('error' in templateResult) {
-        this.error(templateResult.error, {exit: 1})
-      }
-
-      const templateData = templateResult.data
-      if (!templateData) {
-        this.error(`Template "${args.templateName}" not found.`, {exit: 1})
-      }
-
       const plugins = templateData.template.config.plugins
       if (plugins && plugins.length > 0) {
         const compatibility = await checkTemplatePluginsCompatibility(
@@ -81,7 +88,22 @@ export default class InstantiationProjectNew extends Base {
       }
     }
 
-    const settings = await readUserTemplateSettings(args.templateName, args.templateName, flags.settings)
+    const projectContext = createReadonlyProjectContext({
+      projectRepositoryName: args.projectRepositoryName,
+      projectAuthor: '',
+      rootTemplateName: args.templateName,
+    })
+
+    const pluginsResult = await skaffLib.loadPluginsForTemplate(templateData.template, projectContext)
+    if ('error' in pluginsResult) {
+      this.error(pluginsResult.error, {exit: 1})
+    }
+
+    const pluginInputs = await resolveCliPluginInputs(pluginsResult.data, flags['plugin-input'])
+
+    const settings = await readUserTemplateSettings(args.templateName, args.templateName, flags.settings, undefined, {
+      pluginInputs,
+    })
 
     const res = await skaffLib.generateNewProject(args.projectRepositoryName, args.templateName, process.cwd(), settings, {
       git: true,
