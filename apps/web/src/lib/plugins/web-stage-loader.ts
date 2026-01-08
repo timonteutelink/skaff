@@ -87,6 +87,14 @@ export interface PluginCompatibilityResult {
 }
 
 /**
+ * Required template settings keys for a plugin.
+ */
+export interface WebPluginRequirement {
+  pluginName: string;
+  requiredSettingsKeys: string[];
+}
+
+/**
  * Builds a Map of installed plugins from the static registry.
  * This is used by the skaff-lib compatibility checker.
  */
@@ -355,11 +363,17 @@ export async function loadWebTemplatePluginRequirements(
 
     const entry = pickEntrypoint(resolvedModule, reference.exportName);
     const pluginModule = coerceToPluginModule(entry);
-    if (!pluginModule?.manifest?.requiredSettingsKeys?.length) continue;
+    if (!pluginModule) {
+      continue;
+    }
+    const requiredSettingsKeys = (
+      pluginModule.manifest as { requiredSettingsKeys?: string[] } | undefined
+    )?.requiredSettingsKeys;
+    if (!requiredSettingsKeys?.length) continue;
 
     requirements.push({
       pluginName: pluginModule.manifest.name ?? pluginName,
-      requiredSettingsKeys: pluginModule.manifest.requiredSettingsKeys,
+      requiredSettingsKeys,
     });
   }
 

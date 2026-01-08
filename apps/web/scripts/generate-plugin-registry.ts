@@ -29,7 +29,7 @@ import process from "node:process";
 import {
   determinePluginTrustBasic,
   type PluginTrustLevel,
-} from "@timonteutelink/skaff-lib";
+} from "@timonteutelink/skaff-lib/browser";
 
 interface ParsedPackageSpec {
   name: string;

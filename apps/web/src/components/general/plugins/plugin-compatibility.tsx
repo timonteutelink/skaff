@@ -96,12 +96,12 @@ export function PluginCompatibilityDetails({
         <p className="text-sm text-muted-foreground">
           All required plugins are installed and compatible.
         </p>
-        {templateSettingsWarnings.length > 0 ? (
+        {result.templateSettingsWarnings.length > 0 ? (
           <Alert>
             <AlertTitle>Template settings warnings</AlertTitle>
             <AlertDescription>
               <ul className="list-disc pl-4 text-sm">
-                {templateSettingsWarnings.map((warning) => (
+                {result.templateSettingsWarnings.map((warning) => (
                   <li key={warning.module}>
                     {formatTemplateSettingsWarning(warning)}
                   </li>
@@ -202,7 +202,7 @@ export function PluginCompatibilityDetails({
           ) : null}
         </AlertDescription>
       </Alert>
-      {templateSettingsWarnings.length > 0 ? (
+      {result.templateSettingsWarnings.length > 0 ? (
         <Alert>
           <AlertTitle>Template settings warnings</AlertTitle>
           <AlertDescription>
@@ -212,7 +212,7 @@ export function PluginCompatibilityDetails({
               plugin requirements.
             </p>
             <ul className="list-disc pl-4 text-sm">
-              {templateSettingsWarnings.map((warning) => (
+              {result.templateSettingsWarnings.map((warning) => (
                 <li key={warning.module}>
                   {formatTemplateSettingsWarning(warning)}
                 </li>

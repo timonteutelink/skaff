@@ -659,6 +659,9 @@ export interface WebTemplateStageRenderProps<
   setSettingsDraft: (next: UserTemplateSettings | null) => void;
 }
 
+export type TemplateStageRenderProps<TState = unknown> =
+  WebTemplateStageRenderProps<TState>;
+
 /**
  * A web UI stage contributed by a plugin.
  *
