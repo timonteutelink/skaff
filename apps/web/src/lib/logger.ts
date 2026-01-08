@@ -2,7 +2,7 @@
 
 import log, { LogLevelDesc } from "loglevel";
 import { logFromClient } from "@/app/actions/logs";
-import { LevelName } from "@timonteutelink/skaff-lib";
+import { LevelName } from "@timonteutelink/skaff-lib/browser";
 
 const defaultLevel: LogLevelDesc =
   (process.env.NEXT_PUBLIC_LOG_LEVEL as LogLevelDesc) ?? "info";
@@ -27,4 +27,3 @@ const logger = {
 };
 
 export default logger;
-

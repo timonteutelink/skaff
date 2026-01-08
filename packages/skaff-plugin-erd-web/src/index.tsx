@@ -6,7 +6,7 @@ import type {
   TemplateStageRenderProps,
   WebPluginContribution,
   WebPluginEntrypoint,
-} from "@timonteutelink/skaff-lib";
+} from "@timonteutelink/skaff-lib/browser";
 import {
   mapErdToSettings,
   mapSettingsToErd,
