@@ -23,14 +23,14 @@
     "test": "bun run lint && bun run check-types"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "eslint": "^9.39.1",
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-only-warn": "^1.1.0",
     "typescript": "5.9.3",
-    "typescript-eslint": "^8.46.4",
+    "typescript-eslint": "^8.52.0",
     "handlebars": "^4.7.8",
-    "zod": "^4.1.12"
+    "zod": "^4.3.5"
   },
   "peerDependencies": {
     "handlebars": "^4.7.8",

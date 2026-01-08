@@ -22,7 +22,7 @@
   "dependencies": {
     "@timonteutelink/skaff-plugin-greeter": "workspace:*",
     "@timonteutelink/skaff-plugin-greeter-types": "workspace:*",
-    "react": "19.2.0"
+    "react": "^19.2.0"
   },
   "skaff": {
     "manifest": {
@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@timonteutelink/skaff-lib": "workspace:*",
-    "@types/react": "19.2.5",
+    "@types/react": "^19.2.0",
     "typescript": "5.9.3"
   }
 }

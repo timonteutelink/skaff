@@ -21,8 +21,9 @@
   },
   "dependencies": {
     "@timonteutelink/skaff-lib": "workspace:*",
+    "@timonteutelink/template-types-lib": "workspace:*",
     "@timonteutelink/skaff-plugin-erd-types": "workspace:*",
-    "zod": "^4.1.12"
+    "zod": "^4.3.5"
   },
   "skaff": {
     "manifest": {
