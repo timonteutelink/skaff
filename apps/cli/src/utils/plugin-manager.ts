@@ -9,7 +9,6 @@ import {Config} from '@oclif/core'
 import {createRequire} from 'node:module'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import {pathToFileURL} from 'node:url'
 import * as skaffLib from '@timonteutelink/skaff-lib'
 import type {
   InstalledPluginInfo,
@@ -77,6 +76,39 @@ export function parsePluginBundleMetadata(packageJson: unknown): PluginBundleMet
   return {cli, web}
 }
 
+async function resolvePackageJsonPath(modulePath: string): Promise<string | null> {
+  let currentDir = path.dirname(modulePath)
+
+  while (currentDir && currentDir !== path.dirname(currentDir)) {
+    const candidate = path.join(currentDir, 'package.json')
+    try {
+      await fs.stat(candidate)
+      return candidate
+    } catch {
+      currentDir = path.dirname(currentDir)
+    }
+  }
+
+  return null
+}
+
+async function readPackageJson(
+  requireFromDataDir: NodeRequire,
+  packageName: string,
+): Promise<unknown | null> {
+  try {
+    const modulePath = requireFromDataDir.resolve(packageName)
+    const packageJsonPath = await resolvePackageJsonPath(modulePath)
+    if (!packageJsonPath) {
+      return null
+    }
+    const raw = await fs.readFile(packageJsonPath, 'utf8')
+    return JSON.parse(raw) as unknown
+  } catch {
+    return null
+  }
+}
+
 async function getDataDirDependencyNames(config: Config): Promise<string[]> {
   try {
     const packagePath = path.join(config.dataDir, 'package.json')
@@ -94,9 +126,10 @@ export async function getInstalledPluginBundleMetadata(
 ): Promise<PluginBundleMetadata | null> {
   try {
     const requireFromDataDir = createRequire(path.join(config.dataDir, 'package.json'))
-    const pkgPath = requireFromDataDir.resolve(`${packageName}/package.json`)
-    const raw = await fs.readFile(pkgPath, 'utf8')
-    const packageJson = JSON.parse(raw) as unknown
+    const packageJson = await readPackageJson(requireFromDataDir, packageName)
+    if (!packageJson) {
+      return null
+    }
     return parsePluginBundleMetadata(packageJson)
   } catch {
     return null
@@ -191,18 +224,16 @@ export async function getInstalledCliPlugins(config: Config): Promise<SkaffCliPl
     let isSkaffPlugin = false
     let capabilities: ('template' | 'cli' | 'web')[] | undefined
 
-    try {
-      const requireFromPlugin = createRequire(path.join(plugin.root, 'package.json'))
-      const modulePath = requireFromPlugin.resolve(plugin.name)
-      const pluginModule = await import(pathToFileURL(modulePath).href)
-      const defaultExport = pluginModule.default ?? pluginModule
-
-      if (defaultExport?.manifest?.capabilities) {
-        isSkaffPlugin = true
-        capabilities = defaultExport.manifest.capabilities
-      }
-    } catch {
-      // Plugin doesn't have a loadable Skaff manifest - that's ok
+    const requireFromPlugin = createRequire(path.join(plugin.root, 'package.json'))
+    const packageJson = await readPackageJson(requireFromPlugin, plugin.name)
+    const manifestResult = skaffLib.pluginManifestSchema.safeParse(
+      packageJson && typeof packageJson === 'object'
+        ? (packageJson as {skaff?: {manifest?: unknown}}).skaff?.manifest
+        : undefined,
+    )
+    if (manifestResult.success) {
+      isSkaffPlugin = true
+      capabilities = manifestResult.data.capabilities
     }
 
     // Determine trust level
@@ -230,15 +261,15 @@ export async function getInstalledCliPlugins(config: Config): Promise<SkaffCliPl
       }
 
       try {
-        const modulePath = requireFromDataDir.resolve(dependencyName)
-        const packageJsonPath = path.join(path.dirname(modulePath), '..', 'package.json')
-        const packageRaw = await fs.readFile(packageJsonPath, 'utf8')
-        const packageInfo = JSON.parse(packageRaw) as {name?: string; version?: string}
-        const pluginModule = await import(pathToFileURL(modulePath).href)
-        const defaultExport = pluginModule.default ?? pluginModule
-
-        const isSkaffPlugin = Boolean(defaultExport?.manifest?.capabilities)
-        const capabilities = isSkaffPlugin ? defaultExport.manifest.capabilities : undefined
+        const packageJson = await readPackageJson(requireFromDataDir, dependencyName)
+        const manifestResult = skaffLib.pluginManifestSchema.safeParse(
+          packageJson && typeof packageJson === 'object'
+            ? (packageJson as {skaff?: {manifest?: unknown}}).skaff?.manifest
+            : undefined,
+        )
+        const isSkaffPlugin = manifestResult.success
+        const capabilities = manifestResult.success ? manifestResult.data.capabilities : undefined
+        const packageInfo = (packageJson ?? {}) as {name?: string; version?: string}
         const packageName = packageInfo.name ?? dependencyName
 
         plugins.push({
@@ -272,7 +303,7 @@ export async function getInstalledSkaffPlugins(config: Config): Promise<SkaffCli
  * Registers installed Skaff plugin modules so they can be activated by templates.
  */
 export async function registerInstalledPluginModules(config: Config): Promise<void> {
-  const entries: { moduleExports: unknown; modulePath: string; packageName: string }[] = []
+  const entries: { modulePath: string; packageName: string; manifest: skaffLib.PluginManifest }[] = []
   const seenPackages = new Set<string>()
 
   for (const plugin of config.getPluginsList()) {
@@ -280,24 +311,24 @@ export async function registerInstalledPluginModules(config: Config): Promise<vo
       continue
     }
 
-    try {
-      const requireFromPlugin = createRequire(path.join(plugin.root, 'package.json'))
-      const modulePath = requireFromPlugin.resolve(plugin.name)
-      const moduleNamespace = await import(pathToFileURL(modulePath).href)
-      const candidate = moduleNamespace.default ?? moduleNamespace
-      if (!candidate?.manifest?.capabilities) {
-        continue
-      }
-
-      entries.push({
-        moduleExports: moduleNamespace,
-        modulePath,
-        packageName: plugin.name,
-      })
-      seenPackages.add(plugin.name)
-    } catch {
-      // Ignore plugins that fail to import; they are treated as not installed
+    const requireFromPlugin = createRequire(path.join(plugin.root, 'package.json'))
+    const packageJson = await readPackageJson(requireFromPlugin, plugin.name)
+    const manifestResult = skaffLib.pluginManifestSchema.safeParse(
+      packageJson && typeof packageJson === 'object'
+        ? (packageJson as {skaff?: {manifest?: unknown}}).skaff?.manifest
+        : undefined,
+    )
+    if (!manifestResult.success) {
+      continue
     }
+
+    const modulePath = requireFromPlugin.resolve(plugin.name)
+    entries.push({
+      modulePath,
+      packageName: plugin.name,
+      manifest: manifestResult.data,
+    })
+    seenPackages.add(plugin.name)
   }
 
   const dependencyNames = await getDataDirDependencyNames(config)
@@ -309,23 +340,23 @@ export async function registerInstalledPluginModules(config: Config): Promise<vo
         continue
       }
 
-      try {
-        const modulePath = requireFromDataDir.resolve(dependencyName)
-        const moduleNamespace = await import(pathToFileURL(modulePath).href)
-        const candidate = moduleNamespace.default ?? moduleNamespace
-        if (!candidate?.manifest?.capabilities) {
-          continue
-        }
-
-        entries.push({
-          moduleExports: moduleNamespace,
-          modulePath,
-          packageName: dependencyName,
-        })
-        seenPackages.add(dependencyName)
-      } catch {
-        // Ignore non-plugin dependencies
+      const modulePath = requireFromDataDir.resolve(dependencyName)
+      const packageJson = await readPackageJson(requireFromDataDir, dependencyName)
+      const manifestResult = skaffLib.pluginManifestSchema.safeParse(
+        packageJson && typeof packageJson === 'object'
+          ? (packageJson as {skaff?: {manifest?: unknown}}).skaff?.manifest
+          : undefined,
+      )
+      if (!manifestResult.success) {
+        continue
       }
+
+      entries.push({
+        modulePath,
+        packageName: dependencyName,
+        manifest: manifestResult.data,
+      })
+      seenPackages.add(dependencyName)
     }
   }
 

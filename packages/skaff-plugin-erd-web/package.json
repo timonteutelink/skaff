@@ -23,6 +23,20 @@
     "@timonteutelink/skaff-plugin-erd-types": "workspace:*",
     "react": "19.2.0"
   },
+  "skaff": {
+    "manifest": {
+      "name": "erd",
+      "version": "0.0.1",
+      "capabilities": [
+        "web"
+      ],
+      "supportedHooks": {
+        "template": [],
+        "cli": [],
+        "web": []
+      }
+    }
+  },
   "devDependencies": {
     "typescript": "5.9.3"
   }

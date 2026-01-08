@@ -110,16 +110,6 @@ const greeterLifecycle: PluginLifecycle = {
 };
 
 const greeterPlugin: SkaffPluginModule = {
-  manifest: {
-    name: GREETER_PLUGIN_NAME,
-    version: "0.0.0",
-    capabilities: ["template"],
-    supportedHooks: {
-      template: ["configureTemplateInstantiationPipeline"],
-      cli: [],
-      web: [],
-    },
-  },
   lifecycle: greeterLifecycle,
   template: createGreeterTemplatePlugin,
 };

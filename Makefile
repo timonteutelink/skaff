@@ -64,6 +64,14 @@ build-web:
 
 bw: build-web
 
+build-erd-plugins:
+	cd packages/skaff-plugin-erd-types && bun run build
+	cd packages/skaff-plugin-erd && bun run build
+	cd packages/skaff-plugin-erd-web && bun run build
+	@echo "Built ERD plugins!"
+
+bep: build-erd-plugins
+
 build-web-nix:
 	nix build .#skaff-web
 	@echo "Built web via Nix!"
@@ -126,7 +134,7 @@ monorepo-prod:
 
 mp: monorepo-prod
 
-build-all: it il ir bt bl bc bw
+build-all: it il ir bt bl bep bc bw
 	@echo "Built core libs + CLI + Web!"
 
 ba: build-all

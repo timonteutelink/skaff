@@ -25,6 +25,18 @@
     "zod": "^4.1.12"
   },
   "skaff": {
+    "manifest": {
+      "name": "erd",
+      "version": "0.0.1",
+      "capabilities": [
+        "template"
+      ],
+      "supportedHooks": {
+        "template": [],
+        "cli": [],
+        "web": []
+      }
+    },
     "bundle": {
       "web": "@timonteutelink/skaff-plugin-erd-web"
     }

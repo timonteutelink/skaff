@@ -41,16 +41,15 @@ async function loadPluginContext(): Promise<PluginContext> {
 
 async function registerTestPlugins(): Promise<void> {
   const {registerPluginModules} = await loadPluginContext()
-  const buildPlugin = (name: string, capability: 'template' | 'cli' | 'web') => ({
-    manifest: {
-      name,
-      version: '0.0.0',
-      capabilities: [capability],
-      supportedHooks: {
-        template: [],
-        cli: [],
-        web: [],
-      },
+  const buildPlugin = (_name: string, _capability: 'template' | 'cli' | 'web') => ({})
+  const buildManifest = (name: string, capability: 'template' | 'cli' | 'web') => ({
+    name,
+    version: '0.0.0',
+    capabilities: [capability],
+    supportedHooks: {
+      template: [],
+      cli: [],
+      web: [],
     },
   })
 
@@ -58,14 +57,17 @@ async function registerTestPlugins(): Promise<void> {
     {
       packageName: '@timonteutelink/skaff-plugin-greeter',
       sandboxedExports: {default: buildPlugin('@timonteutelink/skaff-plugin-greeter', 'template')},
+      manifest: buildManifest('@timonteutelink/skaff-plugin-greeter', 'template'),
     },
     {
       packageName: '@timonteutelink/skaff-plugin-greeter-cli',
       sandboxedExports: {default: buildPlugin('@timonteutelink/skaff-plugin-greeter-cli', 'cli')},
+      manifest: buildManifest('@timonteutelink/skaff-plugin-greeter-cli', 'cli'),
     },
     {
       packageName: '@timonteutelink/skaff-plugin-greeter-web',
       sandboxedExports: {default: buildPlugin('@timonteutelink/skaff-plugin-greeter-web', 'web')},
+      manifest: buildManifest('@timonteutelink/skaff-plugin-greeter-web', 'web'),
     },
   ])
 }

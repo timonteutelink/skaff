@@ -1,6 +1,5 @@
 "use client";
 
-import "@dineug/erd-editor";
 import type { ErdEditorElement } from "@dineug/erd-editor";
 import type {
   TemplateStageRenderProps,
@@ -41,6 +40,10 @@ function ErdStage({
 }: ErdStageProps) {
   const editorRef = React.useRef<ErdEditorElement | null>(null);
   const hasInitializedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    void import("@dineug/erd-editor");
+  }, []);
 
   const settingsInput = React.useMemo(() => {
     if (settingsDraft && Object.keys(settingsDraft).length > 0) {
@@ -161,12 +164,6 @@ const createErdWebContribution: WebPluginEntrypoint = (input) => {
 };
 
 const erdWebPlugin = {
-  manifest: {
-    name: "erd",
-    version: "0.0.0",
-    capabilities: ["web"],
-    supportedHooks: { template: [], cli: [], web: [] },
-  },
   web: createErdWebContribution,
 };
 

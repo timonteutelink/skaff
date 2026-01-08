@@ -307,7 +307,7 @@ export function createPluginCompatibilityValidators(
       return { data: undefined };
     }
 
-    const manifestName = pluginModule.manifest?.name ?? pluginName;
+    const manifestName = installedPlugin?.name ?? pluginName;
     const rawSettings = options.pluginSettings?.[manifestName];
     const parsed = pluginModule.globalConfigSchema.safeParse(rawSettings ?? {});
 
@@ -358,7 +358,7 @@ export function createPluginCompatibilityValidators(
       return { data: undefined };
     }
 
-    const manifestName = pluginModule.manifest?.name ?? pluginName;
+    const manifestName = installedPlugin?.name ?? pluginName;
     return {
       data: {
         module: pluginConfig.module,

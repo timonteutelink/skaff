@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 
 import { registerPluginModules } from "../../src/core/plugins";
+import type { PluginManifest } from "../../src/core/plugins";
 import greeterPluginModule from "../../../../examples/plugins/plugin-greeter/src/index";
 import greeterCliPluginModule from "../../../../examples/plugins/plugin-greeter-cli/src/index";
 import greeterWebPluginModule from "../../../../examples/plugins/plugin-greeter-web/src/index";
@@ -124,19 +125,27 @@ export async function setupIntegrationTestEnvironment(
 export function registerGreeterPlugins(options?: {
   includeSandboxedExports?: boolean;
 }): void {
-  const greeterCliModule = {
-    ...greeterCliPluginModule,
-    manifest: {
-      ...greeterCliPluginModule.manifest,
-      name: "greeter-cli",
+  const greeterManifest: PluginManifest = {
+    name: "greeter",
+    version: "0.0.0",
+    capabilities: ["template"],
+    supportedHooks: {
+      template: ["configureTemplateInstantiationPipeline"],
+      cli: [],
+      web: [],
     },
   };
-  const greeterWebModule = {
-    ...greeterWebPluginModule,
-    manifest: {
-      ...greeterWebPluginModule.manifest,
-      name: "greeter-web",
-    },
+  const greeterCliManifest: PluginManifest = {
+    name: "greeter-cli",
+    version: "0.0.0",
+    capabilities: ["cli"],
+    supportedHooks: { template: [], cli: [], web: [] },
+  };
+  const greeterWebManifest: PluginManifest = {
+    name: "greeter-web",
+    version: "0.0.0",
+    capabilities: ["web"],
+    supportedHooks: { template: [], cli: [], web: [] },
   };
 
   const includeSandboxedExports = options?.includeSandboxedExports ?? false;
@@ -155,22 +164,25 @@ export function registerGreeterPlugins(options?: {
         "../../../../examples/plugins/plugin-greeter/src/index.ts",
       ),
       packageName: "@timonteutelink/skaff-plugin-greeter",
+      manifest: greeterManifest,
     }),
     withSandboxedExports({
-      moduleExports: greeterCliModule,
+      moduleExports: greeterCliPluginModule,
       modulePath: path.resolve(
         __dirname,
         "../../../../examples/plugins/plugin-greeter-cli/src/index.ts",
       ),
       packageName: "@timonteutelink/skaff-plugin-greeter-cli",
+      manifest: greeterCliManifest,
     }),
     withSandboxedExports({
-      moduleExports: greeterWebModule,
+      moduleExports: greeterWebPluginModule,
       modulePath: path.resolve(
         __dirname,
         "../../../../examples/plugins/plugin-greeter-web/src/index.tsx",
       ),
       packageName: "@timonteutelink/skaff-plugin-greeter-web",
+      manifest: greeterWebManifest,
     }),
   ]);
 }
