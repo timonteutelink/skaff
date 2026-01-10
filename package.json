@@ -41,6 +41,7 @@
     "packages/eslint-config",
     "packages/skaff-lib",
     "packages/skaff-plugin-erd",
+    "packages/skaff-plugin-erd-cli",
     "packages/skaff-plugin-erd-types",
     "packages/skaff-plugin-erd-web",
     "packages/tailwind-config",
