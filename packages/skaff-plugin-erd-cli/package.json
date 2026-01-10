@@ -1,14 +1,14 @@
 {
-  "name": "@timonteutelink/skaff-plugin-erd",
+  "name": "@timonteutelink/skaff-plugin-erd-cli",
   "version": "0.0.1",
-  "description": "Prototype ERD template plugin for Skaff",
+  "description": "CLI contribution for the Skaff ERD plugin",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./dist/index.js"
   },
   "oclif": {
-    "name": "@timonteutelink/skaff-plugin-erd"
+    "name": "@timonteutelink/skaff-plugin-erd-cli"
   },
   "files": [
     "dist"
@@ -21,29 +21,25 @@
   },
   "dependencies": {
     "@timonteutelink/skaff-lib": "workspace:*",
-    "@timonteutelink/template-types-lib": "workspace:*",
-    "@timonteutelink/skaff-plugin-erd-types": "workspace:*",
-    "zod": "^4.3.5"
+    "@timonteutelink/skaff-plugin-erd": "workspace:*",
+    "@timonteutelink/skaff-plugin-erd-types": "workspace:*"
   },
   "skaff": {
     "manifest": {
       "name": "erd",
       "version": "0.0.1",
       "capabilities": [
-        "template"
+        "cli"
       ],
       "supportedHooks": {
         "template": [],
         "cli": [],
         "web": []
       }
-    },
-    "bundle": {
-      "cli": "@timonteutelink/skaff-plugin-erd-cli",
-      "web": "@timonteutelink/skaff-plugin-erd-web"
     }
   },
   "devDependencies": {
+    "@inquirer/prompts": "^5.3.8",
     "typescript": "5.9.3"
   }
 }

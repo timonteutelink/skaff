@@ -76,6 +76,32 @@ const createErdTemplatePlugin: TemplatePluginEntrypoint = (input) => {
 
 const erdPlugin: SkaffPluginModule = {
   template: createErdTemplatePlugin,
+  settingsInputTransform: (input, context) => {
+    const parsedOptions = erdPluginOptionsSchema.safeParse(context.options ?? {});
+    if (!parsedOptions.success) {
+      throw new Error(`Invalid ERD plugin options: ${parsedOptions.error.message}`);
+    }
+
+    const pluginInputs = context.pluginInputs ?? {};
+    const erdInput = pluginInputs.erdSchema ?? pluginInputs.erd;
+    if (!erdInput) {
+      return input as UserTemplateSettings;
+    }
+
+    const mappedSettings = mapErdToSettings(
+      erdInput,
+      parsedOptions.data.mappers,
+    );
+
+    if (!input || typeof input !== "object") {
+      return mappedSettings;
+    }
+
+    return {
+      ...mappedSettings,
+      ...(input as UserTemplateSettings),
+    };
+  },
 };
 
 export type { ErdPluginOptions };

@@ -159,14 +159,26 @@ export type ErdPluginOptions = {
 
 export const erdTemplatePluginSpecifier =
   "@timonteutelink/skaff-plugin-erd" as const;
+export const erdCliPluginSpecifier =
+  "@timonteutelink/skaff-plugin-erd-cli" as const;
 
 export type ErdTemplatePluginConfig = TemplatePluginConfig & {
   module: typeof erdTemplatePluginSpecifier;
   options: ErdPluginOptions;
 };
 
+export type ErdCliPluginConfig = TemplatePluginConfig & {
+  module: typeof erdCliPluginSpecifier;
+};
+
 export function useErdTemplatePlugin(
   mappers: ErdTemplateMappers,
 ): ErdTemplatePluginConfig {
   return { module: erdTemplatePluginSpecifier, options: { mappers } };
+}
+
+export function useErdPlugins(
+  mappers: ErdTemplateMappers,
+): [ErdTemplatePluginConfig, ErdCliPluginConfig] {
+  return [useErdTemplatePlugin(mappers), { module: erdCliPluginSpecifier }];
 }
