@@ -4,7 +4,7 @@ localFlake:
     {
       packages = {
         skaff-cli = pkgs.callPackage ./../../skaff-package/cli-package.nix {
-          inherit (inputs.bun2nix.lib.${system}) mkBunDerivation;
+          bun2nix = inputs.bun2nix.packages.${system}.default;
         };
         default = self.packages.${system}.skaff-cli;
       };
