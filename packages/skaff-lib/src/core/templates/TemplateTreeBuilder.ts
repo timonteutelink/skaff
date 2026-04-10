@@ -1,8 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { inject, injectable } from "tsyringe";
-
 import {
   TemplateConfigLoader,
   TemplateConfigWithFileInfo,
@@ -11,7 +9,6 @@ import {
 import { backendLogger } from "../../lib/logger";
 import { Result } from "../../lib/types";
 import { logError } from "../../lib/utils";
-import { GitServiceToken, TemplateConfigLoaderToken } from "../../di/tokens";
 import type { GitService } from "../infra/git-service";
 import { Template } from "./Template";
 import { validateTemplate } from "./TemplateValidation";
@@ -141,7 +138,9 @@ function linkExplicitReferences(
   }
 }
 
-function linkByDirectoryContainment(templatesMap: Record<string, Template>): void {
+function linkByDirectoryContainment(
+  templatesMap: Record<string, Template>,
+): void {
   const allTemplates = Object.values(templatesMap);
 
   for (const candidate of allTemplates) {
@@ -197,9 +196,13 @@ function linkByDirectoryContainment(templatesMap: Record<string, Template>): voi
   }
 }
 
-function findRootTemplate(templatesMap: Record<string, Template>): Result<Template> {
+function findRootTemplate(
+  templatesMap: Record<string, Template>,
+): Result<Template> {
   const allTemplates = Object.values(templatesMap);
-  const rootTemplates = allTemplates.filter((template) => !template.parentTemplate);
+  const rootTemplates = allTemplates.filter(
+    (template) => !template.parentTemplate,
+  );
 
   if (rootTemplates.length === 0) {
     logError({ shortMessage: "No root templates found." });
@@ -226,16 +229,16 @@ export interface TemplateTreeBuilderOptions {
   commitHash?: string;
   trackedRevision?: string;
   skipBranchResolution?: boolean;
+  devTemplates?: boolean;
 }
 
-@injectable()
 export class TemplateTreeBuilder {
+  private static devTemplatesWarningLogged = false;
+
   constructor(
-    @inject(GitServiceToken)
     private readonly gitService: GitService,
-    @inject(TemplateConfigLoaderToken)
     private readonly templateConfigLoader: TemplateConfigLoader,
-  ) { }
+  ) {}
 
   public async build(
     rootTemplateDir: string,
@@ -249,6 +252,7 @@ export class TemplateTreeBuilder {
       options.skipBranchResolution,
       options.commitHash,
       options.trackedRevision,
+      options.devTemplates,
     );
     if ("error" in contextResult) {
       return contextResult;
@@ -257,6 +261,7 @@ export class TemplateTreeBuilder {
     const configsResult = await this.loadTemplateConfigs(
       contextResult.data.absoluteRootDir,
       contextResult.data.commitHash,
+      options.devTemplates,
     );
     if ("error" in configsResult) {
       return configsResult;
@@ -298,7 +303,10 @@ export class TemplateTreeBuilder {
     templatesMap: Record<string, Template>,
   ): Promise<Result<void>> {
     for (const remoteRef of remoteRefs) {
-      const refAbsolute = path.resolve(context.absoluteRootDir, remoteRef.refDir);
+      const refAbsolute = path.resolve(
+        context.absoluteRootDir,
+        remoteRef.refDir,
+      );
       const intendedParentDir = path.dirname(refAbsolute);
       const parent = templatesMap[intendedParentDir];
 
@@ -378,7 +386,8 @@ export class TemplateTreeBuilder {
       return { data: undefined };
     }
 
-    const branchResult = await this.gitService.getCurrentBranch(absoluteRootDir);
+    const branchResult =
+      await this.gitService.getCurrentBranch(absoluteRootDir);
     if ("error" in branchResult) {
       return { error: branchResult.error };
     }
@@ -393,17 +402,22 @@ export class TemplateTreeBuilder {
     skipBranchResolution?: boolean,
     commitHashOverride?: string,
     trackedRevision?: string,
+    devTemplates?: boolean,
   ): Promise<Result<TemplateBuildContext>> {
     const absoluteBaseDir = path.dirname(absoluteRootDir);
-    const isRepoCleanResult = await this.gitService.isGitRepoClean(
-      absoluteBaseDir,
-    );
-    if ("error" in isRepoCleanResult) {
-      return { error: isRepoCleanResult.error };
-    }
-    if (!isRepoCleanResult.data) {
-      backendLogger.warn(`Ignoring template because the repo is not clean`);
-      return { error: "Template dir is not clean" };
+    if (!devTemplates) {
+      const isRepoCleanResult =
+        await this.gitService.isGitRepoClean(absoluteBaseDir);
+      if ("error" in isRepoCleanResult) {
+        return { error: isRepoCleanResult.error };
+      }
+      if (!isRepoCleanResult.data) {
+        backendLogger.warn(`Ignoring template because the repo is not clean`);
+        return { error: "Template dir is not clean" };
+      }
+    } else if (!TemplateTreeBuilder.devTemplatesWarningLogged) {
+      backendLogger.warn("Using dev templates; dirty working tree allowed.");
+      TemplateTreeBuilder.devTemplatesWarningLogged = true;
     }
 
     const commitHashResult = commitHashOverride
@@ -437,6 +451,7 @@ export class TemplateTreeBuilder {
   private async loadTemplateConfigs(
     absoluteRootDir: string,
     commitHash: string,
+    devTemplates?: boolean,
   ): Promise<
     Result<{
       configs: Record<string, TemplateConfigWithFileInfo>;
@@ -447,6 +462,7 @@ export class TemplateTreeBuilder {
       const configs = await this.templateConfigLoader.loadAllTemplateConfigs(
         absoluteRootDir,
         commitHash,
+        { devTemplates },
       );
       return { data: configs };
     } catch (error) {

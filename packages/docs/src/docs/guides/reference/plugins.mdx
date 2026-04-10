@@ -1,0 +1,51 @@
+---
+title: Plugins
+authors: []
+sidebar_position: 4
+---
+
+Skaff plugins extend template generation, CLI workflows, and the web interface.
+Templates opt in via the `plugins` array in `templateConfig.ts`, and Skaff
+activates only **pre-registered** plugins.
+
+## Installation surfaces
+
+| Environment | Installation method | Notes |
+| ----------- | ------------------- | ----- |
+| **CLI** | `skaff plugins install <package>` | Uses oclif's plugin system. Required for template plugins and CLI-only plugins. |
+| **Web (Docker)** | `SKAFF_PLUGINS` build argument | Plugins are bundled at build time; runtime installs are not supported. |
+| **Web (Nix)** | `plugins` parameter | Nix builds inject plugin packages into the build. |
+| **Library** | npm dependency + `registerPluginModules` | Programmatic use in custom tooling. |
+
+Templates requiring missing plugins remain visible but disabled, with a message
+showing which plugins or versions are missing.
+
+## Trust levels
+
+Skaff assigns a trust level to each plugin package:
+
+| Trust Level | Description |
+| ----------- | ----------- |
+| **official** | From `@skaff/*` or `@timonteutelink/*` scopes, maintained by the Skaff team. |
+| **verified** | Published with npm provenance linking to a source repository. |
+| **community** | Standard npm package without provenance verification. |
+| **private** | From a private registry (your organization owns the trust decision). |
+| **unknown** | Trust could not be determined. |
+
+The CLI and web UI warn when installing or using non-official plugins. These
+warnings are informational—they do not block installation.
+
+## Compatibility rules
+
+- Templates can specify a semver range for each plugin. Skaff checks the range
+  against installed versions.
+- When multiple plugins are required, ordering is controlled by `dependsOn` and
+  `weight` hints.
+- Plugins can be split by surface area (e.g. base generation, CLI commands, web
+  UI stages) so templates depend only on the pieces they need.
+
+## Where plugin input lives
+
+Plugin input is stored in `templateSettings.json` under each instance’s
+`templateSettings.plugins` object. Plugin output is recomputed at generation
+and diff time to keep outputs deterministic.

@@ -27,7 +27,6 @@
   <a href="https://discord.gg/efVC93Cr">Discord</a>
 </p>
 
-
 ## Installation
 
 The CLI can be used without a global install.
@@ -76,7 +75,7 @@ bunx @timonteutelink/skaff project new banana \
   fastapi
 ```
 
-This will clone or fetch the `fastapi` template, prompt you for required values and options, then produce a ready‑to‑run FastAPI application. For an overview of available commands and options, run:
+This will clone the `fastapi` template, prompt you for required values and options, then produce a ready‑to‑run FastAPI application. For an overview of available commands and options, run:
 
 ```bash
 skaff --help
@@ -91,11 +90,11 @@ skaff --help
 
 - **One‑command scaffolding.** Generate a new project or apply a subtemplate with a single command or click. A guided prompt collects the name, options and feature flags and applies them consistently across all files and configs.
 - **Diff preview and patching.** skaff shows you exactly what will be created or changed. For existing projects it generates a git patch so you can inspect and commit the changes yourself.
-![Preview Patching](assets/previewPatching.png)
+  ![Preview Patching](assets/previewPatching.png)
 - **Multi‑platform distribution.** Use it instantly via `npx` or `bunx`, install globally with npm or bun, download a prebuilt binary, or run it as a reproducible Nix flake.
 - **Visual Web UI.** A Next.js powered interface allows you to browse templates, fill in form fields, preview the resulting file tree or diff, and apply patches without touching the terminal
-- **Flexible configuration.** Configure where your templates live and where to create projects through a simple JSON config or environment variables like `TEMPLATE_DIR_PATHS`, `PROJECT_SEARCH_PATHS`. Point Skaff at local directories or GitHub repositories and it will clone the latest templates for you. Skaff recognises GitHub repositories declared as shorthand (`github:`/`gh:`), full HTTPS or SSH URLs, and even `file://` URIs. Append `@branch` (for shorthands) or `#branch` (for URLs) to pin a specific branch when loading templates.
-- **Language agnostic.** Templates can target any stack like FastAPI, React, Go and Rust as long as they ship a schema. Additional template repositories can be referenced with `--repo` or configured once in `settings.json`.
+- **Flexible configuration.** Configure where your templates live and where to create projects through a simple JSON config or environment variables like `TEMPLATE_DIR_PATHS`, `PROJECT_SEARCH_PATHS`. Point Skaff at local directories or GitHub repositories and it will clone the latest templates for you. Skaff recognises GitHub repositories declared as shorthand (`github:`/`gh:`), full HTTPS or SSH URLs, and even `file://` URIs. Append `@branch` (for shorthands) or `#branch` (for URLs) to pin a specific branch when loading templates. For local iteration, enable dev mode with `skaff --dev-templates` or `SKAFF_DEV_TEMPLATES=1` to allow dirty working trees and cache-busting for template configs.
+- **Language agnostic.** Templates can target any stack like FastAPI, React, Go and Rust as long as a project can be contained in a git repository. Additional template repositories can be referenced with `--repo` or configured once in `settings.json`.
 
 ## How it works
 
@@ -109,6 +108,114 @@ When you invoke skaff, it will:
 
 Templates may also include tasks, linting and formatting setups so that your new project is productive out of the box.
 
+## Plugin discovery and extensibility
+
+- Each `templateConfig.ts` can declare an optional `plugins` array describing plugin module specifiers and options. Skaff only
+  activates a plugin when that specific template is being generated.
+- A shared loader exported from `@timonteutelink/skaff-lib` (`loadPluginsForTemplate`) activates only **pre-registered** plugins.
+  Environments must register plugins at startup (CLI via oclif, Web via build-time registry, or library consumers via
+  `registerPluginModules`) before templates can use them.
+- Plugin declarations can include explicit `dependsOn` and `weight` hints to stabilize hook execution order across runs when
+  multiple plugins are enabled.
+- Plugins target the `TemplateGenerationPlugin` interface, which receives a `PipelineBuilder` seeded with the default stages so
+  they can inject, replace or remove steps while keeping the base pipeline intact and deterministic when no plugins load.
+- CLI and Web plugin entrypoints can be exported as factories that receive `{ template, options, projectContext }`, allowing
+  UI hooks to use template-scoped plugin options alongside a safe template view and read-only project metadata.
+- Template settings are the single source of truth; plugins can surface UI or CLI stages to suggest or update settings, while
+  templates own the schema that gets persisted to `templateSettings.json`.
+- Plugins can export a `requiredTemplateSettingsSchema` that templates should merge or extend into their own
+  `templateSettingsSchema` (for example, `templateSettingsSchema.merge(pluginRequiredSchema)`), ensuring plugin-required
+  fields are validated. Skaff warns when a template does not satisfy a plugin’s required settings schema.
+- CLI plugins can surface commands through `skaff plugin run --list` / `--command <name>` while web plugins return lightweight
+  notices that the UI can render next to project details.
+- Template authors who publish plugin-specific type helpers can keep them separate from runtime code—for example, the
+  `@timonteutelink/skaff-plugin-greeter-types` package demonstrates a declaration-only helper that templates can import to type
+  their plugin options without adding runtime weight.
+- Example plugins can be split by surface area: the greeter sample ships as
+  `@timonteutelink/skaff-plugin-greeter` (generation pipeline),
+  `@timonteutelink/skaff-plugin-greeter-cli` (commands and interactive
+  settings wrappers), and `@timonteutelink/skaff-plugin-greeter-web` (React UI
+  stages) so templates only depend on the pieces they need.
+
+### Plugin installation
+
+Plugins are installed differently depending on the environment:
+
+| Environment      | Installation Method               | When to Use             |
+| ---------------- | --------------------------------- | ----------------------- |
+| **CLI**          | `skaff plugins install <package>` | Interactive development |
+| **Web (Docker)** | `SKAFF_PLUGINS` build arg         | Production deployments  |
+| **Web (Nix)**    | `plugins` parameter               | Nix-based deployments   |
+| **Library**      | npm dependency in `package.json`  | Programmatic usage      |
+
+Plugins can declare bundle metadata in their `package.json` under `skaff.bundle` to
+connect a base plugin to CLI or Web variants. The CLI automatically installs the
+`bundle.cli` package when you install the base plugin, and Web builds expand base
+plugin entries in `SKAFF_PLUGINS` to include the `bundle.web` package.
+
+**CLI Example:**
+
+```bash
+skaff plugins install @skaff/plugin-greeter
+skaff plugins list
+skaff plugins check  # Check if project's required plugins are installed
+```
+
+**Docker Example:**
+
+```bash
+docker build \
+  --build-arg SKAFF_PLUGINS="@skaff/plugin-greeter @skaff/plugin-docker" \
+  -t my-skaff-web .
+```
+
+### Plugin trust levels
+
+Skaff implements a trust hierarchy to help you make informed decisions about third-party plugins:
+
+| Trust Level   | Badge         | Description                                                                 |
+| ------------- | ------------- | --------------------------------------------------------------------------- |
+| **Official**  | `✓ Official`  | From `@skaff/*` or `@timonteutelink/*` scopes, maintained by the Skaff team |
+| **Verified**  | `✓ Verified`  | Has npm provenance attestation linking to source repository                 |
+| **Community** | `⚠ Community` | Standard npm package without provenance verification                        |
+| **Private**   | `◉ Private`   | From a private npm registry                                                 |
+
+When installing or using non-official plugins, Skaff displays warnings to remind you to review the source code. Trust levels are informational—they warn but don't block installation.
+
+Templates that require plugins not installed in your environment are displayed but disabled, with a clear message indicating which plugins are missing.
+
+## Security
+
+Skaff executes user‑provided template code (such as `templateConfig.ts` and plugins) in a hardened sandbox powered by [SES (Secure ECMAScript)](https://github.com/endojs/endo/tree/master/packages/ses). This ensures that untrusted code cannot escape its boundaries.
+
+### Sandbox guarantees
+
+| Property                    | Description                                                                                                                                                                    |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **No filesystem access**    | Sandboxed code cannot read, write or list files.                                                                                                                               |
+| **No network access**       | No `fetch`, `XMLHttpRequest` or Node.js `http` available.                                                                                                                      |
+| **No process/environment**  | `process`, `child_process` and environment variables are blocked.                                                                                                              |
+| **Frozen intrinsics**       | All built‑in prototypes (`Object`, `Array`, `Function`, etc.) are frozen after `lockdown()`, preventing prototype pollution.                                                   |
+| **Deterministic execution** | `Date.now()` and `Math.random()` are disabled by default for reproducible builds.                                                                                              |
+| **Whitelisted imports**     | Only explicitly allowed modules can be `require()`d: `yaml`, `zod`, and `@timonteutelink/template-types-lib`. Plugins may receive extra environment-registered stubs (for example, the Web UI registers a minimal React stub via `registerPluginSandboxLibraries`). |
+
+### Where sandboxing is applied
+
+All untrusted code paths go through `HardenedSandboxService`:
+
+1. **Template configuration** – `templateConfig.ts` files are bundled and evaluated via `evaluateCommonJs()`.
+2. **Plugin code** – Plugins declared by templates are loaded and executed in the same sandbox.
+3. **`mapFinalSettings`** – Custom settings transformers run via `invokeFunction()`.
+4. **Side‑effect transforms** – Transform functions in side effects execute sandboxed.
+5. **Handlebars helpers** – Helpers defined in templates run via `invokeFunctionWithArgs()`.
+
+### Limitations
+
+- **No timeout enforcement.** SES accepts a `timeoutMs` option but does not enforce it. Infinite loops in template code will block execution.
+- **Memory limits.** There is currently no memory cap; a template could allocate unbounded memory.
+
+For details see `packages/skaff-lib/src/core/infra/hardened-sandbox.ts`.
+
 ## CLI
 
 The CLI follows the standard `skaff <command> [options]` pattern. Common commands include:
@@ -117,6 +224,18 @@ The CLI follows the standard `skaff <command> [options]` pattern. Common command
 - `skaff help [command]` – print detailed help for a command.
 
 Run `skaff --help` to see the full list of commands and flags.
+
+### Plugin settings
+
+The Web UI and CLI share the same system-wide plugin settings stored in
+`~/.config/skaff/settings.json`. Use these commands to manage per-plugin
+settings from the terminal:
+
+```bash
+skaff plugin-settings get
+skaff plugin-settings set @skaff/plugin-greeter '{"greeting":"Hello"}'
+skaff plugin-settings remove @skaff/plugin-greeter
+```
 
 ## Web interface
 
@@ -144,14 +263,33 @@ bun --filter apps/web dev
 
 Open http://localhost:3000 to access the interface. When running locally the app uses your home directory’s `~/.config/skaff` by default, and you can update the settings through the UI.
 
+The Web UI build automatically generates an empty plugin registry when no web
+plugins are installed, so a fresh checkout can start without extra setup. To add
+plugins later, set `SKAFF_PLUGINS` and rebuild (`bun --filter apps/web build`) or
+run `bun --filter apps/web generate:plugins`.
+
 ## Contributing
 
-We appreciate contributions of all kinds. Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for the full guide. In summary:
+We appreciate contributions of all kinds. Please see the
+[contributing guide](https://timonteutelink.github.io/skaff/docs/contributing)
+for the full guide. In summary:
 
 - Set up the monorepo with `bun install` and build the core libs
 - Use `bun test` to run unit tests, and run `bun format` / `bun lint` before committing
+- Skaff-lib tests require built JavaScript outputs for `template-types-lib` and `skaff-lib`. Use `bun run test:skaff-lib` from the repo root (or `bun run test:ci` in `packages/skaff-lib`) to build both before running Jest.
+- If skaff-lib tests fail, always rebuild `packages/template-types-lib` (`cd packages/template-types-lib && bun run build`) before re-running `cd packages/skaff-lib && bun run test`. If dependency state is inconsistent, run `make cr` followed by `bun install` before rebuilding and retesting.
 - Work on a feature branch and open a Pull Request against `main`. PRs run continuous integration and should be kept focused
 - Releases are handled by maintainers via semantic versioning and GitHub Actions; you usually don’t need to publish packages yourself
+
+### Helpful local commands
+
+The Makefile and Turbo scripts expose short-hands for common flows:
+
+- **Clean + install:** `make cr && bun install`
+- **Build everything (libs + apps):** `make build-all`
+- **Build everything incl. Docker web image:** `make build-all-all`
+- **Run all tests registered in workspaces:** `bun run test`
+- **Run the required skaff-lib test suite:** `cd packages/skaff-lib && bun run test`
 
 ## License
 

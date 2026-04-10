@@ -4,7 +4,9 @@ authors: []
 sidebar_position: 1
 ---
 
-The web app wraps Skaff’s templating engine in a Next.js dashboard. Use it for demos, collaborative reviews, or when a form-driven workflow beats terminal prompts.
+The web app wraps Skaff’s templating engine in a Next.js dashboard. Use it for
+demos, collaborative reviews, or when a form-driven workflow beats terminal
+prompts.
 
 ## Run the app
 
@@ -16,10 +18,12 @@ docker run --rm \
   -v ~/.config/skaff:/app/.config/skaff \
   -v ~/.cache/skaff:/app/.cache/skaff \
   -v ~/projects:/projects \
-  timonteutelink/skaff-web:latest
+  timonteutelink/skaff:latest
 ```
 
-Mount the config and cache directories so the web app reads the same settings and repositories as the CLI. Bind any project folders you want to edit into `/projects`.
+Mount the config and cache directories so the web app reads the same settings
+and repositories as the CLI. Bind any project folders you want to edit into
+`/projects`.
 
 ### Local development
 
@@ -32,15 +36,27 @@ The dev server listens on port 3000 and hot reloads as you edit the interface.
 
 ## Use the workflow
 
-1. **Select a template.** The Templates view lists every root template available via your configuration and lets you load new Git repositories on demand with the “Load from Github” action.
-2. **Fill in the form.** Fields and validation rules are derived from the template’s Zod schema.
-3. **Preview the diff.** Inspect new files, edits, and removals before applying changes.
-4. **Generate files.** Choose a destination directory and apply the patch. Skaff updates `templateSettings.json` automatically.
+1. **Select a template.** The Templates view lists every root template available
+   via your configuration and lets you load new Git repositories on demand.
+2. **Fill in the form.** Fields and validation rules are derived from the
+   template’s Zod schema.
+3. **Preview the diff.** Inspect new files, edits, and removals before applying
+   changes.
+4. **Generate files.** Choose a destination directory and apply the patch. Skaff
+   updates `templateSettings.json` automatically.
 
-Return later to add subtemplates, apply template updates, or run template-defined commands directly from the browser. Reference the [project README](https://github.com/timonteutelink/skaff#readme) for environment variables, release processes, and repository structure.
+## Plugin support
+
+The web interface bundles plugins at build time only. To include plugins in
+Docker builds, pass the `SKAFF_PLUGINS` build argument when creating your image.
+At runtime, templates that depend on missing or incompatible plugins are
+disabled with a clear message.
 
 ## Troubleshooting
 
-- Templates not showing up? Verify the mount paths inside the container and ensure repositories are accessible.
-- Seeing stale content? Clear cached repositories with `skaff template erase-cache` and reload the app.
-- Patch failures? Resolve conflicts in your editor, then retry the action—the UI surfaces detailed errors in toast notifications.
+- Templates not showing up? Verify the mount paths inside the container and
+  ensure repositories are accessible.
+- Seeing stale content? Clear cached repositories with `skaff template
+  erase-cache` and reload the app.
+- Patch failures? Resolve conflicts in your editor, then retry the action—the UI
+  surfaces detailed errors in toast notifications.

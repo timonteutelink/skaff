@@ -1,13 +1,13 @@
 import z from "zod";
-import { HelperDelegate } from "handlebars";
 import {
   StringOrCallback,
   UserTemplateSettings,
   AnyOrCallback,
   FinalTemplateSettings,
-  AiResultsObject,
 } from "./utils";
-import { ProjectSettings } from "./project-settings-types";
+import { ReadonlyProjectContext } from "./sandbox-safe-types";
+
+export type HelperDelegate = (...args: any[]) => any;
 
 /**
  * Interface representing all mandatory options for a template.
@@ -53,22 +53,39 @@ export const templateConfigSchema = z.object({
 export type TemplateConfig = z.infer<typeof templateConfigSchema>;
 
 /**
- * Type representing a function that has side effects when generating a template.
- * @param templateSettings - The template settings the user inputted when generating the template.
- * @param oldFileContents - The old contents of the file to be edited, if any.
- * @returns The new contents of the file.
+ * Input provided to a side effect transform function.
  */
-export type SideEffectFunction<
+export interface SideEffectInput<
   TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
-> = (
-  templateSettings: TFinalSettings,
-  oldFileContents?: string,
-) => Promise<string | null>;
+> {
+  /** The final template settings for this template instance */
+  templateSettings: TFinalSettings;
+  /** The existing contents of the file, or undefined if file doesn't exist */
+  existingContents?: string;
+}
+
+/**
+ * Type representing a pure transform function for side effects.
+ *
+ * This function MUST be pure (no side effects, no I/O). It receives the template
+ * settings and existing file contents, and returns the new file contents.
+ * The host environment handles all actual file I/O.
+ *
+ * @param input - The input containing template settings and existing file contents
+ * @returns The new contents of the file, or null to skip writing
+ */
+export type SideEffectTransform<
+  TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
+> = (input: SideEffectInput<TFinalSettings>) => string | null;
 
 export type SideEffect<
   TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
 > = {
-  apply: SideEffectFunction<TFinalSettings>;
+  /**
+   * Pure transform function that computes new file contents.
+   * Must be synchronous and have no side effects - all I/O is handled by the host.
+   */
+  transform: SideEffectTransform<TFinalSettings>;
   /**
    * The path to the file to be created or edited.
    * relative to project root
@@ -149,46 +166,49 @@ export type TemplateCommand<
   command: StringOrCallback<TFinalSettings>;
 };
 
-export type AiContext = {
-  description: string;
-  relevantFiles?: string[];
-};
-
 export type TemplateParentReference = {
   templateName: string;
   repoUrl?: string;
   versionConstraint?: string;
 };
 
-export type LLMTools = {
-  llm: (input: string) => Promise<string>;
-};
+export type TemplatePluginConfig = {
+  /** Module specifier that resolves from the template repository. */
+  module: string;
 
-//TODO: Ai settings will go in the tool env vars.
-export type AiCallbackFunction<
-  TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
-> = (
-  llmTools: LLMTools,
-  templateSettings: TFinalSettings,
-) => Promise<Record<string, string>>;
+  /**
+   * Semver version constraint for the plugin.
+   * If specified, the installed plugin version must satisfy this constraint.
+   * Uses standard semver range syntax (e.g., "^1.0.0", ">=2.0.0 <3.0.0", "1.x").
+   *
+   * @example "^1.0.0" - Compatible with 1.0.0 and above, but less than 2.0.0
+   * @example ">=2.0.0" - Version 2.0.0 or higher
+   * @example "1.2.3" - Exact version match
+   */
+  version?: string;
 
-export type AiAutoGenerateSettings<
-  TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
-> = {
-  expectedKeys: AnyOrCallback<TFinalSettings, string[]>;
-  callback: AiCallbackFunction<TFinalSettings>;
-};
+  /**
+   * Optional named export to use instead of the module's default export.
+   * When omitted, the default export is treated as the plugin entry.
+   */
+  exportName?: string;
 
-export type AiUserConversationSettings<
-  TFinalSettings extends FinalTemplateSettings = FinalTemplateSettings,
-> = {
-  expectedKeys: AnyOrCallback<TFinalSettings, string[]>;
+  /**
+   * Arbitrary configuration passed to the plugin factory (if it exposes one).
+   */
+  options?: unknown;
 
-  expectedResults: AnyOrCallback<TFinalSettings, string[]>;
+  /**
+   * Ordered list of plugin names or module specifiers that must run before this plugin.
+   * Use this to declare explicit dependencies when plugin execution order matters.
+   */
+  dependsOn?: string[];
 
-  prompt: StringOrCallback<TFinalSettings>;
-
-  // tools?
+  /**
+   * Weight to influence plugin ordering when no dependencies apply.
+   * Lower weights run earlier; higher weights run later.
+   */
+  weight?: number;
 };
 
 export interface TemplateMigration {
@@ -205,10 +225,10 @@ export interface TemplateMigration {
 export interface TemplateConfigModule<
   TParentFinalSettings extends FinalTemplateSettings,
   TInputSettingsSchema extends z.ZodObject<UserTemplateSettings>,
-  TFinalSettingsSchema extends z.ZodObject<UserTemplateSettings> = TInputSettingsSchema,
-  TAiResultsObject extends AiResultsObject = {},
+  TFinalSettingsSchema extends z.ZodObject<UserTemplateSettings> =
+    TInputSettingsSchema,
   TInputSettings extends UserTemplateSettings = z.output<TInputSettingsSchema>,
-  TFinalSettings extends FinalTemplateSettings = z.output<TFinalSettingsSchema>
+  TFinalSettings extends FinalTemplateSettings = z.output<TFinalSettingsSchema>,
 > {
   /**
    * The target path for the template. Must be set on subtemplates.
@@ -236,12 +256,17 @@ export interface TemplateConfigModule<
   /**
    * The final settings type mapping after the user inputted settings are merged with the template settings.
    * This is the type that will be used to generate the template.
+   *
+   * BIJECTIONAL GENERATION: Templates receive only their own settings, parent
+   * settings, and basic project metadata. They cannot access other templates'
+   * settings, ensuring the same input always produces the same output regardless
+   * of which other templates exist in the project.
    */
   mapFinalSettings: (inputSettings: {
-    fullProjectSettings: ProjectSettings;
+    /** Read-only project metadata (name, author, root template) */
+    projectContext: ReadonlyProjectContext;
     templateSettings: TInputSettings;
     parentSettings?: TParentFinalSettings;
-    aiResults: TAiResultsObject;
   }) => TFinalSettings;
 
   /**
@@ -260,10 +285,7 @@ export interface TemplateConfigModule<
   /**
    * Side effects to be applied when generating the template.
    */
-  sideEffects?: AnyOrCallback<
-    TFinalSettings,
-    SideEffect<TFinalSettings>[]
-  >;
+  sideEffects?: AnyOrCallback<TFinalSettings, SideEffect<TFinalSettings>[]>;
 
   /**
    * Redirects of files or directories to another location based from project root.
@@ -291,7 +313,7 @@ export interface TemplateConfigModule<
   /**
    * A list of helper functions provided to handlebars before rendering the template.
    */
-  handlebarHelpers?: Record<string, HelperDelegate>
+  handlebarHelpers?: Record<string, HelperDelegate>;
 
   /**
    * A list of commands the user might want to run inside the project. Related to this template. Executed using bash.
@@ -299,28 +321,12 @@ export interface TemplateConfigModule<
   commands?: TemplateCommand<TFinalSettings>[];
 
   /**
-   * A description of this template. Usefull for the AI.
-   * When instantiating a child template this description will be used to describe the the things this template adds.
-   */
-  aiContext?: AnyOrCallback<TFinalSettings, AiContext>;
-
-  /**
-   * Ai auto generation settings.
-   * This is invoked to add ai generated vars to the template.
-   * Provides the expected keys the ai will produce.
-   * In the template ai_results will be a Record string string where the expected keys are the ones provided here.
-   * These have to be provided to generate the template so this function needs to return these keys.
-   */
-  aiAutoGenerate?: AiAutoGenerateSettings<TFinalSettings>;
-
-  /**
-   * Ai user conversation settings.
-   * These settings are used to start a conversation with the user. After the conversation is resolved the ai will call the final conversation ending tool and the ai should provide the expected keys otherwise generation will fail. Allow the user to retry a conversation if the ai doesnt provide the keys or if the user wants to modify the keys. Show all results to user before actually using the ai generated results in the template. All ai results will also go inside the templateSettings. Bit ugly but otherwise needs to go in a hidden file or a subdir.
-   */
-  aiUserConversationSettings?: AiUserConversationSettings<TFinalSettings>[];
-
-  /**
    * Optional references to parent templates that may host this template as a detached subtree.
    */
   possibleParentTemplates?: TemplateParentReference[];
+
+  /**
+   * Optional plugins that should participate when this template is generated.
+   */
+  plugins?: TemplatePluginConfig[];
 }

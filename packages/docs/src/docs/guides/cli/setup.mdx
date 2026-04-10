@@ -4,16 +4,18 @@ authors: []
 sidebar_position: 2
 ---
 
-Skaff reads configuration from three sources, merged in this order: environment variables, `~/.config/skaff/settings.json`, and runtime flags. Use the CLI to keep everything aligned.
+Skaff reads configuration from three sources, merged in this order: environment
+variables, `~/.config/skaff/settings.json`, and runtime flags. Use the CLI to
+keep everything aligned.
 
 ## Manage settings
 
 ```bash
 # add directories that contain template repositories
-skaff config add ~/skaff-example-templates TEMPLATE_DIR_PATHS
+skaff config add ~/templates TEMPLATE_DIR_PATHS
 
 # add a GitHub repository (defaults to the main branch)
-skaff config add github:timonteutelink/skaff-example-templates TEMPLATE_DIR_PATHS
+skaff config add github:timonteutelink/example-templates TEMPLATE_DIR_PATHS
 
 # optionally tell Skaff where to find existing projects
 skaff config add ~/code PROJECT_SEARCH_PATHS
@@ -25,15 +27,25 @@ skaff config set NPM_PATH bunx
 skaff config get --format table
 ```
 
-Move the configuration file by exporting `SKAFF_CONFIG_PATH` before running commands.
+Set `SKAFF_CONFIG_PATH` to a **directory** to relocate the config file
+(`settings.json` will be created inside it).
+
+## Cache and dev settings
+
+- `SKAFF_CACHE_PATH` overrides the template cache directory. When unset, Skaff
+  uses an OS temp directory.
+- `--dev-templates` (or `SKAFF_DEV_TEMPLATES=1`) allows dirty template
+  repositories and skips strict commit hash checks during template development.
 
 ## Load template repositories
 
 Clone or refresh templates on demand:
 
 ```bash
-skaff template load github:org/templates
+skaff template load github:org/templates --branch main
 skaff template list --format table
 ```
 
-Skaff caches repositories under `~/.cache/skaff`. Use `skaff template reload` to fetch the latest commits or `skaff template erase-cache` to clear stale copies.
+Use `skaff template reload` to fetch the latest commits for cached repos,
+`skaff template load --refresh` to force a refresh for a specific repo, or
+`skaff template erase-cache` to clear stale copies.

@@ -3,6 +3,7 @@
 	"private": true,
 	"packageManager": "bun@1.2.15",
 	"scripts": {
+		"build": "bun run docs",
 		"dev": "docusaurus start --port 3100",
 		"clean": "rm -rf build .docusaurus src/docs/skaff-lib src/docs/lib src/docs/template-types-lib src/docs/cli dist temp",
 		"gen:template-types-lib-api": "cd ../template-types-lib && bun run build && cd ../docs && mkdir -p src/docs/template-types-lib && api-extractor run -c template-types-lib-api-extractor.json --local --verbose",
@@ -10,7 +11,8 @@
 		"gen:cli": "cd ../../apps/cli && bun run build:dist && oclif readme --multi --output-dir=../../packages/docs/src/docs/cli && cd ../../packages/docs",
 		"docs": "bun run gen:template-types-lib-api && bun run gen:skaff-lib-api && bun run gen:cli && cp src/extra-pages/cli-index.mdx src/docs/cli/index.mdx && docusaurus build",
 		"devdocs": "bun run gen:template-types-lib-api && bun run gen:skaff-lib-api && bun run gen:cli && cp src/extra-pages/cli-index.mdx src/docs/cli/index.mdx && docusaurus start --port 3100",
-		"serve": "docusaurus serve"
+		"serve": "docusaurus serve",
+		"test": "bun run build"
 	},
 	"devDependencies": {
 		"@docusaurus/core": "^3.9.2",

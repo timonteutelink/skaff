@@ -1,14 +1,28 @@
 ---
 title: Maintain and share templates
 authors: []
-sidebar_position: 4
+sidebar_position: 5
 ---
 
 Treat templates like production code so consumers can trust them.
 
-- **Document options.** Add a README next to each root template describing required inputs, available subtemplates, and sample commands.
-- **Test rendered projects.** Run language-specific tests or smoke scripts after template changes to ensure outputs still build.
-- **Tag releases.** Create Git tags when major updates ship. Skaff stores commit hashes, but readable tags make diffs easier to track.
-- **Bundle examples.** Check in representative `templateSettings.json` files to demonstrate common scenarios. Users can feed them to `skaff project from-settings`.
-- **Review side effects.** Keep `sideEffects` deterministic and idempotent to avoid noisy diffs on repeated runs.
-- **Distribute accessibly.** Host repositories where your teams can reach them—private organisation Git, public GitHub, or archives referenced from the [main README](https://github.com/timonteutelink/skaff#readme).
+- **Document options.** Add a README next to each root template describing
+  required inputs, available subtemplates, and sample commands.
+- **Test rendered projects.** Run language-specific tests or smoke scripts after
+  template changes to ensure outputs still build.
+- **Tag releases.** Create Git tags when major updates ship. Skaff stores commit
+  hashes, but readable tags make diffs easier to track.
+- **Bundle examples.** Check in representative `templateSettings.json` files to
+  demonstrate common scenarios. Users can feed them to
+  `skaff project from-settings`.
+- **Review side effects.** Keep `sideEffects` deterministic and idempotent to
+  avoid noisy diffs on repeated runs.
+- **Document plugin requirements.** If templates require plugins, list them in
+  the template README so consumers can install the right packages before
+  generation.
+- **Distribute accessibly.** Host repositories where your teams can reach them:
+  private organisation Git, public GitHub, or archives referenced from the
+  [main README](https://github.com/timonteutelink/skaff#readme).
+
+When iterating locally, use `skaff --dev-templates` (or `SKAFF_DEV_TEMPLATES=1`)
+to bypass strict git cleanliness checks for your template repository.

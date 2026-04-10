@@ -16,6 +16,7 @@ import {
   retrieveTemplate,
   retrieveTemplateRevisionForProject,
 } from "@/app/actions/template";
+import { retrieveAllPluginSettings } from "@/app/actions/plugin-settings";
 import CommitButton from "@/components/general/git/commit-dialog";
 import { DiffVisualizerPage } from "@/components/general/git/diff-visualizer-page";
 import { TemplateSettingsForm } from "@/components/general/template-settings/template-settings-form";
@@ -31,13 +32,26 @@ import {
 } from "@timonteutelink/skaff-lib/browser";
 import { UserTemplateSettings } from "@timonteutelink/template-types-lib";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toastNullError } from "@/lib/utils";
 import {
   FileUploadDialog,
   JsonFile,
 } from "@/components/general/file-upload-dialog";
 import { ConfirmationDialog } from "@/components/general/confirmation-dialog";
+import {
+  loadWebTemplateStages,
+  loadWebTemplatePluginRequirements,
+  checkPluginCompatibility,
+  type WebPluginStageEntry,
+  type WebPluginRequirement,
+  type PluginCompatibilityResult,
+} from "@/lib/plugins/web-stage-loader";
+import { PluginCompatibilityDetails } from "@/components/general/plugins/plugin-compatibility";
+import {
+  buildSchemaAndDefaults,
+  normalizeNativeSchemaNode,
+} from "@/components/general/template-settings/schema-utils";
 
 // TODO: when updating to a new template version we should reiterate all settings of all templates for possible changes. Or we fully automate go directly to diff but require the template to setup sensible defaults for possible new options.
 
@@ -82,7 +96,30 @@ const TemplateInstantiationPage: React.FC = () => {
   const [appliedDiff, setAppliedDiff] = useState<ParsedFile[] | null>(null);
   const [storedFormData, setStoredFormData] =
     useState<UserTemplateSettings | null>(null);
-
+  const [settingsDraft, setSettingsDraft] =
+    useState<UserTemplateSettings | null>(null);
+  const [pluginStages, setPluginStages] = useState<WebPluginStageEntry[]>([]);
+  const [pluginRequirements, setPluginRequirements] = useState<
+    WebPluginRequirement[]
+  >([]);
+  const [pluginCompatibility, setPluginCompatibility] =
+    useState<PluginCompatibilityResult | null>(null);
+  const [pluginSettings, setPluginSettings] = useState<
+    Record<string, unknown> | null
+  >(null);
+  const [stageState, setStageState] = useState<Record<string, unknown>>({});
+  const [beforeStageIndex, setBeforeStageIndex] = useState(0);
+  const [afterStageIndex, setAfterStageIndex] = useState(0);
+  const [initStageIndex, setInitStageIndex] = useState(0);
+  const [finalizeStageIndex, setFinalizeStageIndex] = useState(0);
+  const [flowPhase, setFlowPhase] = useState<
+    "init" | "before" | "form" | "after" | "finalize"
+  >("before");
+  const [pendingSettings, setPendingSettings] =
+    useState<UserTemplateSettings | null>(null);
+  const [pendingFinalizeSettings, setPendingFinalizeSettings] =
+    useState<UserTemplateSettings | null>(null);
+  const lastInvalidStageKey = useRef<string | null>(null);
   useEffect(() => {
     if (!projectRepositoryNameParam) {
       toastNullError({
@@ -130,8 +167,7 @@ const TemplateInstantiationPage: React.FC = () => {
       (existingTemplateInstanceIdParam && templateInstanceIdParam)
     ) {
       toastNullError({
-        shortMessage:
-          "Provide exactly one instantiation mode.",
+        shortMessage: "Provide exactly one instantiation mode.",
       });
       router.push("/projects");
       return;
@@ -141,7 +177,7 @@ const TemplateInstantiationPage: React.FC = () => {
       let projectResult;
       let revisionResult;
       if (selectedDirectoryIdParam) {
-        revisionResult = await retrieveTemplate(templateNameParam!)
+        revisionResult = await retrieveTemplate(templateNameParam!);
       } else {
         [projectResult, revisionResult] = await Promise.all([
           retrieveProject(projectRepositoryNameParam),
@@ -150,9 +186,7 @@ const TemplateInstantiationPage: React.FC = () => {
       }
 
       const revision = toastNullError({
-        result: revisionResult as Result<
-          TemplateSummary | TemplateDTO | null
-        >,
+        result: revisionResult as Result<TemplateSummary | TemplateDTO | null>,
         shortMessage: "Error retrieving template.",
         nullErrorMessage: `Template not found for project: ${projectRepositoryNameParam}`,
         nullRedirectPath: "/projects",
@@ -234,6 +268,20 @@ const TemplateInstantiationPage: React.FC = () => {
     templateInstanceIdParam,
   ]);
 
+  useEffect(() => {
+    retrieveAllPluginSettings().then((settingsResult) => {
+      const settings = toastNullError({
+        result: settingsResult,
+        shortMessage: "Error retrieving plugin settings",
+      });
+      if (!settings) {
+        setPluginSettings(null);
+        return;
+      }
+      setPluginSettings(settings);
+    });
+  }, []);
+
   const subTemplate = useMemo(() => {
     if (!rootTemplate || !templateNameParam) {
       return null;
@@ -241,7 +289,287 @@ const TemplateInstantiationPage: React.FC = () => {
     return findTemplate(rootTemplate, templateNameParam);
   }, [rootTemplate, templateNameParam]);
 
-  const handleSubmitSettings = useCallback(
+  useEffect(() => {
+    let canceled = false;
+    if (!subTemplate || "error" in subTemplate || !subTemplate.data) {
+      setPluginStages([]);
+      setPluginRequirements([]);
+      setPluginCompatibility(null);
+      setStageState({});
+      setFlowPhase("form");
+      return;
+    }
+
+    if (pluginSettings === null) {
+      setPluginCompatibility(null);
+      setPluginStages([]);
+      setPluginRequirements([]);
+      setStageState({});
+      setFlowPhase("form");
+      return;
+    }
+
+    const compatibility = checkPluginCompatibility(
+      subTemplate.data,
+      pluginSettings,
+    );
+    setPluginCompatibility(compatibility);
+    if (!compatibility.compatible) {
+      setPluginStages([]);
+      setPluginRequirements([]);
+      setStageState({});
+      setFlowPhase("form");
+      return;
+    }
+
+    const projectContext = {
+      projectRepositoryName: projectRepositoryNameParam ?? "",
+      projectAuthor: project?.settings.projectAuthor ?? "",
+      rootTemplateName:
+        rootTemplate?.config.templateConfig.name ?? templateNameParam ?? "",
+    };
+
+    Promise.all([
+      loadWebTemplateStages(subTemplate.data, projectContext, pluginSettings),
+      loadWebTemplatePluginRequirements(subTemplate.data, pluginSettings),
+    ]).then(([stages, requirements]) => {
+      if (canceled) return;
+      setPluginStages(stages);
+      setStageState({});
+      setBeforeStageIndex(0);
+      setAfterStageIndex(0);
+      setInitStageIndex(0);
+      setFinalizeStageIndex(0);
+      setFlowPhase("init");
+    });
+
+    return () => {
+      canceled = true;
+    };
+  }, [
+    subTemplate,
+    projectRepositoryNameParam,
+    project?.settings.projectAuthor,
+    rootTemplate?.config.templateConfig.name,
+    templateNameParam,
+    pluginSettings,
+  ]);
+
+  // Now use entry.stateKey directly since it's pre-computed with proper namespacing
+  const getStageKey = useCallback(
+    (entry: WebPluginStageEntry) => entry.stateKey,
+    [],
+  );
+
+  const beforeStages = useMemo(
+    () =>
+      pluginStages.filter(
+        (entry) => entry.stage.placement === "before-settings",
+      ),
+    [pluginStages],
+  );
+  const initStages = useMemo(
+    () => pluginStages.filter((entry) => entry.stage.placement === "init"),
+    [pluginStages],
+  );
+  const afterStages = useMemo(
+    () =>
+      pluginStages.filter(
+        (entry) => entry.stage.placement === "after-settings",
+      ),
+    [pluginStages],
+  );
+  const finalizeStages = useMemo(
+    () => pluginStages.filter((entry) => entry.stage.placement === "finalize"),
+    [pluginStages],
+  );
+
+  const buildStageContext = useCallback(
+    (
+      entry: WebPluginStageEntry,
+      currentSettings: UserTemplateSettings | null,
+    ) => ({
+      templateName: templateNameParam ?? "",
+      projectRepositoryName: projectRepositoryNameParam ?? undefined,
+      currentSettings,
+      settingsDraft,
+      stageState: stageState[getStageKey(entry)],
+    }),
+    [
+      projectRepositoryNameParam,
+      getStageKey,
+      settingsDraft,
+      stageState,
+      templateNameParam,
+    ],
+  );
+
+  const updateStageState = useCallback((key: string, value: unknown) => {
+    setStageState((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  const validateStageState = useCallback(
+    (entry: WebPluginStageEntry, value: unknown) => {
+      if (!entry.stage.stateSchema) {
+        return true;
+      }
+
+      const parsed = entry.stage.stateSchema.safeParse(value);
+      if (!parsed.success) {
+        if (lastInvalidStageKey.current !== entry.stateKey) {
+          lastInvalidStageKey.current = entry.stateKey;
+          toastNullError({
+            shortMessage: `Stage state for "${entry.stage.id}" is invalid.`,
+            error: parsed.error,
+          });
+        }
+        return false;
+      }
+
+      if (lastInvalidStageKey.current === entry.stateKey) {
+        lastInvalidStageKey.current = null;
+      }
+      return true;
+    },
+    [],
+  );
+
+  const baseTemplateSettingsDefaultValues: Record<string, any> = useMemo(() => {
+    if (storedFormData && Object.keys(storedFormData).length > 0) {
+      return storedFormData;
+    }
+
+    if (
+      !subTemplate ||
+      !project ||
+      !existingTemplateInstanceIdParam ||
+      "error" in subTemplate ||
+      !subTemplate.data
+    ) {
+      return {};
+    }
+
+    const instantiatedSettings =
+      project.settings.instantiatedTemplates.find(
+        (t) =>
+          t.id === existingTemplateInstanceIdParam &&
+          t.templateName === subTemplate.data?.config.templateConfig.name,
+      )?.templateSettings || {};
+
+    return instantiatedSettings;
+  }, [subTemplate, project, existingTemplateInstanceIdParam, storedFormData]);
+
+  const stageInitialSettings = useMemo(() => {
+    if (settingsDraft && Object.keys(settingsDraft).length > 0) {
+      return settingsDraft;
+    }
+    if (
+      existingTemplateInstanceIdParam &&
+      Object.keys(baseTemplateSettingsDefaultValues).length > 0
+    ) {
+      return baseTemplateSettingsDefaultValues;
+    }
+    return storedFormData;
+  }, [
+    baseTemplateSettingsDefaultValues,
+    existingTemplateInstanceIdParam,
+    settingsDraft,
+    storedFormData,
+  ]);
+
+  const readonlyStageSettings = useMemo(() => {
+    if (!stageInitialSettings) return null;
+    return Object.freeze({ ...stageInitialSettings });
+  }, [stageInitialSettings]);
+
+  const ensureBeforeStage = useCallback(
+    async (startIndex = 0) => {
+      let cursor = startIndex;
+      while (cursor < beforeStages.length) {
+        const entry = beforeStages[cursor]!;
+        const context = buildStageContext(entry, readonlyStageSettings);
+        const skip = await entry.stage.shouldSkip?.(context);
+
+        if (!skip) {
+          setBeforeStageIndex(cursor);
+          setFlowPhase("before");
+          return;
+        }
+        cursor += 1;
+      }
+      setFlowPhase("form");
+    },
+    [beforeStages, buildStageContext, readonlyStageSettings],
+  );
+
+  const ensureInitStage = useCallback(
+    async (startIndex = 0) => {
+      let cursor = startIndex;
+      while (cursor < initStages.length) {
+        const entry = initStages[cursor]!;
+        const context = buildStageContext(entry, readonlyStageSettings);
+        const skip = await entry.stage.shouldSkip?.(context);
+
+        if (!skip) {
+          setInitStageIndex(cursor);
+          setFlowPhase("init");
+          return;
+        }
+        cursor += 1;
+      }
+      await ensureBeforeStage(0);
+    },
+    [initStages, buildStageContext, ensureBeforeStage, readonlyStageSettings],
+  );
+
+  useEffect(() => {
+    void ensureInitStage(0);
+  }, [ensureInitStage]);
+
+  const mergeDraftSettings = useCallback(
+    (settings: UserTemplateSettings) => ({
+      ...(settingsDraft ?? {}),
+      ...settings,
+    }),
+    [settingsDraft],
+  );
+
+  const ensureFinalizeStage = useCallback(
+    async (startIndex: number, settings: UserTemplateSettings) => {
+      let cursor = startIndex;
+      while (cursor < finalizeStages.length) {
+        const entry = finalizeStages[cursor]!;
+        const context = buildStageContext(entry, settings);
+        const skip = await entry.stage.shouldSkip?.(context);
+
+        if (!skip) {
+          setFinalizeStageIndex(cursor);
+          setFlowPhase("finalize");
+          return;
+        }
+        cursor += 1;
+      }
+
+      setPendingFinalizeSettings(null);
+      setFlowPhase("form");
+    },
+    [finalizeStages, buildStageContext],
+  );
+
+  const startFinalizeStages = useCallback(
+    async (settings: UserTemplateSettings) => {
+      if (!finalizeStages.length) {
+        setFlowPhase("form");
+        return;
+      }
+
+      setPendingFinalizeSettings(settings);
+      await ensureFinalizeStage(0, settings);
+    },
+    [finalizeStages, ensureFinalizeStage],
+  );
+
+  const processSettingsSubmission = useCallback(
     async (data: UserTemplateSettings) => {
       if (
         !projectRepositoryNameParam ||
@@ -255,13 +583,14 @@ const TemplateInstantiationPage: React.FC = () => {
         return;
       }
 
-      setStoredFormData(data);
+      const mergedSettings = mergeDraftSettings(data);
+      setStoredFormData(mergedSettings);
       if (selectedDirectoryIdParam) {
         const newProjectResult = await createNewProject(
           projectRepositoryNameParam,
           templateNameParam,
           selectedDirectoryIdParam,
-          data,
+          mergedSettings,
         );
 
         const newProject = toastNullError({
@@ -282,7 +611,9 @@ const TemplateInstantiationPage: React.FC = () => {
           return;
         }
 
-        if (project.settings.projectRepositoryName !== projectRepositoryNameParam) {
+        if (
+          project.settings.projectRepositoryName !== projectRepositoryNameParam
+        ) {
           toastNullError({
             shortMessage: "Project repository name does not match.",
           });
@@ -316,7 +647,7 @@ const TemplateInstantiationPage: React.FC = () => {
             subTemplateValue.config.templateConfig.name,
             parentTemplateInstanceIdParam!,
             projectRepositoryNameParam,
-            data,
+            mergedSettings,
           );
 
         const result = toastNullError({
@@ -337,7 +668,9 @@ const TemplateInstantiationPage: React.FC = () => {
           return;
         }
 
-        if (project.settings.projectRepositoryName !== projectRepositoryNameParam) {
+        if (
+          project.settings.projectRepositoryName !== projectRepositoryNameParam
+        ) {
           toastNullError({
             shortMessage: "Project repository name does not match.",
           });
@@ -355,7 +688,7 @@ const TemplateInstantiationPage: React.FC = () => {
 
         const templateModificationResult =
           await prepareTemplateModificationDiff(
-            data,
+            mergedSettings,
             projectRepositoryNameParam,
             existingTemplateInstanceIdParam,
           );
@@ -376,8 +709,11 @@ const TemplateInstantiationPage: React.FC = () => {
         });
         return;
       }
+
+      await startFinalizeStages(mergedSettings);
     },
     [
+      mergeDraftSettings,
       projectRepositoryNameParam,
       rootTemplate,
       subTemplate,
@@ -386,8 +722,121 @@ const TemplateInstantiationPage: React.FC = () => {
       templateNameParam,
       project,
       existingTemplateInstanceIdParam,
+      startFinalizeStages,
     ],
   );
+
+  const ensureAfterStage = useCallback(
+    async (startIndex: number, settings: UserTemplateSettings) => {
+      let cursor = startIndex;
+      while (cursor < afterStages.length) {
+        const entry = afterStages[cursor]!;
+        const context = buildStageContext(entry, settings);
+        const skip = await entry.stage.shouldSkip?.(context);
+
+        if (!skip) {
+          setAfterStageIndex(cursor);
+          setFlowPhase("after");
+          return;
+        }
+
+        cursor += 1;
+      }
+
+      setPendingSettings(null);
+      setFlowPhase("form");
+      await processSettingsSubmission(settings);
+    },
+    [afterStages, buildStageContext, processSettingsSubmission],
+  );
+
+  const startAfterStages = useCallback(
+    async (data: UserTemplateSettings) => {
+      setStoredFormData(data);
+      setPendingSettings(data);
+
+      if (afterStages.length === 0) {
+        await processSettingsSubmission(data);
+        setPendingSettings(null);
+        return;
+      }
+
+      await ensureAfterStage(0, data);
+    },
+    [afterStages, ensureAfterStage, processSettingsSubmission],
+  );
+
+  const normalizedSettingsSchema = useMemo(() => {
+    if (!subTemplate || "error" in subTemplate || !subTemplate.data) {
+      return null;
+    }
+    return normalizeNativeSchemaNode(
+      subTemplate.data.config.templateSettingsSchema,
+    );
+  }, [subTemplate]);
+
+  const settingsDraftSchema = useMemo(() => {
+    if (!normalizedSettingsSchema?.properties) return null;
+    const { schema } = buildSchemaAndDefaults(normalizedSettingsSchema);
+    return schema;
+  }, [normalizedSettingsSchema]);
+
+  const setDraftAndDefaults = useCallback(
+    (next: UserTemplateSettings | null) => {
+      if (!next) {
+        setSettingsDraft(null);
+        setStoredFormData(null);
+        return;
+      }
+      const merged = {
+        ...(settingsDraft ?? storedFormData ?? {}),
+        ...next,
+      };
+      setSettingsDraft(merged);
+      setStoredFormData(merged);
+    },
+    [settingsDraft, storedFormData],
+  );
+
+  const validateSettingsDraft = useCallback(() => {
+    if (!settingsDraft || !settingsDraftSchema) return true;
+    const parsed = settingsDraftSchema.safeParse(settingsDraft);
+    if (!parsed.success) {
+      toastNullError({
+        shortMessage: "Draft template settings are invalid.",
+        error: parsed.error,
+      });
+      return false;
+    }
+    return true;
+  }, [settingsDraft, settingsDraftSchema]);
+
+  const handleBeforeContinue = useCallback(() => {
+    if (!validateSettingsDraft()) {
+      return;
+    }
+    void ensureBeforeStage(beforeStageIndex + 1);
+  }, [beforeStageIndex, ensureBeforeStage, validateSettingsDraft]);
+
+  const handleInitContinue = useCallback(() => {
+    if (!validateSettingsDraft()) {
+      return;
+    }
+    void ensureInitStage(initStageIndex + 1);
+  }, [initStageIndex, ensureInitStage, validateSettingsDraft]);
+
+  const handleAfterContinue = useCallback(() => {
+    if (!pendingSettings) return;
+    void ensureAfterStage(afterStageIndex + 1, pendingSettings);
+  }, [afterStageIndex, ensureAfterStage, pendingSettings]);
+
+  const handleFinalizeContinue = useCallback(() => {
+    if (!pendingFinalizeSettings) return;
+    void ensureFinalizeStage(
+      finalizeStageIndex + 1,
+      pendingFinalizeSettings,
+    );
+  }, [finalizeStageIndex, ensureFinalizeStage, pendingFinalizeSettings]);
 
   const handleConfirmAppliedDiff = useCallback(
     async (commitMessage: string) => {
@@ -404,7 +853,10 @@ const TemplateInstantiationPage: React.FC = () => {
         return;
       }
 
-      const commitResult = await commitChanges(projectRepositoryNameParam, commitMessage);
+      const commitResult = await commitChanges(
+        projectRepositoryNameParam,
+        commitMessage,
+      );
 
       const commit = toastNullError({
         result: commitResult,
@@ -414,7 +866,9 @@ const TemplateInstantiationPage: React.FC = () => {
       if (commit === false) {
         return;
       }
-      router.push(`/projects/project/?projectRepositoryName=${projectRepositoryNameParam}`);
+      router.push(
+        `/projects/project/?projectRepositoryName=${projectRepositoryNameParam}`,
+      );
     },
     [router, projectRepositoryNameParam],
   );
@@ -522,7 +976,9 @@ const TemplateInstantiationPage: React.FC = () => {
         return;
       }
 
-      const resolveResult = await resolveConflictsAndDiff(projectRepositoryNameParam);
+      const resolveResult = await resolveConflictsAndDiff(
+        projectRepositoryNameParam,
+      );
 
       const resolved = toastNullError({
         result: resolveResult,
@@ -561,8 +1017,9 @@ const TemplateInstantiationPage: React.FC = () => {
         return;
       }
     } else {
-      const restoreResult =
-        await restoreAllChangesToCleanProject(projectRepositoryNameParam);
+      const restoreResult = await restoreAllChangesToCleanProject(
+        projectRepositoryNameParam,
+      );
       const restored = toastNullError({
         result: restoreResult,
         shortMessage: "Error restoring changes.",
@@ -580,29 +1037,25 @@ const TemplateInstantiationPage: React.FC = () => {
   }, []);
 
   const templateSettingsDefaultValues: Record<string, any> = useMemo(() => {
-    if (storedFormData && Object.keys(storedFormData).length > 0) {
-      return storedFormData;
+    if (settingsDraft && Object.keys(settingsDraft).length > 0) {
+      return settingsDraft;
     }
+    return baseTemplateSettingsDefaultValues;
+  }, [baseTemplateSettingsDefaultValues, settingsDraft]);
 
+  useEffect(() => {
     if (
-      !subTemplate ||
-      !project ||
-      !existingTemplateInstanceIdParam ||
-      "error" in subTemplate ||
-      !subTemplate.data
+      existingTemplateInstanceIdParam &&
+      !settingsDraft &&
+      Object.keys(baseTemplateSettingsDefaultValues).length > 0
     ) {
-      return {};
+      setSettingsDraft(baseTemplateSettingsDefaultValues as UserTemplateSettings);
     }
-
-    const instantiatedSettings =
-      project.settings.instantiatedTemplates.find(
-        (t) =>
-          t.id === existingTemplateInstanceIdParam &&
-          t.templateName === subTemplate.data?.config.templateConfig.name,
-      )?.templateSettings || {};
-
-    return instantiatedSettings;
-  }, [subTemplate, project, existingTemplateInstanceIdParam, storedFormData]);
+  }, [
+    existingTemplateInstanceIdParam,
+    settingsDraft,
+    baseTemplateSettingsDefaultValues,
+  ]);
 
   if (!projectRepositoryNameParam) {
     return (
@@ -624,6 +1077,118 @@ const TemplateInstantiationPage: React.FC = () => {
     return (
       <div className="container mx-auto py-10">
         <h1 className="text-2xl font-bold">Loading...</h1>
+      </div>
+    );
+  }
+
+  if (flowPhase === "init" && initStages[initStageIndex]) {
+    const entry = initStages[initStageIndex]!;
+    const key = getStageKey(entry);
+    validateStageState(entry, stageState[key]);
+
+    return (
+      <div className="container py-4 mx-auto">
+        {entry.stage.render({
+          templateName: templateNameParam ?? "",
+          projectRepositoryName: projectRepositoryNameParam ?? undefined,
+          currentSettings: readonlyStageSettings,
+          settingsDraft,
+          stageState: stageState[key],
+          setStageState: (value) => updateStageState(key, value),
+          setSettingsDraft: setDraftAndDefaults,
+          onContinue: () => {
+            if (!validateStageState(entry, stageState[key])) {
+              return;
+            }
+            handleInitContinue();
+          },
+        })}
+      </div>
+    );
+  }
+
+  if (flowPhase === "before" && beforeStages[beforeStageIndex]) {
+    const entry = beforeStages[beforeStageIndex]!;
+    const key = getStageKey(entry);
+    validateStageState(entry, stageState[key]);
+
+    return (
+      <div className="container py-4 mx-auto">
+        {entry.stage.render({
+          templateName: templateNameParam ?? "",
+          projectRepositoryName: projectRepositoryNameParam ?? undefined,
+          currentSettings: readonlyStageSettings,
+          settingsDraft,
+          stageState: stageState[key],
+          setStageState: (value) => updateStageState(key, value),
+          setSettingsDraft: setDraftAndDefaults,
+          onContinue: () => {
+            if (!validateStageState(entry, stageState[key])) {
+              return;
+            }
+            handleBeforeContinue();
+          },
+        })}
+      </div>
+    );
+  }
+
+  if (
+    flowPhase === "after" &&
+    afterStages[afterStageIndex] &&
+    pendingSettings
+  ) {
+    const entry = afterStages[afterStageIndex]!;
+    const key = getStageKey(entry);
+    validateStageState(entry, stageState[key]);
+
+    return (
+      <div className="container py-4 mx-auto">
+        {entry.stage.render({
+          templateName: templateNameParam ?? "",
+          projectRepositoryName: projectRepositoryNameParam ?? undefined,
+          currentSettings: pendingSettings,
+          settingsDraft,
+          stageState: stageState[key],
+          setStageState: (value) => updateStageState(key, value),
+          setSettingsDraft: setDraftAndDefaults,
+          onContinue: () => {
+            if (!validateStageState(entry, stageState[key])) {
+              return;
+            }
+            handleAfterContinue();
+          },
+        })}
+      </div>
+    );
+  }
+
+  if (
+    flowPhase === "finalize" &&
+    finalizeStages[finalizeStageIndex] &&
+    pendingFinalizeSettings
+  ) {
+    const entry = finalizeStages[finalizeStageIndex]!;
+    const key = getStageKey(entry);
+    validateStageState(entry, stageState[key]);
+
+    return (
+      <div className="container py-4 mx-auto">
+        {entry.stage.render({
+          templateName: templateNameParam ?? "",
+          projectRepositoryName: projectRepositoryNameParam ?? undefined,
+          currentSettings: pendingFinalizeSettings,
+          settingsDraft,
+          stageState: stageState[key],
+          setStageState: (value) => updateStageState(key, value),
+          setSettingsDraft: setDraftAndDefaults,
+          onContinue: () => {
+            if (!validateStageState(entry, stageState[key])) {
+              return;
+            }
+            handleFinalizeContinue();
+          },
+        })}
       </div>
     );
   }
@@ -655,7 +1220,7 @@ const TemplateInstantiationPage: React.FC = () => {
           )}
           <CommitButton
             onCommit={handleConfirmAppliedDiff}
-            onCancel={() => { }}
+            onCancel={() => {}}
           />
         </div>
       </div>
@@ -723,7 +1288,7 @@ const TemplateInstantiationPage: React.FC = () => {
   }
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full space-y-4">
       {selectedDirectoryIdParam ? (
         <div className="w-full h-16 bg-gray-50 border-b border-b-gray-300 flex items-center justify-end px-4">
           <FileUploadDialog
@@ -733,6 +1298,19 @@ const TemplateInstantiationPage: React.FC = () => {
           />
         </div>
       ) : null}
+      {pluginCompatibility && !pluginCompatibility.compatible ? (
+        <div className="px-4">
+          <PluginCompatibilityDetails
+            result={pluginCompatibility}
+            title="Required plugins missing"
+          />
+        </div>
+      ) : null}
+      {pluginCompatibility === null && pluginSettings === null ? (
+        <div className="px-4 text-sm text-muted-foreground">
+          Checking plugin compatibility and global settings...
+        </div>
+      ) : null}
       <TemplateSettingsForm
         projectRepositoryName={projectRepositoryNameParam}
         selectedTemplate={templateNameParam}
@@ -740,12 +1318,21 @@ const TemplateInstantiationPage: React.FC = () => {
           subTemplate.data.config.templateSettingsSchema
         }
         formDefaultValues={templateSettingsDefaultValues}
-        action={handleSubmitSettings}
+        action={startAfterStages}
         cancel={() => {
           router.push(
             `/projects/${projectRepositoryNameParam && !selectedDirectoryIdParam ? `project/?projectRepositoryName=${projectRepositoryNameParam}` : ""}`,
           );
         }}
+        submitDisabled={
+          pluginSettings === null ||
+          Boolean(pluginCompatibility && !pluginCompatibility.compatible)
+        }
+        submitDisabledReason={
+          pluginSettings === null
+            ? "Checking plugin compatibility..."
+            : "Install the required plugins to continue."
+        }
       />
     </div>
   );

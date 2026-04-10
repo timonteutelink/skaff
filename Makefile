@@ -1,5 +1,9 @@
-all: install-types build-types install-lib build-lib install-repo build-cli build-cli-nix build-web build-web-docker build-web-nix
+all: build-all
 	@echo "Built everything!"
+
+install:
+	bun install
+	@echo "Installed workspace dependencies!"
 
 install-types:
 	cd packages/template-types-lib && bun i
@@ -31,6 +35,18 @@ install-repo:
 
 ir: install-repo
 
+build:
+	bun run build
+	@echo "Built all Turbo packages!"
+
+build-libs:
+	bun run build:libs
+	@echo "Built all library packages!"
+
+build-apps:
+	bun run build:apps
+	@echo "Built all app packages!"
+
 build-cli:
 	cd apps/cli && bun run build:dist
 	@echo "Built CLI!"
@@ -47,6 +63,20 @@ build-web:
 	@echo "Built web!"
 
 bw: build-web
+
+build-erd-plugins:
+	cd packages/skaff-plugin-erd-types && bun run build
+	cd packages/skaff-plugin-erd && bun run build
+	cd packages/skaff-plugin-erd-web && bun run build
+	@echo "Built ERD plugins!"
+
+bep: build-erd-plugins
+
+build-web-nix:
+	nix build .#skaff-web
+	@echo "Built web via Nix!"
+
+bwn: build-web-nix
 
 build-web-docker:
 	cd apps/web && ./docker/build.sh
@@ -104,13 +134,34 @@ monorepo-prod:
 
 mp: monorepo-prod
 
-build-all: it il ir bt bl bc
+build-all: it il ir bt bl bep bc bw
+	@echo "Built core libs + CLI + Web!"
 
 ba: build-all
 
 build-all-all: build-all bwd
 
 baa: build-all-all
+
+test:
+	bun run test
+	@echo "Ran all Turbo test scripts!"
+
+test-skaff-lib:
+	cd packages/skaff-lib && bun run test
+	@echo "Ran skaff-lib test suite!"
+
+test-cli:
+	cd apps/cli && bun run test
+	@echo "Ran CLI test suite!"
+
+lint:
+	bun run lint
+	@echo "Ran all Turbo lint scripts!"
+
+check-types:
+	bun run check-types
+	@echo "Ran all Turbo type checks!"
 
 clean-repo:
 	rm -rf bun.lock node_modules apps/cli/node_modules apps/web/node_modules packages/template-types-lib/node_modules packages/template-types-lib/bun.lock packages/skaff-lib/node_modules packages/skaff-lib/bun.lock 

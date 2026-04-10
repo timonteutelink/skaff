@@ -1,37 +1,22 @@
 import { randomUUID } from "node:crypto";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import { builtinModules, createRequire } from "node:module";
 import ts from "typescript";
 
 import * as templateTypesLibNS from "@timonteutelink/template-types-lib";
-import * as handlebarsNS from "handlebars";
-import * as yamlNS from "yaml";
-import * as zodNS from "zod"; // full namespace object
 
-import { inject, injectable } from "tsyringe";
-
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { GenericTemplateConfigModule } from "../../../lib";
 import { normalizeGitRepositorySpecifier } from "../../../lib/git-repo-spec";
 import { getSkaffContainer } from "../../../di/container";
-import {
-  CacheServiceToken,
-  EsbuildInitializerToken,
-  TemplateConfigLoaderToken,
-} from "../../../di/tokens";
+import { TemplateConfigLoaderToken } from "../../../di/tokens";
 import type { CacheService } from "../../../core/infra/cache-service";
 import type { EsbuildInitializer } from "../../../utils/get-esbuild";
+import type { HardenedSandboxService } from "../../../core/infra/hardened-sandbox";
+import { getSandboxLibraries } from "../../../core/infra/sandbox-endowments";
 
 const { templateConfigSchema } = templateTypesLibNS;
-
-const SANDBOX_LIBS: Record<string, unknown> = {
-  "@timonteutelink/template-types-lib": templateTypesLibNS,
-  zod: zodNS,
-  handlebars: handlebarsNS,
-
-  // utils
-  yaml: yamlNS,
-};
 
 interface TemplateConfigFileInfo {
   configPath: string;
@@ -39,7 +24,7 @@ interface TemplateConfigFileInfo {
 }
 
 export type TemplateConfigWithFileInfo = {
-  templateConfig: GenericTemplateConfigModule
+  templateConfig: GenericTemplateConfigModule;
 } & TemplateConfigFileInfo;
 
 type TemplateRefEntry =
@@ -118,21 +103,133 @@ function extractTemplateRefEntries(raw: unknown): TemplateRefEntry[] {
   );
 }
 
-async function readTsConfig(): Promise<any> {
-  return {
-    "compilerOptions": {
-      "target": "ES2022",
-      "lib": ["ES2022"],
+const requireFromHere = createRequire(__filename);
 
-      "module": "NodeNext",
-      "moduleResolution": "NodeNext",
+function resolveSkaffLibRoot(): string {
+  try {
+    const pkgPath = requireFromHere.resolve(
+      "@timonteutelink/skaff-lib/package.json",
+    );
+    return path.dirname(pkgPath);
+  } catch {
+    const currentDir = path.dirname(__filename);
+    return path.resolve(currentDir, "../../../..");
+  }
+}
 
-      "types": ["node"],
-
-      "strict": true,
-      "skipLibCheck": true         // speeds up builds; safe for CLIs
+function resolvePackageRoot(
+  moduleName: string,
+  fromDir: string,
+): string {
+  if (moduleName.startsWith("@")) {
+    const [, packageName] = moduleName.split("/");
+    if (packageName) {
+      const workspaceCandidate = path.resolve(fromDir, "..", packageName);
+      const pkgJsonPath = path.join(workspaceCandidate, "package.json");
+      if (existsSync(pkgJsonPath)) {
+        try {
+          const contents = JSON.parse(
+            readFileSync(pkgJsonPath, "utf8"),
+          ) as { name?: string };
+          if (contents.name === moduleName) {
+            return workspaceCandidate;
+          }
+        } catch {
+          // Fall through to node resolution
+        }
+      }
     }
   }
+
+  const resolutionRoots = [
+    fromDir,
+    process.cwd(),
+    path.dirname(fromDir),
+    path.resolve(fromDir, "..", ".."),
+  ];
+
+  const errors: string[] = [];
+  for (const root of resolutionRoots) {
+    try {
+      const pkgPath = requireFromHere.resolve(
+        `${moduleName}/package.json`,
+        {
+          paths: [root],
+        },
+      );
+      return path.dirname(pkgPath);
+    } catch (error) {
+      errors.push(String(error));
+    }
+  }
+
+  for (const root of resolutionRoots) {
+    try {
+      const resolvedEntry = requireFromHere.resolve(moduleName, {
+        paths: [root],
+      });
+      let currentDir = path.dirname(resolvedEntry);
+      while (currentDir !== path.parse(currentDir).root) {
+        const candidate = path.join(currentDir, "package.json");
+        if (existsSync(candidate)) {
+          return currentDir;
+        }
+        currentDir = path.dirname(currentDir);
+      }
+    } catch (error) {
+      errors.push(String(error));
+    }
+  }
+
+  throw new Error(
+    `Cannot resolve module "${moduleName}/package.json" from paths ${JSON.stringify(
+      resolutionRoots,
+    )} from ${__filename}\n${errors.join("\n")}`,
+  );
+}
+
+function buildAllowedModuleNames(): string[] {
+  const allowed = Object.keys(getSandboxLibraries());
+  if (!allowed.includes("undici-types")) {
+    allowed.push("undici-types");
+  }
+  return allowed;
+}
+
+function resolveModulePathMapping(
+  moduleName: string,
+  skaffLibRoot: string,
+): string {
+  const packageRoot = resolvePackageRoot(moduleName, skaffLibRoot);
+  const distTypes = path.join(packageRoot, "dist", "index.d.ts");
+  const srcEntry = path.join(packageRoot, "src", "index.ts");
+
+  if (existsSync(distTypes)) {
+    return path.relative(skaffLibRoot, packageRoot);
+  }
+
+  if (existsSync(srcEntry)) {
+    return path.relative(skaffLibRoot, srcEntry);
+  }
+
+  return path.relative(skaffLibRoot, packageRoot);
+}
+
+async function readTsConfig(): Promise<any> {
+  return {
+    compilerOptions: {
+      target: "ES2022",
+      lib: ["ES2022"],
+
+      module: "NodeNext",
+      moduleResolution: "NodeNext",
+
+      types: ["node"],
+
+      strict: true,
+      skipLibCheck: true, // speeds up builds; safe for CLIs
+    },
+  };
 }
 
 // async function readTsConfig() {
@@ -148,7 +245,7 @@ function findTypesDirectory(startDir: string): string | null {
   let currentDir = startDir;
 
   while (currentDir !== path.parse(currentDir).root) {
-    const typesPath = path.join(currentDir, 'node_modules', '@types');
+    const typesPath = path.join(currentDir, "node_modules", "@types");
     if (existsSync(typesPath)) {
       return typesPath;
     }
@@ -156,24 +253,79 @@ function findTypesDirectory(startDir: string): string | null {
   }
 
   // Fallback to the current working directory if @types exists there
-  const fallbackPath = path.join(process.cwd(), 'node_modules', '@types');
+  const fallbackPath = path.join(process.cwd(), "node_modules", "@types");
   return existsSync(fallbackPath) ? fallbackPath : null;
 }
 
+function isAllowedModule(
+  moduleName: string,
+  allowedModules: string[],
+): boolean {
+  if (allowedModules.includes(moduleName)) {
+    return true;
+  }
+  return allowedModules.some((allowed) => moduleName.startsWith(`${allowed}/`));
+}
+
+function createModuleResolutionHost(
+  compilerHost: ts.CompilerHost,
+  allowedModules: string[],
+  compilerOptions: ts.CompilerOptions,
+): ts.CompilerHost {
+  const nodeBuiltins = new Set(builtinModules);
+  return {
+    ...compilerHost,
+    resolveModuleNames: (moduleNames, containingFile) =>
+      moduleNames.map((moduleName) => {
+        const isRelative =
+          moduleName.startsWith(".") || path.isAbsolute(moduleName);
+        const isNodeBuiltin =
+          moduleName === "node" ||
+          moduleName.startsWith("node:") ||
+          nodeBuiltins.has(moduleName);
+
+        if (!isRelative && !isNodeBuiltin && !isAllowedModule(moduleName, allowedModules)) {
+          throw new Error(
+            `Template configs may only import ${allowedModules
+              .map((allowed) => `"${allowed}"`)
+              .join(", ")}. Disallowed import: "${moduleName}".`,
+          );
+        }
+
+        const resolved = ts.resolveModuleName(
+          moduleName,
+          containingFile,
+          compilerOptions,
+          compilerHost,
+        );
+        return resolved.resolvedModule;
+      }),
+  };
+}
+
 async function typeCheckFile(filePath: string): Promise<void> {
-  const templateDir = path.dirname(filePath);
+  const skaffLibRoot = resolveSkaffLibRoot();
+  const allowedModules = buildAllowedModuleNames();
 
   const typeRoots = [
-    findTypesDirectory(templateDir) || path.join(process.cwd(), 'node_modules', '@types'),
+    findTypesDirectory(skaffLibRoot) ||
+      path.join(process.cwd(), "node_modules", "@types"),
   ];
+
+  const paths: Record<string, string[]> = {};
+  for (const moduleName of allowedModules) {
+    paths[moduleName] = [resolveModulePathMapping(moduleName, skaffLibRoot)];
+  }
 
   const tsConfig = await readTsConfig();
   const { options, errors } = ts.convertCompilerOptionsFromJson(
     {
       ...tsConfig.compilerOptions,
+      baseUrl: skaffLibRoot,
+      paths,
       typeRoots,
     },
-    templateDir,
+    skaffLibRoot,
   );
 
   if (errors.length) {
@@ -187,7 +339,9 @@ async function typeCheckFile(filePath: string): Promise<void> {
     );
   }
 
-  const program = ts.createProgram([filePath], options);
+  const baseHost = ts.createCompilerHost(options);
+  const host = createModuleResolutionHost(baseHost, allowedModules, options);
+  const program = ts.createProgram([filePath], options, host);
   const diags = ts.getPreEmitDiagnostics(program);
   if (diags.length) {
     const host: ts.FormatDiagnosticsHost = {
@@ -246,14 +400,14 @@ async function findTemplateConfigFiles(
         }
 
         for (const reference of references) {
-        if (reference.type === "remote") {
-          results.remoteRefs.push({
-            refDir: path.relative(rootDir, full),
-            repoUrl: reference.repoUrl,
-            branch: reference.branch,
-            revision: reference.revision,
-            templatePath: reference.path,
-          });
+          if (reference.type === "remote") {
+            results.remoteRefs.push({
+              refDir: path.relative(rootDir, full),
+              repoUrl: reference.repoUrl,
+              branch: reference.branch,
+              revision: reference.revision,
+              templatePath: reference.path,
+            });
             continue;
           }
 
@@ -283,43 +437,128 @@ async function findTemplateConfigFiles(
   return results;
 }
 
-// Very simple and minimal sandbox
-async function evaluateBundledCode(
-  code: string,
-): Promise<Record<string, TemplateConfigWithFileInfo>> {
-  const { Script, createContext } = await import(/* webpackIgnore: true */ "node:vm");
+const SANDBOX_TIMEOUT_MS = 1_000;
+const DEV_CACHE_STAT_CONCURRENCY = 20;
 
-  function safeRequire(id: string) {
-    if (id in SANDBOX_LIBS) return SANDBOX_LIBS[id];
-    const rootId = id.split("/", 1)[0]!;
-    if (rootId in SANDBOX_LIBS) return SANDBOX_LIBS[rootId];
-    throw new Error(`Blocked import: ${id}`);
+async function collectFileStatEntries(
+  rootDir: string,
+  files: TemplateConfigFileInfo[],
+): Promise<string[]> {
+  const entries: string[] = [];
+  const seenFilesDirs = new Set<string>();
+
+  const queue: string[] = [];
+  const queued = new Set<string>();
+
+  const enqueue = (target: string): void => {
+    if (queued.has(target)) {
+      return;
+    }
+    queued.add(target);
+    queue.push(target);
+  };
+
+  for (const file of files) {
+    const configPath = path.resolve(rootDir, file.configPath);
+    enqueue(configPath);
+
+    const filesDir = path.join(path.dirname(configPath), "files");
+    if (!seenFilesDirs.has(filesDir)) {
+      seenFilesDirs.add(filesDir);
+      enqueue(filesDir);
+    }
   }
 
-  const contextModule = { exports: {} };
-  const context = createContext({
-    exports: contextModule.exports,
-    require: safeRequire,
-    module: contextModule,
-    __filename: "",
-    __dirname: "",
-  });
-  const script = new Script(code + "(exports, require, module, __filename, __dirname);", { filename: "template-bundle.cjs" });
-  script.runInContext(context);
-  return (contextModule.exports as any).configs;
+  const processBatch = async (batch: string[]): Promise<void> => {
+    await Promise.all(
+      batch.map(async (target) => {
+        const stat = await fs.stat(target).catch(() => null);
+        if (!stat) {
+          return;
+        }
+        const rel = path.relative(rootDir, target);
+        entries.push(`${rel}:${stat.mtimeMs}`);
+
+        if (stat.isDirectory()) {
+          const dirEntries = await fs
+            .readdir(target, { withFileTypes: true })
+            .catch(() => []);
+          for (const dirent of dirEntries) {
+            const full = path.join(target, dirent.name);
+            enqueue(full);
+          }
+        }
+      }),
+    );
+  };
+
+  while (queue.length > 0) {
+    const batch = queue.splice(0, DEV_CACHE_STAT_CONCURRENCY);
+    await processBatch(batch);
+  }
+
+  return entries.sort();
 }
 
-@injectable()
 export class TemplateConfigLoader {
   constructor(
-    @inject(CacheServiceToken) private readonly cacheService: CacheService,
-    @inject(EsbuildInitializerToken)
+    private readonly cacheService: CacheService,
     private readonly esbuildInitializer: EsbuildInitializer,
-  ) { }
+    private readonly sandboxService: HardenedSandboxService,
+  ) {}
+
+  private evaluateBundledCode(
+    code: string,
+  ): Record<string, TemplateConfigWithFileInfo> {
+    const exports = this.sandboxService.evaluateCommonJs<{
+      configs: Record<string, TemplateConfigWithFileInfo>;
+      default?: { configs?: Record<string, TemplateConfigWithFileInfo> };
+    }>({
+      code,
+      allowedModules: getSandboxLibraries(),
+      filename: "template-config-bundle.cjs",
+      timeoutMs: SANDBOX_TIMEOUT_MS,
+    });
+
+    const configs = exports.configs ?? exports.default?.configs;
+    if (!configs) {
+      throw new Error("Template config bundle did not export configs");
+    }
+
+    return configs;
+  }
+
+  private normalizeTemplateConfigs(
+    configs: Record<string, TemplateConfigWithFileInfo>,
+  ): Record<string, TemplateConfigWithFileInfo> {
+    const normalized: Record<string, TemplateConfigWithFileInfo> = {};
+
+    for (const [key, mod] of Object.entries(configs)) {
+      const parsed = templateConfigSchema.safeParse(
+        mod.templateConfig.templateConfig,
+      );
+      if (!parsed.success) {
+        throw new Error(
+          `Invalid template configuration in ${key}: ${parsed.error}`,
+        );
+      }
+
+      normalized[key] = {
+        ...mod,
+        templateConfig: {
+          ...mod.templateConfig,
+          templateConfig: parsed.data,
+        },
+      };
+    }
+
+    return normalized;
+  }
 
   public async loadAllTemplateConfigs(
     rootDir: string,
     commitHash: string,
+    options: { devTemplates?: boolean } = {},
   ): Promise<{
     configs: Record<string, TemplateConfigWithFileInfo>;
     remoteRefs: RemoteTemplateReference[];
@@ -333,9 +572,15 @@ export class TemplateConfigLoader {
       throw new Error(`No templateConfig.ts files found under ${rootDir}`);
     }
 
-    const cacheKey = this.cacheService.hash(
-      `${commitHash}:${path.resolve(rootDir)}`,
-    );
+    const rootPath = path.resolve(rootDir);
+    let cacheKeySeed = `${commitHash}:${rootPath}`;
+    if (options.devTemplates) {
+      const statEntries = await collectFileStatEntries(rootPath, files);
+      const devCacheBuster = this.cacheService.hash(statEntries.join("|"));
+      cacheKeySeed = `${cacheKeySeed}:${devCacheBuster}`;
+    }
+
+    const cacheKey = this.cacheService.hash(cacheKeySeed);
 
     const cached = await this.cacheService.retrieveFromCache(
       "template-config",
@@ -344,8 +589,11 @@ export class TemplateConfigLoader {
     );
     if ("data" in cached && cached.data) {
       const code = await fs.readFile(cached.data.path, "utf8");
-      const configs = await evaluateBundledCode(code);
-      return { configs, remoteRefs: discovery.remoteRefs };
+      const configs = this.evaluateBundledCode(code);
+      return {
+        configs: this.normalizeTemplateConfigs(configs),
+        remoteRefs: discovery.remoteRefs,
+      };
     }
 
     const imports: string[] = [];
@@ -358,9 +606,7 @@ export class TemplateConfigLoader {
         imports.push(`import ${alias} from "./${rel.slice(0, -3)}";`);
         let entry = `"${rel}": { templateConfig: ${alias}, configPath: "${rel}"`;
         if (fi.refDir) {
-          const refRel = path
-            .relative(rootDir, fi.refDir)
-            .replace(/\\/g, "/");
+          const refRel = path.relative(rootDir, fi.refDir).replace(/\\/g, "/");
           entry += `, refDir: "${refRel}"`;
         }
         exports.push(entry + "}");
@@ -391,15 +637,9 @@ export class TemplateConfigLoader {
       format: "cjs",
       platform: "neutral",
       target: "es2022",
-      external: Object.keys(SANDBOX_LIBS),
+      external: Object.keys(getSandboxLibraries()),
       write: false,
       minify: true,
-      banner: {
-        js: `;(function(exports, require, module, __filename, __dirname) {`
-      },
-      footer: {
-        js: `\n})`
-      },
     });
     if ("stop" in esbuild && esbuild.stop) await esbuild.stop();
     const bundle = outputFiles[0]?.text;
@@ -415,21 +655,11 @@ export class TemplateConfigLoader {
       throw new Error(`Failed to cache bundle: ${saved.error}`);
     }
 
-    const configs = await evaluateBundledCode(bundle);
-
-    for (const key of Object.keys(configs)) {
-      const mod = configs[key]!;
-      const parsed = templateConfigSchema.safeParse(
-        mod.templateConfig.templateConfig,
-      );
-      if (!parsed.success) {
-        throw new Error(
-          `Invalid template configuration in ${key}: ${parsed.error}`,
-        );
-      }
-      mod.templateConfig.templateConfig = parsed.data;
-    }
-    return { configs, remoteRefs: discovery.remoteRefs };
+    const configs = this.evaluateBundledCode(bundle);
+    return {
+      configs: this.normalizeTemplateConfigs(configs),
+      remoteRefs: discovery.remoteRefs,
+    };
   }
 }
 

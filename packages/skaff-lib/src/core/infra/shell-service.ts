@@ -1,6 +1,5 @@
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
-import { injectable } from "tsyringe";
 
 import { getSkaffContainer } from "../../di/container";
 import { ShellServiceToken } from "../../di/tokens";
@@ -9,7 +8,6 @@ import { logError } from "../../lib/utils";
 
 const asyncExec = promisify(exec);
 
-@injectable()
 export class ShellService {
   public async execute(
     commandCwd: string,

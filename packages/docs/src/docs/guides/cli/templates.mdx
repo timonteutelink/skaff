@@ -1,0 +1,51 @@
+---
+title: Work with templates
+authors: []
+sidebar_position: 3
+---
+
+Template repositories live in local directories or remote Git repos. Skaff can
+load, cache, and inspect them with the `skaff template` commands.
+
+## Load template repositories
+
+```bash
+skaff template load github:org/templates --branch main
+skaff template load https://github.com/org/templates.git#dev
+```
+
+Use `--branch` to track a branch or `#<branch>`/`@<branch>` in the repo spec.
+Commit hashes are treated as fixed revisions.
+
+## List and inspect templates
+
+```bash
+skaff template list --format table
+skaff template show fastapi
+```
+
+`template list` shows every root template available in configured paths. Use
+`template show` to inspect the resolved metadata for a single template.
+
+## Manage cached repositories
+
+```bash
+skaff template reload
+skaff template load github:org/templates --refresh
+skaff template erase-cache
+```
+
+- `template reload` refreshes all cached repos.
+- `template load --refresh` updates a specific repo.
+- `template erase-cache` clears the cache directory entirely.
+
+## Inspect revisions
+
+```bash
+skaff template revisions fastapi
+skaff template project-revision /path/to/project
+```
+
+`template revisions` lists known revisions for a template repository. Use
+`template project-revision` to print the revision hash stored for an existing
+project.

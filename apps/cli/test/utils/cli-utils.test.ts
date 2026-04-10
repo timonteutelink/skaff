@@ -1,12 +1,13 @@
-import type { Project, Result } from '@timonteutelink/skaff-lib';
-
 import { afterEach, beforeEach, describe, it } from 'mocha';
 import { strict as assert } from 'node:assert';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { getCurrentProject } from '../../src/utils/cli-utils.js';
+import { createWorkspaceFixture } from '../lib/fixtures.js';
+
+type Result<T> = { data?: T; error?: string };
+type Project = Record<string, unknown>;
 
 describe('getCurrentProject', () => {
   let originalCwd: string;
@@ -27,12 +28,12 @@ describe('getCurrentProject', () => {
   });
 
   async function createProjectFixture() {
-    const root = await mkdtemp(path.join(tmpdir(), 'skaff-cli-utils-'));
-    createdRoots.push(root);
-    await writeFile(path.join(root, 'templateSettings.json'), '{}');
-    const nested = path.join(root, 'nested');
+    const fixture = await createWorkspaceFixture();
+    createdRoots.push(fixture.root);
+    await writeFile(path.join(fixture.root, 'templateSettings.json'), '{}');
+    const nested = path.join(fixture.root, 'nested');
     await mkdir(nested);
-    return { nested, root };
+    return { nested, root: fixture.root };
   }
 
   it('discovers the current project from the working directory when no override is supplied', async () => {

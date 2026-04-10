@@ -4,23 +4,30 @@ authors: []
 sidebar_position: 4
 ---
 
-Skaff commands are deterministic and exit with non-zero codes on failure, making them safe to run in CI/CD pipelines or other scripted environments.
+Skaff commands are deterministic and exit with non-zero codes on failure, making
+them safe to run in CI/CD pipelines or other scripted environments.
 
 ## Best practices
 
-- **Use ephemeral installs.** `bunx @timonteutelink/skaff ...` (or `npx`) keeps images slim and always fetches the desired version.
-- **Prefer structured output.** Pass `--format json` to commands you parse. Combine with `jq` or similar tools for assertions.
-- **Fail on drift.** Prepare an update diff and gate merges until it applies cleanly: `skaff project diff prepare-update main --format json` and check the resulting `diffHash`.
-- **Cache template repos.** Most CI systems can persist `~/.cache/skaff` between runs to avoid cloning repositories every time.
+- **Use ephemeral installs.** `bunx @timonteutelink/skaff ...` (or `npx`) keeps
+  images slim and always fetches the desired version.
+- **Prefer structured output.** Pass `--format json` or `--format ndjson` to
+  commands you parse. Combine with `jq` or similar tools for assertions.
+- **Fail on drift.** Prepare an update diff and gate merges until it applies
+  cleanly: `skaff project diff prepare-update main --format json` and check the
+  resulting `diffHash`.
+- **Cache template repos.** Most CI systems can persist `SKAFF_CACHE_PATH`
+  between runs to avoid cloning repositories every time.
 
 ## Example pipeline step
 
 ```bash
-bunx @timonteutelink/skaff template load github:org/templates
+bunx @timonteutelink/skaff template load github:org/templates --branch main
 bunx @timonteutelink/skaff project diff prepare-update main --format json > diff.json
 jq -e '.diffHash' diff.json >/dev/null || exit 0
 bunx @timonteutelink/skaff project diff apply "$(jq -r '.diffHash' diff.json)"
 git diff --exit-code
 ```
 
-This pattern keeps generated projects current while letting Git own the final review and merge.
+This pattern keeps generated projects current while letting Git own the final
+review and merge.

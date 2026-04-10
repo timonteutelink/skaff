@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "declaration": true,
     "module": "Node16",
     "outDir": "dist",
@@ -7,14 +8,12 @@
     "strict": true,
     "target": "es2022",
     "moduleResolution": "node16",
-    "types": [
-      "node"
-    ]
+    "skipLibCheck": true,
+    "types": ["node"]
   },
-  "include": [
-    "./src/**/*"
-  ],
+  "include": ["./src/**/*"],
   "ts-node": {
-    "esm": true
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
   }
 }

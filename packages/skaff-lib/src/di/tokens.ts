@@ -1,4 +1,4 @@
-import type { InjectionToken } from "tsyringe";
+import type { InjectionToken } from "./container";
 
 import type { AutoInstantiationSettingsAdjuster } from "../core/diffing/AutoInstantiationSettingsAdjuster";
 import type { DiffCache } from "../core/diffing/DiffCache";
@@ -16,9 +16,10 @@ import type { ProjectRepository } from "../repositories/project-repository";
 import type { RootTemplateRepository } from "../repositories/root-template-repository";
 import type { TemplatePathsProvider } from "../repositories/root-template-repository";
 import type { EsbuildInitializer } from "../utils/get-esbuild";
+import type { HardenedSandboxService } from "../core/infra/hardened-sandbox";
 
 function createToken<T>(description: string): InjectionToken<T> {
-  return Symbol.for(`skaff:${description}`);
+  return Symbol.for(`skaff:${description}`) as InjectionToken<T>;
 }
 
 export const CacheServiceToken = createToken<CacheService>("CacheService");
@@ -36,20 +37,28 @@ export const ProjectDiffPlannerToken =
   createToken<ProjectDiffPlanner>("ProjectDiffPlanner");
 export const ProjectRepositoryToken =
   createToken<ProjectRepository>("ProjectRepository");
-export const RootTemplateRepositoryToken =
-  createToken<RootTemplateRepository>("RootTemplateRepository");
+export const RootTemplateRepositoryToken = createToken<RootTemplateRepository>(
+  "RootTemplateRepository",
+);
 export const TemplateGeneratorServiceToken =
   createToken<TemplateGeneratorService>("TemplateGeneratorService");
-export const ProjectCreationManagerToken =
-  createToken<ProjectCreationManager>("ProjectCreationManager");
-export const TemplateConfigLoaderToken =
-  createToken<TemplateConfigLoader>("TemplateConfigLoader");
-export const TemplateTreeBuilderToken =
-  createToken<TemplateTreeBuilder>("TemplateTreeBuilder");
-export const TemplatePathsProviderToken =
-  createToken<TemplatePathsProvider>("TemplatePathsProvider");
+export const ProjectCreationManagerToken = createToken<ProjectCreationManager>(
+  "ProjectCreationManager",
+);
+export const TemplateConfigLoaderToken = createToken<TemplateConfigLoader>(
+  "TemplateConfigLoader",
+);
+export const TemplateTreeBuilderToken = createToken<TemplateTreeBuilder>(
+  "TemplateTreeBuilder",
+);
+export const TemplatePathsProviderToken = createToken<TemplatePathsProvider>(
+  "TemplatePathsProvider",
+);
 export const EsbuildInitializerToken =
   createToken<EsbuildInitializer>("EsbuildInitializer");
+export const HardenedSandboxServiceToken = createToken<HardenedSandboxService>(
+  "HardenedSandboxService",
+);
 
 export const TOKENS = {
   CacheService: CacheServiceToken,
@@ -68,4 +77,5 @@ export const TOKENS = {
   TemplateTreeBuilder: TemplateTreeBuilderToken,
   TemplatePathsProvider: TemplatePathsProviderToken,
   EsbuildInitializer: EsbuildInitializerToken,
+  HardenedSandboxService: HardenedSandboxServiceToken,
 } as const;

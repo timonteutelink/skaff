@@ -14,18 +14,20 @@ const config: Config = {
         jsc: {
           parser: {
             syntax: "typescript",
-            tsx: false,
-            decorators: true,
-          },
-          transform: {
-            legacyDecorator: true,
-            decoratorMetadata: true,
+            tsx: true,
           },
         },
       },
     ],
   },
-  setupFiles: ["<rootDir>/tests/setup-env.js"],
+  setupFilesAfterEnv: ["<rootDir>/tests/setup-env.ts"],
+  moduleNameMapper: {
+    "^@timonteutelink/template-types-lib$":
+      "<rootDir>/../template-types-lib/dist/index.js",
+    "^@timonteutelink/skaff-plugin-greeter-types$":
+      "<rootDir>/../../examples/plugins/plugin-greeter-types/src/index.ts",
+    "^zod$": "<rootDir>/../../node_modules/zod",
+  },
 
   collectCoverage: true,
   coverageDirectory: "coverage",

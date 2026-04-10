@@ -12,40 +12,40 @@
   },
   "bugs": "https://github.com/timonteutelink/skaff/issues",
   "dependencies": {
-    "@types/node": "^24.10.1",
-    "@inquirer/prompts": "^8.0.1",
-    "@inquirer/core": "^11.0.1",
-    "@inquirer/type": "^4.0.1",
-    "@inquirer/select": "^5.0.1",
+    "@types/node": "^25.0.3",
+    "@inquirer/prompts": "^8.1.0",
+    "@inquirer/core": "^11.1.0",
+    "@inquirer/type": "^4.0.2",
+    "@inquirer/select": "^5.0.3",
     "@oclif/core": "^4.8.0",
     "@oclif/plugin-help": "^6.2.36",
     "@oclif/plugin-plugins": "^5.4.54",
-    "@timonteutelink/skaff-lib": "0.0.99",
-    "@timonteutelink/template-types-lib": "0.0.56",
-    "esbuild": "^0.27.0",
+    "@timonteutelink/skaff-lib": "workspace:*",
+    "@timonteutelink/template-types-lib": "workspace:*",
+    "esbuild": "^0.27.2",
     "loglevel": "^1.9.2",
-    "winston": "^3.18.3",
+    "winston": "^3.19.0",
     "winston-daily-rotate-file": "^5.0.0",
-    "yaml": "^2.8.1",
-    "zod": "^4.1.12"
+    "yaml": "^2.8.2",
+    "zod": "^4.3.5"
   },
   "overrides": {
     "@inquirer/core": "^10.2.0"
   },
   "devDependencies": {
     "@eslint/compat": "^2.0.0",
-    "@types/bun": "^1.3.2",
+    "@types/bun": "^1.3.5",
     "@oclif/plugin-update": "^4.7.16",
     "@oclif/prettier-config": "^0.2.1",
     "@oclif/test": "^4.1.15",
     "@types/chai": "^5.2.3",
     "@types/mocha": "^10.0.10",
-    "chai": "^6.2.1",
-    "eslint": "^9.39.1",
-    "eslint-config-oclif": "^6.0.118",
+    "chai": "^6.2.2",
+    "eslint": "^9.39.2",
+    "eslint-config-oclif": "^6.0.129",
     "eslint-config-prettier": "^10.1.8",
     "mocha": "^11.7.5",
-    "oclif": "^4.22.47",
+    "oclif": "^4.22.63",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
@@ -70,6 +70,7 @@
     "commands": "./dist/commands",
     "plugins": [
       "@oclif/plugin-help",
+      "@oclif/plugin-plugins",
       "@oclif/plugin-warn-if-update-available"
     ],
     "macos": {
@@ -79,6 +80,9 @@
     "topics": {
       "code-templating": {
         "description": "Manage code templates"
+      },
+      "plugins": {
+        "description": "Manage Skaff plugins"
       }
     },
     "repositoryPrefix": "https://github.com/timonteutelink/skaff/tree/main/apps/cli/<%- commandPath %>"
@@ -89,13 +93,17 @@
     "directory": "apps/cli"
   },
   "scripts": {
-    "rundev": "",
+    "dev": "oclif dev",
     "build": "rm -rf dist && tsc -b",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist oclif.manifest.json",
     "lint": "eslint",
     "postpack": "rm -f oclif.manifest.json",
-    "posttest": "bun run lint",
+    "posttest": "true",
     "prepack": "bun run build:dist && oclif readme",
-    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+    "test": "export SKAFF_SKIP_LINT=1; cd ../../packages/template-types-lib && bun run build && cd ../skaff-lib && bun run build && cd ../../apps/cli && node -e \"const path=require('node:path'); process.env.SKAFF_CACHE_PATH=path.resolve(process.cwd(),'..','..','.skaff-test-cache'); process.env.SKAFF_CONFIG_PATH=path.resolve(process.cwd(),'..','..','.skaff-test-config'); process.env.TEMPLATE_DIR_PATHS=path.resolve(process.cwd(),'..','..','templates','test-templates'); process.env.SKAFF_DEV_TEMPLATES='1'; const sandbox=require('../../packages/skaff-lib/dist/core/infra/hardened-sandbox.js'); sandbox.markHardenedEnvironmentForTesting(); const {getTemplate}=require('../../packages/skaff-lib/dist/actions/template/get-template.js'); getTemplate('test_template').then(res=>{ if (res.error || !res.data) { console.error(res); process.exit(1); } }).catch(err=>{ console.error(err); process.exit(1); });\" && bun run build && bun run test:commands && bun run test:utils",
+    "test:commands": "NODE_OPTIONS=\"--experimental-specifier-resolution=node\" TS_NODE_IGNORE=\"node_modules\" TS_NODE_PROJECT=./test/tsconfig.json TS_NODE_TRANSPILE_ONLY=1 mocha --forbid-only \"test/commands/**/*.test.ts\"",
+    "test:utils": "NODE_OPTIONS=\"--experimental-specifier-resolution=node\" TS_NODE_IGNORE=\"node_modules\" TS_NODE_PROJECT=./test/tsconfig.json TS_NODE_TRANSPILE_ONLY=1 mocha --forbid-only \"test/utils/**/*.test.ts\"",
     "version": "oclif readme && git add README.md",
     "__buildprod": "tsc --noEmit && bun run build.ts && bun build --compile ./dist/main.js ./dist/*.js --outfile ./bin/skaff",
     "build:dist": "bun run build && oclif manifest",

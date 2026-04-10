@@ -3,6 +3,7 @@ import {
   ProjectSettings,
   UserTemplateSettings,
 } from "@timonteutelink/template-types-lib";
+import z from "zod";
 import crypto from "node:crypto";
 import { backendLogger } from "../../lib/logger";
 import { Result } from "../../lib/types";
@@ -14,7 +15,22 @@ import {
   writeNewTemplateToSettings,
 } from "../projects/project-settings-service";
 import { getLatestTemplateMigrationUuid } from "../templates/TemplateMigration";
-import { GeneratorOptions } from "./template-generator-service";
+import { GeneratorOptions } from "./template-generation-types";
+
+function parseTemplateSettings(
+  templateSettingsSchema: z.ZodObject<any>,
+  userSettings: UserTemplateSettings,
+): Result<UserTemplateSettings> {
+  const parsed = templateSettingsSchema.safeParse(userSettings);
+
+  if (!parsed.success) {
+    return {
+      error: `Failed to parse user settings: ${parsed.error}`,
+    };
+  }
+
+  return { data: parsed.data };
+}
 
 export class ProjectSettingsSynchronizer {
   constructor(
@@ -98,15 +114,13 @@ export class ProjectSettingsSynchronizer {
       };
     }
 
-    const parsedUserSettings =
-      this.rootTemplate.config.templateSettingsSchema.safeParse(userSettings);
-    if (!parsedUserSettings.success) {
-      backendLogger.error(
-        `Failed to parse user settings: ${parsedUserSettings.error}`,
-      );
-      return {
-        error: `Failed to parse user settings: ${parsedUserSettings.error}`,
-      };
+    const parsedUserSettings = parseTemplateSettings(
+      this.rootTemplate.config.templateSettingsSchema,
+      userSettings,
+    );
+    if ("error" in parsedUserSettings) {
+      backendLogger.error(parsedUserSettings.error);
+      return { error: parsedUserSettings.error };
     }
 
     const newProjectId = newUuid || crypto.randomUUID();
@@ -144,15 +158,13 @@ export class ProjectSettingsSynchronizer {
       };
     }
 
-    const parsedUserSettings =
-      template.config.templateSettingsSchema.safeParse(userSettings);
-    if (!parsedUserSettings.success) {
-      backendLogger.error(
-        `Failed to parse user settings: ${parsedUserSettings.error}`,
-      );
-      return {
-        error: `Failed to parse user settings: ${parsedUserSettings.error}`,
-      };
+    const parsedUserSettings = parseTemplateSettings(
+      template.config.templateSettingsSchema,
+      userSettings,
+    );
+    if ("error" in parsedUserSettings) {
+      backendLogger.error(parsedUserSettings.error);
+      return { error: parsedUserSettings.error };
     }
 
     if (!template.config.templateConfig.multiInstance) {
@@ -206,12 +218,14 @@ export class ProjectSettingsSynchronizer {
     template: Template,
     userSettings: UserTemplateSettings,
     parentInstanceId?: string,
+    options?: { templateInstanceId?: string },
   ): Result<FinalTemplateSettings> {
     return Project.getFinalTemplateSettings(
       template,
       this.destinationProjectSettings,
       userSettings,
       parentInstanceId,
+      options,
     );
   }
 

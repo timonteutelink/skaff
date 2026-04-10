@@ -43,6 +43,10 @@ export default class ProjectModify extends Base {
       instTpl.templateName,
       flags.settings,
       instTpl.templateSettings as UserTemplateSettings,
+      {
+        projectSettings: proj.data.instantiatedProjectSettings,
+        templateInstanceId: args.templateInstanceId,
+      },
     );
 
     const res = await prepareModificationDiff(

@@ -2,8 +2,6 @@ import type { Dirent } from "node:fs";
 import * as fs from "node:fs/promises";
 import path from "node:path";
 
-import { inject, injectable } from "tsyringe";
-
 import { TemplateParentReference } from "@timonteutelink/template-types-lib";
 
 import { getConfig } from "../lib";
@@ -19,11 +17,6 @@ import {
   normalizeGitRepositorySpecifier,
   parseTemplatePathEntry,
 } from "../lib/git-repo-spec";
-import {
-  GitServiceToken,
-  TemplatePathsProviderToken,
-  TemplateTreeBuilderToken,
-} from "../di/tokens";
 
 export type TemplatePathsProvider = () => Promise<string[]>;
 
@@ -55,6 +48,11 @@ interface CacheDirDescriptorInfo {
 
 const LONG_REVISION_SUFFIX = /-([0-9a-f]{40})$/i;
 const SHORT_HASH_SUFFIX = /-([0-9a-f]{8})$/i;
+
+function isDevTemplatesEnabled(): boolean {
+  const raw = process.env.SKAFF_DEV_TEMPLATES?.toLowerCase().trim();
+  return raw === "1" || raw === "true" || raw === "yes" || raw === "on";
+}
 
 function extractDescriptorSegment(dirName: string): string | null {
   const branchTokenIndex = dirName.lastIndexOf("-branch-");
@@ -95,7 +93,11 @@ function inferCacheDirDescriptor(dirName: string): CacheDirDescriptorInfo {
   const descriptorSegment = extractDescriptorSegment(workingName);
 
   if (!descriptorSegment || descriptorSegment === "default") {
-    return { branch: undefined, hasExplicitRevision: Boolean(revisionFromSuffix), revisionFromSuffix };
+    return {
+      branch: undefined,
+      hasExplicitRevision: Boolean(revisionFromSuffix),
+      revisionFromSuffix,
+    };
   }
 
   if (descriptorSegment.startsWith("branch-")) {
@@ -134,22 +136,21 @@ function inferCacheDirDescriptor(dirName: string): CacheDirDescriptorInfo {
   };
 }
 
-@injectable()
 export class RootTemplateRepository {
   private loading: boolean = false;
   private readonly templatePathsProvider: TemplatePathsProvider;
   private remoteRepos: RemoteRepoEntry[] = [];
   private readonly registry = new TemplateRegistry();
   public templates: Template[] = [];
+  private readonly devTemplatesEnabled: boolean;
 
   constructor(
-    @inject(TemplateTreeBuilderToken)
     private readonly templateTreeBuilder: TemplateTreeBuilder,
-    @inject(GitServiceToken) private readonly gitService: GitService,
-    @inject(TemplatePathsProviderToken)
+    private readonly gitService: GitService,
     templatePathsProvider: TemplatePathsProvider = defaultTemplatePathsProvider,
   ) {
     this.templatePathsProvider = templatePathsProvider;
+    this.devTemplatesEnabled = isDevTemplatesEnabled();
   }
 
   private async hydrateCachedRepos(): Promise<void> {
@@ -204,7 +205,9 @@ export class RootTemplateRepository {
           : descriptorInfo.branch;
       const revision =
         descriptorInfo.revisionFromSuffix ??
-        (descriptorInfo.hasExplicitRevision ? commitHashResult.data : undefined);
+        (descriptorInfo.hasExplicitRevision
+          ? commitHashResult.data
+          : undefined);
       const existing = this.remoteRepos.find(
         (repo) =>
           repo.url === repoUrlResult.data &&
@@ -244,9 +247,8 @@ export class RootTemplateRepository {
 
     let targetBranch = requestedBranch;
     if (shouldInferDefaultBranch) {
-      const defaultBranchResult = await this.gitService.getRemoteDefaultBranch(
-        repoUrl,
-      );
+      const defaultBranchResult =
+        await this.gitService.getRemoteDefaultBranch(repoUrl);
       if ("error" in defaultBranchResult) {
         return { error: defaultBranchResult.error };
       }
@@ -337,6 +339,7 @@ export class RootTemplateRepository {
     }
 
     const localTemplatePaths: string[] = [];
+    const localTemplateRoots = new Set<string>();
 
     for (const basePath of baseTemplatePaths) {
       const parsed = parseTemplatePathEntry(basePath);
@@ -379,6 +382,7 @@ export class RootTemplateRepository {
         }
       } else {
         localTemplatePaths.push(parsed.path);
+        localTemplateRoots.add(parsed.path);
       }
     }
 
@@ -387,6 +391,8 @@ export class RootTemplateRepository {
     );
     for (const templatePath of paths) {
       const repoInfo = this.remoteRepos.find((r) => r.path === templatePath);
+      const isLocalPath = localTemplateRoots.has(templatePath);
+      const devTemplates = this.devTemplatesEnabled && isLocalPath;
       const templatesRootDir = path.join(templatePath, "templates");
       let templateEntries: Dirent[] = [];
       try {
@@ -404,10 +410,7 @@ export class RootTemplateRepository {
         if (!entry.isDirectory()) {
           continue;
         }
-        const rootTemplateDirPath = path.join(
-          templatesRootDir,
-          entry.name,
-        );
+        const rootTemplateDirPath = path.join(templatesRootDir, entry.name);
         try {
           const stat = await fs.stat(rootTemplateDirPath);
           if (!stat.isDirectory()) {
@@ -430,6 +433,7 @@ export class RootTemplateRepository {
             branchOverride: repoInfo?.branch,
             trackedRevision: repoInfo?.revision,
             skipBranchResolution: Boolean(repoInfo),
+            devTemplates,
           },
         );
         if ("error" in templateResult) {
@@ -611,10 +615,8 @@ export class RootTemplateRepository {
       return { data: null };
     }
 
-    const saveRevisionInCacheResult = await this.gitService.cloneRevisionToCache(
-      sourceTemplate,
-      revisionHash,
-    );
+    const saveRevisionInCacheResult =
+      await this.gitService.cloneRevisionToCache(sourceTemplate, revisionHash);
 
     if ("error" in saveRevisionInCacheResult) {
       return saveRevisionInCacheResult;

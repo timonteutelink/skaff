@@ -1,0 +1,39 @@
+---
+title: Project settings file
+authors: []
+sidebar_position: 4
+---
+
+Skaff stores project state in `templateSettings.json` at the project root. This
+file tracks the templates that have been instantiated and their input settings.
+
+## Top-level fields
+
+| Field | Description |
+| ----- | ----------- |
+| `projectRepositoryName` | Project name used when the root template was instantiated. |
+| `projectAuthor` | Author or team string captured at instantiation. |
+| `rootTemplateName` | Name of the root template used to create the project. |
+| `instantiatedTemplates` | Array of template instance records. |
+
+## Template instance fields
+
+Each entry in `instantiatedTemplates` includes:
+
+| Field | Description |
+| ----- | ----------- |
+| `id` | Instance ID (`root` for the root template). |
+| `parentId` | Parent instance ID for subtemplates (optional). |
+| `templateName` | Template name on disk. |
+| `templateSettings` | User-provided settings, including plugin input under `plugins`. |
+| `templateCommitHash` | Commit hash the template was rendered from (optional). |
+| `templateRepoUrl` | Repository URL for the template (optional). |
+| `templateBranch` | Branch name used when instantiating (optional). |
+| `automaticallyInstantiatedByParent` | Whether a parent template auto-added this instance. |
+| `lastMigration` | UUID of the last applied migration (optional). |
+
+## Plugin input
+
+Plugin input is stored under `templateSettings.plugins` to keep generation
+bijective. Plugin output is recalculated at generation time and is not stored in
+`templateSettings.json`.

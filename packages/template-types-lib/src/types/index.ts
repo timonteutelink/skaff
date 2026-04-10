@@ -1,6 +1,5 @@
 export type {
   UserTemplateSettings,
-  AiResultsObject,
   FinalTemplateSettings,
   StringOrCallback,
   AnyOrCallback,
@@ -8,27 +7,44 @@ export type {
 
 export type {
   TemplateConfig,
-  SideEffectFunction,
+  SideEffectInput,
+  SideEffectTransform,
   SideEffect,
   RedirectFile,
   TemplateDisablingThis,
   AllowOverwrite,
   AutoInstantiatedSubtemplate,
   TemplateCommand,
-  LLMTools,
-  AiContext,
-  AiCallbackFunction,
-  AiAutoGenerateSettings,
-  AiUserConversationSettings,
   TemplateConfigModule,
   TemplateMigration,
   TemplateParentReference,
+  TemplatePluginConfig,
 } from "./template-config-types";
 
 export type {
   InstantiatedTemplate,
   ProjectSettings,
 } from "./project-settings-types";
+
+// Sandbox-safe types for template and plugin code
+export type {
+  ReadonlyProjectContext,
+  ReadonlyInstantiatedTemplate,
+  ReadonlyTemplateView,
+  PluginScopedContext,
+  MapFinalSettingsInput,
+  TemplateCallbackContext,
+} from "./sandbox-safe-types";
+
+export {
+  createReadonlyProjectContext,
+  createReadonlyTemplateView,
+} from "./sandbox-safe-types";
+
+// Plugin settings types
+export type { PluginGlobalConfig } from "./plugin-global-config";
+
+export { pluginGlobalConfigSchema } from "./plugin-global-config";
 
 export {
   instantiatedTemplateSchema,

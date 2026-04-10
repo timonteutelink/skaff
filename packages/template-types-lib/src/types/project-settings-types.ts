@@ -1,12 +1,17 @@
 import { z } from "zod";
 
+/**
+ * Schema for an instantiated template stored in templateSettings.json.
+ *
+ */
 export const instantiatedTemplateSchema = z.object({
   id: z.string().min(1),
   parentId: z.string().optional(),
 
   templateName: z.string().min(1),
-  templateSettings: z.object({}).passthrough(), //UserTemplateSettings
-  templateCommitHash: z.string().optional(), //TODO make sure this is a valid hash
+  /** User-provided template settings. */
+  templateSettings: z.object({}).passthrough(),
+  templateCommitHash: z.string().optional(),
   templateRepoUrl: z.string().optional(),
   templateBranch: z.string().optional(),
 

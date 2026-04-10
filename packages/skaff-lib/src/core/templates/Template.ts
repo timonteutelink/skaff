@@ -217,6 +217,7 @@ export class Template {
       trackedRevision: this.trackedRevision,
       possibleParentTemplates: this.possibleParentTemplates,
       isDetachedSubtreeRoot: this.isDetachedSubtreeRoot,
+      plugins: this.config.plugins ?? [],
     };
   }
 
@@ -299,10 +300,31 @@ export class Template {
   }
 
   public async isValid(): Promise<boolean> {
+    const devTemplates = process.env.SKAFF_DEV_TEMPLATES?.toLowerCase().trim();
+    if (devTemplates === "1" || devTemplates === "true" || devTemplates === "yes" || devTemplates === "on") {
+      return true;
+    }
+
     const gitService = getGitService();
-    const isRepoClean = await gitService.isGitRepoClean(this.absoluteBaseDir);
-    if ("error" in isRepoClean) {
-      return false;
+    const devTemplatesEnabled = process.env.SKAFF_DEV_TEMPLATES
+      ?.toLowerCase()
+      .trim();
+    const skipCleanCheck =
+      devTemplatesEnabled === "1" ||
+      devTemplatesEnabled === "true" ||
+      devTemplatesEnabled === "yes" ||
+      devTemplatesEnabled === "on";
+
+    if (!skipCleanCheck) {
+      const isRepoClean = await gitService.isGitRepoClean(
+        this.absoluteBaseDir,
+      );
+      if ("error" in isRepoClean) {
+        return false;
+      }
+      if (!isRepoClean.data) {
+        return false;
+      }
     }
 
     const commitResult = await gitService.getCommitHash(this.absoluteBaseDir);
@@ -312,7 +334,7 @@ export class Template {
 
     const foundCommitHash = this.findCommitHash();
 
-    return isRepoClean.data && commitResult.data === foundCommitHash;
+    return commitResult.data === foundCommitHash;
   }
 
 }

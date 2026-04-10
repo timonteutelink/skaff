@@ -1,0 +1,18 @@
+---
+title: Git helper commands
+authors: []
+sidebar_position: 4
+---
+
+Skaff includes git-aware helpers for comparing a project with its template
+revision.
+
+## Compare project to its template
+
+```bash
+skaff git diff-template
+```
+
+This command shows a summarized diff table between the current project and the
+template revision stored in `templateSettings.json`. Use `--project <path>` to
+point at a different project directory.

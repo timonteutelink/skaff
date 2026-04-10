@@ -7,6 +7,7 @@ This package provides the shared TypeScript types and Zod schemas used when auth
 - **`TemplateConfig`** – Strongly typed metadata describing a template (name, author, spec version, etc.).
 - **`TemplateConfigModule`** – The contract every `templateConfig.ts` module implements to expose settings schemas, helpers, and lifecycle hooks.
 - **`projectSettingsSchema`** – Zod schema (with matching `ProjectSettings` type) for validating the generated project's global metadata and instantiated templates.
+- **`TemplatePluginConfig`** – Declares the plugin module specifier, optional export name, dependency/weight ordering hints, and options passed to Skaff's plugin loader when a template opts into plugins.
 
 ## Usage
 
@@ -37,9 +38,41 @@ const templateModule: TemplateConfigModule<
   templateSettingsSchema,
   templateFinalSettingsSchema: templateSettingsSchema,
   mapFinalSettings: ({ templateSettings }) => templateSettings,
+  plugins: [
+    // Base greeter template hook plus CLI and web contributions
+    { module: "@timonteutelink/skaff-plugin-greeter", options: { greeting: "hello" } },
+    "@timonteutelink/skaff-plugin-greeter-cli",
+    "@timonteutelink/skaff-plugin-greeter-web",
+  ],
 };
 
 export default templateModule;
+```
+
+### Plugin configuration
+
+Template authors can opt into plugins by adding a `plugins` array to the exported `TemplateConfigModule`. Each entry is a
+`TemplatePluginConfig` describing the module specifier (resolved from the template repository's `package.json`), the export to
+load (defaults to `default`), optional dependency/weight hints to stabilize execution order, and optional plugin-specific
+options. The Skaff library exposes a shared loader that the CLI and Web UI reuse to import these modules at runtime, ensuring
+plugins only activate for templates that explicitly list them.
+
+Plugin settings live in the template’s own `templateSettingsSchema`. Plugins can
+read and suggest settings through their CLI/Web stages, while templates remain
+the single source of truth for stored settings.
+
+If a plugin exports a `requiredTemplateSettingsSchema`, import it in your
+template and merge/extend it into `templateSettingsSchema` so plugin-required
+fields are validated. For example:
+
+```ts
+import { requiredTemplateSettingsSchema as greeterRequired } from "@timonteutelink/skaff-plugin-greeter";
+
+const templateSettingsSchema = z
+  .object({
+    greeting: z.string().default("hello"),
+  })
+  .merge(greeterRequired);
 ```
 
 ## Template Layout Example

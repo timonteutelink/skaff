@@ -1,0 +1,44 @@
+{
+  "name": "@timonteutelink/skaff-plugin-erd-web",
+  "version": "0.0.1",
+  "description": "Prototype ERD web UI plugin for Skaff",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "test": "bun run build"
+  },
+  "dependencies": {
+    "@dineug/erd-editor": "3.3.0",
+    "@timonteutelink/skaff-lib": "workspace:*",
+    "@timonteutelink/skaff-plugin-erd": "workspace:*",
+    "@timonteutelink/skaff-plugin-erd-types": "workspace:*",
+    "@types/react": "^19.2.7",
+    "react": "^19.2.0"
+  },
+  "skaff": {
+    "manifest": {
+      "name": "erd",
+      "version": "0.0.1",
+      "capabilities": [
+        "web"
+      ],
+      "supportedHooks": {
+        "template": [],
+        "cli": [],
+        "web": []
+      }
+    }
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
+}

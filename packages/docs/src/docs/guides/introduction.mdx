@@ -4,15 +4,22 @@ authors: []
 sidebar_position: 1
 ---
 
-Skaff is a TypeScript-powered scaffolding toolkit that turns curated templates into ready-to-run projects.
-It combines a fast CLI, a web dashboard, and shared libraries so teams can ship consistent services without copying stale boilerplates.
+Skaff is a TypeScript-powered scaffolding toolkit that turns curated templates
+into ready-to-run projects. It combines a CLI, a web dashboard, and shared
+libraries so teams can ship consistent services without copying stale
+boilerplates.
 
 ## What you get
 
-- **Guided project creation.** Render templates from the CLI or web UI, validate answers with Zod, and review a Git diff before anything touches your repository.
-- **Repeatable upgrades.** Save template settings once and rerun the template later to generate patch files that capture only upstream changes.
-- **Composable features.** Break large starters into subtemplates so optional modules, jobs, or stacks can be added on demand.
-- **Automation-friendly tooling.** Every workflow is scriptable and available as a library, making Skaff easy to embed in CI or internal developer platforms.
+- **Guided project creation.** Render templates from the CLI or web UI, validate
+  answers with Zod, and review a Git diff before anything touches your
+  repository.
+- **Repeatable upgrades.** Save template settings once and rerun the template
+  later to generate patch files that capture only upstream changes.
+- **Composable features.** Break large starters into subtemplates so optional
+  modules, jobs, or stacks can be added on demand.
+- **Automation-friendly tooling.** Every workflow is scriptable and available as
+  a library, making Skaff easy to embed in CI or internal developer platforms.
 
 ## Components at a glance
 
@@ -23,4 +30,19 @@ It combines a fast CLI, a web dashboard, and shared libraries so teams can ship 
 | **Core runtime (`packages/skaff-lib`)**            | Shared rendering and diffing engine consumed by the CLI, web app, and custom integrations.                                   |
 | **Template types (`packages/template-types-lib`)** | Typed helpers for `templateConfig.ts` files, subtemplate wiring, migrations, and side effects.                               |
 
-For repository setup and release details, keep the [project README](https://github.com/timonteutelink/skaff#readme) nearby while using these docs.
+## How Skaff stays reproducible
+
+- Template code runs in a hardened SES sandbox with a strict allow-list of
+  imports.
+- Template outputs are rendered in a temporary Git repo and surfaced as diffs or
+  patches, so you can always review changes before applying them.
+- `templateSettings.json` captures template inputs and instance metadata, making
+  updates deterministic.
+
+## Where to go next
+
+- [Basics](./basics/index) covers your first CLI or web run.
+- [CLI workflows](./cli/index) dives into config, templates, and project updates.
+- [Template authoring](./authoring/index) explains how to build and maintain
+  templates for your team.
+- [Reference docs](./reference/index) list configuration keys and API shapes.

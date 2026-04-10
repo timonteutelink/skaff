@@ -1,4 +1,4 @@
-import { getProjectFromPath, Project, Result } from "@timonteutelink/skaff-lib";
+import type { Project, Result } from "@timonteutelink/skaff-lib";
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
@@ -65,12 +65,18 @@ export async function findProjectDirPath(startDir?: string): Promise<null | stri
 
 export async function getCurrentProject(
   projectPath?: string,
-  loader: typeof getProjectFromPath = getProjectFromPath,
+  loader?: (projectPath: string) => Promise<Result<null | Project>>,
 ): Promise<Result<null | Project>> {
+  const resolvedLoader =
+    loader ??
+    (async (resolvedPath: string) => {
+      const { getProjectFromPath } = await import("@timonteutelink/skaff-lib");
+      return getProjectFromPath(resolvedPath);
+    });
   const projectDir = await findProjectDirPath(projectPath);
   if (!projectDir) {
     return { error: "No project found in the current directory or its parents." };
   }
 
-  return loader(projectDir);
+  return resolvedLoader(projectDir);
 }

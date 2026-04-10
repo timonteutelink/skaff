@@ -1,4 +1,4 @@
-import type { DependencyContainer } from "tsyringe";
+import type { ServiceContainer } from "./container";
 
 import {
   createDefaultContainer,
@@ -7,17 +7,25 @@ import {
   setSkaffContainer,
 } from "./container";
 
+/**
+ * Creates a fresh test container with all default services registered.
+ * Optionally applies overrides for mocking dependencies.
+ */
 export function createTestContainer(
-  registerOverrides?: (container: DependencyContainer) => void,
-): DependencyContainer {
+  registerOverrides?: (container: ServiceContainer) => void,
+): ServiceContainer {
   const testContainer = createDefaultContainer();
   registerOverrides?.(testContainer);
   return testContainer;
 }
 
+/**
+ * Runs a function with an isolated test container, restoring the original
+ * container state after the function completes (even if it throws).
+ */
 export function withTestContainer<T>(
-  run: (container: DependencyContainer) => T,
-  registerOverrides?: (container: DependencyContainer) => void,
+  run: (container: ServiceContainer) => T,
+  registerOverrides?: (container: ServiceContainer) => void,
 ): T {
   const previousContainer = peekSkaffContainer();
   const testContainer = createTestContainer(registerOverrides);

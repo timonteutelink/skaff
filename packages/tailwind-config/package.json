@@ -5,6 +5,10 @@
   "exports": {
     ".": "./tailwind.config.ts"
   },
+  "scripts": {
+    "build": "echo \"No build step for @repo/tailwind-config\"",
+    "test": "echo \"No tests for @repo/tailwind-config\""
+  },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "tailwindcss": "^4.1.17"

@@ -1,0 +1,151 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+
+import { beforeAll, describe, expect, it, jest } from "@jest/globals";
+import { z } from "zod";
+
+import {
+  createMockHardenedSandboxModule,
+  createTempDir,
+  writeTemplateFileTree,
+} from "./lib";
+import type { GenericTemplateConfigModule } from "../src/lib/types";
+import { getSkaffContainer } from "../src/di/container";
+import { ShellServiceToken } from "../src/di/tokens";
+
+let Template: typeof import("../src/core/templates/Template").Template;
+let Project: typeof import("../src/models/project").Project;
+
+jest.mock("../src/core/infra/hardened-sandbox", () => ({
+  ...createMockHardenedSandboxModule(),
+}));
+
+jest.mock("../src/lib/logger", () => ({
+  backendLogger: {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+    trace: jest.fn(),
+  },
+}));
+
+beforeAll(async () => {
+  ({ Template } = await import("../src/core/templates/Template"));
+  ({ Project } = await import("../src/models/project"));
+});
+
+describe("Template commands", () => {
+  it("exposes template commands in DTOs", async () => {
+    const { root: baseDir } = await createTempDir("skaff-command-");
+    const templateDir = path.join(baseDir, "template");
+    const { filesDir } = await writeTemplateFileTree({ root: templateDir });
+
+    const schema = z.object({ message: z.string() });
+    const templateConfig: GenericTemplateConfigModule = {
+      templateConfig: {
+        name: "command-template",
+        author: "Test",
+        specVersion: "0.0.1",
+      },
+      templateSettingsSchema: schema,
+      templateFinalSettingsSchema: schema,
+      mapFinalSettings: ({ templateSettings }) => templateSettings,
+      commands: [
+        {
+          title: "Say Hello",
+          description: "Echoes a greeting",
+          command: (settings) => `echo ${settings.message}`,
+        },
+      ],
+    } as GenericTemplateConfigModule;
+
+    const template = new Template({
+      config: templateConfig,
+      absoluteBaseDir: baseDir,
+      absoluteDir: templateDir,
+      absoluteFilesDir: filesDir,
+    });
+
+    const dto = template.mapToDTO();
+
+    expect(dto.templateCommands).toEqual([
+      {
+        title: "Say Hello",
+        description: "Echoes a greeting",
+      },
+    ]);
+  });
+
+  it("executes template commands using final settings", async () => {
+    const shellService = {
+      execute: jest.fn().mockResolvedValue({ data: "ok" }),
+    };
+
+    const container = getSkaffContainer();
+    container.registerInstance(
+      ShellServiceToken,
+      shellService as unknown as typeof shellService,
+    );
+
+    const { root: baseDir } = await createTempDir("skaff-command-");
+    const templateDir = path.join(baseDir, "template");
+    const { filesDir } = await writeTemplateFileTree({ root: templateDir });
+
+    const schema = z.object({ message: z.string() });
+    const templateConfig: GenericTemplateConfigModule = {
+      templateConfig: {
+        name: "command-template",
+        author: "Test",
+        specVersion: "0.0.1",
+      },
+      templateSettingsSchema: schema,
+      templateFinalSettingsSchema: schema,
+      mapFinalSettings: ({ templateSettings }) => templateSettings,
+      commands: [
+        {
+          title: "Say Hello",
+          description: "Echoes a greeting",
+          command: (settings) => `echo ${settings.message}`,
+        },
+      ],
+    } as GenericTemplateConfigModule;
+
+    const template = new Template({
+      config: templateConfig,
+      absoluteBaseDir: baseDir,
+      absoluteDir: templateDir,
+      absoluteFilesDir: filesDir,
+    });
+
+    const projectSettings = {
+      projectRepositoryName: "demo",
+      projectAuthor: "tester",
+      rootTemplateName: "command-template",
+      instantiatedTemplates: [
+        {
+          id: "root-id",
+          templateName: "command-template",
+          templateSettings: { message: "Hello" },
+        },
+      ],
+    };
+
+    const projectDir = path.join(baseDir, "project");
+    await fs.mkdir(projectDir, { recursive: true });
+    const settingsPath = path.join(projectDir, "templateSettings.json");
+    await fs.writeFile(settingsPath, JSON.stringify(projectSettings), "utf8");
+
+    const project = new Project(
+      projectDir,
+      settingsPath,
+      projectSettings,
+      template,
+    );
+
+    const result = await project.executeTemplateCommand("root-id", "Say Hello");
+
+    expect(result).toEqual({ data: "ok" });
+    expect(shellService.execute).toHaveBeenCalledWith(projectDir, "echo Hello");
+  });
+});

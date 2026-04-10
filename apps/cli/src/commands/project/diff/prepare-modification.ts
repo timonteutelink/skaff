@@ -46,6 +46,11 @@ static flags = {
       proj.data.rootTemplate.config.templateConfig.name,
       instTpl.templateName,
       flags.settings,
+      instTpl.templateSettings as any,
+      {
+        projectSettings: proj.data.instantiatedProjectSettings,
+        templateInstanceId: args.templateInstanceId,
+      },
     );
 
     const res = await prepareModificationDiff(

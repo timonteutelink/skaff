@@ -1,8 +1,8 @@
 import path from "node:path";
 import * as fs from "node:fs/promises";
-import { tmpdir } from "node:os";
 import { withTestContainer } from "../src/di/testing";
 import { makeDir } from "../src/core/infra/file-service";
+import { createTempDir } from "./lib";
 
 jest.mock("../src/lib/logger", () => ({
   backendLogger: { error: jest.fn(), info: jest.fn() },
@@ -11,7 +11,7 @@ jest.mock("../src/lib/logger", () => ({
 describe("file-service", () => {
   it("creates directories recursively", async () =>
     withTestContainer(async () => {
-      const base = await fs.mkdtemp(path.join(tmpdir(), "fs-test-"));
+      const { root: base } = await createTempDir("fs-test-");
       const nested = path.join(base, "a/b/c");
       const result = await makeDir(nested);
       expect(result).toEqual({ data: undefined });

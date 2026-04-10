@@ -1,0 +1,56 @@
+---
+title: Add plugins
+authors: []
+sidebar_position: 4
+---
+
+Plugins let templates inject custom behavior into the generation pipeline or
+surface new commands and UI panels. Templates opt in by declaring a `plugins`
+array inside `templateConfig.ts`.
+
+## Declare required plugins
+
+```ts title="templateConfig.ts"
+import type { TemplateConfigModule } from "@timonteutelink/template-types-lib";
+
+const templateModule: TemplateConfigModule<...> = {
+  // ...other fields
+  plugins: [
+    {
+      module: "@skaff/plugin-greeter",
+      version: "^1.0.0",
+      exportName: "default",
+      options: { greeting: "Hello" },
+      dependsOn: ["@skaff/plugin-core"],
+      weight: 10,
+    },
+  ],
+};
+```
+
+Key fields:
+
+- `module`: npm package name or module specifier to load.
+- `version`: optional semver range; templates are disabled if installed plugins
+  do not satisfy it.
+- `exportName`: optional named export to use instead of the default export.
+- `options`: arbitrary configuration passed to the plugin factory.
+- `dependsOn`: explicit ordering requirements between plugins.
+- `weight`: tie-breaker weight when no dependency ordering is defined (lower
+  runs earlier).
+
+## How plugins are resolved
+
+Skaff only activates **pre-registered** plugins:
+
+- **CLI:** installed via `skaff plugins install` and loaded through oclif.
+- **Web:** bundled at build time via the `SKAFF_PLUGINS` build argument.
+- **Library:** registered programmatically with `registerPluginModules`.
+
+If a template requires a plugin that is missing or incompatible, Skaff will list
+it but disable generation, showing the missing plugins and version constraints.
+
+## Capture plugin input
+
+Template settings can include plugin input under the `plugins` key. This data is
+stored verbatim in `templateSettings.json` and revalidated on subsequent runs.
